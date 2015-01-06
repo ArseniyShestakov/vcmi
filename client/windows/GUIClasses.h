@@ -7,6 +7,7 @@
 #include "../widgets/CGarrisonInt.h"
 #include "../widgets/Images.h"
 #include "../windows/CWindowObject.h"
+#include "../CMT.h"
 
 /*
  * GUIClasses.h, part of VCMI engine
@@ -219,6 +220,7 @@ private:
 
 public:
 	CSystemOptionsWindow(); //c-tor
+    ~CSystemOptionsWindow(); //d-tor
 };
 
 class CTavernWindow : public CWindowObject

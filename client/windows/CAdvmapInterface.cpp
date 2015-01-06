@@ -501,7 +501,7 @@ void CAdvMapInt::fadventureOPtions()
 
 void CAdvMapInt::fsystemOptions()
 {
-	GH.pushInt(new CSystemOptionsWindow());
+    GH.pushInt(new CSystemOptionsWindow());
 }
 
 void CAdvMapInt::fnextHero()

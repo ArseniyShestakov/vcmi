@@ -5,6 +5,7 @@
 
 #include "../widgets/TextControls.h"
 #include "../widgets/Buttons.h"
+#include "../CMT.h"
 
 class CDefHandler;
 class CCallback;

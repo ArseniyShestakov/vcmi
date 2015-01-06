@@ -510,6 +510,9 @@ CSystemOptionsWindow::CSystemOptionsWindow():
     onFullscreenChanged(settings.listen["video"]["fullscreen"])
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
+    // Mouse lock off
+    SDL_SetWindowGrab(mainWindow, SDL_FALSE);
+
 	title = new CLabel(242, 32, FONT_BIG, CENTER, Colors::YELLOW, CGI->generaltexth->allTexts[568]);
 
 	const JsonNode & texts = CGI->generaltexth->localizedTexts["systemOptions"];
@@ -617,6 +620,11 @@ CSystemOptionsWindow::CSystemOptionsWindow():
 	resText += boost::lexical_cast<std::string>(settings["video"]["screenRes"]["height"].Float());
 	gameResLabel = new CLabel(170, 292, FONT_MEDIUM, CENTER, Colors::YELLOW, resText);
 
+}
+
+CSystemOptionsWindow::~CSystemOptionsWindow()
+{
+    SDL_SetWindowGrab(mainWindow, SDL_TRUE);
 }
 
 void CSystemOptionsWindow::selectGameRes()

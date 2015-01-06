@@ -902,6 +902,7 @@ static bool recreateWindow(int w, int h, int bpp, bool fullscreen)
 	else
 	{
 		mainWindow = SDL_CreateWindow(NAME.c_str(), SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED, w, h, 0);
+        SDL_SetWindowGrab(mainWindow, SDL_TRUE);
 	}
 	
 	
