@@ -125,6 +125,7 @@ const BuildingID extra[] = {BuildingID::RESOURCE_SILO, BuildingID::SPECIAL_1, Bu
 class VCAI : public CAdventureAI
 {
 public:
+	std::map<ObjectInstanceID, int> blockers;
 	//internal methods for town development
 
 	//try build an unbuilt structure in maxDays at most (0 = indefinite)

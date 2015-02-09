@@ -654,6 +654,7 @@ void VCAI::makeTurn()
 	boost::shared_lock<boost::shared_mutex> gsLock(cb->getGsMutex());
 	setThreadName("VCAI::makeTurn");
 
+	blockers = {};
     logGlobal->infoStream() << boost::format("Player %d starting turn") % static_cast<int>(playerID.getNum());
 
 	switch(cb->getDate(Date::DAY_OF_WEEK))
@@ -3103,7 +3104,29 @@ int3 SectorMap::findFirstVisitableTile (HeroPtr h, crint3 dst)
 		auto topObj = cb->getTopObj(curtile);
 		if (topObj && topObj->ID == Obj::HERO && topObj != h.h)
 		{
-			logAi->warnStream() << ("Another allied hero stands in our way");
+			const CGHeroInstance *blocker = cb->getHero(topObj->id);
+			if (ai->blockers.find(topObj->id) == ai->blockers.end())
+			{
+				ai->blockers[topObj->id] = 1;
+			}
+			else
+			{
+				ai->blockers[topObj->id]++;
+
+				if (ai->blockers[topObj->id] >= 3)
+				{
+					logAi->warnStream() << boost::format("OMG OMG OMG. The %s is bad blocker!") % blocker->name;
+					ai->myCb->dismissHero(blocker);
+					ai->lostHero(blocker);
+
+					ai->blockers.erase(topObj->id);
+
+					//we need to throw, otherwise hero will be assigned to sth again
+					throw std::runtime_error("Hero was lost!");
+				}
+			}
+
+			logAi->warnStream() << boost::format("Another allied hero (%s) stands in the way of %s") % blocker->name % h.name;
 			return ret;
 		}
 		if(ai->myCb->getPathsInfo(h.get())->getPathInfo(curtile)->reachable())
