@@ -3301,7 +3301,8 @@ void CPathfinder::initializeGraph()
 void CPathfinder::calculatePaths()
 {
 	assert(hero);
-	assert(hero == getHero(hero->id));
+	const CGHeroInstance* herotest = getHero(hero->id);
+	assert(*hero == *herotest);
 
 	bool flying = hero->hasBonusOfType(Bonus::FLYING_MOVEMENT);
 	int maxMovePointsLand = hero->maxMovePoints(true);

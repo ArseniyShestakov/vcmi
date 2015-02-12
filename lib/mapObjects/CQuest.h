@@ -169,6 +169,7 @@ class DLL_LINKAGE CGBorderGuard : public CGKeys, public IQuestObject
 {
 public:
 	CGBorderGuard() : IQuestObject(){};
+//	CGBorderGuard() : IQuestObject(){quest->missionType = CQuest::MISSION_KEYMASTER;};
 	void initObj() override;
 	void onHeroVisit(const CGHeroInstance * h) const override;
 	void blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer) const override;

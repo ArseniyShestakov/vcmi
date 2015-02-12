@@ -801,7 +801,8 @@ const CPathsInfo * CClient::getPathsInfo(const CGHeroInstance *h)
 {
 	assert(h);
 	boost::unique_lock<boost::mutex> pathLock(pathInfo->pathMx);
-	if (pathInfo->hero != h)
+//	if (pathInfo->hero != h)
+	if (true)
 	{
 		gs->calculatePaths(h, *pathInfo.get());
 	}

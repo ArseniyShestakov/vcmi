@@ -6,6 +6,8 @@
 #include "../widgets/Images.h"
 #include "CWindowObject.h"
 
+#include "../widgets/CComponent.h"
+
 /*
  * CQuestLog.h, part of VCMI engine
  *
@@ -20,7 +22,6 @@ class CCreature;
 class CStackInstance;
 class CButton;
 class CGHeroInstance;
-class CComponent;
 class LRClickableAreaWText;
 class CButton;
 class CPicture;
@@ -30,7 +31,7 @@ class CSlider;
 class CLabel;
 struct QuestInfo;
 
-const int QUEST_COUNT = 9;
+const int QUEST_COUNT = 7;
 
 class CQuestLabel : public LRClickableAreaWText, public CMultiLineLabel
 {
@@ -69,7 +70,6 @@ public:
 	CQuestMinimap (const Rect & position);
 	//should be called to invalidate whole map - different player or level
 	void update();
-	void setLevel(int level);
 	void addQuestMarks (const QuestInfo * q);
 
 	void showAll(SDL_Surface * to);
@@ -77,15 +77,19 @@ public:
 
 class CQuestLog : public CWindowObject
 {
+	CComponentBox * box;
+	std::vector<Component> components;
 	int questIndex;
 	const QuestInfo * currentQuest;
 
 	const std::vector<QuestInfo> quests;
 	std::vector<CQuestLabel *> labels;
+	CInfoWindow * desc;
 	CTextBox * description;
 	CQuestMinimap * minimap;
 	CSlider * slider; //scrolls quests
 	CButton *ok;
+	int ignoredQuests;
 
 	void init ();
 public:
@@ -94,7 +98,7 @@ public:
 
 	~CQuestLog(){};
 
-	void selectQuest (int which);
+	void selectQuest (int which, int labelId);
 	void updateMinimap (int which){};
 	void printDescription (int which){};
 	void sliderMoved (int newpos);

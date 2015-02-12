@@ -87,6 +87,9 @@ void CQuestMinimap::addQuestMarks (const QuestInfo * q)
 	int x,y;
 	minimap->tileToPixels (tile, x, y);
 
+	if (level != tile.z)
+		setLevel(tile.z);
+
 	CQuestIcon * pic = new CQuestIcon ("VwSymbol.def", 3, x, y);
 
 	pic->moveBy (Point ( -pic->pos.w/2, -pic->pos.h/2));
@@ -99,7 +102,9 @@ void CQuestMinimap::update()
 {
 	CMinimap::update();
 	if (currentQuest)
+	{
 		addQuestMarks (currentQuest);
+	}
 }
 
 void CQuestMinimap::iconClicked()
@@ -119,9 +124,11 @@ void CQuestMinimap::showAll(SDL_Surface * to)
 CQuestLog::CQuestLog (const std::vector<QuestInfo> & Quests) :
 	CWindowObject(PLAYER_COLORED | BORDERED, "questDialog.pcx"),
 	questIndex(0),
+	ignoredQuests(0),
 	currentQuest(nullptr),
 	quests (Quests),
-	slider(nullptr)
+	slider(nullptr),
+	box(nullptr)
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
 	init();
@@ -130,21 +137,35 @@ CQuestLog::CQuestLog (const std::vector<QuestInfo> & Quests) :
 void CQuestLog::init()
 {
 	minimap = new CQuestMinimap (Rect (33, 18, 144, 144));
-	description = new CTextBox ("", Rect(221, 18, 350, 355), 1, FONT_MEDIUM, TOPLEFT, Colors::WHITE);
+	description = new CTextBox ("", Rect(231, 18, 350, 355), 1, FONT_MEDIUM, TOPLEFT, Colors::WHITE);
 	ok = new CButton(Point(533, 386), "IOKAY.DEF", CGI->generaltexth->zelp[445], boost::bind(&CQuestLog::close,this), SDLK_RETURN);
-
-	if (quests.size() > QUEST_COUNT)
-		slider = new CSlider(Point(189, 184), 230, std::bind (&CQuestLog::sliderMoved, this, _1), QUEST_COUNT, quests.size(), false, CSlider::BROWN);
 
 	for (int i = 0; i < quests.size(); ++i)
 	{
+		if (quests[i].quest->missionType == CQuest::MISSION_NONE)
+		{
+			ignoredQuests++;
+			continue;
+		}
 		MetaString text;
+		int currentLabel = labels.size();
 		quests[i].quest->getRolloverText (text, false);
 		if (quests[i].obj)
 			text.addReplacement (quests[i].obj->getObjectName()); //get name of the object
-		CQuestLabel * label = new CQuestLabel (Rect(14, 184 + i * 24, 172,30), FONT_SMALL, TOPLEFT, Colors::WHITE, text.toString());
-		label->callback = boost::bind(&CQuestLog::selectQuest, this, i);
+		CQuestLabel * label = new CQuestLabel (Rect(14, 184, 172,31), FONT_SMALL, TOPLEFT, Colors::WHITE, text.toString());
+		label->disable();
+		label->callback = boost::bind(&CQuestLog::selectQuest, this, i, currentLabel);
 		labels.push_back(label);
+
+		// Make latest quest active
+		selectQuest(i, currentLabel);
+	}
+
+	if (quests.size()-ignoredQuests > QUEST_COUNT)
+//	if (true)
+	{
+		slider = new CSlider(Point(189, 184), 230, std::bind (&CQuestLog::sliderMoved, this, _1), QUEST_COUNT, labels.size(), false, CSlider::BROWN);
+		slider->moveToMax();
 	}
 
 	recreateQuestList (0);
@@ -155,43 +176,65 @@ void CQuestLog::showAll(SDL_Surface * to)
 	CWindowObject::showAll (to);
 	for (auto label : labels)
 	{
-		label->show(to); //shows only if active
+		label->show(to); //shows only if active // NO IT'S NOT!
 	}
 	if (labels.size() && labels[questIndex]->active)
 	{
 		CSDL_Ext::drawBorder(to, Rect::around(labels[questIndex]->pos), int3(Colors::METALLIC_GOLD.r, Colors::METALLIC_GOLD.g, Colors::METALLIC_GOLD.b));
 	}
+/*	minimap->show(to);
 	description->show(to);
-	minimap->show(to);
+
+	if (components.size())
+	{
+		std::vector<CComponent *> components_p;
+		for (auto & component : components)
+			components_p.push_back(new CComponent(component));
+		box = new CComponentBox(components_p, Rect(0, 0, 350, 200));
+		box->activate();
+		box->show(to);
+	}*/
 }
 
 void CQuestLog::recreateQuestList (int newpos)
 {
 	for (int i = 0; i < labels.size(); ++i)
 	{
-		labels[i]->pos = Rect (pos.x + 14, pos.y + 192 + (i-newpos) * 25, 173, 23);
+		labels[i]->pos = Rect (pos.x + 14, pos.y + 184 + (i-newpos) * 32, 173, 31);
 		if (i >= newpos && i < newpos + QUEST_COUNT)
 		{
-			labels[i]->activate();
+			labels[i]->enable();
 		}
 		else
 		{
-			labels[i]->deactivate();
+			labels[i]->disable();
 		}
 	}
 	minimap->update();
 }
 
-void CQuestLog::selectQuest (int which)
+void CQuestLog::selectQuest (int which, int labelId)
 {
-	questIndex = which;
+	questIndex = labelId;
 	currentQuest = &quests[which];
 	minimap->currentQuest = currentQuest;
 
 	MetaString text;
-	std::vector<Component> components; //TODO: display them
-	currentQuest->quest->getVisitText (text, components , currentQuest->quest->isCustomFirst, true);
+	components.clear();
+//	std::vector<Component> components; //TODO: display them
+	currentQuest->quest->getVisitText (text, components, currentQuest->quest->isCustomFirst, true);
 	description->setText (text.toString()); //TODO: use special log entry text
+//	desc->text->setText(text.toString());
+
+	delete box;
+	if (components.size())
+	{
+		std::vector<CComponent *> comps;
+		for (auto & component : components)
+			comps.push_back(new CComponent(component));
+		box = new CComponentBox(comps, Rect(231, 200, 350, 200));
+	}
+
 	minimap->update();
 	redraw();
 }
