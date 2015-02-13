@@ -31,7 +31,7 @@ class CSlider;
 class CLabel;
 struct QuestInfo;
 
-const int QUEST_COUNT = 7;
+const int QUEST_COUNT = 6;
 
 class CQuestLabel : public LRClickableAreaWText, public CMultiLineLabel
 {
@@ -84,7 +84,6 @@ class CQuestLog : public CWindowObject
 
 	const std::vector<QuestInfo> quests;
 	std::vector<CQuestLabel *> labels;
-	CInfoWindow * desc;
 	CTextBox * description;
 	CQuestMinimap * minimap;
 	CSlider * slider; //scrolls quests
