@@ -281,6 +281,8 @@ class CPathfinder : private CGameInfoCallback
 private:
 	bool useSubterraneanGates;
 	bool allowEmbarkAndDisembark;
+	bool useMonolithTwoWay;
+	bool useMonolithOneWay;
 	CPathsInfo &out;
 	const CGHeroInstance *hero;
 	const std::vector<std::vector<std::vector<ui8> > > &FoW;
@@ -301,7 +303,7 @@ private:
 	bool goodForLandSeaTransition(); //checks if current move will be between sea<->land. If so, checks it legality (returns false if movement is not possible) and sets useEmbarkCost
 
 	CGPathNode::EAccessibility evaluateAccessibility(const TerrainTile *tinfo) const;
-	bool canMoveBetween(const int3 &a, const int3 &b) const; //checks only for visitable objects that may make moving between tiles impossible, not other conditions (like tiles itself accessibility)
+	bool canMoveBetween(const int3 &a, const int3 &b, bool oneway = false) const; //checks only for visitable objects that may make moving between tiles impossible, not other conditions (like tiles itself accessibility)
 
 public:
 	CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance *_hero);
