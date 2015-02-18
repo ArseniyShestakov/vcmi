@@ -125,14 +125,26 @@ bool TerrainTile::isClear(const TerrainTile *from /*= nullptr*/) const
 	return entrableTerrain(from) && !blocked;
 }
 
-int TerrainTile::topVisitableId() const
+int TerrainTile::topVisitableId(bool ignoreLatest) const
 {
-	return visitableObjects.size() ? visitableObjects.back()->ID : -1;
+	auto visitableObj = visitableObjects;
+	if (ignoreLatest && visitableObj.size())
+	{
+		visitableObj.erase(visitableObj.end()-1);
+	}
+
+	return visitableObj.size() ? visitableObj.back()->ID : -1;
 }
 
-CGObjectInstance * TerrainTile::topVisitableObj() const
+CGObjectInstance * TerrainTile::topVisitableObj(bool ignoreLatest) const
 {
-	return visitableObjects.size() ? visitableObjects.back() : nullptr;
+	auto visitableObj = visitableObjects;
+	if (ignoreLatest && visitableObj.size())
+	{
+		visitableObj.erase(visitableObj.end()-1);
+	}
+
+	return visitableObj.size() ? visitableObj.back() : nullptr;
 }
 
 bool TerrainTile::isCoastal() const
