@@ -342,6 +342,14 @@ bool CMap::checkForVisitableDir(const int3 & src, const TerrainTile *pom, const 
 			continue;
 
 		const CGObjectInstance * obj = pom->visitableObjects[b];
+		const TerrainTile * srcpom = &getTile(src);
+		if (obj->ID == Obj::SUBTERRANEAN_GATE && srcpom && srcpom->visitableObjects.size())
+		{
+			//srcpom->topVisitableId();
+			const CGObjectInstance * srcobj = srcpom->visitableObjects[0];
+			if (srcobj->ID == Obj::SUBTERRANEAN_GATE)
+				return true;
+		}
 
 		if (!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
 			return false;
