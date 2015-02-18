@@ -3508,6 +3508,7 @@ void CPathfinder::calculatePaths()
 					|| destTopVisObjID == Obj::SUBTERRANEAN_GATE
 					|| destTopVisObjID == Obj::MONOLITH_TWO_WAY
 					|| destTopVisObjID == Obj::MONOLITH_ONE_WAY_ENTRANCE
+					|| destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
 					mq.push_back(dp);
