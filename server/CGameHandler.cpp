@@ -1747,7 +1747,17 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, Pl
 		tmh.result = result;
 		sendAndApply(&tmh);
 
-		if(lookForGuards == CHECK_FOR_GUARDS && this->isInTheMap(guardPos))
+		if (visitDest == VISIT_DEST && (
+			t.topVisitableId(true) == Obj::SUBTERRANEAN_GATE
+			||
+			t.topVisitableId(true) == Obj::MONOLITH_TWO_WAY
+			||
+			t.topVisitableId(true) == Obj::MONOLITH_ONE_WAY_ENTRANCE
+			))
+		{
+			visitObjectOnTile(t, h);
+		}
+		else if(lookForGuards == CHECK_FOR_GUARDS && this->isInTheMap(guardPos))
 		{
 			tmh.attackedFrom = guardPos;
 
