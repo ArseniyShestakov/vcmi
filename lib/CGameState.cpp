@@ -3349,13 +3349,12 @@ void CPathfinder::calculatePaths()
 			turn++;
 		}
 
-
 		//add accessible neighbouring nodes to the queue
 		neighbours.clear();
 
 		//handling subterranean gate => it's exit is the only neighbour
 		int specialMovementPrice = -1;
-		switch (ct->topVisitableId())
+		switch (ct->topVisitableId(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)))
 		{
 			case Obj::SUBTERRANEAN_GATE:
 			{
