@@ -3304,6 +3304,7 @@ void CPathfinder::calculatePaths()
 	assert(hero == getHero(hero->id));
 
 	bool flying = hero->hasBonusOfType(Bonus::FLYING_MOVEMENT);
+	bool walkOnWater = hero->hasBonusOfType(Bonus::WATER_WALKING);
 	int maxMovePointsLand = hero->maxMovePoints(true);
 	int maxMovePointsWater = hero->maxMovePoints(false);
 	int3 src = hero->getPosition(false);
@@ -3437,10 +3438,10 @@ void CPathfinder::calculatePaths()
 
 			const bool destIsGuardian = sourceGuardPosition == n;
 
-			if(!goodForLandSeaTransition())
+			if(!goodForLandSeaTransition() && !flying && !walkOnWater)
 				continue;
 
-			if(!canMoveBetween(cp->coord, dp->coord, (destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT)) || dp->accessible == CGPathNode::BLOCKED )
+			if(!canMoveBetween(cp->coord, dp->coord, (destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT)) || dp->accessible == CGPathNode::BLOCKED && !flying)
 				continue;
 
 			//special case -> hero embarked a boat standing on a guarded tile -> we must allow to move away from that tile
@@ -3460,11 +3461,13 @@ void CPathfinder::calculatePaths()
 
 			int remains = movement - cost;
 
-			if(useEmbarkCost)
+			if(useEmbarkCost && !flying && !walkOnWater)
 			{
 				remains = hero->movementPointsAfterEmbark(movement, cost, useEmbarkCost - 1);
 				cost = movement - remains;
 			}
+			if (flying || walkOnWater)
+				cost = cost / 4;
 
 			if(remains < 0)
 			{
@@ -3490,6 +3493,7 @@ void CPathfinder::calculatePaths()
 										&& dp->accessible == CGPathNode::BLOCKVIS;
 
 				if (dp->accessible == CGPathNode::ACCESSIBLE
+					|| flying
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
 					|| CGTeleport::isTeleportInstance(destTopVisObjID)
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
