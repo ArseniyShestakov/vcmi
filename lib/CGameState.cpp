@@ -3492,10 +3492,7 @@ void CPathfinder::calculatePaths()
 
 				if (dp->accessible == CGPathNode::ACCESSIBLE
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| destTopVisObjID == Obj::SUBTERRANEAN_GATE
-					|| destTopVisObjID == Obj::MONOLITH_TWO_WAY
-					|| destTopVisObjID == Obj::MONOLITH_ONE_WAY_ENTRANCE
-					|| destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT
+					|| CGTeleport::isTeleportInstance(destTopVisObjID)
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
 					mq.push_back(dp);
