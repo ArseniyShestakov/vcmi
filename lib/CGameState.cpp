@@ -3354,84 +3354,72 @@ void CPathfinder::calculatePaths()
 		neighbours.clear();
 
 		//handling subterranean gate => it's exit is the only neighbour
-		int topVid = ct->topVisitableId();
-		bool subterraneanEntry = (topVid == Obj::SUBTERRANEAN_GATE && useSubterraneanGates);
-		bool monolithTwoWayEntry = (topVid == Obj::MONOLITH_TWO_WAY && useMonolithTwoWay);
-		bool monolithOneWayEntry = (topVid == Obj::MONOLITH_ONE_WAY_ENTRANCE && useMonolithOneWay);
-
-		if(subterraneanEntry)
+		int specialMovementPrice = -1;
+		switch (ct->topVisitableId())
 		{
-			//try finding the exit gate
-			if(const CGObjectInstance *outGate = getObj(CGTeleport::getMatchingGate(ct->visitableObjects.back()->id), false))
+			case Obj::SUBTERRANEAN_GATE:
 			{
-				const int3 outPos = outGate->visitablePos();
-				//gs->getNeighbours(*getTile(outPos), outPos, neighbours, boost::logic::indeterminate, !cp->land);
-				neighbours.push_back(outPos);
-			}
-			else
-			{
-				//gate with no exit (blocked) -> do nothing with this node
-				continue;
-			}
-		}
-		else if (monolithTwoWayEntry)
-		{
-			if (const CGTeleport * obj = dynamic_cast<const CGTeleport *>(getObj(ct->visitableObjects.back()->id)))
-			{
-				if (vstd::contains(obj->objs,Obj::MONOLITH_TWO_WAY)
-					&& vstd::contains(obj->objs[Obj::MONOLITH_TWO_WAY], obj->subID)
-					&& obj->objs[Obj::MONOLITH_TWO_WAY][obj->subID].size() > 1)
+				//try finding the exit gate
+				const CGObjectInstance *outGate = getObj(CGTeleport::getMatchingGate(ct->visitableObjects.back()->id), false);
+				if(useSubterraneanGates && outGate)
 				{
-					for (auto teleObjId : obj->objs[Obj::MONOLITH_TWO_WAY][obj->subID])
-					{
-						auto teleObj = getObj(teleObjId);
-						if (!teleObj || teleObj->id == obj->id)
-							continue;
-
-						const int3 outPos = teleObj->visitablePos();
-						neighbours.push_back(outPos);
-					}
+					const int3 outPos = outGate->visitablePos();
+					//gs->getNeighbours(*getTile(outPos), outPos, neighbours, boost::logic::indeterminate, !cp->land);
+					neighbours.push_back(outPos);
 				}
-						/*
-				for (std::map<int, std::vector<ObjectInstanceID> >& teleID : tel.second())
+//				else
+//				{
+					//gate with no exit (blocked) -> do nothing with this node
+//					continue;
+//				}
+				break;
+			}
+			case Obj::MONOLITH_TWO_WAY:
+			{
+				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(getObj(ct->visitableObjects.back()->id));
+				if (useMonolithTwoWay && obj)
 				{
-					if (teleID.first() == Obj::MONOLITH_TWO_WAY)
+					if (vstd::contains(obj->objs,Obj::MONOLITH_TWO_WAY)
+						&& vstd::contains(obj->objs[Obj::MONOLITH_TWO_WAY], obj->subID)
+						&& obj->objs[Obj::MONOLITH_TWO_WAY][obj->subID].size() > 1)
 					{
-						for (int monolithId : teleID.second())
+						for (auto teleObjId : obj->objs[Obj::MONOLITH_TWO_WAY][obj->subID])
 						{
-							if (monolithId == obj->id)
+							auto teleObj = getObj(teleObjId);
+							if (!teleObj || teleObj->id == obj->id)
 								continue;
 
-							auto teleObj = getObj(monolithId);
-							if (teleObj->subID == obj->subID)
-							{
-								const int3 outPos = teleObj->visitablePos();
-								neighbours.push_back(outPos);
-							}
+							const int3 outPos = teleObj->visitablePos();
+							neighbours.push_back(outPos);
 						}
 					}
-				}*/
+				}
+				break;
 			}
-		}
-		else if (monolithOneWayEntry)
-		{
-			if (const CGTeleport * obj = dynamic_cast<const CGTeleport *>(getObj(ct->visitableObjects.back()->id)))
+			case Obj::MONOLITH_ONE_WAY_ENTRANCE:
 			{
-				if (vstd::contains(obj->objs,Obj::MONOLITH_ONE_WAY_EXIT)
-					&& vstd::contains(obj->objs[Obj::MONOLITH_ONE_WAY_EXIT], obj->subID)
-					&& obj->objs[Obj::MONOLITH_ONE_WAY_EXIT][obj->subID].size())
+				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(getObj(ct->visitableObjects.back()->id));
+				if (useMonolithOneWay && obj)
 				{
-					for (auto teleObjId : obj->objs[Obj::MONOLITH_ONE_WAY_EXIT][obj->subID])
+					if (vstd::contains(obj->objs,Obj::MONOLITH_ONE_WAY_EXIT)
+						&& vstd::contains(obj->objs[Obj::MONOLITH_ONE_WAY_EXIT], obj->subID)
+						&& obj->objs[Obj::MONOLITH_ONE_WAY_EXIT][obj->subID].size())
 					{
-						auto teleObj = getObj(teleObjId);
-						if (!teleObj || teleObj->id == obj->id)
-							continue;
+						for (auto teleObjId : obj->objs[Obj::MONOLITH_ONE_WAY_EXIT][obj->subID])
+						{
+							auto teleObj = getObj(teleObjId);
+							if (!teleObj || teleObj->id == obj->id)
+								continue;
 
-						const int3 outPos = teleObj->visitablePos();
-						neighbours.push_back(outPos);
+							const int3 outPos = teleObj->visitablePos();
+							neighbours.push_back(outPos);
+						}
 					}
 				}
+				break;
 			}
+			default:
+				break;
 		}
 
 		gs->getNeighbours(*ct, cp->coord, neighbours, boost::logic::indeterminate, !cp->land);
@@ -3441,7 +3429,7 @@ void CPathfinder::calculatePaths()
 			const int3 &n = neighbour; //current neighbor
 			dp = getNode(n);
 			dt = &gs->map->getTile(n);
-            destTopVisObjID = dt->topVisitableId();
+			destTopVisObjID = Obj(dt->topVisitableId());
 
 			useEmbarkCost = 0; //0 - usual movement; 1 - embark; 2 - disembark
 
@@ -3463,14 +3451,13 @@ void CPathfinder::calculatePaths()
 			int cost = gs->getMovementCost(hero, cp->coord, dp->coord, flying, movement);
 
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
-			if(subterraneanEntry && destTopVisObjID == Obj::SUBTERRANEAN_GATE && cp->coord.z != dp->coord.z)
-				cost = 0;
+			if (specialMovementPrice != -1 && CGTeleport::isTeleportInstance(destTopVisObjID))
+			{
+				cost = specialMovementPrice;
 
-			if(monolithTwoWayEntry && destTopVisObjID == Obj::MONOLITH_TWO_WAY)
-				cost = 0;
-
-			if(monolithOneWayEntry && destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT)
-				cost = 0;
+				if (destTopVisObjID == Obj::SUBTERRANEAN_GATE)
+					assert(cp->coord.z != dp->coord.z); //this should never happen
+			}
 
 			int remains = movement - cost;
 
