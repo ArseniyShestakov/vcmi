@@ -3355,12 +3355,13 @@ void CPathfinder::calculatePaths()
 
 		//handling subterranean gate => it's exit is the only neighbour
 		int specialMovementPrice = -1;
-		switch (ct->topVisitableId(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)))
+		bool ignoreHeroOnTop = cp->coord == CGHeroInstance::convertPosition(hero->pos, false);
+		switch (ct->topVisitableId(ignoreHeroOnTop))
 		{
 			case Obj::SUBTERRANEAN_GATE:
 			{
 				//try finding the exit gate
-				const CGObjectInstance *outGate = getObj(CGTeleport::getMatchingGate(ct->visitableObjects.back()->id), false);
+				const CGObjectInstance *outGate = getObj(CGTeleport::getMatchingGate(ct->topVisitableObj(ignoreHeroOnTop)->id), false);
 				if(useSubterraneanGates && outGate)
 				{
 					const int3 outPos = outGate->visitablePos();
@@ -3376,7 +3377,7 @@ void CPathfinder::calculatePaths()
 			}
 			case Obj::MONOLITH_TWO_WAY:
 			{
-				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(getObj(ct->visitableObjects.back()->id));
+				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(ct->topVisitableObj(ignoreHeroOnTop));
 				if (useMonolithTwoWay && obj)
 				{
 					if (vstd::contains(obj->objs,Obj::MONOLITH_TWO_WAY)
@@ -3398,7 +3399,7 @@ void CPathfinder::calculatePaths()
 			}
 			case Obj::MONOLITH_ONE_WAY_ENTRANCE:
 			{
-				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(getObj(ct->visitableObjects.back()->id));
+				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(ct->topVisitableObj(ignoreHeroOnTop));
 				if (useMonolithOneWay && obj)
 				{
 					if (vstd::contains(obj->objs,Obj::MONOLITH_ONE_WAY_EXIT)
@@ -3466,8 +3467,8 @@ void CPathfinder::calculatePaths()
 				remains = hero->movementPointsAfterEmbark(movement, cost, useEmbarkCost - 1);
 				cost = movement - remains;
 			}
-			if (flying || walkOnWater)
-				cost = cost / 4;
+/*			if (flying || walkOnWater)
+				cost = cost / 4;*/
 
 			if(remains < 0)
 			{
@@ -3492,7 +3493,7 @@ void CPathfinder::calculatePaths()
 				const bool guardedDst = gs->map->guardingCreaturePositions[dp->coord.x][dp->coord.y][dp->coord.z].valid()
 										&& dp->accessible == CGPathNode::BLOCKVIS;
 
-				if (dp->accessible == CGPathNode::ACCESSIBLE
+				if ((dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false))
 					|| flying
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
 					|| CGTeleport::isTeleportInstance(destTopVisObjID)
