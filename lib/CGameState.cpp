@@ -3439,7 +3439,7 @@ void CPathfinder::calculatePaths()
 
 			const bool destIsGuardian = sourceGuardPosition == n;
 
-			if(!goodForLandSeaTransition() && !flying && !walkOnWater)
+			if(!flying && !walkOnWater && !goodForLandSeaTransition())
 				continue;
 
 			if(!canMoveBetween(cp->coord, dp->coord, (destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT)) || dp->accessible == CGPathNode::BLOCKED && !flying)
