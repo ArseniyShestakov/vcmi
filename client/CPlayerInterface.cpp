@@ -2666,6 +2666,10 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			if(path.nodes[i-1].coord.z != path.nodes[i].coord.z)
 				continue;
 
+			if (std::abs(path.nodes[i].coord.x-path.nodes[i-1].coord.x) > 1
+				|| std::abs(path.nodes[i].coord.y-path.nodes[i-1].coord.y) > 1)
+				continue;
+
 			//stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
 			if(path.nodes[i-1].turns)
 			{
@@ -2693,13 +2697,21 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			stillMoveHero.data = WAITING_MOVE;
 
 			int3 endpos(path.nodes[i-1].coord.x, path.nodes[i-1].coord.y, h->pos.z);
+			const CGHeroInstance * hh = cb->getHero(h->id);
 			bool guarded = CGI->mh->map->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
 
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
-			cb->moveHero(h,endpos);
 
-			while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
-				stillMoveHero.cond.wait(un);
+//			while(true)
+//			{
+				cb->moveHero(h,endpos);
+				while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
+					stillMoveHero.cond.wait(un);
+
+//				if (h->pos == endpos)
+//					break;
+//			}
+
 
 			logGlobal->traceStream() << "Resuming " << __FUNCTION__;
 			if (guarded || showingDialog->get() == true) // Abort movement if a guard was fought or there is a dialog to display (Mantis #1136)
