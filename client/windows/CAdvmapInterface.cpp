@@ -1435,7 +1435,7 @@ void CAdvMapInt::tileLClicked(const int3 &mapPos)
 			select(static_cast<const CArmedInstance*>(topBlocking), false);
 			return;
 		}
-		else if (pn->accessible != CGPathNode::BLOCKED)//still here? we need to move hero if we clicked end of already selected path or calculate a new path otherwise
+		else if (!currentHero->hasBonusOfType(Bonus::FLYING_MOVEMENT) || pn->accessible != CGPathNode::BLOCKED)//still here? we need to move hero if we clicked end of already selected path or calculate a new path otherwise
 		{
 			if (terrain.currentPath  &&  terrain.currentPath->endPos() == mapPos)//we'll be moving
 			{
@@ -1443,7 +1443,7 @@ void CAdvMapInt::tileLClicked(const int3 &mapPos)
 					LOCPLINT->moveHero(currentHero,*terrain.currentPath);
 				return;
 			}
-			else/* if(mp.z == currentHero->pos.z)*/ //remove old path and find a new one if we clicked on the map level on which hero is present
+			else if ((!currentHero->hasBonusOfType(Bonus::FLYING_MOVEMENT) && !currentHero->hasBonusOfType(Bonus::WATER_WALKING)) || tile->terType != ETerrainType::WATER)/* if(mp.z == currentHero->pos.z)*/ //remove old path and find a new one if we clicked on the map level on which hero is present
 			{
 				CGPath &path = LOCPLINT->paths[currentHero];
 				terrain.currentPath = &path;
