@@ -1435,7 +1435,7 @@ void CAdvMapInt::tileLClicked(const int3 &mapPos)
 			select(static_cast<const CArmedInstance*>(topBlocking), false);
 			return;
 		}
-		else //still here? we need to move hero if we clicked end of already selected path or calculate a new path otherwise
+		else if (pn->accessible != CGPathNode::BLOCKED)//still here? we need to move hero if we clicked end of already selected path or calculate a new path otherwise
 		{
 			if (terrain.currentPath  &&  terrain.currentPath->endPos() == mapPos)//we'll be moving
 			{
@@ -1620,7 +1620,7 @@ void CAdvMapInt::tileHovered(const int3 &mapPos)
 			}
 			else
 			{
-				if(accessible)
+				if(accessible && pnode->accessible != CGPathNode::BLOCKED)
 				{
 					if(pnode->land)
 						CCS->curh->changeGraphic(ECursor::ADVENTURE, 9 + turns*6);
