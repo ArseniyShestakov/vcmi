@@ -2660,16 +2660,29 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 		const TerrainTile * curTile = cb->getTile(CGHeroInstance::convertPosition(h->pos, false));
 
+		bool firstturn = true;
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
-			//changing z coordinate means we're moving through subterranean gate -> it's done automatically upon the visit, so we don't have to request that move here
-			if(path.nodes[i-1].coord.z != path.nodes[i].coord.z)
-				continue;
-
-			if (std::abs(path.nodes[i].coord.x-path.nodes[i-1].coord.x) > 1
-				|| std::abs(path.nodes[i].coord.y-path.nodes[i-1].coord.y) > 1)
-				continue;
-
+			if (
+				//changing z coordinate means we're moving through subterranean gate -> it's done automatically upon the visit, so we don't have to request that move here
+				path.nodes[i-1].coord.z != path.nodes[i].coord.z
+				|| (
+					// test for teleportation via monolith
+					std::abs(path.nodes[i].coord.x-path.nodes[i-1].coord.x) > 1
+					|| std::abs(path.nodes[i].coord.y-path.nodes[i-1].coord.y) > 1
+						)
+				)
+			{
+				if (firstturn) // if firstturn == true then hero start movement while standing on monolith/gates
+				{
+					cb->moveHero(h,h->pos);
+					while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
+						stillMoveHero.cond.wait(un);
+				}
+				else
+					continue;
+			}
+			firstturn = false;
 			//stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
 			if(path.nodes[i-1].turns)
 			{
@@ -2697,7 +2710,6 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			stillMoveHero.data = WAITING_MOVE;
 
 			int3 endpos(path.nodes[i-1].coord.x, path.nodes[i-1].coord.y, h->pos.z);
-			const CGHeroInstance * hh = cb->getHero(h->id);
 			bool guarded = CGI->mh->map->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
 
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
