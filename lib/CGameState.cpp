@@ -1867,7 +1867,7 @@ void CGameState::initMapObjects()
 			}
 		}
 	}
-	CGTeleport::postInit(); //pairing subterranean gates
+	CGSubterraneanGate::postInit(); //pairing subterranean gates
 
 	map->calculateGuardingGreaturePositions(); //calculate once again when all the guards are placed and initialized
 }
@@ -3358,7 +3358,7 @@ void CPathfinder::calculatePaths()
 		if(subterraneanEntry)
 		{
 			//try finding the exit gate
-			if(const CGObjectInstance *outGate = getObj(CGTeleport::getMatchingGate(ct->visitableObjects.back()->id), false))
+			if(const CGObjectInstance *outGate = getObj(CGSubterraneanGate::getMatchingGate(ct->visitableObjects.back()->id), false))
 			{
 				const int3 outPos = outGate->visitablePos();
 				//gs->getNeighbours(*getTile(outPos), outPos, neighbours, boost::logic::indeterminate, !cp->land);
