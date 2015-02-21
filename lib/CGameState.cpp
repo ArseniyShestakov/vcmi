@@ -3493,11 +3493,15 @@ void CPathfinder::calculatePaths()
 				const bool guardedDst = gs->map->guardingCreaturePositions[dp->coord.x][dp->coord.y][dp->coord.z].valid()
 										&& dp->accessible == CGPathNode::BLOCKVIS;
 
-				if ((dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false))
-					|| flying
-					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| CGTeleport::isTeleportInstance(destTopVisObjID)
-					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
+				if (dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false))
+					mq.push_back(dp);
+				else if (flying)
+					mq.push_back(dp);
+				else if (useEmbarkCost && allowEmbarkAndDisembark)
+					mq.push_back(dp);
+				else if (CGTeleport::isTeleportInstance(destTopVisObjID))
+					mq.push_back(dp);
+				else if (guardedDst && !guardedSource) // Can step into a hostile tile once.
 				{
 					mq.push_back(dp);
 				}
