@@ -2675,12 +2675,14 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			{
 				if (firstturn) // if firstturn == true then hero start movement while standing on monolith/gates
 				{
+					stillMoveHero.data = WAITING_MOVE;
 					cb->moveHero(h,h->pos);
 					while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
 						stillMoveHero.cond.wait(un);
+
+					firstturn = false;
 				}
-				else
-					continue;
+				continue;
 			}
 			firstturn = false;
 			//stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
