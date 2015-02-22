@@ -1436,7 +1436,7 @@ void CAdvMapInt::tileLClicked(const int3 &mapPos)
 			select(static_cast<const CArmedInstance*>(topBlocking), false);
 			return;
 		}
-		else if (!currentHero->hasBonusOfType(Bonus::FLYING_MOVEMENT) || pn->accessible != CGPathNode::BLOCKED)//still here? we need to move hero if we clicked end of already selected path or calculate a new path otherwise
+		else //still here? we need to move hero if we clicked end of already selected path or calculate a new path otherwise
 		{
 			if (terrain.currentPath  &&  terrain.currentPath->endPos() == mapPos)//we'll be moving
 			{
@@ -1444,7 +1444,7 @@ void CAdvMapInt::tileLClicked(const int3 &mapPos)
 					LOCPLINT->moveHero(currentHero,*terrain.currentPath);
 				return;
 			}
-			else if ((!currentHero->hasBonusOfType(Bonus::FLYING_MOVEMENT) && !currentHero->hasBonusOfType(Bonus::WATER_WALKING)) || tile->terType != ETerrainType::WATER)/* if(mp.z == currentHero->pos.z)*/ //remove old path and find a new one if we clicked on the map level on which hero is present
+			else/* if(mp.z == currentHero->pos.z)*/ //remove old path and find a new one if we clicked on the map level on which hero is present
 			{
 				CGPath &path = LOCPLINT->paths[currentHero];
 				terrain.currentPath = &path;
@@ -1537,8 +1537,6 @@ void CAdvMapInt::tileHovered(const int3 &mapPos)
 	}
 	else if(const CGHeroInstance *h = curHero())
 	{
-		bool flying = h->hasBonusOfType(Bonus::FLYING_MOVEMENT);
-		bool walkOnWater = h->hasBonusOfType(Bonus::WATER_WALKING);
 		const CGPathNode *pnode = LOCPLINT->cb->getPathsInfo(h)->getPathInfo(mapPos);
 
 		int turns = pnode->turns;
@@ -1624,7 +1622,7 @@ void CAdvMapInt::tileHovered(const int3 &mapPos)
 			}
 			else
 			{
-				if(accessible && ((!flying && !walkOnWater) || pnode->accessible != CGPathNode::BLOCKED))
+				if(accessible)
 				{
 					if(pnode->land)
 						CCS->curh->changeGraphic(ECursor::ADVENTURE, 9 + turns*6);
@@ -1637,7 +1635,7 @@ void CAdvMapInt::tileHovered(const int3 &mapPos)
 		}
 		else //no objs
 		{
-			if(accessible && ((!flying && !walkOnWater) || pnode->land)/* && pnode->accessible != CGPathNode::FLYABLE*/)
+			if(accessible/* && pnode->accessible != CGPathNode::FLYABLE*/)
 			{
 				if (guardingCreature)
 				{
@@ -1645,9 +1643,9 @@ void CAdvMapInt::tileHovered(const int3 &mapPos)
 				}
 				else
 				{
-					if(pnode->land || flying || walkOnWater)
+					if(pnode->land)
 					{
-						if(LOCPLINT->cb->getTile(h->getPosition(false))->terType != ETerrainType::WATER || flying || walkOnWater)
+						if(LOCPLINT->cb->getTile(h->getPosition(false))->terType != ETerrainType::WATER)
 							CCS->curh->changeGraphic(ECursor::ADVENTURE, 4 + turns*6);
 						else
 							CCS->curh->changeGraphic(ECursor::ADVENTURE, 7 + turns*6); //anchor
