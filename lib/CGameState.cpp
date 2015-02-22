@@ -3366,6 +3366,8 @@ void CPathfinder::calculatePaths()
 					const int3 outPos = outGate->visitablePos();
 					//gs->getNeighbours(*getTile(outPos), outPos, neighbours, boost::logic::indeterminate, !cp->land);
 					neighbours.push_back(outPos);
+
+					specialMovementPrice = 0;
 				}
 //				else
 //				{
@@ -3393,6 +3395,8 @@ void CPathfinder::calculatePaths()
 							neighbours.push_back(outPos);
 						}
 					}
+
+					specialMovementPrice = 0;
 				}
 				break;
 			}
@@ -3414,6 +3418,8 @@ void CPathfinder::calculatePaths()
 							const int3 outPos = teleObj->visitablePos();
 							neighbours.push_back(outPos);
 						}
+
+						specialMovementPrice = 0;
 					}
 				}
 				break;
