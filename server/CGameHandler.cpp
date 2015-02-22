@@ -1701,7 +1701,6 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, Pl
 	tmh.movePoints = h->movement;
 
 	//check if destination tile is available
-	logGlobal->errorStream() << "SXX! DST: " << dst << " - - POS: " << h->pos;
 
 	//it's a rock or blocked and not visitable tile
 	//OR hero is on land and dest is water and (there is not present only one object - boat)
