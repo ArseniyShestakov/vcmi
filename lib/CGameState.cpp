@@ -3458,12 +3458,7 @@ void CPathfinder::calculatePaths()
 
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
 			if (specialMovementPrice != -1 && dynamic_cast<const CGTeleport*>(dt->topVisitableObj()))
-			{
 				cost = specialMovementPrice;
-
-				if (destTopVisObjID == Obj::SUBTERRANEAN_GATE)
-					assert(cp->coord.z != dp->coord.z); //this should never happen
-			}
 
 			int remains = movement - cost;
 
