@@ -1750,8 +1750,8 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, Pl
 		tmh.result = result;
 		sendAndApply(&tmh);
 
-		if (visitDest == VISIT_DEST && dynamic_cast<const CGTeleport*>(t.topVisitableObj(true)))
-		{
+		if (visitDest == VISIT_DEST && t.topVisitableObj() && t.topVisitableObj()->id == h->id)
+		{ // Hero should be always able to visit any object he staying on even if there guards around
 			visitObjectOnTile(t, h);
 		}
 		else if(lookForGuards == CHECK_FOR_GUARDS && this->isInTheMap(guardPos))
