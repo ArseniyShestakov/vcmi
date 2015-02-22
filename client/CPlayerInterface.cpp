@@ -2663,15 +2663,10 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 		bool firstturn = true;
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
-			if (
-				//changing z coordinate means we're moving through subterranean gate -> it's done automatically upon the visit, so we don't have to request that move here
-				path.nodes[i-1].coord.z != path.nodes[i].coord.z
-				|| (
-					// test for teleportation via monolith
-					std::abs(path.nodes[i].coord.x-path.nodes[i-1].coord.x) > 1
-					|| std::abs(path.nodes[i].coord.y-path.nodes[i-1].coord.y) > 1
-						)
-				)
+			// Get objects on current and next tile as teleporters need special handling.
+			auto priorObject = dynamic_cast<CGTeleport*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
+			auto nextObject = dynamic_cast<CGTeleport*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj());
+			if (priorObject && nextObject && ((priorObject->ID == nextObject->ID) || nextObject->ID == Obj::MONOLITH_ONE_WAY_EXIT))
 			{
 				if (firstturn) // if firstturn == true then hero start movement while standing on monolith/gates
 				{
