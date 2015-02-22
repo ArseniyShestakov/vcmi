@@ -1259,6 +1259,11 @@ bool CFadeAnimation::isFinished() const
 	return fadingCounter >= 1.0f;
 }
 
+bool CFadeAnimation::canDraw() const
+{
+	return fading && fadingSurface && fadingMode != EMode::NONE;
+}
+
 CFadeAnimation::CFadeAnimation()
 	: fadingSurface(nullptr),
 	  fading(false),
@@ -1298,15 +1303,15 @@ void CFadeAnimation::init(EMode mode, SDL_Surface * sourceSurface, bool freeSurf
 	shouldFreeSurface = freeSurfaceAtEnd;
 }
 
-void CFadeAnimation::draw(SDL_Surface * targetSurface, const SDL_Rect * sourceRect, SDL_Rect * destRect)
+void CFadeAnimation::draw(SDL_Surface * targetSurface, SDL_Rect * sourceRect, SDL_Rect * destRect)
 {	
-	if (!fading || !fadingSurface || fadingMode == EMode::NONE)
+	if (!canDraw())
 	{
 		fading = false;
 		return;
 	}
 	
 	CSDL_Ext::setAlpha(fadingSurface, fadingCounter * 255);
-	SDL_BlitSurface(fadingSurface, const_cast<SDL_Rect *>(sourceRect), targetSurface, destRect); //FIXME
+	SDL_BlitSurface(fadingSurface, sourceRect, targetSurface, destRect); //FIXME
 	CSDL_Ext::setAlpha(fadingSurface, 255);
 }

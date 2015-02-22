@@ -11,6 +11,7 @@ class IUpdateable;
 class ILockedUpdatable;
 class IShowActivatable;
 class IShowable;
+class CFadeAnimation;
 
 /*
  * CGuiHandler.h, part of VCMI engine
@@ -62,8 +63,27 @@ private:
 	#ifndef VCMI_SDL1
 	CIntObjectList textInterested;
 	#endif // VCMI_SDL1
-	               
+		               
 	void processLists(const ui16 activityFlag, std::function<void (std::list<CIntObject*> *)> cb);               
+	
+	/// objects that controls animation process of fading in/out top window
+	CFadeAnimation *screenFadeAnim;
+	/// helper surface used for window fading animation
+	SDL_Surface *screenFadeSurface;
+	/// indicates that the fading animation has just finished and we need a full redraw
+	bool fadeFinishedInCurrentFrame;
+	/// hacky flag used for crossfading views (currently used when switching between CCastleInterfaces); @see #popIntTotallyAndWaitForFadingPush
+	bool crossfadePush;
+	/// list of windows that were pushed with fade-in; kept here to fade-out them on close if possible
+	std::vector<const IShowActivatable*> currentFadableWindows;
+	/// initiates new fade-in process for given window
+	void fadeInNewScreen(IShowActivatable * newScreen);
+	/// initiates new fade-out process for given window
+	void fadeOutRemovedScreen(IShowActivatable * removedScreen);
+	/// checks if given window can be faded-out (only if it was pushed with fade-in)
+	bool canFadeout(const IShowActivatable * removedScreen) const;
+	/// processes the logic of screenFadeAnim
+	void updateFade();
 public:
 	void handleElementActivate(CIntObject * elem, ui16 activityFlag);
 	void handleElementDeActivate(CIntObject * elem, ui16 activityFlag);
@@ -88,7 +108,8 @@ public:
 
 	void popInt(IShowActivatable *top); //removes given interface from the top and activates next
 	void popIntTotally(IShowActivatable *top); //deactivates, deletes, removes given interface from the top and activates next
-	void pushInt(IShowActivatable *newInt); //deactivate old top interface, activates this one and pushes to the top
+	void popIntTotallyAndWaitForFadingPush(IShowActivatable *newInt); // hacky method for crossfading views; more comments in definition
+	void pushInt(IShowActivatable *newInt, bool fadein = false); //deactivate old top interface, activates this one and pushes to the top
 	void popInts(int howMany); //pops one or more interfaces - deactivates top, deletes and removes given number of interfaces, activates new front
 	IShowActivatable *topInt(); //returns top interface
 

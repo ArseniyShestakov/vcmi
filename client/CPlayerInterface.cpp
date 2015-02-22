@@ -433,10 +433,14 @@ void CPlayerInterface::heroCreated(const CGHeroInstance * hero)
 }
 void CPlayerInterface::openTownWindow(const CGTownInstance * town)
 {
+	bool castleIntWasOpened = false;
 	if (castleInt)
+	{
+		castleIntWasOpened = true;
 		castleInt->close();
+	}
 	castleInt = new CCastleInterface(town);
-	GH.pushInt(castleInt);
+	GH.pushInt(castleInt, !castleIntWasOpened);
 }
 
 int3 CPlayerInterface::repairScreenPos(int3 pos)
@@ -2172,7 +2176,7 @@ void CPlayerInterface::showPuzzleMap()
 	double ratio = 0;
 	int3 grailPos = cb->getGrailPos(ratio);
 
-	GH.pushInt(new CPuzzleWindow(grailPos, ratio));
+	GH.pushInt(new CPuzzleWindow(grailPos, ratio), true);
 }
 
 void CPlayerInterface::viewWorldMap()

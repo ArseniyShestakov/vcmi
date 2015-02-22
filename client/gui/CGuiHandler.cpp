@@ -5,6 +5,7 @@
 
 #include "CIntObject.h"
 #include "CCursorHandler.h"
+#include "CAnimation.h"
 
 #include "../CGameInfo.h"
 #include "../../lib/CThreadHelper.h"
@@ -69,6 +70,49 @@ void CGuiHandler::processLists(const ui16 activityFlag, std::function<void (std:
 	#endif // VCMI_SDL1
 }
 
+void CGuiHandler::fadeInNewScreen(IShowActivatable * newScreen)
+{	
+	if (!conf.go()->ac.screenFading)
+		return; // fading disabled in config
+	
+	currentFadableWindows.push_back(newScreen); // cache window for later fadeout
+	
+	if (!screenFadeSurface)
+	{
+		assert(screen);
+		screenFadeSurface = CSDL_Ext::newSurface(screen->w, screen->h);
+	}
+	SDL_FillRect(screenFadeSurface, nullptr, SDL_MapRGBA(screenFadeSurface->format, 0, 0, 0, 0)); // TODO cheaper way to clear the bitmap?
+	newScreen->showAll(screenFadeSurface);
+	screenFadeAnim->init(CFadeAnimation::EMode::IN, screenFadeSurface, false, 0.1f);
+}
+
+void CGuiHandler::fadeOutRemovedScreen(IShowActivatable * removedScreen)
+{
+	vstd::erase_if_present(currentFadableWindows, removedScreen);
+	SDL_FillRect(screenFadeSurface, nullptr, SDL_MapRGBA(screenFadeSurface->format, 0, 0, 0, 0));
+	removedScreen->showAll(screenFadeSurface); // blit the removed view on helper surface so it can be faded out
+	screenFadeAnim->init(CFadeAnimation::EMode::OUT, screenFadeSurface, false, 0.1f);
+}
+
+bool CGuiHandler::canFadeout(const IShowActivatable * removedScreen) const
+{
+	if (!conf.go()->ac.screenFading)
+		return false; // fading disabled in config
+	return vstd::contains(currentFadableWindows, removedScreen);
+}
+
+void CGuiHandler::updateFade()
+{
+	if (screenFadeAnim->isFading())
+	{
+		screenFadeAnim->update();
+		fadeFinishedInCurrentFrame = !screenFadeAnim->isFading();
+		if (fadeFinishedInCurrentFrame)
+			crossfadePush = false;
+	}
+}
+
 void CGuiHandler::handleElementActivate(CIntObject * elem, ui16 activityFlag)
 {
 	processLists(activityFlag,[&](std::list<CIntObject*> * lst){
@@ -102,17 +146,50 @@ void CGuiHandler::popIntTotally( IShowActivatable *top )
 {
 	assert(listInt.front() == top);
 	popInt(top);
+	if (canFadeout(top))
+		fadeOutRemovedScreen(top);
 	delete top;
 	fakeMouseMove();
 }
 
-void CGuiHandler::pushInt( IShowActivatable *newInt )
+void CGuiHandler::popIntTotallyAndWaitForFadingPush(IShowActivatable * top)
+{
+	/// this is special version of popIntTotally that can be used for crossfading views; 
+	/// if you use it, you are expected to call fading pushInt immediately (within the same frame);
+	///	it's done separately in two steps (this pop + next push) because some windows (CCastleInterface) rely on ctor/dtor magic 
+	/// and have to be constructed/destructed in the correct order; during crossfade, the window passed to this method is still drawn below the new pushed window
+	assert(listInt.front() == top);
+	SDL_FillRect(screenFadeSurface, nullptr, SDL_MapRGBA(screenFadeSurface->format, 0, 0, 0, 0));
+	top->showAll(screenFadeSurface);	
+	// these lines are a copy of popIntTotally and popInt logic, but with no redraw and no fading
+	top->deactivate();
+	listInt.pop_front(); 
+	objsToBlit -= top;
+	if(!listInt.empty())
+		listInt.front()->activate();	
+	delete top;
+	fakeMouseMove();
+	
+	crossfadePush = true; // indicates that now gui handler expects fading push and uses some special, hacky logic
+}
+
+void CGuiHandler::pushInt(IShowActivatable *newInt, bool fadein /* = false */)
 {
 	assert(newInt);
 	assert(boost::range::find(listInt, newInt) == listInt.end()); // do not add same object twice
-
+	
 	//a new interface will be present, we'll need to use buffer surface (unless it's advmapint that will alter screenBuf on activate anyway)
 	screenBuf = screen2;
+	
+	if (crossfadePush)
+	{
+		// for crossfading (@see #popIntTotallyAndWaitForFadingPush), we have previous window cached in fading surface, so copy it to screen buffer
+		// (total redraws are disabled during crossfade, so it won't be overridden)
+		blitAt(screenFadeSurface, 0, 0, screen2);
+	}
+	
+	if (fadein)
+		fadeInNewScreen(newInt);
 
 	if(!listInt.empty())
 		listInt.front()->deactivate();
@@ -130,9 +207,12 @@ void CGuiHandler::popInts( int howMany )
 	listInt.front()->deactivate();
 	for(int i=0; i < howMany; i++)
 	{
-		objsToBlit -= listInt.front();
-		delete listInt.front();
+		auto front = listInt.front();
+		objsToBlit -= front;
 		listInt.pop_front();
+		if (i + 1 == howMany && canFadeout(front)) // tries to fade-out only the last screen (TODO fade-out all of them? should be possible since they can be all cached on single surface)
+			fadeOutRemovedScreen(front);
+		delete front;		
 	}
 
 	if(!listInt.empty())
@@ -149,13 +229,6 @@ IShowActivatable * CGuiHandler::topInt()
 		return nullptr;
 	else
 		return listInt.front();
-}
-
-void CGuiHandler::totalRedraw()
-{
-	for(auto & elem : objsToBlit)
-		elem->showAll(screen2);
-	blitAt(screen2,0,0,screen);
 }
 
 void CGuiHandler::updateTime()
@@ -371,11 +444,39 @@ void CGuiHandler::handleMouseMotion(SDL_Event *sEvent)
 }
 
 void CGuiHandler::simpleRedraw()
-{
-	//update only top interface and draw background
-	if(objsToBlit.size() > 1)
-		blitAt(screen2,0,0,screen); //blit background
-	objsToBlit.back()->show(screen); //blit active interface/window
+{	
+	if (fadeFinishedInCurrentFrame && !crossfadePush)
+	{
+		fadeFinishedInCurrentFrame = false;
+		totalRedraw(); // needs full redraw after fading, because new window wasn't drawn on screen2 before
+	}
+	else
+	{
+		//update only top interface and draw background
+		if(objsToBlit.size() > 1 || screenFadeAnim->isFading())
+			blitAt(screen2,0,0,screen); //blit background
+		
+		if (!screenFadeAnim->isFading())			
+			objsToBlit.back()->show(screen); //blit active interface/window
+		else
+			screenFadeAnim->draw(screen, nullptr, nullptr);	
+	}
+}
+
+void CGuiHandler::totalRedraw()
+{		
+	if (screenFadeAnim->isFading() && crossfadePush) // don't touch screen2 during crossfade
+		simpleRedraw();
+	else
+	{
+		for(auto & elem : objsToBlit)
+			if (!screenFadeAnim->isFading() || elem != objsToBlit.back() || screenFadeAnim->fadingMode != CFadeAnimation::EMode::IN)
+				elem->showAll(screen2);
+	
+		blitAt(screen2,0,0,screen);
+		if (screenFadeAnim->isFading())
+			screenFadeAnim->draw(screen, nullptr, nullptr);				
+	}
 }
 
 void CGuiHandler::handleMoveInterested( const SDL_MouseMotionEvent & motion )
@@ -410,9 +511,10 @@ void CGuiHandler::fakeMouseMove()
 }
 
 void CGuiHandler::renderFrame()
-{
+{	
 	auto doUpdate = [this]()
 	{
+		updateFade();
 		if(nullptr != curInt)
 		{
 			curInt -> update();
@@ -439,7 +541,11 @@ void CGuiHandler::renderFrame()
 
 
 CGuiHandler::CGuiHandler()
-:lastClick(-500, -500)
+	: screenFadeAnim(new CFadeAnimation()), 
+	  screenFadeSurface(nullptr),
+	  fadeFinishedInCurrentFrame(false),
+	  crossfadePush(false),
+	  lastClick(-500, -500)
 {
 	curInt = nullptr;
 	current = nullptr;
@@ -453,6 +559,9 @@ CGuiHandler::CGuiHandler()
 CGuiHandler::~CGuiHandler()
 {
 	delete mainFPSmng;
+	delete screenFadeAnim;
+	if (screenFadeSurface)
+		SDL_FreeSurface(screenFadeSurface);
 }
 
 void CGuiHandler::breakEventHandling()
