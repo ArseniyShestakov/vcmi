@@ -125,24 +125,16 @@ bool TerrainTile::isClear(const TerrainTile *from /*= nullptr*/) const
 	return entrableTerrain(from) && !blocked;
 }
 
-int TerrainTile::topVisitableId(bool ignoreLatest) const
+int TerrainTile::topVisitableId(bool excludeTop) const
 {
-	auto visitableObj = visitableObjects;
-	if (ignoreLatest && visitableObj.size())
-	{
-		visitableObj.erase(visitableObj.end()-1);
-	}
-
-	return visitableObj.size() ? visitableObj.back()->ID : -1;
+	return topVisitableObj(excludeTop) ? topVisitableObj(excludeTop)->ID : -1;
 }
 
-CGObjectInstance * TerrainTile::topVisitableObj(bool ignoreLatest) const
+CGObjectInstance * TerrainTile::topVisitableObj(bool excludeTop) const
 {
 	auto visitableObj = visitableObjects;
-	if (ignoreLatest && visitableObj.size())
-	{
-		visitableObj.erase(visitableObj.end()-1);
-	}
+	if (excludeTop && visitableObj.size())
+		visitableObj.pop_back();
 
 	return visitableObj.size() ? visitableObj.back() : nullptr;
 }
