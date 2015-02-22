@@ -3452,7 +3452,7 @@ void CPathfinder::calculatePaths()
 			int cost = gs->getMovementCost(hero, cp->coord, dp->coord, flying, movement);
 
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
-			if (specialMovementPrice != -1 && CGTeleport::isTeleportInstance(destTopVisObjID))
+			if (specialMovementPrice != -1 && dynamic_cast<const CGTeleport*>(dt->topVisitableObj()))
 			{
 				cost = specialMovementPrice;
 
@@ -3499,7 +3499,7 @@ void CPathfinder::calculatePaths()
 					mq.push_back(dp);
 				else if (useEmbarkCost && allowEmbarkAndDisembark)
 					mq.push_back(dp);
-				else if (CGTeleport::isTeleportInstance(destTopVisObjID))
+				else if (dynamic_cast<const CGTeleport*>(dt->topVisitableObj()))
 					mq.push_back(dp);
 				else if (guardedDst && !guardedSource) // Can step into a hostile tile once.
 				{

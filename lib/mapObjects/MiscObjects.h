@@ -256,7 +256,6 @@ public:
 	void initObj() override;
 	static void postInit();
 	static ObjectInstanceID getMatchingGate(ObjectInstanceID id); //receives id of one subterranean gate and returns id of the paired one, -1 if none
-	static bool isTeleportInstance(Obj ID);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{

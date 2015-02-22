@@ -934,21 +934,6 @@ ObjectInstanceID CGTeleport::getMatchingGate(ObjectInstanceID id)
 	return ObjectInstanceID();
 }
 
-bool CGTeleport::isTeleportInstance(Obj ID)
-{
-	switch (ID)
-	{
-		case Obj::SUBTERRANEAN_GATE:
-		case Obj::MONOLITH_TWO_WAY:
-		case Obj::MONOLITH_ONE_WAY_ENTRANCE:
-		case Obj::MONOLITH_ONE_WAY_EXIT:
-			return true;
-
-		default:
-			return false;
-	}
-}
-
 void CGArtifact::initObj()
 {
 	blockVisit = true;

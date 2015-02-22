@@ -1751,7 +1751,7 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, Pl
 		tmh.result = result;
 		sendAndApply(&tmh);
 
-		if (visitDest == VISIT_DEST && CGTeleport::isTeleportInstance(Obj(t.topVisitableId(true))))
+		if (visitDest == VISIT_DEST && dynamic_cast<const CGTeleport*>(t.topVisitableObj(true)))
 		{
 			visitObjectOnTile(t, h);
 		}
