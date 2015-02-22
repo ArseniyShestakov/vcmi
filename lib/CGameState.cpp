@@ -3441,7 +3441,7 @@ void CPathfinder::calculatePaths()
 			if(!goodForLandSeaTransition())
 				continue;
 
-			if(!canMoveBetween(cp->coord, dp->coord, (destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT)))
+			if(!canMoveBetween(cp->coord, dp->coord, (destTopVisObjID == Obj::MONOLITH_ONE_WAY_EXIT)) || dp->accessible == CGPathNode::BLOCKED)
 				continue;
 
 			//special case -> hero embarked a boat standing on a guarded tile -> we must allow to move away from that tile
