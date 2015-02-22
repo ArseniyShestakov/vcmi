@@ -2664,7 +2664,6 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 		const TerrainTile * curTile = cb->getTile(CGHeroInstance::convertPosition(h->pos, false));
 
-		bool firstturn = true;
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
 			// Get objects on current and next tile as teleporters need special handling.
@@ -2674,18 +2673,15 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 				&& ((priorObject->ID == nextObject->ID)
 					|| (priorObject->ID == Obj::MONOLITH_ONE_WAY_ENTRANCE && nextObject->ID == Obj::MONOLITH_ONE_WAY_EXIT)))
 			{
-				if (firstturn) // if firstturn == true then hero start movement while standing on monolith/gates
+				if (i == path.nodes.size()-1) // if firstturn == true then hero start movement while standing on monolith/gates
 				{
 					stillMoveHero.data = WAITING_MOVE;
 					cb->moveHero(h,h->pos);
 					while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
 						stillMoveHero.cond.wait(un);
-
-					firstturn = false;
 				}
 				continue;
 			}
-			firstturn = false;
 			//stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
 			if(path.nodes[i-1].turns)
 			{
@@ -2716,17 +2712,10 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			bool guarded = CGI->mh->map->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
 
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
+			cb->moveHero(h,endpos);
 
-//			while(true)
-//			{
-				cb->moveHero(h,endpos);
-				while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
-					stillMoveHero.cond.wait(un);
-
-//				if (h->pos == endpos)
-//					break;
-//			}
-
+			while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
+				stillMoveHero.cond.wait(un);
 
 			logGlobal->traceStream() << "Resuming " << __FUNCTION__;
 			if (guarded || showingDialog->get() == true) // Abort movement if a guard was fought or there is a dialog to display (Mantis #1136)
