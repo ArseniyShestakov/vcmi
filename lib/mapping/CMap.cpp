@@ -349,27 +349,9 @@ bool CMap::checkForVisitableDir(const int3 & src, const TerrainTile *pom, const 
 		const TerrainTile * srcpom = &getTile(src);
 		if (srcpom && srcpom->visitableObjects.size())
 		{
-			const CGObjectInstance * srcobj = srcpom->visitableObjects[0];
-			switch (obj->ID)
-			{
-				case Obj::SUBTERRANEAN_GATE:
-					if (srcobj->ID == obj->ID)
-						return true;
-
-					break;
-
-				case Obj::MONOLITH_TWO_WAY:
-					if (srcobj->ID == obj->ID && srcobj->subID == obj->subID)
-						return true;
-
-					break;
-
-				case Obj::MONOLITH_ONE_WAY_EXIT:
-					if (srcobj->ID == Obj::MONOLITH_ONE_WAY_ENTRANCE && srcobj->subID == obj->subID)
-						return true;
-
-					break;
-			}
+			auto dstObj = dynamic_cast<const CGMonolith *>(obj);
+			if (dstObj && dstObj->isChannelEntrance(srcpom->visitableObjects[0]->id))
+				return true;
 		}
 
 		if (!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
