@@ -21,8 +21,10 @@
 #include "../IGameCallback.h"
 #include "../CGameState.h"
 
-std::map<Obj, std::map<int, std::vector<ObjectInstanceID> > > CGTeleport::objs;
-std::vector<std::pair<ObjectInstanceID, ObjectInstanceID> > CGTeleport::gates;
+std::vector<CGMonolith::SChannel> CGMonolith::channels;
+std::vector<ObjectInstanceID> CGMonolith::objs;
+std::vector<ObjectInstanceID> CGSubterraneanGate::objs;
+std::vector<ObjectInstanceID> CGWhirlpool::objs;
 std::map <si32, std::vector<ObjectInstanceID> > CGMagi::eyelist;
 ui8 CGObelisk::obeliskCount; //how many obelisks are on map
 std::map<TeamID, ui8> CGObelisk::visited; //map: team_id => how many obelisks has been visited
@@ -743,132 +745,181 @@ void CGResource::blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer)
 		cb->startBattleI(hero, this);
 }
 
-void CGTeleport::onHeroVisit( const CGHeroInstance * h ) const
+CGMonolith::SChannel::SChannel()
+	: entrances{}, exits{}
+{
+}
+
+std::vector<ObjectInstanceID> CGMonolith::SChannel::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2)
+{
+	std::vector<ObjectInstanceID> v3;
+
+	std::sort(v1.begin(), v1.end());
+	std::sort(v2.begin(), v2.end());
+
+	std::set_intersection(v1.begin(),v1.end(),v2.begin(),v2.end(),back_inserter(v3));
+
+	return v3;
+}
+
+void CGMonolith::SChannel::addObject(ObjectInstanceID id, EOType type)
+{
+	if(cb->getObj(id))
+	{
+		if(type == ENTRANCE || type == BOTH)
+			entrances.push_back(id);
+
+		if(type == EXIT || type == BOTH)
+			exits.push_back(id);
+	}
+
+}
+
+CGMonolith::SChannel::ECType CGMonolith::SChannel::getType()
+{
+	if((!entrances.size() || !exits.size())
+		|| (entrances.size() == 1 && entrances == exits))
+		return ECType::NONE;
+
+	auto intersection = instersection(entrances, exits);
+	if(intersection.size() == entrances.size() && intersection.size() == exits.size())
+		return ECType::BIDIRECTIONAL;
+	else if(!intersection.size())
+		return ECType::UNIDIRECTIONAL;
+	else
+		return ECType::MIXED;
+}
+
+bool CGMonolith::isEntrance() const
+{
+	return type == BOTH || type == ENTRANCE;
+}
+
+bool CGMonolith::isExit() const
+{
+	return type == BOTH || type == EXIT;
+}
+
+std::vector<ObjectInstanceID> CGMonolith::getAllExits(bool excludeCurrent) const
+{
+	std::vector<ObjectInstanceID> ret = channels[cid].exits;
+	if(excludeCurrent)
+		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
+
+	return ret;
+}
+
+ObjectInstanceID CGMonolith::getRandomExit() const
 {
 	ObjectInstanceID destinationid;
-	switch(ID)
-	{
-	case Obj::MONOLITH_ONE_WAY_ENTRANCE: //one way - find corresponding exit monolith
-	{
-		if(vstd::contains(objs,Obj::MONOLITH_ONE_WAY_EXIT) && vstd::contains(objs[Obj::MONOLITH_ONE_WAY_EXIT],subID) && objs[Obj::MONOLITH_ONE_WAY_EXIT][subID].size())
-		{
-			destinationid = *RandomGeneratorUtil::nextItem(objs[Obj::MONOLITH_ONE_WAY_EXIT][subID], cb->gameState()->getRandomGenerator());
-		}
-		else
-		{
-			logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id;
-		}
-		break;
-	}
-	case Obj::MONOLITH_TWO_WAY://two way monolith - pick any other one
-	case Obj::WHIRLPOOL: //Whirlpool
-		if(vstd::contains(objs,ID) && vstd::contains(objs[ID],subID) && objs[ID][subID].size()>1)
-		{
-			//choose another exit
-			do
-			{
-				destinationid = *RandomGeneratorUtil::nextItem(objs[ID][subID], cb->gameState()->getRandomGenerator());
-			} while(destinationid == id);
+	auto exits = getAllExits();
+	if(exits.size())
+		destinationid = *RandomGeneratorUtil::nextItem(exits, cb->gameState()->getRandomGenerator());
 
-			if (ID == Obj::WHIRLPOOL)
-			{
-				if (!h->hasBonusOfType(Bonus::WHIRLPOOL_PROTECTION))
-				{
-					if (h->Slots().size() > 1 || h->Slots().begin()->second->count > 1)
-					{ //we can't remove last unit
-						SlotID targetstack = h->Slots().begin()->first; //slot numbers may vary
-						for(auto i = h->Slots().rbegin(); i != h->Slots().rend(); i++)
-						{
-							if (h->getPower(targetstack) > h->getPower(i->first))
-							{
-								targetstack = (i->first);
-							}
-						}
+	return destinationid;
+}
 
-						TQuantity countToTake = h->getStackCount(targetstack) * 0.5;
-						vstd::amax(countToTake, 1);
+void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
+{
+	ObjectInstanceID destinationid;
+	if(isEntrance())
+		destinationid = getRandomExit();
 
-
-						InfoWindow iw;
-						iw.player = h->tempOwner;
-						iw.text.addTxt (MetaString::ADVOB_TXT, 168);
-						iw.components.push_back (Component(CStackBasicDescriptor(h->getCreature(targetstack), countToTake)));
-						cb->showInfoDialog(&iw);
-						cb->changeStackCount(StackLocation(h, targetstack), -countToTake);
-					}
-				}
-			}
-		}
-		else
-			logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id;
-		break;
-	case Obj::SUBTERRANEAN_GATE: //find nearest subterranean gate on the other level
-		{
-			destinationid = getMatchingGate(id);
-			if(destinationid == ObjectInstanceID()) //no exit
-			{
-				showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
-			}
-			break;
-		}
-	}
 	if(destinationid == ObjectInstanceID())
 	{
-		logGlobal->warnStream() << "Cannot find exit... (obj at " << pos << ") :( ";
+		logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
 		return;
 	}
-	if (ID == Obj::WHIRLPOOL)
-	{
-		std::set<int3> tiles = cb->getObj(destinationid)->getBlockedPos();
-		auto & tile = *RandomGeneratorUtil::nextItem(tiles, cb->gameState()->getRandomGenerator());
-		cb->moveHero(h->id, tile + int3(1,0,0), true);
-	}
-	else
-		cb->moveHero (h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
+
+	cb->moveHero(h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
 }
 
-void CGTeleport::initObj()
+void CGMonolith::initObj()
 {
-	int si = subID;
-	switch (ID)
+	std::vector<Obj> IDs;
+	IDs.push_back(ID);
+	switch(ID)
 	{
-	case Obj::SUBTERRANEAN_GATE://ignore subterranean gates subid
-	case Obj::WHIRLPOOL:
-		{
-			si = 0;
+		case Obj::MONOLITH_ONE_WAY_ENTRANCE:
+			type = ENTRANCE;
+			IDs.push_back(Obj::MONOLITH_ONE_WAY_EXIT);
 			break;
-		}
-	default:
-		break;
+		case Obj::MONOLITH_ONE_WAY_EXIT:
+			type = EXIT;
+			IDs.push_back(Obj::MONOLITH_ONE_WAY_ENTRANCE);
+			break;
+		case Obj::MONOLITH_TWO_WAY:
+		default:
+			type = BOTH;
+			break;
 	}
-	objs[ID][si].push_back(id);
+
+	cid = findMeChannel(IDs, subID);
+	if(cid == -1)
+	{
+		cid = channels.size();
+		channels.push_back(SChannel());
+	}
+	channels[cid].addObject(id, type);
+	objs.push_back(id);
 }
 
-void CGTeleport::postInit() //matches subterranean gates into pairs
+int CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
+{
+	for(auto objId : objs)
+	{
+		auto obj = dynamic_cast<const CGMonolith*>(cb->getObj(objId));
+		if(obj && vstd::contains(IDs, obj->ID) && obj->subID == SubID)
+			return obj->cid;
+	}
+
+	return -1;
+}
+
+void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
+{
+	ObjectInstanceID destinationid = getRandomExit();
+	if(destinationid == ObjectInstanceID()) //no exit
+	{
+		showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
+		logGlobal->warnStream() << "Cannot find exit subterranean gate for "<< id << " (obj at " << pos << ") :(";
+		return;
+	}
+
+	cb->moveHero(h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
+}
+
+void CGSubterraneanGate::initObj()
+{
+	objs.push_back(id);
+	type = BOTH;
+}
+
+void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gates into pairs
 {
 	//split on underground and surface gates
-	std::vector<const CGObjectInstance *> gatesSplit[2]; //surface and underground gates
-	for(auto & elem : objs[Obj::SUBTERRANEAN_GATE][0])
+	std::vector<CGMonolith *> gatesSplit[2]; //surface and underground gates
+	for(auto & elem : objs)
 	{
-		const CGObjectInstance *hlp = cb->getObj(elem);
+		auto hlp = dynamic_cast<CGMonolith *>(gs->getObjInstance(elem));
 		gatesSplit[hlp->pos.z].push_back(hlp);
 	}
 
 	//sort by position
-	std::sort(gatesSplit[0].begin(), gatesSplit[0].end(), [](const CGObjectInstance * a, const CGObjectInstance * b)
+	std::sort(gatesSplit[0].begin(), gatesSplit[0].end(), [](CGMonolith * a, CGMonolith * b)
 	{
 		return a->pos < b->pos;
 	});
 
 	for(size_t i = 0; i < gatesSplit[0].size(); i++)
 	{
-		const CGObjectInstance *cur = gatesSplit[0][i];
+		CGMonolith *cur = gatesSplit[0][i];
 
 		//find nearest underground exit
 		std::pair<int, si32> best(-1, std::numeric_limits<si32>::max()); //pair<pos_in_vector, distance^2>
 		for(int j = 0; j < gatesSplit[1].size(); j++)
 		{
-			const CGObjectInstance *checked = gatesSplit[1][j];
+			CGMonolith *checked = gatesSplit[1][j];
 			if(!checked)
 				continue;
 			si32 hlp = checked->pos.dist2dSQ(cur->pos);
@@ -879,28 +930,59 @@ void CGTeleport::postInit() //matches subterranean gates into pairs
 			}
 		}
 
+		int channelId = channels.size();
+		channels.push_back(CGMonolith::SChannel());
 		if(best.first >= 0) //found pair
 		{
-			gates.push_back(std::make_pair(cur->id, gatesSplit[1][best.first]->id));
+			channels[channelId].addObject(gatesSplit[1][best.first]->id, BOTH);
+			gatesSplit[1][best.first]->cid = channelId;
 			gatesSplit[1][best.first] = nullptr;
 		}
-		else
-			gates.push_back(std::make_pair(cur->id, ObjectInstanceID()));
+		cur->cid = channelId;
+		channels[channelId].addObject(cur->id, BOTH);
 	}
-	objs.erase(Obj::SUBTERRANEAN_GATE);
+	objs.clear();
 }
 
-ObjectInstanceID CGTeleport::getMatchingGate(ObjectInstanceID id)
+void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 {
-	for(auto & gate : gates)
+	ObjectInstanceID destinationid = getRandomExit();
+	if(destinationid == ObjectInstanceID())
 	{
-		if(gate.first == id)
-			return gate.second;
-		if(gate.second == id)
-			return gate.first;
+		logGlobal->warnStream() << "Cannot find exit whirlpool for "<< id << " (obj at " << pos << ") :(";
+		return;
 	}
 
-	return ObjectInstanceID();
+	if(!h->hasBonusOfType(Bonus::WHIRLPOOL_PROTECTION))
+	{
+		if(h->Slots().size() > 1 || h->Slots().begin()->second->count > 1)
+		{ //we can't remove last unit
+			SlotID targetstack = h->Slots().begin()->first; //slot numbers may vary
+			for(auto i = h->Slots().rbegin(); i != h->Slots().rend(); i++)
+			{
+				if(h->getPower(targetstack) > h->getPower(i->first))
+				{
+					targetstack = (i->first);
+				}
+			}
+
+			TQuantity countToTake = h->getStackCount(targetstack) * 0.5;
+			vstd::amax(countToTake, 1);
+
+			InfoWindow iw;
+			iw.player = h->tempOwner;
+			iw.text.addTxt(MetaString::ADVOB_TXT, 168);
+			iw.components.push_back(Component(CStackBasicDescriptor(h->getCreature(targetstack), countToTake)));
+			cb->showInfoDialog(&iw);
+			cb->changeStackCount(StackLocation(h, targetstack), -countToTake);
+		}
+	}
+
+	std::set<int3> tiles = cb->getObj(destinationid)->getBlockedPos();
+	auto & tile = *RandomGeneratorUtil::nextItem(tiles, cb->gameState()->getRandomGenerator());
+	cb->moveHero(h->id, tile + int3(1,0,0), true);
+
+	cb->moveHero(h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
 }
 
 void CGArtifact::initObj()
