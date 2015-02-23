@@ -2641,9 +2641,22 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
-			//changing z coordinate means we're moving through subterranean gate -> it's done automatically upon the visit, so we don't have to request that move here
-			if(path.nodes[i-1].coord.z != path.nodes[i].coord.z)
+			// Get objects on current and next tile as teleporters need special handling.
+			auto priorObject = dynamic_cast<CGTeleport*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
+			auto nextObject = dynamic_cast<CGTeleport*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos));
+			if ((priorObject && nextObject)
+				&& ((priorObject->ID == nextObject->ID)
+					|| (priorObject->ID == Obj::MONOLITH_ONE_WAY_ENTRANCE && nextObject->ID == Obj::MONOLITH_ONE_WAY_EXIT)))
+			{
+				if (i == path.nodes.size()-1) // if firstturn == true then hero start movement while standing on monolith/gates
+				{
+					stillMoveHero.data = WAITING_MOVE;
+					cb->moveHero(h,h->pos);
+					while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
+						stillMoveHero.cond.wait(un);
+				}
 				continue;
+			}
 
 			//stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
 			if(path.nodes[i-1].turns)
