@@ -125,9 +125,9 @@ bool TerrainTile::isClear(const TerrainTile *from /*= nullptr*/) const
 	return entrableTerrain(from) && !blocked;
 }
 
-int TerrainTile::topVisitableId(bool excludeTop) const
+Obj TerrainTile::topVisitableId(bool excludeTop) const
 {
-	return topVisitableObj(excludeTop) ? topVisitableObj(excludeTop)->ID : -1;
+	return topVisitableObj(excludeTop) ? topVisitableObj(excludeTop)->ID : Obj(-1);
 }
 
 CGObjectInstance * TerrainTile::topVisitableObj(bool excludeTop) const
