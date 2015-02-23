@@ -3425,7 +3425,7 @@ void CPathfinder::calculatePaths()
 
 				if (dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false)
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| cObj && dObj
+					|| (cObj && dObj)
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
 					mq.push_back(dp);
