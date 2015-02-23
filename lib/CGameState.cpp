@@ -3454,7 +3454,7 @@ CGPathNode *CPathfinder::getNode(const int3 &coord)
 
 bool CPathfinder::canMoveBetween(const int3 &a, const int3 &b) const
 {
-	return gs->checkForVisitableDir(a, b) && gs->checkForVisitableDir(b, a);
+	return gs->checkForVisitableDir(a, b);
 }
 
 CGPathNode::EAccessibility CPathfinder::evaluateAccessibility(const TerrainTile *tinfo) const
