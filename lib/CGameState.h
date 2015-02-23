@@ -281,6 +281,8 @@ class CPathfinder : private CGameInfoCallback
 private:
 	bool useSubterraneanGates;
 	bool allowEmbarkAndDisembark;
+	bool useMonolithTwoWay;
+	bool useMonolithOneWay;
 	CPathsInfo &out;
 	const CGHeroInstance *hero;
 	const std::vector<std::vector<std::vector<ui8> > > &FoW;
