@@ -247,19 +247,77 @@ public:
 	ui32 defaultResProduction();
 };
 
-class DLL_LINKAGE CGTeleport : public CGObjectInstance //teleports and subterranean gates
+class DLL_LINKAGE CGMonolith : public CGObjectInstance
 {
 public:
-	static std::map<Obj, std::map<int, std::vector<ObjectInstanceID> > > objs; //teleports: map[ID][subID] => vector of ids
-	static std::vector<std::pair<ObjectInstanceID, ObjectInstanceID> > gates; //subterranean gates: pairs of ids
+	enum EOType {ENTRANCE, EXIT, BOTH};
+
+	/**
+	 * This struct contain information about teleportation channel
+	 */
+	struct SChannel
+	{
+		enum ECType
+		{
+			NONE, BIDIRECTIONAL, UNIDIRECTIONAL, MIXED
+		};
+
+		std::vector<ObjectInstanceID> entrances;
+		std::vector<ObjectInstanceID> exits;
+
+		SChannel();
+		std::vector<ObjectInstanceID> instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2);
+		void addObject(ObjectInstanceID id, CGMonolith::EOType type = CGMonolith::EOType::BOTH);
+		ECType getType();
+
+		template <typename Handler> void serialize(Handler &h, const int version)
+		{
+			h & entrances & exits;
+		}
+	};
+
+	static std::vector<SChannel> channels;
+	static std::vector<ObjectInstanceID> objs;
+	int cid;
+	EOType type;
+
+	bool isEntrance() const;
+	bool isExit() const;
+	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = true) const;
+	ObjectInstanceID getRandomExit() const;
 	void onHeroVisit(const CGHeroInstance * h) const override;
 	void initObj() override;
-	static void postInit();
-	static ObjectInstanceID getMatchingGate(ObjectInstanceID id); //receives id of one subterranean gate and returns id of the paired one, -1 if none
+	int findMeChannel(std::vector<Obj> IDs, int SubID) const;
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & static_cast<CGObjectInstance&>(*this);
+		h & cid & type & static_cast<CGObjectInstance&>(*this);
+	}
+};
+
+class DLL_LINKAGE CGSubterraneanGate : public CGMonolith
+{
+public:
+	static std::vector<ObjectInstanceID> objs;
+	void onHeroVisit(const CGHeroInstance * h) const override;
+	void initObj() override;
+	static void postInit(CGameState * gs);
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & static_cast<CGMonolith&>(*this);
+	}
+};
+
+class DLL_LINKAGE CGWhirlpool : public CGMonolith
+{
+public:
+	static std::vector<ObjectInstanceID> objs;
+	void onHeroVisit(const CGHeroInstance * h) const override;
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & static_cast<CGMonolith&>(*this);
 	}
 };
 

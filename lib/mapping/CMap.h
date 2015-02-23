@@ -502,8 +502,7 @@ public:
 		h & heroesOnMap & towns & artInstances;
 
 		// static members
-		h & CGTeleport::objs;
-		h & CGTeleport::gates;
+		h & CGMonolith::channels;
 		h & CGKeys::playerKeyMap;
 		h & CGMagi::eyelist;
 		h & CGObelisk::obeliskCount & CGObelisk::visited;
