@@ -800,6 +800,22 @@ bool CGMonolith::isExit() const
 	return type == BOTH || type == EXIT;
 }
 
+bool CGMonolith::isChannelEntrance(ObjectInstanceID src) const
+{
+	if (vstd::contains(channels[cid].entrances, src))
+		return true;
+	else
+		return false;
+}
+
+bool CGMonolith::isChannelExit(ObjectInstanceID dst) const
+{
+	if (vstd::contains(channels[cid].exits, dst))
+		return true;
+	else
+		return false;
+}
+
 std::vector<ObjectInstanceID> CGMonolith::getAllExits(bool excludeCurrent) const
 {
 	std::vector<ObjectInstanceID> ret = channels[cid].exits;

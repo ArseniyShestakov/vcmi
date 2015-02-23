@@ -283,6 +283,8 @@ public:
 
 	bool isEntrance() const;
 	bool isExit() const;
+	bool isChannelEntrance(ObjectInstanceID src) const;
+	bool isChannelExit(ObjectInstanceID dst) const;
 	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = true) const;
 	ObjectInstanceID getRandomExit() const;
 	void onHeroVisit(const CGHeroInstance * h) const override;
