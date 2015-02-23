@@ -2642,8 +2642,8 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
 			// Get objects on current and next tile as teleporters need special handling.
-			auto priorObject = dynamic_cast<CGTeleport*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
-			auto nextObject = dynamic_cast<CGTeleport*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos));
+			auto priorObject = dynamic_cast<CGMonolith*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
+			auto nextObject = dynamic_cast<CGMonolith*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos));
 			if ((priorObject && nextObject)
 				&& ((priorObject->ID == nextObject->ID)
 					|| (priorObject->ID == Obj::MONOLITH_ONE_WAY_ENTRANCE && nextObject->ID == Obj::MONOLITH_ONE_WAY_EXIT)))

@@ -3352,80 +3352,11 @@ void CPathfinder::calculatePaths()
 		//add accessible neighbouring nodes to the queue
 		neighbours.clear();
 
-		//handling subterranean gate => it's exit is the only neighbour
-		int specialMovementPrice = -1;
-		bool ignoreHeroOnTop = cp->coord == CGHeroInstance::convertPosition(hero->pos, false);
-		switch (ct->topVisitableId(ignoreHeroOnTop))
+		auto cObj = dynamic_cast<const CGMonolith *>(ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)));
+		if (cObj && cObj->isEntrance() && cObj->channels[cObj->cid].getType() != CGMonolith::SChannel::NONE)
 		{
-			case Obj::SUBTERRANEAN_GATE:
-			{
-				//try finding the exit gate
-				const CGObjectInstance *outGate = getObj(CGTeleport::getMatchingGate(ct->topVisitableObj(ignoreHeroOnTop)->id), false);
-				if(useSubterraneanGates && outGate)
-				{
-					const int3 outPos = outGate->visitablePos();
-					//gs->getNeighbours(*getTile(outPos), outPos, neighbours, boost::logic::indeterminate, !cp->land);
-					neighbours.push_back(outPos);
-
-					specialMovementPrice = 0;
-				}
-//				else
-//				{
-					//gate with no exit (blocked) -> do nothing with this node
-//					continue;
-//				}
-				break;
-			}
-			case Obj::MONOLITH_TWO_WAY:
-			{
-				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(ct->topVisitableObj(ignoreHeroOnTop));
-				if (useMonolithTwoWay && obj)
-				{
-					if (vstd::contains(obj->objs,Obj::MONOLITH_TWO_WAY)
-						&& vstd::contains(obj->objs[Obj::MONOLITH_TWO_WAY], obj->subID)
-						&& obj->objs[Obj::MONOLITH_TWO_WAY][obj->subID].size() > 1)
-					{
-						for (auto teleObjId : obj->objs[Obj::MONOLITH_TWO_WAY][obj->subID])
-						{
-							auto teleObj = getObj(teleObjId);
-							if (!teleObj || teleObj->id == obj->id)
-								continue;
-
-							const int3 outPos = teleObj->visitablePos();
-							neighbours.push_back(outPos);
-						}
-					}
-
-					specialMovementPrice = 0;
-				}
-				break;
-			}
-			case Obj::MONOLITH_ONE_WAY_ENTRANCE:
-			{
-				const CGTeleport * obj = dynamic_cast<const CGTeleport *>(ct->topVisitableObj(ignoreHeroOnTop));
-				if (useMonolithOneWay && obj)
-				{
-					if (vstd::contains(obj->objs,Obj::MONOLITH_ONE_WAY_EXIT)
-						&& vstd::contains(obj->objs[Obj::MONOLITH_ONE_WAY_EXIT], obj->subID)
-						&& obj->objs[Obj::MONOLITH_ONE_WAY_EXIT][obj->subID].size())
-					{
-						for (auto teleObjId : obj->objs[Obj::MONOLITH_ONE_WAY_EXIT][obj->subID])
-						{
-							auto teleObj = getObj(teleObjId);
-							if (!teleObj || teleObj->id == obj->id)
-								continue;
-
-							const int3 outPos = teleObj->visitablePos();
-							neighbours.push_back(outPos);
-						}
-
-						specialMovementPrice = 0;
-					}
-				}
-				break;
-			}
-			default:
-				break;
+			for (auto objId : cObj->getAllExits())
+				neighbours.push_back(getObj(objId)->visitablePos());
 		}
 
 		gs->getNeighbours(*ct, cp->coord, neighbours, boost::logic::indeterminate, !cp->land);
@@ -3457,8 +3388,9 @@ void CPathfinder::calculatePaths()
 			int cost = gs->getMovementCost(hero, cp->coord, dp->coord, flying, movement);
 
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
-			if (specialMovementPrice != -1 && dynamic_cast<const CGTeleport*>(dt->topVisitableObj()))
-				cost = specialMovementPrice;
+			auto dObj = dynamic_cast<const CGMonolith*>(dt->topVisitableObj());
+			if (cObj && dObj)
+				cost = 0;
 
 			int remains = movement - cost;
 
@@ -3491,9 +3423,9 @@ void CPathfinder::calculatePaths()
 				const bool guardedDst = gs->map->guardingCreaturePositions[dp->coord.x][dp->coord.y][dp->coord.z].valid()
 										&& dp->accessible == CGPathNode::BLOCKVIS;
 
-				if (dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false))
+				if (dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false)
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| dynamic_cast<const CGTeleport*>(dt->topVisitableObj()
+					|| cObj && dObj
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
 					mq.push_back(dp);
