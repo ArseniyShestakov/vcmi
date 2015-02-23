@@ -2643,7 +2643,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 		{
 			// Get objects on current and next tile as teleporters need special handling.
 			auto priorObject = dynamic_cast<CGMonolith*>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
-			ObjectInstanceID nextObjectId = CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableId(path.nodes[i-1].coord == h->pos);
+			ObjectInstanceID nextObjectId = CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos)->id;
 			if (priorObject && priorObject->isChannelExit(nextObjectId))
 			{
 				if (i == path.nodes.size()-1) // if firstturn == true then hero start movement while standing on monolith/gates
