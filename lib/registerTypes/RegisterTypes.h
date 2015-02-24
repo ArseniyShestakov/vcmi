@@ -283,6 +283,7 @@ void registerTypesClientPacks2(Serializer &s)
 	s.template registerType<Query, HeroLevelUp>();
 	s.template registerType<Query, CommanderLevelUp>();
 	s.template registerType<Query, BlockingDialog>();
+	s.template registerType<Query, MonolithDialog>();
 	s.template registerType<Query, GarrisonDialog>();
 	s.template registerType<Query, ExchangeDialog>();
 

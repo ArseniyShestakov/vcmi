@@ -1141,6 +1141,14 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 
 }
 
+void CPlayerInterface::showMonolithDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
+{
+	EVENT_HANDLER_CALLED_BY_CLIENT;
+	waitWhileDialog();
+
+	cb->selectionMade(exits[0].getNum(), askID);
+}
+
 void CPlayerInterface::tileRevealed(const std::unordered_set<int3, ShashInt3> &pos)
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;

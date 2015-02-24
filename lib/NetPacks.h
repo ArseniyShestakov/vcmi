@@ -1180,6 +1180,21 @@ struct BlockingDialog : public Query//2003
 	}
 };
 
+struct MonolithDialog : public Query//2006
+{
+	MonolithDialog(){type = 2006;};
+
+	void applyCl(CClient *cl);
+
+	const CGHeroInstance *hero;
+	std::vector<ObjectInstanceID> teleporters;
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & hero & teleporters;
+	}
+};
+
 struct GarrisonDialog : public Query//2004
 {
 	GarrisonDialog(){type = 2004;}

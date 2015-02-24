@@ -590,6 +590,14 @@ void VCAI::showBlockingDialog(const std::string &text, const std::vector<Compone
 	});
 }
 
+void VCAI::showMonolithDialog(const std::vector<ObjectInstanceID> exits, QueryID askID)
+{
+	//LOG_TRACE_PARAMS(logAi, "text '%s', askID '%i', soundID '%i', selection '%i', cancel '%i'", exits % askID % soundID % selection % cancel);
+	NET_EVENT_HANDLER;
+
+	cb->selectionMade(0, askID);
+}
+
 void VCAI::showGarrisonDialog(const CArmedInstance *up, const CGHeroInstance *down, bool removableUnits, QueryID queryID)
 {
 	LOG_TRACE_PARAMS(logAi, "removableUnits '%i', queryID '%i'", removableUnits % queryID);

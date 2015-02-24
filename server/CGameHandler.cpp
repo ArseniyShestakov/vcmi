@@ -1897,6 +1897,14 @@ void CGameHandler::showBlockingDialog( BlockingDialog *iw )
 	sendToAllClients(iw);
 }
 
+void CGameHandler::showMonolithDialog( MonolithDialog *iw )
+{
+	auto dialogQuery = make_shared<CMonolithDialogQuery>(*iw);
+	queries.addQuery(dialogQuery);
+	iw->queryID = dialogQuery->queryID;
+	sendToAllClients(iw);
+}
+
 void CGameHandler::giveResource(PlayerColor player, Res::ERes which, int val) //TODO: cap according to Bersy's suggestion
 {
 	if(!val) return; //don't waste time on empty call

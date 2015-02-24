@@ -313,6 +313,19 @@ CBlockingDialogQuery::CBlockingDialogQuery(const BlockingDialog &bd)
 	addPlayer(bd.player);
 }
 
+void CMonolithDialogQuery::notifyObjectAboutRemoval(const CObjectVisitQuery &objectVisit) const
+{
+	assert(answer);
+	auto obj = dynamic_cast<const CGMonolith *>(objectVisit.visitedObject);
+	obj->monolithDialogAnswered(objectVisit.visitingHero, *answer);
+}
+
+CMonolithDialogQuery::CMonolithDialogQuery(const MonolithDialog &md)
+{
+	this->md = md;
+	addPlayer(md.hero->tempOwner);
+}
+
 CHeroLevelUpDialogQuery::CHeroLevelUpDialogQuery(const HeroLevelUp &Hlu)
 {
 	hlu = Hlu;

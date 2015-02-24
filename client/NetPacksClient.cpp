@@ -578,6 +578,11 @@ void BlockingDialog::applyCl( CClient *cl )
         logNetwork->warnStream() << "We received YesNoDialog for not our player...";
 }
 
+void MonolithDialog::applyCl( CClient *cl )
+{
+	cl->playerint[hero->tempOwner]->showMonolithDialog(teleporters, queryID);
+}
+
 void GarrisonDialog::applyCl(CClient *cl)
 {
 	const CGHeroInstance *h = cl->getHero(hid);

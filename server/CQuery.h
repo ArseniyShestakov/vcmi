@@ -130,6 +130,16 @@ public:
 	virtual void notifyObjectAboutRemoval(const CObjectVisitQuery &objectVisit) const override;
 };
 
+class CMonolithDialogQuery : public CDialogQuery
+{
+public:
+	MonolithDialog md; //copy of pack... debug purposes
+
+	CMonolithDialogQuery(const MonolithDialog &md);
+
+	virtual void notifyObjectAboutRemoval(const CObjectVisitQuery &objectVisit) const override;
+};
+
 class CHeroLevelUpDialogQuery : public CDialogQuery
 {
 public:
