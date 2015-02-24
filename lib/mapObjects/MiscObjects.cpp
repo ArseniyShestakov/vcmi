@@ -21,7 +21,6 @@
 #include "../IGameCallback.h"
 #include "../CGameState.h"
 
-std::vector<CGMonolith::SChannel> CGMonolith::channels;
 std::vector<ObjectInstanceID> CGMonolith::objs;
 std::vector<ObjectInstanceID> CGSubterraneanGate::objs;
 std::vector<ObjectInstanceID> CGWhirlpool::objs;
@@ -745,12 +744,12 @@ void CGResource::blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer)
 		cb->startBattleI(hero, this);
 }
 
-CGMonolith::SChannel::SChannel()
-	: entrances{}, exits{}
+TeleportChannel::TeleportChannel() :
+	entrances{}, exits{}
 {
 }
 
-std::vector<ObjectInstanceID> CGMonolith::SChannel::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2)
+std::vector<ObjectInstanceID> CGMonolith::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const
 {
 	std::vector<ObjectInstanceID> v3;
 
@@ -762,32 +761,28 @@ std::vector<ObjectInstanceID> CGMonolith::SChannel::instersection(std::vector<Ob
 	return v3;
 }
 
-void CGMonolith::SChannel::addObject(ObjectInstanceID id, EOType type)
+void CGMonolith::addToChannel()
 {
-	if(cb->getObj(id))
-	{
-		if(type == ENTRANCE || type == BOTH)
-			entrances.push_back(id);
+	if(type == ENTRANCE || type == BOTH)
+		channel->entrances.push_back(id);
 
-		if(type == EXIT || type == BOTH)
-			exits.push_back(id);
-	}
-
+	if(type == EXIT || type == BOTH)
+		channel->exits.push_back(id);
 }
 
-CGMonolith::SChannel::ECType CGMonolith::SChannel::getType()
+TeleportChannel::EType CGMonolith::getChannelType() const
 {
-	if((!entrances.size() || !exits.size())
-		|| (entrances.size() == 1 && entrances == exits))
-		return ECType::NONE;
+	if((!channel->entrances.size() || !channel->exits.size())
+		|| (channel->entrances.size() == 1 && channel->entrances == channel->exits))
+		return TeleportChannel::DUMMY;
 
-	auto intersection = instersection(entrances, exits);
-	if(intersection.size() == entrances.size() && intersection.size() == exits.size())
-		return ECType::BIDIRECTIONAL;
+	auto intersection = instersection(channel->entrances, channel->exits);
+	if(intersection.size() == channel->entrances.size() && intersection.size() == channel->exits.size())
+		return TeleportChannel::BIDIRECTIONAL;
 	else if(!intersection.size())
-		return ECType::UNIDIRECTIONAL;
+		return TeleportChannel::UNIDIRECTIONAL;
 	else
-		return ECType::MIXED;
+		return TeleportChannel::MIXED;
 }
 
 bool CGMonolith::isEntrance() const
@@ -802,7 +797,7 @@ bool CGMonolith::isExit() const
 
 bool CGMonolith::isChannelEntrance(ObjectInstanceID src) const
 {
-	if(vstd::contains(channels[cid].entrances, src))
+	if(vstd::contains(channel->entrances, src))
 		return true;
 	else
 		return false;
@@ -810,7 +805,7 @@ bool CGMonolith::isChannelEntrance(ObjectInstanceID src) const
 
 bool CGMonolith::isChannelExit(ObjectInstanceID dst) const
 {
-	if(vstd::contains(channels[cid].exits, dst))
+	if(vstd::contains(channel->exits, dst))
 		return true;
 	else
 		return false;
@@ -818,7 +813,7 @@ bool CGMonolith::isChannelExit(ObjectInstanceID dst) const
 
 std::vector<ObjectInstanceID> CGMonolith::getAllExits(bool excludeCurrent) const
 {
-	std::vector<ObjectInstanceID> ret = channels[cid].exits;
+	std::vector<ObjectInstanceID> ret = channel->exits;
 	if(excludeCurrent)
 		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
 
@@ -840,7 +835,7 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	ObjectInstanceID destinationid;
 	if(isEntrance())
 	{
-		if (channels[cid].getType() == CGMonolith::SChannel::BIDIRECTIONAL)
+		if (getChannelType() == TeleportChannel::BIDIRECTIONAL)
 		{
 			MonolithDialog md;
 			md.hero = h;
@@ -893,26 +888,26 @@ void CGMonolith::initObj()
 			break;
 	}
 
-	cid = findMeChannel(IDs, subID);
-	if(cid == -1)
+	channel = findMeChannel(IDs, subID);
+	if(!channel)
 	{
-		cid = channels.size();
-		channels.push_back(SChannel());
+		cb->gameState()->map->teleportChannels.push_back(TeleportChannel());
+		channel = &cb->gameState()->map->teleportChannels.back();
 	}
-	channels[cid].addObject(id, type);
+	addToChannel();
 	objs.push_back(id);
 }
 
-int CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
+TeleportChannel * CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
 {
 	for(auto objId : objs)
 	{
 		auto obj = dynamic_cast<const CGMonolith*>(cb->getObj(objId));
 		if(obj && vstd::contains(IDs, obj->ID) && obj->subID == SubID)
-			return obj->cid;
+			return obj->channel;
 	}
 
-	return -1;
+	return nullptr;
 }
 
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
@@ -952,7 +947,7 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 
 	for(size_t i = 0; i < gatesSplit[0].size(); i++)
 	{
-		CGMonolith *cur = gatesSplit[0][i];
+		CGMonolith * objCurrent = gatesSplit[0][i];
 
 		//find nearest underground exit
 		std::pair<int, si32> best(-1, std::numeric_limits<si32>::max()); //pair<pos_in_vector, distance^2>
@@ -961,7 +956,7 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 			CGMonolith *checked = gatesSplit[1][j];
 			if(!checked)
 				continue;
-			si32 hlp = checked->pos.dist2dSQ(cur->pos);
+			si32 hlp = checked->pos.dist2dSQ(objCurrent->pos);
 			if(hlp < best.second)
 			{
 				best.first = j;
@@ -969,16 +964,16 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 			}
 		}
 
-		int channelId = channels.size();
-		channels.push_back(CGMonolith::SChannel());
+		int channelId = cb->gameState()->map->teleportChannels.size();
+		cb->gameState()->map->teleportChannels.push_back(TeleportChannel());
+		objCurrent->channel = &cb->gameState()->map->teleportChannels[channelId];
+		objCurrent->addToChannel();
 		if(best.first >= 0) //found pair
 		{
-			channels[channelId].addObject(gatesSplit[1][best.first]->id, BOTH);
-			gatesSplit[1][best.first]->cid = channelId;
+			gatesSplit[1][best.first]->channel = &cb->gameState()->map->teleportChannels[channelId];
+			gatesSplit[1][best.first]->addToChannel();
 			gatesSplit[1][best.first] = nullptr;
 		}
-		cur->cid = channelId;
-		channels[channelId].addObject(cur->id, BOTH);
 	}
 	objs.clear();
 }

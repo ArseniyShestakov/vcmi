@@ -15,6 +15,7 @@
 #include "../mapObjects/MiscObjects.h" // To serialize static props
 #include "../mapObjects/CQuest.h" // To serialize static props
 #include "../mapObjects/CGTownInstance.h" // To serialize static props
+#include "../mapObjects/MiscObjects.h"
 #include "../ResourceSet.h"
 #include "../int3.h"
 #include "../GameConstants.h"
@@ -31,6 +32,7 @@ class IModableArt;
 class IQuestObject;
 class CInputStream;
 class CMapEditManager;
+struct TeleportChannel;
 
 /// The hero name struct consists of the hero id and the hero name.
 struct DLL_LINKAGE SHeroName
@@ -432,6 +434,7 @@ public:
 
 	//Helper lists
 	std::vector< ConstTransitivePtr<CGHeroInstance> > heroesOnMap;
+	std::vector<TeleportChannel> teleportChannels;
 
 	/// associative list to identify which hero/creature id belongs to which object id(index for objects)
 	std::map<si32, ObjectInstanceID> questIdentifierToId;
@@ -499,10 +502,9 @@ public:
 		}
 
 		h & objects;
-		h & heroesOnMap & towns & artInstances;
+		h & heroesOnMap & teleportChannels & towns & artInstances;
 
 		// static members
-		h & CGMonolith::channels;
 		h & CGKeys::playerKeyMap;
 		h & CGMagi::eyelist;
 		h & CGObelisk::obeliskCount & CGObelisk::visited;

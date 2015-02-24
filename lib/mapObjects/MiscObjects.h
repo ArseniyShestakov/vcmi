@@ -247,54 +247,56 @@ public:
 	ui32 defaultResProduction();
 };
 
-class DLL_LINKAGE CGMonolith : public CGObjectInstance
+/**
+ * This struct contain information about teleportation channel
+ */
+struct DLL_LINKAGE TeleportChannel
 {
-public:
-	enum EOType {ENTRANCE, EXIT, BOTH};
-
-	/**
-	 * This struct contain information about teleportation channel
-	 */
-	struct SChannel
+	enum EType
 	{
-		enum ECType
-		{
-			NONE, BIDIRECTIONAL, UNIDIRECTIONAL, MIXED
-		};
-
-		std::vector<ObjectInstanceID> entrances;
-		std::vector<ObjectInstanceID> exits;
-
-		SChannel();
-		std::vector<ObjectInstanceID> instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2);
-		void addObject(ObjectInstanceID id, CGMonolith::EOType type = CGMonolith::EOType::BOTH);
-		ECType getType();
-
-		template <typename Handler> void serialize(Handler &h, const int version)
-		{
-			h & entrances & exits;
-		}
+		DUMMY, BIDIRECTIONAL, UNIDIRECTIONAL, MIXED
 	};
 
-	static std::vector<SChannel> channels;
-	static std::vector<ObjectInstanceID> objs;
-	int cid;
-	EOType type;
+	TeleportChannel();
 
-	bool isEntrance() const;
-	bool isExit() const;
-	bool isChannelEntrance(ObjectInstanceID src) const;
-	bool isChannelExit(ObjectInstanceID dst) const;
-	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = true) const;
-	ObjectInstanceID getRandomExit() const;
-	void onHeroVisit(const CGHeroInstance * h) const override;
-	void monolithDialogAnswered(const CGHeroInstance *hero, ui32 answer) const;
-	void initObj() override;
-	int findMeChannel(std::vector<Obj> IDs, int SubID) const;
+	std::vector<ObjectInstanceID> entrances = {};
+	std::vector<ObjectInstanceID> exits = {};
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & cid & type & static_cast<CGObjectInstance&>(*this);
+		h & entrances & exits;
+	}
+};
+
+class DLL_LINKAGE CGMonolith : public CGObjectInstance
+{
+	std::vector<ObjectInstanceID> instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const;
+
+public:
+	enum EType {ENTRANCE, EXIT, BOTH};
+
+	static std::vector<ObjectInstanceID> objs;
+	EType type;
+	TeleportChannel * channel;
+
+	bool isChannelEntrance(ObjectInstanceID src) const;
+	bool isChannelExit(ObjectInstanceID dst) const;
+	TeleportChannel::EType getChannelType() const;
+	TeleportChannel * findMeChannel(std::vector<Obj> IDs, int SubID) const;
+	void addToChannel();
+
+	bool isEntrance() const;
+	bool isExit() const;
+	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = true) const;
+	ObjectInstanceID getRandomExit() const;
+
+	void onHeroVisit(const CGHeroInstance * h) const override;
+	void monolithDialogAnswered(const CGHeroInstance *hero, ui32 answer) const;
+	void initObj() override;
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & type & channel & static_cast<CGObjectInstance&>(*this);
 	}
 };
 

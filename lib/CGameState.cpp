@@ -3353,7 +3353,7 @@ void CPathfinder::calculatePaths()
 		neighbours.clear();
 
 		auto cObj = dynamic_cast<const CGMonolith *>(ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)));
-		if(cObj && cObj->isEntrance() && cObj->channels[cObj->cid].getType() != CGMonolith::SChannel::NONE)
+		if(cObj && cObj->isEntrance() && cObj->getChannelType() != TeleportChannel::DUMMY)
 		{
 			for(auto objId : cObj->getAllExits())
 				neighbours.push_back(getObj(objId)->visitablePos());
@@ -3425,7 +3425,7 @@ void CPathfinder::calculatePaths()
 
 				if(dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false)
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| (dObj && dObj->isEntrance() && dObj->channels[dObj->cid].getType() != CGMonolith::SChannel::NONE)
+					|| (dObj && dObj->isEntrance() && dObj->getChannelType() != TeleportChannel::DUMMY)
 					|| (cObj && dObj && dObj->isChannelEntrance(cObj->id))
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
