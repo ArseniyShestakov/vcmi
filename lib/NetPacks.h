@@ -1191,7 +1191,7 @@ struct MonolithDialog : public Query//2006
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & hero & teleporters;
+		h & queryID & hero & teleporters;
 	}
 };
 
