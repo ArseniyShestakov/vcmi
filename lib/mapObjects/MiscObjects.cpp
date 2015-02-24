@@ -835,7 +835,7 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	ObjectInstanceID destinationid;
 	if(isEntrance())
 	{
-		if (getChannelType() == TeleportChannel::BIDIRECTIONAL)
+		if (getChannelType() == TeleportChannel::BIDIRECTIONAL && getAllExits().size() > 1)
 		{
 			MonolithDialog md;
 			md.hero = h;
