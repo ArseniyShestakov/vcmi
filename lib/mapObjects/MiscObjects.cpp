@@ -964,13 +964,13 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 			}
 		}
 
-		int channelId = cb->gameState()->map->teleportChannels.size();
-		cb->gameState()->map->teleportChannels.push_back(TeleportChannel());
-		objCurrent->channel = &cb->gameState()->map->teleportChannels[channelId];
+		int channelId = gs->map->teleportChannels.size();
+		gs->map->teleportChannels.push_back(TeleportChannel());
+		objCurrent->channel = &gs->map->teleportChannels[channelId];
 		objCurrent->addToChannel();
 		if(best.first >= 0) //found pair
 		{
-			gatesSplit[1][best.first]->channel = &cb->gameState()->map->teleportChannels[channelId];
+			gatesSplit[1][best.first]->channel = &gs->map->teleportChannels[channelId];
 			gatesSplit[1][best.first]->addToChannel();
 			gatesSplit[1][best.first] = nullptr;
 		}
