@@ -97,6 +97,7 @@ static bool objectBlitOrderSorter(const TerrainTileObject  & a, const TerrainTil
 CPlayerInterface::CPlayerInterface(PlayerColor Player)
 {
 	logGlobal->traceStream() << "\tHuman player interface for player " << Player << " being constructed";
+	nextTeleporter = ObjectInstanceID();
 	observerInDuelMode = false;
 	howManyPeople++;
 	GH.defActionsDef = 0;
@@ -1144,7 +1145,14 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 void CPlayerInterface::showMonolithDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
-	waitWhileDialog();
+	for (auto exit : exits)
+	{
+		if (exit == nextTeleporter)
+		{
+			cb->selectionMade(nextTeleporter.getNum(), askID);
+			return;
+		}
+	}
 
 	cb->selectionMade(exits[0].getNum(), askID);
 }
@@ -2649,6 +2657,15 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
+			if (i-2 >= 0)
+			{
+				auto teleporter = dynamic_cast<CGMonolith *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-2].coord,false)).topVisitableObj());
+				if (teleporter)
+					nextTeleporter = teleporter->id;
+
+				logGlobal->traceStream() << "SXX! TELEPORT ID: " << nextTeleporter;
+			}
+
 			// Get objects on current and next tile as teleporters need special handling.
 			auto priorObject = dynamic_cast<CGMonolith *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
 			auto nextObject = CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos);
