@@ -763,10 +763,10 @@ std::vector<ObjectInstanceID> CGMonolith::instersection(std::vector<ObjectInstan
 
 void CGMonolith::addToChannel()
 {
-	if(type == ENTRANCE || type == BOTH)
+	if(isEntrance())
 		channel->entrances.push_back(id);
 
-	if(type == EXIT || type == BOTH)
+	if(isExit())
 		channel->exits.push_back(id);
 }
 
