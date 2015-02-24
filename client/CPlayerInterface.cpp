@@ -1145,16 +1145,21 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 void CPlayerInterface::showMonolithDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
-	for (auto exit : exits)
+	if (nextTeleporter != ObjectInstanceID())
 	{
-		if (exit == nextTeleporter)
+		for (auto exit : exits)
 		{
-			cb->selectionMade(nextTeleporter.getNum(), askID);
-			return;
+			if (exit == nextTeleporter)
+			{
+				cb->selectionMade(nextTeleporter.getNum(), askID);
+				nextTeleporter = ObjectInstanceID();
+				return;
+			}
 		}
 	}
 
-	cb->selectionMade(exits[0].getNum(), askID);
+	auto obj = dynamic_cast<const CGMonolith *>(cb->getObj(exits[0]));
+	cb->selectionMade(obj->getRandomExit().getNum(), askID);
 }
 
 void CPlayerInterface::tileRevealed(const std::unordered_set<int3, ShashInt3> &pos)
@@ -2662,8 +2667,6 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 				auto teleporter = dynamic_cast<CGMonolith *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-2].coord,false)).topVisitableObj());
 				if (teleporter)
 					nextTeleporter = teleporter->id;
-
-				logGlobal->traceStream() << "SXX! TELEPORT ID: " << nextTeleporter;
 			}
 
 			// Get objects on current and next tile as teleporters need special handling.
