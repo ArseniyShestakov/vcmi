@@ -3353,9 +3353,9 @@ void CPathfinder::calculatePaths()
 		neighbours.clear();
 
 		auto cObj = dynamic_cast<const CGMonolith *>(ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)));
-		if (cObj && cObj->isEntrance() && cObj->channels[cObj->cid].getType() != CGMonolith::SChannel::NONE)
+		if(cObj && cObj->isEntrance() && cObj->channels[cObj->cid].getType() != CGMonolith::SChannel::NONE)
 		{
-			for (auto objId : cObj->getAllExits())
+			for(auto objId : cObj->getAllExits())
 				neighbours.push_back(getObj(objId)->visitablePos());
 		}
 
@@ -3389,7 +3389,7 @@ void CPathfinder::calculatePaths()
 
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
 			auto dObj = dynamic_cast<const CGMonolith*>(dt->topVisitableObj());
-			if (cObj && dObj)
+			if(cObj && dObj)
 				cost = 0;
 
 			int remains = movement - cost;
@@ -3423,7 +3423,7 @@ void CPathfinder::calculatePaths()
 				const bool guardedDst = gs->map->guardingCreaturePositions[dp->coord.x][dp->coord.y][dp->coord.z].valid()
 										&& dp->accessible == CGPathNode::BLOCKVIS;
 
-				if (dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false)
+				if(dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false)
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
 					|| (cObj && dObj)
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.

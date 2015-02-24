@@ -133,7 +133,7 @@ Obj TerrainTile::topVisitableId(bool excludeTop) const
 CGObjectInstance * TerrainTile::topVisitableObj(bool excludeTop) const
 {
 	auto visitableObj = visitableObjects;
-	if (excludeTop && visitableObj.size())
+	if(excludeTop && visitableObj.size())
 		visitableObj.pop_back();
 
 	return visitableObj.size() ? visitableObj.back() : nullptr;
@@ -347,14 +347,14 @@ bool CMap::checkForVisitableDir(const int3 & src, const TerrainTile *pom, const 
 
 		const CGObjectInstance * obj = pom->visitableObjects[b];
 		const TerrainTile * srcpom = &getTile(src);
-		if (srcpom && srcpom->visitableObjects.size())
+		if(srcpom && srcpom->visitableObjects.size())
 		{
 			auto dstObj = dynamic_cast<const CGMonolith *>(obj);
-			if (dstObj && dstObj->isChannelEntrance(srcpom->visitableObjects[0]->id))
+			if(dstObj && dstObj->isChannelEntrance(srcpom->visitableObjects[0]->id))
 				return true;
 		}
 
-		if (!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
+		if(!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
 			return false;
 	}
 	return true;

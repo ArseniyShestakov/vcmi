@@ -802,7 +802,7 @@ bool CGMonolith::isExit() const
 
 bool CGMonolith::isChannelEntrance(ObjectInstanceID src) const
 {
-	if (vstd::contains(channels[cid].entrances, src))
+	if(vstd::contains(channels[cid].entrances, src))
 		return true;
 	else
 		return false;
@@ -810,7 +810,7 @@ bool CGMonolith::isChannelEntrance(ObjectInstanceID src) const
 
 bool CGMonolith::isChannelExit(ObjectInstanceID dst) const
 {
-	if (vstd::contains(channels[cid].exits, dst))
+	if(vstd::contains(channels[cid].exits, dst))
 		return true;
 	else
 		return false;
