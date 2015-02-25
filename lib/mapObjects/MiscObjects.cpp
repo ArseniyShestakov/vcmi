@@ -916,6 +916,14 @@ bool CGMonolith::isConnected(const CGMonolith * src, const CGMonolith * dst)
 		return false;
 }
 
+bool CGMonolith::isPassable(const CGMonolith * obj)
+{
+	if (obj && obj->isEntrance() && obj->getChannelType() != TeleportChannel::DUMMY)
+		return true;
+	else
+		return false;
+}
+
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
 	ObjectInstanceID destinationid = getRandomExit();

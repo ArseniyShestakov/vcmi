@@ -293,6 +293,7 @@ public:
 	void monolithDialogAnswered(const CGHeroInstance *hero, ui32 answer) const;
 	void initObj() override;
 	static bool isConnected(const CGMonolith * src, const CGMonolith * dst);
+	static bool isPassable(const CGMonolith * obj);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
