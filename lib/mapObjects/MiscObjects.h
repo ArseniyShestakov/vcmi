@@ -292,6 +292,7 @@ public:
 	void onHeroVisit(const CGHeroInstance * h) const override;
 	void monolithDialogAnswered(const CGHeroInstance *hero, ui32 answer) const;
 	void initObj() override;
+	static bool isConnected(const CGMonolith * src, const CGMonolith * dst);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{

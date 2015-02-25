@@ -908,6 +908,14 @@ shared_ptr<TeleportChannel> CGMonolith::findMeChannel(std::vector<Obj> IDs, int 
 	return nullptr;
 }
 
+bool CGMonolith::isConnected(const CGMonolith * src, const CGMonolith * dst)
+{
+	if (src && dst && src->isChannelExit(dst->id))
+		return true;
+	else
+		return false;
+}
+
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
 	ObjectInstanceID destinationid = getRandomExit();
