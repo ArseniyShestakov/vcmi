@@ -340,24 +340,19 @@ bool CMap::isWaterTile(const int3 &pos) const
 
 bool CMap::checkForVisitableDir(const int3 & src, const TerrainTile *pom, const int3 & dst ) const
 {
-	const TerrainTile * srcpom = &getTile(src);
 	for(ui32 b=0; b<pom->visitableObjects.size(); ++b) //checking destination tile
 	{
 		if(!vstd::contains(pom->blockingObjects, pom->visitableObjects[b])) //this visitable object is not blocking, ignore
 			continue;
 
 		const CGObjectInstance * obj = pom->visitableObjects[b];
-		if(srcpom && srcpom->visitableObjects.size())
-		{
-			auto dstObj = dynamic_cast<const CGMonolith *>(obj);
-			if(dstObj && dstObj->visitablePos() == dst
-			   && dstObj->isChannelEntrance(srcpom->visitableObjects[0]->id))
-				return true;
-		}
 
 		if(!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
 			return false;
 	}
+
+	// TODO: This hacky code need improvement. It's used to not let hero exit from teleporter to wrong tile. E.g above teleporter.
+	const TerrainTile * srcpom = &getTile(src);
 	if (srcpom->visitableObjects.size() && srcpom->visitableObjects[0] && !srcpom->visitableObjects[0]->appearance.isVisitableFrom(dst.x - src.x, dst.y - src.y))
 		return false;
 

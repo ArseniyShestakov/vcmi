@@ -3353,7 +3353,7 @@ void CPathfinder::calculatePaths()
 		neighbours.clear();
 
 		auto cObj = dynamic_cast<const CGMonolith *>(ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)));
-		if(cObj && cObj->isEntrance() && cObj->getChannelType() != TeleportChannel::DUMMY)
+		if(CGMonolith::isPassable(cObj))
 		{
 			for(auto objId : cObj->getAllExits())
 				neighbours.push_back(getObj(objId)->visitablePos());
@@ -3378,7 +3378,9 @@ void CPathfinder::calculatePaths()
 			if(!goodForLandSeaTransition())
 				continue;
 
-			if(!canMoveBetween(cp->coord, dp->coord) || dp->accessible == CGPathNode::BLOCKED)
+			auto dObj = dynamic_cast<const CGMonolith*>(dt->topVisitableObj());
+			if((!canMoveBetween(cp->coord, dp->coord) && !CGMonolith::isConnected(cObj, dObj))
+			   || dp->accessible == CGPathNode::BLOCKED)
 				continue;
 
 			//special case -> hero embarked a boat standing on a guarded tile -> we must allow to move away from that tile
@@ -3388,8 +3390,7 @@ void CPathfinder::calculatePaths()
 			int cost = gs->getMovementCost(hero, cp->coord, dp->coord, flying, movement);
 
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
-			auto dObj = dynamic_cast<const CGMonolith*>(dt->topVisitableObj());
-			if(cObj && dObj)
+			if(CGMonolith::isConnected(cObj, dObj))
 				cost = 0;
 
 			int remains = movement - cost;
@@ -3425,8 +3426,8 @@ void CPathfinder::calculatePaths()
 
 				if(dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false)
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| (dObj && dObj->isEntrance() && dObj->getChannelType() != TeleportChannel::DUMMY)
-					|| (cObj && dObj && dObj->isChannelEntrance(cObj->id))
+					|| CGMonolith::isPassable(dObj)
+					|| CGMonolith::isConnected(cObj, dObj)
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
 					mq.push_back(dp);
