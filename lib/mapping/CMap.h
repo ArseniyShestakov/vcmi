@@ -32,7 +32,6 @@ class IModableArt;
 class IQuestObject;
 class CInputStream;
 class CMapEditManager;
-struct TeleportChannel;
 
 /// The hero name struct consists of the hero id and the hero name.
 struct DLL_LINKAGE SHeroName

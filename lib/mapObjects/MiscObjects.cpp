@@ -914,7 +914,7 @@ void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 	if(destinationid == ObjectInstanceID()) //no exit
 	{
 		showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
-		logGlobal->warnStream() << "Cannot find exit subterranean gate for "<< id << " (obj at " << pos << ") :(";
+		logGlobal->debugStream() << "Cannot find exit subterranean gate for "<< id << " (obj at " << pos << ") :(";
 		return;
 	}
 
