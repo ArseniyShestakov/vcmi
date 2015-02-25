@@ -580,7 +580,7 @@ void BlockingDialog::applyCl( CClient *cl )
 
 void MonolithDialog::applyCl( CClient *cl )
 {
-	cl->playerint[hero->tempOwner]->showMonolithDialog(teleporters, queryID);
+	CALL_ONLY_THAT_INTERFACE(hero->tempOwner,showMonolithDialog,teleporters,queryID);
 }
 
 void GarrisonDialog::applyCl(CClient *cl)
