@@ -275,13 +275,13 @@ public:
 
 	static std::vector<ObjectInstanceID> objs;
 	EType type;
-	TeleportChannel * channel;
+	shared_ptr<TeleportChannel> channel;
 
 	CGMonolith();
 	bool isChannelEntrance(ObjectInstanceID src) const;
 	bool isChannelExit(ObjectInstanceID dst) const;
 	TeleportChannel::EType getChannelType() const;
-	TeleportChannel * findMeChannel(std::vector<Obj> IDs, int SubID) const;
+	shared_ptr<TeleportChannel> findMeChannel(std::vector<Obj> IDs, int SubID) const;
 	void addToChannel();
 
 	bool isEntrance() const;

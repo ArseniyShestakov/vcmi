@@ -889,14 +889,14 @@ void CGMonolith::initObj()
 	channel = findMeChannel(IDs, subID);
 	if(!channel)
 	{
-		cb->gameState()->map->teleportChannels.push_back(TeleportChannel());
-		channel = &cb->gameState()->map->teleportChannels.back();
+		channel = make_shared<TeleportChannel>();
+		cb->gameState()->map->teleportChannels.push_back(channel);
 	}
 	addToChannel();
 	objs.push_back(id);
 }
 
-TeleportChannel * CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
+shared_ptr<TeleportChannel> CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
 {
 	for(auto objId : objs)
 	{
@@ -962,13 +962,12 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 			}
 		}
 
-		int channelId = gs->map->teleportChannels.size();
-		gs->map->teleportChannels.push_back(TeleportChannel());
-		objCurrent->channel = &gs->map->teleportChannels[channelId];
+		objCurrent->channel = make_shared<TeleportChannel>();
+		gs->map->teleportChannels.push_back(objCurrent->channel);
 		objCurrent->addToChannel();
 		if(best.first >= 0) //found pair
 		{
-			gatesSplit[1][best.first]->channel = &gs->map->teleportChannels[channelId];
+			gatesSplit[1][best.first]->channel = objCurrent->channel;
 			gatesSplit[1][best.first]->addToChannel();
 			gatesSplit[1][best.first] = nullptr;
 		}
