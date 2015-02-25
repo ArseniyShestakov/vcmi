@@ -744,6 +744,11 @@ void CGResource::blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer)
 		cb->startBattleI(hero, this);
 }
 
+CGMonolith::CGMonolith() :
+	type(UNKNOWN), channel(nullptr)
+{
+}
+
 std::vector<ObjectInstanceID> CGMonolith::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const
 {
 	std::vector<ObjectInstanceID> v3;
@@ -830,12 +835,14 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	ObjectInstanceID destinationid;
 	if(isEntrance())
 	{
-		if (getChannelType() == TeleportChannel::BIDIRECTIONAL && getAllExits().size() > 1)
+		if(getChannelType() == TeleportChannel::BIDIRECTIONAL && getAllExits().size() > 1)
 		{
 			MonolithDialog md;
 			md.hero = h;
 			md.teleporters = getAllExits();
 			cb->showMonolithDialog(&md);
+
+			return;
 		}
 		else
 			destinationid = getRandomExit();
@@ -853,14 +860,10 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 void CGMonolith::monolithDialogAnswered(const CGHeroInstance *hero, ui32 answer) const
 {
 	auto obj = cb->getObj(ObjectInstanceID(answer));
-	if (obj)
-	{
+	if(obj)
 		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
-	}
 	else
-	{
 		throw std::runtime_error("Wrong teleporter");
-	}
 }
 
 void CGMonolith::initObj()

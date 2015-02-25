@@ -1145,11 +1145,11 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 void CPlayerInterface::showMonolithDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
-	if (nextTeleporter != ObjectInstanceID())
+	if(nextTeleporter != ObjectInstanceID())
 	{
-		for (auto exit : exits)
+		for(auto exit : exits)
 		{
-			if (exit == nextTeleporter)
+			if(exit == nextTeleporter)
 			{
 				cb->selectionMade(nextTeleporter.getNum(), askID);
 				nextTeleporter = ObjectInstanceID();
@@ -2662,10 +2662,10 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
-			if (i-2 >= 0)
+			if(i-2 >= 0)
 			{
 				auto teleporter = dynamic_cast<CGMonolith *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-2].coord,false)).topVisitableObj());
-				if (teleporter)
+				if(teleporter)
 					nextTeleporter = teleporter->id;
 			}
 
@@ -2694,13 +2694,13 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			// Start a new sound for the hero movement or let the existing one carry on.
 #if 0
 			// TODO
-			if (hero is flying && sh == -1)
+			if(hero is flying && sh == -1)
 				sh = CCS->soundh->playSound(soundBase::horseFlying, -1);
 #endif
 			{
 				newTerrain = cb->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord, false))->terType;
 
-				if (newTerrain != currentTerrain)
+				if(newTerrain != currentTerrain)
 				{
 					CCS->soundh->stopSound(sh);
 					sh = CCS->soundh->playSound(CCS->soundh->horseSounds[newTerrain], -1);
@@ -2720,7 +2720,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 				stillMoveHero.cond.wait(un);
 
 			logGlobal->traceStream() << "Resuming " << __FUNCTION__;
-			if (guarded || showingDialog->get() == true) // Abort movement if a guard was fought or there is a dialog to display (Mantis #1136)
+			if(guarded || showingDialog->get() == true) // Abort movement if a guard was fought or there is a dialog to display (Mantis #1136)
 				break;
 		}
 
@@ -2733,7 +2733,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 
 	//todo: this should be in main thread
-	if (adventureInt)
+	if(adventureInt)
 	{
 		// (i == 0) means hero went through all the path
 		adventureInt->updateMoveHero(h, (i != 0));

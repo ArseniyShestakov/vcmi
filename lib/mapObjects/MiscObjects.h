@@ -271,12 +271,13 @@ class DLL_LINKAGE CGMonolith : public CGObjectInstance
 	std::vector<ObjectInstanceID> instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const;
 
 public:
-	enum EType {ENTRANCE, EXIT, BOTH};
+	enum EType {UNKNOWN, ENTRANCE, EXIT, BOTH};
 
 	static std::vector<ObjectInstanceID> objs;
 	EType type;
 	TeleportChannel * channel;
 
+	CGMonolith();
 	bool isChannelEntrance(ObjectInstanceID src) const;
 	bool isChannelExit(ObjectInstanceID dst) const;
 	TeleportChannel::EType getChannelType() const;
