@@ -744,11 +744,6 @@ void CGResource::blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer)
 		cb->startBattleI(hero, this);
 }
 
-TeleportChannel::TeleportChannel() :
-	entrances{}, exits{}
-{
-}
-
 std::vector<ObjectInstanceID> CGMonolith::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const
 {
 	std::vector<ObjectInstanceID> v3;

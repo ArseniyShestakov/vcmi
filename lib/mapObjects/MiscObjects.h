@@ -257,10 +257,8 @@ struct DLL_LINKAGE TeleportChannel
 		DUMMY, BIDIRECTIONAL, UNIDIRECTIONAL, MIXED
 	};
 
-	TeleportChannel();
-
-	std::vector<ObjectInstanceID> entrances = {};
-	std::vector<ObjectInstanceID> exits = {};
+	std::vector<ObjectInstanceID> entrances;
+	std::vector<ObjectInstanceID> exits;
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
