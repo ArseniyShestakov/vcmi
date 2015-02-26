@@ -3424,10 +3424,11 @@ void CPathfinder::calculatePaths()
 				const bool guardedDst = gs->map->guardingCreaturePositions[dp->coord.x][dp->coord.y][dp->coord.z].valid()
 										&& dp->accessible == CGPathNode::BLOCKVIS;
 
-				if(dp->accessible == CGPathNode::ACCESSIBLE || dp->coord == CGHeroInstance::convertPosition(hero->pos, false)
+				if(dp->accessible == CGPathNode::ACCESSIBLE
+					|| dp->coord == CGHeroInstance::convertPosition(hero->pos, false) // This one is tricky, we can ignore fact that tile is not ACCESSIBLE in case if it's our hero block it. Though this need investigation.
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| CGTeleport::isPassable(dObj)
-					|| CGTeleport::isConnected(cObj, dObj)
+					|| CGTeleport::isPassable(dObj) // Always add entry teleport with non-dummy channel
+					|| CGTeleport::isConnected(cObj, dObj) // Always add exit points of teleport
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
 					mq.push_back(dp);
