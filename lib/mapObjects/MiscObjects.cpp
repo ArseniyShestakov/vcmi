@@ -871,10 +871,10 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	{
 		if(getChannelType() == TeleportChannel::BIDIRECTIONAL && getAllExits().size() > 1)
 		{
-			TeleportDialog md;
-			md.hero = h;
-			md.teleporters = getAllExits();
-			cb->showTeleportDialog(&md);
+			TeleportDialog td;
+			td.hero = h;
+			td.teleporters = getAllExits();
+			cb->showTeleportDialog(&td);
 
 			return;
 		}

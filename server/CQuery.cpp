@@ -320,7 +320,7 @@ void CTeleportDialogQuery::notifyObjectAboutRemoval(const CObjectVisitQuery &obj
 	obj->teleportDialogAnswered(objectVisit.visitingHero, *answer);
 }
 
-CTeleportDialogQuery::CTeleportDialogQuery(const TeleportDialog &md)
+CTeleportDialogQuery::CTeleportDialogQuery(const TeleportDialog &td)
 {
 	this->td = td;
 	addPlayer(td.hero->tempOwner);
