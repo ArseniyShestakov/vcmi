@@ -3353,7 +3353,9 @@ void CPathfinder::calculatePaths()
 		neighbours.clear();
 
 		auto cObj = dynamic_cast<const CGTeleport *>(ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)));
-		if(CGTeleport::isPassable(cObj))
+		if(CGTeleport::isPassable(cObj)
+			&& ((allowTeleportTwoWay && cObj->getChannelType() == TeleportChannel::BIDIRECTIONAL)
+				|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL)))
 		{
 			for(auto objId : cObj->getAllExits())
 				neighbours.push_back(getObj(objId)->visitablePos());
@@ -3524,10 +3526,9 @@ bool CPathfinder::goodForLandSeaTransition()
 
 CPathfinder::CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance *_hero) : CGameInfoCallback(_gs, boost::optional<PlayerColor>()), out(_out), hero(_hero), FoW(getPlayerTeam(hero->tempOwner)->fogOfWarMap)
 {
-	useSubterraneanGates = true;
 	allowEmbarkAndDisembark = true;
-	useMonolithTwoWay = true;
-	useMonolithOneWay = true;
+	allowTeleportTwoWay = true;
+	allowTeleportOneWay = true;
 }
 
 CRandomGenerator & CGameState::getRandomGenerator()
