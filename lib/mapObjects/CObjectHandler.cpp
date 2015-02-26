@@ -304,6 +304,11 @@ bool CGObjectInstance::isVisitable() const
 	return appearance.isVisitable();
 }
 
+bool CGObjectInstance::isAllowTransit() const
+{
+	return true;//!appearance.denyTransit;
+}
+
 bool CGObjectInstance::passableFor(PlayerColor color) const
 {
 	return false;

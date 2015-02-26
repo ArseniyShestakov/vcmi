@@ -2673,12 +2673,13 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 			// Get objects on current and next tile as teleporters need special handling.
 			auto priorObject = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
-			auto nextObject = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos));
-			if(priorObject && nextObject && priorObject->isChannelExit(nextObject->id))
+			auto nextObject = CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos);
+			auto nextObjectTeleport = dynamic_cast<CGTeleport *>(nextObject);
+			if(priorObject && nextObjectTeleport && priorObject->isChannelExit(nextObjectTeleport->id))
 			{
 				if(i == path.nodes.size()-1) // if firstturn == true then hero start movement while standing on monolith/gates
 				{
-					nextTeleporter = nextObject->id;
+					nextTeleporter = nextObjectTeleport->id;
 					stillMoveHero.data = WAITING_MOVE;
 					cb->moveHero(h,h->pos);
 					while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
@@ -2717,7 +2718,9 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			bool guarded = CGI->mh->map->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
 
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
-			if (tileAfterThis && nextObject && !CGTeleport::isConnected(nextObject, outTeleportObj))
+			// Hero should be able to go through object if it's allow transit
+			if (tileAfterThis && nextObject && nextObject->isAllowTransit()
+				&& !CGTeleport::isConnected(nextObjectTeleport, outTeleportObj))
 				cb->moveHero(h,endpos, true);
 			else
 				cb->moveHero(h,endpos);

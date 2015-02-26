@@ -133,6 +133,7 @@ public:
 	std::set<int3> getBlockedPos() const; //returns set of positions blocked by this object
 	std::set<int3> getBlockedOffsets() const; //returns set of relative positions blocked by this object
 	bool isVisitable() const; //returns true if object is visitable
+	bool isAllowTransit() const; // returns true if hero able to go through object without visiting it
 
 	/** VIRTUAL METHODS **/
 
