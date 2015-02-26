@@ -1213,11 +1213,11 @@ struct TeleportDialog : public Query//2006
 	void applyCl(CClient *cl);
 
 	const CGHeroInstance *hero;
-	std::vector<ObjectInstanceID> teleporters;
+	std::vector<ObjectInstanceID> exits;
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & queryID & hero & teleporters;
+		h & queryID & hero & exits;
 	}
 };
 

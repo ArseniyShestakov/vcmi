@@ -288,7 +288,7 @@ public:
 	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = true) const;
 	ObjectInstanceID getRandomExit() const;
 
-	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer) const;
+	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
 	static bool isPassable(const CGTeleport * obj);
 

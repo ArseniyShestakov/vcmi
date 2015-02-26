@@ -827,9 +827,13 @@ ObjectInstanceID CGTeleport::getRandomExit() const
 	return destinationid;
 }
 
-void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer) const
+void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
 {
-	auto obj = cb->getObj(ObjectInstanceID(answer));
+	ObjectInstanceID objId = ObjectInstanceID(answer);
+	if (objId == ObjectInstanceID())
+		objId = *RandomGeneratorUtil::nextItem(exits, cb->gameState()->getRandomGenerator());
+
+	auto obj = cb->getObj(objId);
 	if(obj)
 		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
 	else
@@ -873,7 +877,7 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 		{
 			TeleportDialog td;
 			td.hero = h;
-			td.teleporters = getAllExits();
+			td.exits = getAllExits();
 			cb->showTeleportDialog(&td);
 
 			return;

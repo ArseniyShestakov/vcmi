@@ -1158,8 +1158,7 @@ void CPlayerInterface::showTeleportDialog( const std::vector<ObjectInstanceID> e
 		}
 	}
 
-	auto obj = dynamic_cast<const CGTeleport *>(cb->getObj(exits[0]));
-	cb->selectionMade(obj->getRandomExit().getNum(), askID);
+	cb->selectionMade(ObjectInstanceID().getNum(), askID);
 }
 
 void CPlayerInterface::tileRevealed(const std::unordered_set<int3, ShashInt3> &pos)
