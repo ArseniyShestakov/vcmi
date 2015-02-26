@@ -266,18 +266,17 @@ struct DLL_LINKAGE TeleportChannel
 	}
 };
 
-class DLL_LINKAGE CGMonolith : public CGObjectInstance
+class DLL_LINKAGE CGTeleport : public CGObjectInstance
 {
 	std::vector<ObjectInstanceID> instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const;
 
 public:
 	enum EType {UNKNOWN, ENTRANCE, EXIT, BOTH};
 
-	static std::vector<ObjectInstanceID> objs;
 	EType type;
 	shared_ptr<TeleportChannel> channel;
 
-	CGMonolith();
+	CGTeleport();
 	bool isChannelEntrance(ObjectInstanceID src) const;
 	bool isChannelExit(ObjectInstanceID dst) const;
 	TeleportChannel::EType getChannelType() const;
@@ -290,10 +289,10 @@ public:
 	ObjectInstanceID getRandomExit() const;
 
 	void onHeroVisit(const CGHeroInstance * h) const override;
-	void monolithDialogAnswered(const CGHeroInstance *hero, ui32 answer) const;
+	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer) const;
 	void initObj() override;
-	static bool isConnected(const CGMonolith * src, const CGMonolith * dst);
-	static bool isPassable(const CGMonolith * obj);
+	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
+	static bool isPassable(const CGTeleport * obj);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -301,7 +300,21 @@ public:
 	}
 };
 
-class DLL_LINKAGE CGSubterraneanGate : public CGMonolith
+class DLL_LINKAGE CGMonolith : public CGTeleport
+{
+public:
+	static std::vector<ObjectInstanceID> objs;
+
+	void onHeroVisit(const CGHeroInstance * h) const override;
+	void initObj() override;
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & static_cast<CGTeleport&>(*this);
+	}
+};
+
+class DLL_LINKAGE CGSubterraneanGate : public CGTeleport
 {
 public:
 	static std::vector<ObjectInstanceID> objs;
@@ -311,7 +324,7 @@ public:
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & static_cast<CGMonolith&>(*this);
+		h & static_cast<CGTeleport&>(*this);
 	}
 };
 

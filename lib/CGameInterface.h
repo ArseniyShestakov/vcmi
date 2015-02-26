@@ -89,7 +89,7 @@ public:
 	// if cancel he is allowed to not choose. After making choice, CCallback::selectionMade should be called
 	// with number of selected component (1 - n) or 0 for cancel (if allowed) and askID.
 	virtual void showBlockingDialog(const std::string &text, const std::vector<Component> &components, QueryID askID, const int soundID, bool selection, bool cancel) = 0;
-	virtual void showMonolithDialog(const std::vector<ObjectInstanceID> exits, QueryID askID) = 0;
+	virtual void showTeleportDialog(const std::vector<ObjectInstanceID> exits, QueryID askID) = 0;
 
 	// all stacks operations between these objects become allowed, interface has to call onEnd when done
 	virtual void showGarrisonDialog(const CArmedInstance *up, const CGHeroInstance *down, bool removableUnits, QueryID queryID) = 0;

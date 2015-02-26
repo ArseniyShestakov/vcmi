@@ -30,7 +30,7 @@ void CEmptyAI::showBlockingDialog(const std::string &text, const std::vector<Com
 	cb->selectionMade(0, askID);
 }
 
-void CEmptyAI::showMonolithDialog(const std::vector<ObjectInstanceID> exits, QueryID askID)
+void CEmptyAI::showTeleportDialog(const std::vector<ObjectInstanceID> exits, QueryID askID)
 {
 	cb->selectionMade(0, askID);
 }

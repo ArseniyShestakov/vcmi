@@ -35,9 +35,10 @@ void registerTypesMapObjects1(Serializer &s)
 	s.template registerType<IObjectInterface, CGObjectInstance>();
 
 	// Non-armed objects
-	s.template registerType<CGObjectInstance, CGMonolith>();
-		s.template registerType<CGMonolith, CGSubterraneanGate>();
-		s.template registerType<CGMonolith, CGWhirlpool>();
+	s.template registerType<CGObjectInstance, CGTeleport>();
+		s.template registerType<CGTeleport, CGSubterraneanGate>();
+		s.template registerType<CGTeleport, CGMonolith>();
+			s.template registerType<CGMonolith, CGWhirlpool>();
 	s.template registerType<CGObjectInstance, CGSignBottle>();
 	s.template registerType<CGObjectInstance, CGScholar>();
 	s.template registerType<CGObjectInstance, CGMagicWell>();
@@ -283,7 +284,7 @@ void registerTypesClientPacks2(Serializer &s)
 	s.template registerType<Query, HeroLevelUp>();
 	s.template registerType<Query, CommanderLevelUp>();
 	s.template registerType<Query, BlockingDialog>();
-	s.template registerType<Query, MonolithDialog>();
+	s.template registerType<Query, TeleportDialog>();
 	s.template registerType<Query, GarrisonDialog>();
 	s.template registerType<Query, ExchangeDialog>();
 

@@ -1142,7 +1142,7 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 
 }
 
-void CPlayerInterface::showMonolithDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
+void CPlayerInterface::showTeleportDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
 	if(nextTeleporter != ObjectInstanceID())
@@ -1158,7 +1158,7 @@ void CPlayerInterface::showMonolithDialog( const std::vector<ObjectInstanceID> e
 		}
 	}
 
-	auto obj = dynamic_cast<const CGMonolith *>(cb->getObj(exits[0]));
+	auto obj = dynamic_cast<const CGTeleport *>(cb->getObj(exits[0]));
 	cb->selectionMade(obj->getRandomExit().getNum(), askID);
 }
 
@@ -2664,13 +2664,13 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 		{
 			if(i-2 >= 0)
 			{
-				auto teleporter = dynamic_cast<CGMonolith *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-2].coord,false)).topVisitableObj());
+				auto teleporter = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-2].coord,false)).topVisitableObj());
 				if(teleporter)
 					nextTeleporter = teleporter->id;
 			}
 
 			// Get objects on current and next tile as teleporters need special handling.
-			auto priorObject = dynamic_cast<CGMonolith *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
+			auto priorObject = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
 			auto nextObject = CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos);
 			if(priorObject && nextObject && priorObject->isChannelExit(nextObject->id))
 			{

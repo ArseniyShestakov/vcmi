@@ -1206,9 +1206,9 @@ struct ExchangeDialog : public Query//2005
 	}
 };
 
-struct MonolithDialog : public Query//2006
+struct TeleportDialog : public Query//2006
 {
-	MonolithDialog(){type = 2006;};
+	TeleportDialog(){type = 2006;};
 
 	void applyCl(CClient *cl);
 

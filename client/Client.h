@@ -178,7 +178,7 @@ public:
 	void changeSecSkill(const CGHeroInstance * hero, SecondarySkill which, int val, bool abs=false) override {}; 
 
 	void showBlockingDialog(BlockingDialog *iw) override {}; 
-	void showMonolithDialog(MonolithDialog *iw) override {};
+	void showTeleportDialog(TeleportDialog *iw) override {};
 	void showGarrisonDialog(ObjectInstanceID upobj, ObjectInstanceID hid, bool removableUnits) override {};
 	void showThievesGuildWindow(PlayerColor player, ObjectInstanceID requestingObjId) override {};
 	void giveResource(PlayerColor player, Res::ERes which, int val) override {};

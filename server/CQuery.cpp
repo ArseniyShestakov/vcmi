@@ -313,17 +313,17 @@ CBlockingDialogQuery::CBlockingDialogQuery(const BlockingDialog &bd)
 	addPlayer(bd.player);
 }
 
-void CMonolithDialogQuery::notifyObjectAboutRemoval(const CObjectVisitQuery &objectVisit) const
+void CTeleportDialogQuery::notifyObjectAboutRemoval(const CObjectVisitQuery &objectVisit) const
 {
 	assert(answer);
-	auto obj = dynamic_cast<const CGMonolith *>(objectVisit.visitedObject);
-	obj->monolithDialogAnswered(objectVisit.visitingHero, *answer);
+	auto obj = dynamic_cast<const CGTeleport *>(objectVisit.visitedObject);
+	obj->teleportDialogAnswered(objectVisit.visitingHero, *answer);
 }
 
-CMonolithDialogQuery::CMonolithDialogQuery(const MonolithDialog &md)
+CTeleportDialogQuery::CTeleportDialogQuery(const TeleportDialog &md)
 {
-	this->md = md;
-	addPlayer(md.hero->tempOwner);
+	this->td = td;
+	addPlayer(td.hero->tempOwner);
 }
 
 CHeroLevelUpDialogQuery::CHeroLevelUpDialogQuery(const HeroLevelUp &Hlu)

@@ -1897,9 +1897,9 @@ void CGameHandler::showBlockingDialog( BlockingDialog *iw )
 	sendToAllClients(iw);
 }
 
-void CGameHandler::showMonolithDialog( MonolithDialog *iw )
+void CGameHandler::showTeleportDialog( TeleportDialog *iw )
 {
-	auto dialogQuery = make_shared<CMonolithDialogQuery>(*iw);
+	auto dialogQuery = make_shared<CTeleportDialogQuery>(*iw);
 	queries.addQuery(dialogQuery);
 	iw->queryID = dialogQuery->queryID;
 	sendToAllClients(iw);

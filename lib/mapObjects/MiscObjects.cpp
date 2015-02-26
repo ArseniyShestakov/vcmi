@@ -744,12 +744,12 @@ void CGResource::blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer)
 		cb->startBattleI(hero, this);
 }
 
-CGMonolith::CGMonolith() :
+CGTeleport::CGTeleport() :
 	type(UNKNOWN), channel(nullptr)
 {
 }
 
-std::vector<ObjectInstanceID> CGMonolith::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const
+std::vector<ObjectInstanceID> CGTeleport::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const
 {
 	std::vector<ObjectInstanceID> v3;
 
@@ -761,7 +761,7 @@ std::vector<ObjectInstanceID> CGMonolith::instersection(std::vector<ObjectInstan
 	return v3;
 }
 
-void CGMonolith::addToChannel()
+void CGTeleport::addToChannel()
 {
 	if(isEntrance())
 		channel->entrances.push_back(id);
@@ -770,7 +770,7 @@ void CGMonolith::addToChannel()
 		channel->exits.push_back(id);
 }
 
-TeleportChannel::EType CGMonolith::getChannelType() const
+TeleportChannel::EType CGTeleport::getChannelType() const
 {
 	if((!channel->entrances.size() || !channel->exits.size())
 		|| (channel->entrances.size() == 1 && channel->entrances == channel->exits))
@@ -785,17 +785,17 @@ TeleportChannel::EType CGMonolith::getChannelType() const
 		return TeleportChannel::MIXED;
 }
 
-bool CGMonolith::isEntrance() const
+bool CGTeleport::isEntrance() const
 {
 	return type == BOTH || type == ENTRANCE;
 }
 
-bool CGMonolith::isExit() const
+bool CGTeleport::isExit() const
 {
 	return type == BOTH || type == EXIT;
 }
 
-bool CGMonolith::isChannelEntrance(ObjectInstanceID src) const
+bool CGTeleport::isChannelEntrance(ObjectInstanceID src) const
 {
 	if(vstd::contains(channel->entrances, src))
 		return true;
@@ -803,7 +803,7 @@ bool CGMonolith::isChannelEntrance(ObjectInstanceID src) const
 		return false;
 }
 
-bool CGMonolith::isChannelExit(ObjectInstanceID dst) const
+bool CGTeleport::isChannelExit(ObjectInstanceID dst) const
 {
 	if(vstd::contains(channel->exits, dst))
 		return true;
@@ -811,7 +811,7 @@ bool CGMonolith::isChannelExit(ObjectInstanceID dst) const
 		return false;
 }
 
-std::vector<ObjectInstanceID> CGMonolith::getAllExits(bool excludeCurrent) const
+std::vector<ObjectInstanceID> CGTeleport::getAllExits(bool excludeCurrent) const
 {
 	std::vector<ObjectInstanceID> ret = channel->exits;
 	if(excludeCurrent)
@@ -820,7 +820,7 @@ std::vector<ObjectInstanceID> CGMonolith::getAllExits(bool excludeCurrent) const
 	return ret;
 }
 
-ObjectInstanceID CGMonolith::getRandomExit() const
+ObjectInstanceID CGTeleport::getRandomExit() const
 {
 	ObjectInstanceID destinationid;
 	auto exits = getAllExits();
@@ -830,6 +830,43 @@ ObjectInstanceID CGMonolith::getRandomExit() const
 	return destinationid;
 }
 
+void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer) const
+{
+	auto obj = cb->getObj(ObjectInstanceID(answer));
+	if(obj)
+		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
+	else
+		throw std::runtime_error("Wrong teleporter");
+}
+
+shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) const
+{
+	for(auto objId : objs)
+	{
+		auto obj = dynamic_cast<const CGTeleport*>(cb->getObj(objId));
+		if(obj && vstd::contains(IDs, obj->ID) && obj->subID == SubID)
+			return obj->channel;
+	}
+
+	return nullptr;
+}
+
+bool CGTeleport::isConnected(const CGTeleport * src, const CGTeleport * dst)
+{
+	if (src && dst && src->isChannelExit(dst->id))
+		return true;
+	else
+		return false;
+}
+
+bool CGTeleport::isPassable(const CGTeleport * obj)
+{
+	if (obj && obj->isEntrance() && obj->getChannelType() != TeleportChannel::DUMMY)
+		return true;
+	else
+		return false;
+}
+
 void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 {
 	ObjectInstanceID destinationid;
@@ -837,10 +874,10 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	{
 		if(getChannelType() == TeleportChannel::BIDIRECTIONAL && getAllExits().size() > 1)
 		{
-			MonolithDialog md;
+			TeleportDialog md;
 			md.hero = h;
 			md.teleporters = getAllExits();
-			cb->showMonolithDialog(&md);
+			cb->showTeleportDialog(&md);
 
 			return;
 		}
@@ -855,15 +892,6 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	}
 
 	cb->moveHero(h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
-}
-
-void CGMonolith::monolithDialogAnswered(const CGHeroInstance *hero, ui32 answer) const
-{
-	auto obj = cb->getObj(ObjectInstanceID(answer));
-	if(obj)
-		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
-	else
-		throw std::runtime_error("Wrong teleporter");
 }
 
 void CGMonolith::initObj()
@@ -896,34 +924,6 @@ void CGMonolith::initObj()
 	objs.push_back(id);
 }
 
-shared_ptr<TeleportChannel> CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
-{
-	for(auto objId : objs)
-	{
-		auto obj = dynamic_cast<const CGMonolith*>(cb->getObj(objId));
-		if(obj && vstd::contains(IDs, obj->ID) && obj->subID == SubID)
-			return obj->channel;
-	}
-
-	return nullptr;
-}
-
-bool CGMonolith::isConnected(const CGMonolith * src, const CGMonolith * dst)
-{
-	if (src && dst && src->isChannelExit(dst->id))
-		return true;
-	else
-		return false;
-}
-
-bool CGMonolith::isPassable(const CGMonolith * obj)
-{
-	if (obj && obj->isEntrance() && obj->getChannelType() != TeleportChannel::DUMMY)
-		return true;
-	else
-		return false;
-}
-
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
 	ObjectInstanceID destinationid = getRandomExit();
@@ -946,28 +946,28 @@ void CGSubterraneanGate::initObj()
 void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gates into pairs
 {
 	//split on underground and surface gates
-	std::vector<CGMonolith *> gatesSplit[2]; //surface and underground gates
+	std::vector<CGTeleport *> gatesSplit[2]; //surface and underground gates
 	for(auto & elem : objs)
 	{
-		auto hlp = dynamic_cast<CGMonolith *>(gs->getObjInstance(elem));
+		auto hlp = dynamic_cast<CGTeleport *>(gs->getObjInstance(elem));
 		gatesSplit[hlp->pos.z].push_back(hlp);
 	}
 
 	//sort by position
-	std::sort(gatesSplit[0].begin(), gatesSplit[0].end(), [](CGMonolith * a, CGMonolith * b)
+	std::sort(gatesSplit[0].begin(), gatesSplit[0].end(), [](CGTeleport * a, CGTeleport * b)
 	{
 		return a->pos < b->pos;
 	});
 
 	for(size_t i = 0; i < gatesSplit[0].size(); i++)
 	{
-		CGMonolith * objCurrent = gatesSplit[0][i];
+		CGTeleport * objCurrent = gatesSplit[0][i];
 
 		//find nearest underground exit
 		std::pair<int, si32> best(-1, std::numeric_limits<si32>::max()); //pair<pos_in_vector, distance^2>
 		for(int j = 0; j < gatesSplit[1].size(); j++)
 		{
-			CGMonolith *checked = gatesSplit[1][j];
+			CGTeleport *checked = gatesSplit[1][j];
 			if(!checked)
 				continue;
 			si32 hlp = checked->pos.dist2dSQ(objCurrent->pos);

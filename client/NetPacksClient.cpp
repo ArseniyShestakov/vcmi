@@ -578,9 +578,9 @@ void BlockingDialog::applyCl( CClient *cl )
         logNetwork->warnStream() << "We received YesNoDialog for not our player...";
 }
 
-void MonolithDialog::applyCl( CClient *cl )
+void TeleportDialog::applyCl( CClient *cl )
 {
-	CALL_ONLY_THAT_INTERFACE(hero->tempOwner,showMonolithDialog,teleporters,queryID);
+	CALL_ONLY_THAT_INTERFACE(hero->tempOwner,showTeleportDialog,teleporters,queryID);
 }
 
 void GarrisonDialog::applyCl(CClient *cl)
