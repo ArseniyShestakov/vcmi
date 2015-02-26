@@ -303,8 +303,6 @@ public:
 class DLL_LINKAGE CGMonolith : public CGTeleport
 {
 public:
-	static std::vector<ObjectInstanceID> objs;
-
 	void onHeroVisit(const CGHeroInstance * h) const override;
 	void initObj() override;
 
@@ -317,7 +315,6 @@ public:
 class DLL_LINKAGE CGSubterraneanGate : public CGTeleport
 {
 public:
-	static std::vector<ObjectInstanceID> objs;
 	void onHeroVisit(const CGHeroInstance * h) const override;
 	void initObj() override;
 	static void postInit(CGameState * gs);
@@ -331,7 +328,6 @@ public:
 class DLL_LINKAGE CGWhirlpool : public CGMonolith
 {
 public:
-	static std::vector<ObjectInstanceID> objs;
 	void onHeroVisit(const CGHeroInstance * h) const override;
 
 	template <typename Handler> void serialize(Handler &h, const int version)

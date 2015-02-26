@@ -21,9 +21,6 @@
 #include "../IGameCallback.h"
 #include "../CGameState.h"
 
-std::vector<ObjectInstanceID> CGMonolith::objs;
-std::vector<ObjectInstanceID> CGSubterraneanGate::objs;
-std::vector<ObjectInstanceID> CGWhirlpool::objs;
 std::map <si32, std::vector<ObjectInstanceID> > CGMagi::eyelist;
 ui8 CGObelisk::obeliskCount; //how many obelisks are on map
 std::map<TeamID, ui8> CGObelisk::visited; //map: team_id => how many obelisks has been visited
@@ -841,11 +838,11 @@ void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer)
 
 shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) const
 {
-	for(auto objId : objs)
+	for(auto obj : cb->gameState()->map->objects)
 	{
-		auto obj = dynamic_cast<const CGTeleport*>(cb->getObj(objId));
-		if(obj && vstd::contains(IDs, obj->ID) && obj->subID == SubID)
-			return obj->channel;
+		auto teleportObj = dynamic_cast<const CGTeleport *>(cb->getObj(obj->id));
+		if(teleportObj && vstd::contains(IDs, teleportObj->ID) && teleportObj->subID == SubID)
+			return teleportObj->channel;
 	}
 
 	return nullptr;
@@ -921,7 +918,6 @@ void CGMonolith::initObj()
 		cb->gameState()->map->teleportChannels.push_back(channel);
 	}
 	addToChannel();
-	objs.push_back(id);
 }
 
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
@@ -939,7 +935,6 @@ void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 
 void CGSubterraneanGate::initObj()
 {
-	objs.push_back(id);
 	type = BOTH;
 }
 
@@ -947,9 +942,9 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 {
 	//split on underground and surface gates
 	std::vector<CGTeleport *> gatesSplit[2]; //surface and underground gates
-	for(auto & elem : objs)
+	for(auto & obj : cb->gameState()->map->objects)
 	{
-		auto hlp = dynamic_cast<CGTeleport *>(gs->getObjInstance(elem));
+		auto hlp = dynamic_cast<CGSubterraneanGate *>(gs->getObjInstance(obj->id));
 		gatesSplit[hlp->pos.z].push_back(hlp);
 	}
 
@@ -988,7 +983,6 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 			gatesSplit[1][best.first] = nullptr;
 		}
 	}
-	objs.clear();
 }
 
 void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
