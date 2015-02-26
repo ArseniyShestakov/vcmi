@@ -2675,6 +2675,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			{
 				if(i == path.nodes.size()-1) // if firstturn == true then hero start movement while standing on monolith/gates
 				{
+					nextTeleporter = nextObject->id;
 					stillMoveHero.data = WAITING_MOVE;
 					cb->moveHero(h,h->pos);
 					while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
