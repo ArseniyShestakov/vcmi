@@ -941,28 +941,29 @@ void CGSubterraneanGate::initObj()
 void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gates into pairs
 {
 	//split on underground and surface gates
-	std::vector<CGTeleport *> gatesSplit[2]; //surface and underground gates
+	std::vector<CGSubterraneanGate *> gatesSplit[2]; //surface and underground gates
 	for(auto & obj : cb->gameState()->map->objects)
 	{
 		auto hlp = dynamic_cast<CGSubterraneanGate *>(gs->getObjInstance(obj->id));
-		gatesSplit[hlp->pos.z].push_back(hlp);
+		if (hlp)
+			gatesSplit[hlp->pos.z].push_back(hlp);
 	}
 
 	//sort by position
-	std::sort(gatesSplit[0].begin(), gatesSplit[0].end(), [](CGTeleport * a, CGTeleport * b)
+	std::sort(gatesSplit[0].begin(), gatesSplit[0].end(), [](CGSubterraneanGate * a, CGSubterraneanGate * b)
 	{
 		return a->pos < b->pos;
 	});
 
 	for(size_t i = 0; i < gatesSplit[0].size(); i++)
 	{
-		CGTeleport * objCurrent = gatesSplit[0][i];
+		CGSubterraneanGate * objCurrent = gatesSplit[0][i];
 
 		//find nearest underground exit
 		std::pair<int, si32> best(-1, std::numeric_limits<si32>::max()); //pair<pos_in_vector, distance^2>
 		for(int j = 0; j < gatesSplit[1].size(); j++)
 		{
-			CGTeleport *checked = gatesSplit[1][j];
+			CGSubterraneanGate *checked = gatesSplit[1][j];
 			if(!checked)
 				continue;
 			si32 hlp = checked->pos.dist2dSQ(objCurrent->pos);
