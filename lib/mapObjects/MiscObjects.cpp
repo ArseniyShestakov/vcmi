@@ -830,14 +830,17 @@ ObjectInstanceID CGTeleport::getRandomExit() const
 void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
 {
 	ObjectInstanceID objId = ObjectInstanceID(answer);
-	if (objId == ObjectInstanceID())
-		objId = *RandomGeneratorUtil::nextItem(exits, cb->gameState()->getRandomGenerator());
+	auto realExits = getAllExits();
+	if(!exits.size() && !realExits.size())
+		return;
+	else if(objId == ObjectInstanceID())
+		objId = getRandomExit();
+	else
+		assert(vstd::contains(exits, objId)); // Likely cheating attempt: not random teleporter choosen, but it's not from provided list
 
 	auto obj = cb->getObj(objId);
-	if(obj)
-		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
-	else
-		throw std::runtime_error("Wrong teleporter");
+	assert(obj); // Teleporter doesn't exist. Likely a bug
+	cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
 }
 
 shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) const
@@ -854,7 +857,7 @@ shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int 
 
 bool CGTeleport::isConnected(const CGTeleport * src, const CGTeleport * dst)
 {
-	if (src && dst && src->isChannelExit(dst->id))
+	if(src && dst && src->isChannelExit(dst->id))
 		return true;
 	else
 		return false;
@@ -862,7 +865,7 @@ bool CGTeleport::isConnected(const CGTeleport * src, const CGTeleport * dst)
 
 bool CGTeleport::isPassable(const CGTeleport * obj)
 {
-	if (obj && obj->isEntrance() && obj->getChannelType() != TeleportChannel::DUMMY)
+	if(obj && obj->isEntrance() && obj->getChannelType() != TeleportChannel::DUMMY)
 		return true;
 	else
 		return false;
@@ -870,29 +873,22 @@ bool CGTeleport::isPassable(const CGTeleport * obj)
 
 void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 {
-	ObjectInstanceID destinationid;
+	std::vector<ObjectInstanceID> destinationids;
 	if(isEntrance())
 	{
 		if(getChannelType() == TeleportChannel::BIDIRECTIONAL && getAllExits().size() > 1)
-		{
-			TeleportDialog td;
-			td.hero = h;
-			td.exits = getAllExits();
-			cb->showTeleportDialog(&td);
-
-			return;
-		}
+			destinationids = getAllExits();
 		else
-			destinationid = getRandomExit();
+			destinationids.push_back(getRandomExit());
 	}
 
-	if(destinationid == ObjectInstanceID())
-	{
+	if(!destinationids.size())
 		logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
-		return;
-	}
 
-	cb->moveHero(h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
+	TeleportDialog td;
+	td.hero = h;
+	td.exits = destinationids;
+	cb->showTeleportDialog(&td);
 }
 
 void CGMonolith::initObj()
@@ -927,14 +923,17 @@ void CGMonolith::initObj()
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
 	ObjectInstanceID destinationid = getRandomExit();
+	TeleportDialog td;
+	td.hero = h;
 	if(destinationid == ObjectInstanceID()) //no exit
 	{
 		showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
 		logGlobal->debugStream() << "Cannot find exit subterranean gate for "<< id << " (obj at " << pos << ") :(";
-		return;
 	}
+	else
+		td.exits.push_back(destinationid);
 
-	cb->moveHero(h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
+	cb->showTeleportDialog(&td);
 }
 
 void CGSubterraneanGate::initObj()
@@ -949,7 +948,7 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 	for(auto & obj : cb->gameState()->map->objects)
 	{
 		auto hlp = dynamic_cast<CGSubterraneanGate *>(gs->getObjInstance(obj->id));
-		if (hlp)
+		if(hlp)
 			gatesSplit[hlp->pos.z].push_back(hlp);
 	}
 
@@ -992,12 +991,9 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 
 void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 {
-	ObjectInstanceID destinationid = getRandomExit();
-	if(destinationid == ObjectInstanceID())
-	{
+	std::vector<ObjectInstanceID> destinationids;
+	if(getRandomExit() == ObjectInstanceID())
 		logGlobal->warnStream() << "Cannot find exit whirlpool for "<< id << " (obj at " << pos << ") :(";
-		return;
-	}
 
 	if(!h->hasBonusOfType(Bonus::WHIRLPOOL_PROTECTION))
 	{
@@ -1023,12 +1019,17 @@ void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 			cb->changeStackCount(StackLocation(h, targetstack), -countToTake);
 		}
 	}
+	else
+		 destinationids = getAllExits();
 
-	std::set<int3> tiles = cb->getObj(destinationid)->getBlockedPos();
+/*	std::set<int3> tiles = cb->getObj(destinationid)->getBlockedPos();
 	auto & tile = *RandomGeneratorUtil::nextItem(tiles, cb->gameState()->getRandomGenerator());
-	cb->moveHero(h->id, tile + int3(1,0,0), true);
+	cb->moveHero(h->id, tile + int3(1,0,0), true);*/
 
-	cb->moveHero(h->id,CGHeroInstance::convertPosition(cb->getObj(destinationid)->pos,true) - getVisitableOffset(), true);
+	TeleportDialog td;
+	td.hero = h;
+	td.exits = destinationids;
+	cb->showTeleportDialog(&td);
 }
 
 void CGArtifact::initObj()

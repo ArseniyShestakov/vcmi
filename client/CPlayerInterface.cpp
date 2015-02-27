@@ -1145,23 +1145,23 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 void CPlayerInterface::showTeleportDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
+	ObjectInstanceID choosenTeleport;
+	EMoveState setState = CONTINUE_MOVE; // Continue movement if able teleport to expected exit: choosen or random
 	if(nextTeleporter != ObjectInstanceID())
 	{
 		for(auto exit : exits)
 		{
 			if(exit == nextTeleporter)
-			{
-				cb->selectionMade(nextTeleporter.getNum(), askID);
-				nextTeleporter = ObjectInstanceID();
-				stillMoveHero.setn(CONTINUE_MOVE);
-				return;
-			}
+				choosenTeleport = nextTeleporter;
 		}
+
+		if(choosenTeleport == ObjectInstanceID())
+			setState = STOP_MOVE; // Stop movement if one way teleport we expected to have one exit actually have more exits and being random
 	}
 
-	cb->selectionMade(ObjectInstanceID().getNum(), askID);
 	nextTeleporter = ObjectInstanceID();
-	stillMoveHero.setn(CONTINUE_MOVE);
+	cb->selectionMade(choosenTeleport.getNum(), askID);
+	stillMoveHero.setn(setState);
 }
 
 void CPlayerInterface::tileRevealed(const std::unordered_set<int3, ShashInt3> &pos)
