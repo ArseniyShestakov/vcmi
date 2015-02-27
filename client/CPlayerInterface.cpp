@@ -2726,7 +2726,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			if (tileAfterThis && nextObject && nextObject->isAllowTransit()
 				&& !CGTeleport::isConnected(nextObjectTeleport, outTeleportObj))
 			{
-				nextTeleporter = ObjectInstanceID(); // Should be -1 if hero not going to visit teleporter. Otherwise requestRealized won't set CONTINUE_MOVE as it's will think that showTeleportDialog will do that
+				nextTeleporter = ObjectInstanceID();
 				cb->moveHero(h,endpos, true);
 			}
 			else
