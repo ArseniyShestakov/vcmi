@@ -2718,7 +2718,8 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 			stillMoveHero.data = WAITING_MOVE;
 
-			int3 endpos(path.nodes[i-1].coord.x, path.nodes[i-1].coord.y, path.nodes[i-1].coord.z);
+			assert(h->pos.z == path.nodes[i-1].coord.z); // Z should change only if it's movement via teleporter and in this case this code shouldn't be executed at all
+			int3 endpos(path.nodes[i-1].coord.x, path.nodes[i-1].coord.y, h->pos.z);
 			bool guarded = CGI->mh->map->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
 
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
