@@ -1153,12 +1153,15 @@ void CPlayerInterface::showTeleportDialog( const std::vector<ObjectInstanceID> e
 			{
 				cb->selectionMade(nextTeleporter.getNum(), askID);
 				nextTeleporter = ObjectInstanceID();
+				stillMoveHero.setn(CONTINUE_MOVE);
 				return;
 			}
 		}
 	}
 
 	cb->selectionMade(ObjectInstanceID().getNum(), askID);
+	nextTeleporter = ObjectInstanceID();
+	stillMoveHero.setn(CONTINUE_MOVE);
 }
 
 void CPlayerInterface::tileRevealed(const std::unordered_set<int3, ShashInt3> &pos)
@@ -1409,7 +1412,8 @@ void CPlayerInterface::showArtifactAssemblyDialog (ui32 artifactID, ui32 assembl
 void CPlayerInterface::requestRealized( PackageApplied *pa )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
-	if(pa->packType == typeList.getTypeID<MoveHero>()  &&  stillMoveHero.get() == DURING_MOVE)
+	if(pa->packType == typeList.getTypeID<MoveHero>()  &&  stillMoveHero.get() == DURING_MOVE
+	   && nextTeleporter == ObjectInstanceID())
 		stillMoveHero.setn(CONTINUE_MOVE);
 }
 
@@ -2721,7 +2725,10 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			// Hero should be able to go through object if it's allow transit
 			if (tileAfterThis && nextObject && nextObject->isAllowTransit()
 				&& !CGTeleport::isConnected(nextObjectTeleport, outTeleportObj))
+			{
+				nextTeleporter = ObjectInstanceID(); // Should be -1 if hero not going to visit teleporter. Otherwise requestRealized won't set CONTINUE_MOVE as it's will think that showTeleportDialog will do that
 				cb->moveHero(h,endpos, true);
+			}
 			else
 				cb->moveHero(h,endpos);
 
