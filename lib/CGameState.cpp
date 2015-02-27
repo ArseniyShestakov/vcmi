@@ -3355,7 +3355,8 @@ void CPathfinder::calculatePaths()
 		auto cObj = dynamic_cast<const CGTeleport *>(ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)));
 		if(CGTeleport::isPassable(cObj)
 			&& ((allowTeleportTwoWay && cObj->getChannelType() == TeleportChannel::BIDIRECTIONAL)
-				|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL)))
+				|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() == 1)
+				|| (allowTeleportOneWayRandom && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() > 1)))
 		{
 			for(auto objId : cObj->getAllExits())
 				neighbours.push_back(getObj(objId)->visitablePos());
@@ -3530,6 +3531,7 @@ CPathfinder::CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance
 	allowEmbarkAndDisembark = true;
 	allowTeleportTwoWay = true;
 	allowTeleportOneWay = true;
+	allowTeleportOneWayRandom = false;
 }
 
 CRandomGenerator & CGameState::getRandomGenerator()

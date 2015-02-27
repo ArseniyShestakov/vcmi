@@ -282,6 +282,7 @@ private:
 	bool allowEmbarkAndDisembark;
 	bool allowTeleportTwoWay;
 	bool allowTeleportOneWay;
+	bool allowTeleportOneWayRandom;
 	CPathsInfo &out;
 	const CGHeroInstance *hero;
 	const std::vector<std::vector<std::vector<ui8> > > &FoW;
