@@ -2723,14 +2723,21 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
 			// Hero should be able to go through object if it's allow transit
-			if (tileAfterThis && nextObject && nextObject->isAllowTransit()
+			if(tileAfterThis && nextObject && nextObject->isAllowTransit()
 				&& !CGTeleport::isConnected(nextObjectTeleport, outTeleportObj))
 			{
 				nextTeleporter = ObjectInstanceID();
 				cb->moveHero(h,endpos, true);
 			}
 			else
+			{
+				if(outTeleportObj && outTeleportObj->id == nextTeleporter
+					&& !CGTeleport::isConnected(nextObjectTeleport, outTeleportObj))
+				{ // If next node and other node after it aren't connected teleporters we need to set it to -1
+					nextTeleporter = ObjectInstanceID();
+				}
 				cb->moveHero(h,endpos);
+			}
 
 			while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
 				stillMoveHero.cond.wait(un);
