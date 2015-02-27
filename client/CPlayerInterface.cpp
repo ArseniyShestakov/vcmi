@@ -2679,7 +2679,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			auto priorObject = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
 			auto nextObject = CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos);
 			auto nextObjectTeleport = dynamic_cast<CGTeleport *>(nextObject);
-			if(priorObject && nextObjectTeleport && priorObject->isChannelExit(nextObjectTeleport->id))
+			if(CGTeleport::isConnected(priorObject, nextObjectTeleport))
 			{
 				if(i == path.nodes.size()-1) // if firstturn == true then hero start movement while standing on monolith/gates
 				{
