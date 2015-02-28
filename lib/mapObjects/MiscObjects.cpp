@@ -839,8 +839,8 @@ void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer,
 		assert(vstd::contains(exits, objId)); // Likely cheating attempt: not random teleporter choosen, but it's not from provided list
 
 	auto obj = cb->getObj(objId);
-	assert(obj); // Teleporter doesn't exist. Likely a bug
-	cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
+	if(obj)
+		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
 }
 
 shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) const
