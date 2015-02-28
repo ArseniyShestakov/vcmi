@@ -350,12 +350,6 @@ bool CMap::checkForVisitableDir(const int3 & src, const TerrainTile *pom, const 
 		if(!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
 			return false;
 	}
-
-	// TODO: This hacky code need improvement. It's used to not let hero exit from teleporter to wrong tile. E.g above teleporter.
-	const TerrainTile * srcpom = &getTile(src);
-	if (srcpom->visitableObjects.size() && srcpom->visitableObjects[0] && !srcpom->visitableObjects[0]->appearance.isVisitableFrom(dst.x - src.x, dst.y - src.y))
-		return false;
-
 	return true;
 }
 

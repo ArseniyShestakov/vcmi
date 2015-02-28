@@ -3352,7 +3352,8 @@ void CPathfinder::calculatePaths()
 		//add accessible neighbouring nodes to the queue
 		neighbours.clear();
 
-		auto cObj = dynamic_cast<const CGTeleport *>(ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false)));
+		auto sObj = ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false));
+		auto cObj = dynamic_cast<const CGTeleport *>(sObj);
 		if(CGTeleport::isPassable(cObj)
 			&& ((allowTeleportTwoWay && cObj->getChannelType() == TeleportChannel::BIDIRECTIONAL)
 				|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() == 1)
@@ -3362,7 +3363,18 @@ void CPathfinder::calculatePaths()
 				neighbours.push_back(getObj(objId)->visitablePos());
 		}
 
-		gs->getNeighbours(*ct, cp->coord, neighbours, boost::logic::indeterminate, !cp->land);
+		std::vector<int3> neighbour_tiles;
+		gs->getNeighbours(*ct, cp->coord, neighbour_tiles, boost::logic::indeterminate, !cp->land);
+		if (sObj)
+		{
+			for(int3 neighbour_tile: neighbour_tiles)
+			{
+				if(canMoveBetween(neighbour_tile, sObj->visitablePos()))
+					neighbours.push_back(neighbour_tile);
+			}
+		}
+		else
+			vstd::concatenate(neighbours, neighbour_tiles);
 
 		for(auto & neighbour : neighbours)
 		{
