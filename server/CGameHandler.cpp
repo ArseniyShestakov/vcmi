@@ -1760,9 +1760,16 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, bo
 
 			moveQuery->visitDestAfterVictory = visitDest==VISIT_DEST;
 		}
-		else if(visitDest == VISIT_DEST && !transit)
+		else if(visitDest == VISIT_DEST)
 		{
-			visitObjectOnTile(t, h);
+			if (!transit || !t.topVisitableObj()->isAllowTransit()
+				|| (t.topVisitableObj()->getOwner() != PlayerColor::UNFLAGGABLE
+					&& !t.topVisitableObj()->passableFor(h->tempOwner)))
+			{
+				visitObjectOnTile(t, h);
+			}
+			else if (t.topVisitableObj()->getOwner() != PlayerColor::UNFLAGGABLE)
+				setOwner(t.topVisitableObj(), h->tempOwner);
 		}
 
 		queries.popIfTop(moveQuery);
