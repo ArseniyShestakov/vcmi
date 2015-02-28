@@ -112,6 +112,8 @@ public:
 	PlayerColor tempOwner;
 	/// If true hero can visit this object only from neighbouring tiles and can't stand on this object
 	bool blockVisit;
+	/// if true hero won't able to go through that tile without visiting it
+	bool denyTransit;
 
 	CGObjectInstance();
 	~CGObjectInstance();
@@ -167,7 +169,7 @@ public:
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & pos & ID & subID & id & tempOwner & blockVisit & appearance;
+		h & pos & ID & subID & id & tempOwner & blockVisit & denyTransit & appearance;
 		//definfo is handled by map serializer
 	}
 protected:

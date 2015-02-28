@@ -192,6 +192,9 @@
 	"monolithOneWayEntrance" : {
 		"index" :43,
 		"handler": "monolith",
+		"base" : {
+			"denyTransit" : true
+		},
 		"types" : {
 			"monolith1" : { "index" : 0 },
 			"monolith2" : { "index" : 1 },

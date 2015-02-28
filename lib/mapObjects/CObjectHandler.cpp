@@ -127,7 +127,8 @@ CGObjectInstance::CGObjectInstance():
 	ID(Obj::NO_OBJ),
 	subID(-1),
 	tempOwner(PlayerColor::UNFLAGGABLE),
-	blockVisit(false)
+	blockVisit(false),
+	denyTransit(false)
 {
 }
 CGObjectInstance::~CGObjectInstance()
@@ -306,7 +307,7 @@ bool CGObjectInstance::isVisitable() const
 
 bool CGObjectInstance::isAllowTransit() const
 {
-	return true;//!appearance.denyTransit;
+	return !denyTransit;
 }
 
 bool CGObjectInstance::passableFor(PlayerColor color) const
