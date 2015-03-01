@@ -3549,7 +3549,7 @@ CPathfinder::CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance
 
 	allowEmbarkAndDisembark = true;
 	allowTeleportTwoWay = true;
-	allowTeleportOneWay = true;
+	allowTeleportOneWay = false;
 	allowTeleportOneWayRandom = false;
 	allowTeleportWhirlPool = false;
 	if (CGWhirlpool::isProtected(hero))
