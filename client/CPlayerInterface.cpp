@@ -2649,14 +2649,26 @@ bool CPlayerInterface::capturedAllEvents()
 	return false;
 }
 
-void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
+void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 {
 	int i = 1;
+	auto getObj = [&](int3 coord, bool ignoreHero = false)
+	{
+		return cb->getTile(CGHeroInstance::convertPosition(coord,false))->topVisitableObj(ignoreHero);
+	};
+
+	boost::unique_lock<boost::mutex> un(stillMoveHero.mx);
+	stillMoveHero.data = CONTINUE_MOVE;
+	auto doMovement = [&](int3 dst, bool transit = false)
+	{
+		stillMoveHero.data = WAITING_MOVE;
+		cb->moveHero(h, dst, transit);
+		while(stillMoveHero.data != STOP_MOVE && stillMoveHero.data != CONTINUE_MOVE)
+			stillMoveHero.cond.wait(un);
+	};
 
 	{
 		path.convert(0);
-		boost::unique_lock<boost::mutex> un(stillMoveHero.mx);
-		stillMoveHero.data = CONTINUE_MOVE;
 
 		ETerrainType currentTerrain = ETerrainType::BORDER; // not init yet
 		ETerrainType newTerrain;
@@ -2666,35 +2678,31 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
 		{
+			int3 currentCoord = path.nodes[i].coord;
+			int3 nextCoord = path.nodes[i-1].coord;
 			CGTeleport * outTeleportObj = nullptr;
 			bool tileAfterThis = false;
 			if(i-2 >= 0)
 			{
 				tileAfterThis = true;
-				outTeleportObj = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-2].coord,false)).topVisitableObj());
+				outTeleportObj = dynamic_cast<CGTeleport *>(getObj(path.nodes[i-2].coord));
 			}
 
 			// Get objects on current and next tile as teleporters need special handling.
-			auto priorObject = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord,false)).topVisitableObj(path.nodes[i].coord == h->pos));
-			auto nextObject = CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-1].coord,false)).topVisitableObj(path.nodes[i-1].coord == h->pos);
+			auto priorObject = dynamic_cast<CGTeleport *>(getObj(currentCoord, currentCoord == h->pos));
+			auto nextObject = getObj(nextCoord, nextCoord == h->pos);
 			auto nextObjectTeleport = dynamic_cast<CGTeleport *>(nextObject);
 			if(CGTeleport::isConnected(priorObject, nextObjectTeleport))
 			{
 				CCS->soundh->stopSound(sh);
 				nextTileTeleportId = nextObjectTeleport->id;
-				stillMoveHero.data = WAITING_MOVE;
-				cb->moveHero(h,h->pos);
-				while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
-					stillMoveHero.cond.wait(un);
-
+				doMovement(h->pos);
 				sh = CCS->soundh->playSound(CCS->soundh->horseSounds[currentTerrain], -1);
-
 				continue;
 			}
 
-			//stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
 			if(path.nodes[i-1].turns)
-			{
+			{ //stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
 				stillMoveHero.data = STOP_MOVE;
 				break;
 			}
@@ -2706,8 +2714,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 				sh = CCS->soundh->playSound(soundBase::horseFlying, -1);
 #endif
 			{
-				newTerrain = cb->getTile(CGHeroInstance::convertPosition(path.nodes[i].coord, false))->terType;
-
+				newTerrain = cb->getTile(CGHeroInstance::convertPosition(currentCoord, false))->terType;
 				if(newTerrain != currentTerrain)
 				{
 					CCS->soundh->stopSound(sh);
@@ -2716,26 +2723,19 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 				}
 			}
 
-			stillMoveHero.data = WAITING_MOVE;
-
-			assert(h->pos.z == path.nodes[i-1].coord.z); // Z should change only if it's movement via teleporter and in this case this code shouldn't be executed at all
-			int3 endpos(path.nodes[i-1].coord.x, path.nodes[i-1].coord.y, h->pos.z);
-			bool guarded = CGI->mh->map->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
-
+			assert(h->pos.z == nextCoord.z); // Z should change only if it's movement via teleporter and in this case this code shouldn't be executed at all
+			int3 endpos(nextCoord.x, nextCoord.y, h->pos.z);
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
-			// Hero should be able to go through object if it's allow transit
 			if(CGTeleport::isConnected(nextObjectTeleport, outTeleportObj)
 			   || (tileAfterThis && nextObject && nextObject->isAllowTransit()))
-			{
-				cb->moveHero(h,endpos, true);
+			{ // Hero should be able to go through object if it's allow transit
+				doMovement(endpos, true);
 			}
 			else
-				cb->moveHero(h,endpos);
-
-			while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
-				stillMoveHero.cond.wait(un);
+				doMovement(endpos);
 
 			logGlobal->traceStream() << "Resuming " << __FUNCTION__;
+			bool guarded = cb->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
 			if(guarded || showingDialog->get() == true) // Abort movement if a guard was fought or there is a dialog to display (Mantis #1136)
 				break;
 		}
