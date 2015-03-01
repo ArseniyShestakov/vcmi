@@ -2673,9 +2673,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 		ETerrainType newTerrain;
 		int sh = -1;
 
-		const TerrainTile * curTile = cb->getTile(CGHeroInstance::convertPosition(h->pos, false));
-
-		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || curTile->blocked); i--)
+		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE); i--)
 		{
 			int3 currentCoord = path.nodes[i].coord;
 			int3 nextCoord = path.nodes[i-1].coord;
