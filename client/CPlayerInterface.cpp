@@ -2669,7 +2669,6 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 
 	{
 		path.convert(0);
-
 		ETerrainType currentTerrain = ETerrainType::BORDER; // not init yet
 		ETerrainType newTerrain;
 		int sh = -1;
@@ -2680,22 +2679,12 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 		{
 			int3 currentCoord = path.nodes[i].coord;
 			int3 nextCoord = path.nodes[i-1].coord;
-			CGTeleport * outTeleportObj = nullptr;
-			bool tileAfterThis = false;
-			if(i-2 >= 0)
-			{
-				tileAfterThis = true;
-				outTeleportObj = dynamic_cast<CGTeleport *>(getObj(path.nodes[i-2].coord));
-			}
 
-			// Get objects on current and next tile as teleporters need special handling.
-			auto priorObject = dynamic_cast<CGTeleport *>(getObj(currentCoord, currentCoord == h->pos));
 			auto nextObject = getObj(nextCoord, nextCoord == h->pos);
-			auto nextObjectTeleport = dynamic_cast<CGTeleport *>(nextObject);
-			if(CGTeleport::isConnected(priorObject, nextObjectTeleport))
-			{
+			if(CGTeleport::isConnected(getObj(currentCoord, currentCoord == h->pos), nextObject))
+			{ //we use special login if hero standing on teleporter it's mean we need
 				CCS->soundh->stopSound(sh);
-				nextTileTeleportId = nextObjectTeleport->id;
+				nextTileTeleportId = nextObject->id;
 				doMovement(h->pos);
 				sh = CCS->soundh->playSound(CCS->soundh->horseSounds[currentTerrain], -1);
 				continue;
@@ -2726,8 +2715,10 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 			assert(h->pos.z == nextCoord.z); // Z should change only if it's movement via teleporter and in this case this code shouldn't be executed at all
 			int3 endpos(nextCoord.x, nextCoord.y, h->pos.z);
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
-			if(CGTeleport::isConnected(nextObjectTeleport, outTeleportObj)
-			   || (tileAfterThis && nextObject && nextObject->isAllowTransit()))
+
+			if((i-2 >= 0) // Check there is node after next one; otherwise transit is pointless
+				&& (CGTeleport::isConnected(nextObject, getObj(path.nodes[i-2].coord))
+					|| (nextObject && nextObject->isAllowTransit())))
 			{ // Hero should be able to go through object if it's allow transit
 				doMovement(endpos, true);
 			}
