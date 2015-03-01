@@ -863,6 +863,13 @@ bool CGTeleport::isConnected(const CGTeleport * src, const CGTeleport * dst)
 		return false;
 }
 
+bool CGTeleport::isConnected(const CGObjectInstance * src, const CGObjectInstance * dst)
+{
+	auto srcObj = dynamic_cast<const CGTeleport *>(src);
+	auto dstObj = dynamic_cast<const CGTeleport *>(dst);
+	return isConnected(srcObj, dstObj);
+}
+
 bool CGTeleport::isPassable(const CGTeleport * obj)
 {
 	if(obj && obj->isEntrance() && obj->getChannelType() != TeleportChannel::DUMMY)

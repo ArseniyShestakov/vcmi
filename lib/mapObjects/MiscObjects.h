@@ -290,6 +290,7 @@ public:
 
 	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
+	static bool isConnected(const CGObjectInstance * src, const CGObjectInstance * dst);
 	static bool isPassable(const CGTeleport * obj);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
