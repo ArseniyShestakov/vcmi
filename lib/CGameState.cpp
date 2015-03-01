@@ -3300,9 +3300,6 @@ void CPathfinder::initializeGraph()
 
 void CPathfinder::calculatePaths()
 {
-	assert(hero);
-	assert(hero == getHero(hero->id));
-
 	bool flying = hero->hasBonusOfType(Bonus::FLYING_MOVEMENT);
 	int maxMovePointsLand = hero->maxMovePoints(true);
 	int maxMovePointsWater = hero->maxMovePoints(false);
@@ -3318,7 +3315,7 @@ void CPathfinder::calculatePaths()
 
 	if(!gs->map->isInTheMap(out.hpos)/* || !gs->map->isInTheMap(dest)*/) //check input
 	{
-        logGlobal->errorStream() << "CGameState::calculatePaths: Hero outside the gs->map? How dare you...";
+		logGlobal->errorStream() << "CGameState::calculatePaths: Hero outside the gs->map? How dare you...";
 		return;
 	}
 
@@ -3354,10 +3351,14 @@ void CPathfinder::calculatePaths()
 
 		auto sObj = ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false));
 		auto cObj = dynamic_cast<const CGTeleport *>(sObj);
+		auto objWhirlpool = dynamic_cast<const CGWhirlpool *>(cObj);
 		if(CGTeleport::isPassable(cObj)
-			&& ((allowTeleportTwoWay && cObj->getChannelType() == TeleportChannel::BIDIRECTIONAL)
-				|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() == 1)
-				|| (allowTeleportOneWayRandom && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() > 1)))
+			&& ((!objWhirlpool
+				 && ((allowTeleportTwoWay && cObj->getChannelType() == TeleportChannel::BIDIRECTIONAL)
+					|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() == 1)
+					|| (allowTeleportOneWayRandom && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() > 1)))
+				|| (allowTeleportWhirlPool && objWhirlpool
+					&& cObj->getChannelType() != TeleportChannel::DUMMY)))
 		{
 			for(auto objId : cObj->getAllExits())
 				neighbours.push_back(getObj(objId)->visitablePos());
@@ -3543,10 +3544,16 @@ bool CPathfinder::goodForLandSeaTransition()
 
 CPathfinder::CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance *_hero) : CGameInfoCallback(_gs, boost::optional<PlayerColor>()), out(_out), hero(_hero), FoW(getPlayerTeam(hero->tempOwner)->fogOfWarMap)
 {
+	assert(hero);
+	assert(hero == getHero(hero->id));
+
 	allowEmbarkAndDisembark = true;
 	allowTeleportTwoWay = true;
 	allowTeleportOneWay = true;
 	allowTeleportOneWayRandom = false;
+	allowTeleportWhirlPool = false;
+	if (CGWhirlpool::isProtected(hero))
+		allowTeleportWhirlPool = true;
 }
 
 CRandomGenerator & CGameState::getRandomGenerator()

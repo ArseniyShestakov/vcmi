@@ -283,6 +283,7 @@ private:
 	bool allowTeleportTwoWay;
 	bool allowTeleportOneWay;
 	bool allowTeleportOneWayRandom;
+	bool allowTeleportWhirlPool;
 	CPathsInfo &out;
 	const CGHeroInstance *hero;
 	const std::vector<std::vector<std::vector<ui8> > > &FoW;

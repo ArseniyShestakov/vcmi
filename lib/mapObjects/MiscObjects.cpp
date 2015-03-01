@@ -857,7 +857,7 @@ shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int 
 
 bool CGTeleport::isConnected(const CGTeleport * src, const CGTeleport * dst)
 {
-	if(src && dst && src->isChannelExit(dst->id))
+	if(src && dst && src->isChannelExit(dst->id) && src != dst)
 		return true;
 	else
 		return false;
@@ -995,41 +995,64 @@ void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 	if(getRandomExit() == ObjectInstanceID())
 		logGlobal->warnStream() << "Cannot find exit whirlpool for "<< id << " (obj at " << pos << ") :(";
 
-	if(!h->hasBonusOfType(Bonus::WHIRLPOOL_PROTECTION))
+	if(!isProtected(h))
 	{
-		if(h->Slots().size() > 1 || h->Slots().begin()->second->count > 1)
-		{ //we can't remove last unit
-			SlotID targetstack = h->Slots().begin()->first; //slot numbers may vary
-			for(auto i = h->Slots().rbegin(); i != h->Slots().rend(); i++)
-			{
-				if(h->getPower(targetstack) > h->getPower(i->first))
-				{
-					targetstack = (i->first);
-				}
-			}
-
-			TQuantity countToTake = h->getStackCount(targetstack) * 0.5;
-			vstd::amax(countToTake, 1);
-
-			InfoWindow iw;
-			iw.player = h->tempOwner;
-			iw.text.addTxt(MetaString::ADVOB_TXT, 168);
-			iw.components.push_back(Component(CStackBasicDescriptor(h->getCreature(targetstack), countToTake)));
-			cb->showInfoDialog(&iw);
-			cb->changeStackCount(StackLocation(h, targetstack), -countToTake);
+		SlotID targetstack = h->Slots().begin()->first; //slot numbers may vary
+		for(auto i = h->Slots().rbegin(); i != h->Slots().rend(); i++)
+		{
+			if(h->getPower(targetstack) > h->getPower(i->first))
+				targetstack = (i->first);
 		}
+
+		TQuantity countToTake = h->getStackCount(targetstack) * 0.5;
+		vstd::amax(countToTake, 1);
+
+		InfoWindow iw;
+		iw.player = h->tempOwner;
+		iw.text.addTxt(MetaString::ADVOB_TXT, 168);
+		iw.components.push_back(Component(CStackBasicDescriptor(h->getCreature(targetstack), countToTake)));
+		cb->showInfoDialog(&iw);
+		cb->changeStackCount(StackLocation(h, targetstack), -countToTake);
 	}
 	else
 		 destinationids = getAllExits();
-
-/*	std::set<int3> tiles = cb->getObj(destinationid)->getBlockedPos();
-	auto & tile = *RandomGeneratorUtil::nextItem(tiles, cb->gameState()->getRandomGenerator());
-	cb->moveHero(h->id, tile + int3(1,0,0), true);*/
 
 	TeleportDialog td;
 	td.hero = h;
 	td.exits = destinationids;
 	cb->showTeleportDialog(&td);
+}
+
+void CGWhirlpool::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
+{
+	ObjectInstanceID objId = ObjectInstanceID(answer);
+	auto realExits = getAllExits();
+	if(!exits.size() && !realExits.size())
+		return;
+	else if(objId == ObjectInstanceID())
+		objId = getRandomExit();
+	else
+		assert(vstd::contains(exits, objId)); // Likely cheating attempt: not random teleporter choosen, but it's not from provided list
+
+	auto obj = cb->getObj(objId);
+	if(obj)
+	{
+		std::set<int3> tiles = obj->getBlockedPos();
+		auto & tile = *RandomGeneratorUtil::nextItem(tiles, cb->gameState()->getRandomGenerator());
+		cb->moveHero(hero->id, tile + int3(1,0,0), true);
+
+		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
+	}
+}
+
+bool CGWhirlpool::isProtected( const CGHeroInstance * h )
+{
+	if(h->hasBonusOfType(Bonus::WHIRLPOOL_PROTECTION)
+	   || (h->Slots().size() == 1 && h->Slots().begin()->second->count == 1)) //we can't remove last unit
+	{
+		return true;
+	}
+	return false;
 }
 
 void CGArtifact::initObj()

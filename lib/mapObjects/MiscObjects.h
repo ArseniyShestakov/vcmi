@@ -327,6 +327,8 @@ class DLL_LINKAGE CGWhirlpool : public CGMonolith
 {
 public:
 	void onHeroVisit(const CGHeroInstance * h) const override;
+	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;
+	static bool isProtected( const CGHeroInstance * h );
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
