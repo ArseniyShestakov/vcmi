@@ -97,7 +97,7 @@ static bool objectBlitOrderSorter(const TerrainTileObject  & a, const TerrainTil
 CPlayerInterface::CPlayerInterface(PlayerColor Player)
 {
 	logGlobal->traceStream() << "\tHuman player interface for player " << Player << " being constructed";
-	nextTeleporter = ObjectInstanceID();
+	nextTileTeleportId = ObjectInstanceID();
 	observerInDuelMode = false;
 	howManyPeople++;
 	GH.defActionsDef = 0;
@@ -1146,22 +1146,15 @@ void CPlayerInterface::showTeleportDialog( const std::vector<ObjectInstanceID> e
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
 	ObjectInstanceID choosenTeleport;
-	EMoveState setState = CONTINUE_MOVE; // Continue movement if able teleport to expected exit: choosen or random
-	if(nextTeleporter != ObjectInstanceID())
+	if(nextTileTeleportId != ObjectInstanceID())
 	{
 		for(auto exit : exits)
 		{
-			if(exit == nextTeleporter)
-				choosenTeleport = nextTeleporter;
+			if(exit == nextTileTeleportId)
+				choosenTeleport = nextTileTeleportId;
 		}
-
-		if(choosenTeleport == ObjectInstanceID())
-			setState = STOP_MOVE; // Stop movement if one way teleport we expected to have one exit actually have more exits and being random
 	}
-
-	nextTeleporter = ObjectInstanceID();
 	cb->selectionMade(choosenTeleport.getNum(), askID);
-	stillMoveHero.setn(setState);
 }
 
 void CPlayerInterface::tileRevealed(const std::unordered_set<int3, ShashInt3> &pos)
@@ -1413,8 +1406,16 @@ void CPlayerInterface::requestRealized( PackageApplied *pa )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
 	if(pa->packType == typeList.getTypeID<MoveHero>()  &&  stillMoveHero.get() == DURING_MOVE
-	   && nextTeleporter == ObjectInstanceID())
+	   && nextTileTeleportId == ObjectInstanceID())
 		stillMoveHero.setn(CONTINUE_MOVE);
+
+	if(nextTileTeleportId != ObjectInstanceID()
+	   && pa->packType == typeList.getTypeID<QueryReply>()
+	   && stillMoveHero.get() == DURING_MOVE)
+	{ // After teleportation via CGTeleport object is finished
+		nextTileTeleportId = ObjectInstanceID();
+		stillMoveHero.setn(CONTINUE_MOVE);
+	}
 }
 
 void CPlayerInterface::heroExchangeStarted(ObjectInstanceID hero1, ObjectInstanceID hero2, QueryID query)
@@ -2671,8 +2672,6 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			{
 				tileAfterThis = true;
 				outTeleportObj = dynamic_cast<CGTeleport *>(CGI->mh->map->getTile(CGHeroInstance::convertPosition(path.nodes[i-2].coord,false)).topVisitableObj());
-				if(outTeleportObj)
-					nextTeleporter = outTeleportObj->id;
 			}
 
 			// Get objects on current and next tile as teleporters need special handling.
@@ -2681,14 +2680,15 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 			auto nextObjectTeleport = dynamic_cast<CGTeleport *>(nextObject);
 			if(CGTeleport::isConnected(priorObject, nextObjectTeleport))
 			{
-				if(i == path.nodes.size()-1) // if firstturn == true then hero start movement while standing on monolith/gates
-				{
-					nextTeleporter = nextObjectTeleport->id;
-					stillMoveHero.data = WAITING_MOVE;
-					cb->moveHero(h,h->pos);
-					while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
-						stillMoveHero.cond.wait(un);
-				}
+				CCS->soundh->stopSound(sh);
+				nextTileTeleportId = nextObjectTeleport->id;
+				stillMoveHero.data = WAITING_MOVE;
+				cb->moveHero(h,h->pos);
+				while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
+					stillMoveHero.cond.wait(un);
+
+				sh = CCS->soundh->playSound(CCS->soundh->horseSounds[currentTerrain], -1);
+
 				continue;
 			}
 
@@ -2724,21 +2724,13 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance* h, CGPath path)
 
 			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
 			// Hero should be able to go through object if it's allow transit
-			if(tileAfterThis && nextObject && nextObject->isAllowTransit()
-				&& !CGTeleport::isConnected(nextObjectTeleport, outTeleportObj))
+			if(CGTeleport::isConnected(nextObjectTeleport, outTeleportObj)
+			   || (tileAfterThis && nextObject && nextObject->isAllowTransit()))
 			{
-				nextTeleporter = ObjectInstanceID();
 				cb->moveHero(h,endpos, true);
 			}
 			else
-			{
-				if(outTeleportObj && outTeleportObj->id == nextTeleporter
-					&& !CGTeleport::isConnected(nextObjectTeleport, outTeleportObj))
-				{ // If next node and other node after it aren't connected teleporters we need to set it to -1
-					nextTeleporter = ObjectInstanceID();
-				}
 				cb->moveHero(h,endpos);
-			}
 
 			while(stillMoveHero.data != STOP_MOVE  &&  stillMoveHero.data != CONTINUE_MOVE)
 				stillMoveHero.cond.wait(un);
