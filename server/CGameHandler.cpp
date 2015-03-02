@@ -1762,7 +1762,7 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, bo
 		}
 		else if(visitDest == VISIT_DEST)
 		{
-			if (!transit || !t.topVisitableObj()->isAllowTransit()
+			if (!transit || !t.topVisitableObj() || !t.topVisitableObj()->isAllowTransit()
 				|| (t.topVisitableObj()->getOwner() != PlayerColor::UNFLAGGABLE
 					&& !t.topVisitableObj()->passableFor(h->tempOwner)))
 			{

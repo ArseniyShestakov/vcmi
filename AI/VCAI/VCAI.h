@@ -139,6 +139,7 @@ public:
 	friend class FuzzyHelper;
 
 	std::map<const CGObjectInstance *, const CGObjectInstance *> knownSubterraneanGates;
+	ObjectInstanceID nextTileTeleportId;
 	//std::vector<const CGObjectInstance *> visitedThisWeek; //only OPWs
 	std::map<HeroPtr, std::set<const CGTownInstance *> > townVisitsThisWeek;
 

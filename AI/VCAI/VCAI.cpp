@@ -29,6 +29,9 @@ const int GOLD_RESERVE = 10000; //when buying creatures we want to keep at least
 
 using namespace vstd;
 
+enum  EMoveState {STOP_MOVE, WAITING_MOVE, CONTINUE_MOVE, DURING_MOVE};
+CondSh<EMoveState> stillMoveHero; //used during hero movement
+
 //one thread may be turn of AI and another will be handling a side effect for AI2
 boost::thread_specific_ptr<CCallback> cb;
 boost::thread_specific_ptr<VCAI> ai;
@@ -92,6 +95,7 @@ struct ObjInfo
 std::map<const CGObjectInstance *, ObjInfo> helperObjInfo;
 
 VCAI::VCAI(void)
+	: nextTileTeleportId(-1)
 {
 	LOG_TRACE(logAi);
 	makingTurn = nullptr;
@@ -446,7 +450,14 @@ void VCAI::requestRealized(PackageApplied *pa)
 				status.madeTurn();
 	}
 
-	if(pa->packType == typeList.getTypeID<QueryReply>())
+	if(nextTileTeleportId != ObjectInstanceID()
+	   && pa->packType == typeList.getTypeID<QueryReply>()
+	   && stillMoveHero.get() == DURING_MOVE)
+	{ // After teleportation via CGTeleport object is finished
+		nextTileTeleportId = ObjectInstanceID();
+		stillMoveHero.setn(CONTINUE_MOVE);
+	}
+	else if(pa->packType == typeList.getTypeID<QueryReply>())
 	{
 		status.receivedAnswerConfirmation(pa->requestID, pa->result);
 	}
@@ -592,10 +603,24 @@ void VCAI::showBlockingDialog(const std::string &text, const std::vector<Compone
 
 void VCAI::showTeleportDialog(const std::vector<ObjectInstanceID> exits, QueryID askID)
 {
-	//LOG_TRACE_PARAMS(logAi, "text '%s', askID '%i', soundID '%i', selection '%i', cancel '%i'", exits % askID % soundID % selection % cancel);
+	LOG_TRACE_PARAMS(logAi, "askID '%i', exits '%s'", askID % exits);
 	NET_EVENT_HANDLER;
+	status.addQuery(askID, boost::str(boost::format("Teleport dialog query with %d exits")
+																			% exits.size()));
 
-	cb->selectionMade(0, askID);
+	ObjectInstanceID choosenTeleport;
+	if(nextTileTeleportId != ObjectInstanceID())
+	{
+		for(auto exit : exits)
+		{
+			if(exit == nextTileTeleportId)
+				choosenTeleport = nextTileTeleportId;
+		}
+	}
+	requestActionASAP([=]()
+	{
+		answerQuery(askID, choosenTeleport.getNum());
+	});
 }
 
 void VCAI::showGarrisonDialog(const CArmedInstance *up, const CGHeroInstance *down, bool removableUnits, QueryID queryID)
@@ -1677,9 +1702,41 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			throw goalFulfilledException (sptr(Goals::VisitTile(dst).sethero(h)));
 		}
 
+		auto getObj = [&](int3 coord, bool ignoreHero = false)
+		{
+			CGObjectInstance * nptr = nullptr;
+			auto tile = cb->getTile(CGHeroInstance::convertPosition(coord,false));
+			if (!tile) // TODO: find out why is tile can be nullptr as it's not issue for player interface
+				return nptr;
+			return tile->topVisitableObj(ignoreHero);
+		};
+
+		boost::unique_lock<boost::mutex> un(stillMoveHero.mx);
+		stillMoveHero.data = CONTINUE_MOVE;
+		auto doMovement = [&](int3 dst, bool transit = false)
+		{
+			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true), transit);
+		};
+
 		int i=path.nodes.size()-1;
 		for(; i>0; i--)
 		{
+			int3 currentCoord = path.nodes[i].coord;
+			int3 nextCoord = path.nodes[i-1].coord;
+
+			auto nextObject = getObj(nextCoord, nextCoord == h->pos);
+			if(CGTeleport::isConnected(getObj(currentCoord, currentCoord == h->pos), nextObject))
+			{ //we use special login if hero standing on teleporter it's mean we need
+				nextTileTeleportId = nextObject->id;
+
+				stillMoveHero.data = DURING_MOVE;
+				doMovement(h->pos);
+				while(stillMoveHero.data != STOP_MOVE && stillMoveHero.data != CONTINUE_MOVE)
+					stillMoveHero.cond.wait(un);
+
+				continue;
+			}
+
 			//stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
 			if(path.nodes[i-1].turns)
 			{
@@ -1691,7 +1748,15 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			if(endpos == h->visitablePos())
 				continue;
 
-			cb->moveHero(*h, CGHeroInstance::convertPosition(endpos, true));
+			if((i-2 >= 0) // Check there is node after next one; otherwise transit is pointless
+				&& (CGTeleport::isConnected(nextObject, getObj(path.nodes[i-2].coord))
+					|| (nextObject && nextObject->isAllowTransit())))
+			{ // Hero should be able to go through object if it's allow transit
+				doMovement(endpos, true);
+			}
+			else
+				doMovement(endpos);
+
 			waitTillFree(); //movement may cause battle or blocking dialog
 			boost::this_thread::interruption_point();
 			if(!h) //we lost hero - remove all tasks assigned to him/her
