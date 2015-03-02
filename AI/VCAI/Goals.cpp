@@ -591,6 +591,7 @@ TGoalVec Explore::getAllPossibleSubgoals()
 				case Obj::REDWOOD_OBSERVATORY:
 				case Obj::PILLAR_OF_FIRE:
 				case Obj::CARTOGRAPHER:
+				case Obj::MONOLITH_TWO_WAY:
 				case Obj::SUBTERRANEAN_GATE: //TODO: check ai->knownSubterraneanGates
 					objs.push_back (obj);
 			}
