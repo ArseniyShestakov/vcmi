@@ -598,18 +598,13 @@ void VCAI::showTeleportDialog(const std::vector<ObjectInstanceID> exits, QueryID
 	status.addQuery(askID, boost::str(boost::format("Teleport dialog query with %d exits")
 																			% exits.size()));
 
-	ObjectInstanceID choosenTeleport;
-	if(nextTileTeleportId != ObjectInstanceID())
-	{
-		for(auto exit : exits)
-		{
-			if(exit == nextTileTeleportId)
-				choosenTeleport = nextTileTeleportId;
-		}
-	}
+	ObjectInstanceID choosenExit;
+	if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
+		choosenExit = nextTileTeleportId;
+
 	requestActionASAP([=]()
 	{
-		answerQuery(askID, choosenTeleport.getNum());
+		answerQuery(askID, choosenExit.getNum());
 	});
 }
 

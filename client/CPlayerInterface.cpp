@@ -1145,16 +1145,11 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 void CPlayerInterface::showTeleportDialog( const std::vector<ObjectInstanceID> exits, QueryID askID )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
-	ObjectInstanceID choosenTeleport;
-	if(nextTileTeleportId != ObjectInstanceID())
-	{
-		for(auto exit : exits)
-		{
-			if(exit == nextTileTeleportId)
-				choosenTeleport = nextTileTeleportId;
-		}
-	}
-	cb->selectionMade(choosenTeleport.getNum(), askID);
+	ObjectInstanceID choosenExit;
+	if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
+		choosenExit = nextTileTeleportId;
+
+	cb->selectionMade(choosenExit.getNum(), askID);
 }
 
 void CPlayerInterface::tileRevealed(const std::unordered_set<int3, ShashInt3> &pos)
