@@ -29,9 +29,6 @@ const int GOLD_RESERVE = 10000; //when buying creatures we want to keep at least
 
 using namespace vstd;
 
-enum  EMoveState {STOP_MOVE, WAITING_MOVE, CONTINUE_MOVE, DURING_MOVE};
-CondSh<EMoveState> stillMoveHero; //used during hero movement
-
 //one thread may be turn of AI and another will be handling a side effect for AI2
 boost::thread_specific_ptr<CCallback> cb;
 boost::thread_specific_ptr<VCAI> ai;
@@ -450,14 +447,7 @@ void VCAI::requestRealized(PackageApplied *pa)
 				status.madeTurn();
 	}
 
-	if(nextTileTeleportId != ObjectInstanceID()
-	   && pa->packType == typeList.getTypeID<QueryReply>()
-	   && stillMoveHero.get() == DURING_MOVE)
-	{ // After teleportation via CGTeleport object is finished
-		nextTileTeleportId = ObjectInstanceID();
-		stillMoveHero.setn(CONTINUE_MOVE);
-	}
-	else if(pa->packType == typeList.getTypeID<QueryReply>())
+	if(pa->packType == typeList.getTypeID<QueryReply>())
 	{
 		status.receivedAnswerConfirmation(pa->requestID, pa->result);
 	}
@@ -1704,15 +1694,9 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 
 		auto getObj = [&](int3 coord, bool ignoreHero = false)
 		{
-			CGObjectInstance * nptr = nullptr;
-			auto tile = cb->getTile(CGHeroInstance::convertPosition(coord,false));
-			if (!tile) // TODO: find out why is tile can be nullptr as it's not issue for player interface
-				return nptr;
-			return tile->topVisitableObj(ignoreHero);
+			return cb->getTile(coord,false)->topVisitableObj(ignoreHero);
 		};
 
-		boost::unique_lock<boost::mutex> un(stillMoveHero.mx);
-		stillMoveHero.data = CONTINUE_MOVE;
 		auto doMovement = [&](int3 dst, bool transit = false)
 		{
 			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true), transit);
@@ -1724,15 +1708,13 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			int3 currentCoord = path.nodes[i].coord;
 			int3 nextCoord = path.nodes[i-1].coord;
 
-			auto nextObject = getObj(nextCoord, nextCoord == h->pos);
-			if(CGTeleport::isConnected(getObj(currentCoord, currentCoord == h->pos), nextObject))
+			auto currentObject = getObj(currentCoord, currentCoord == CGHeroInstance::convertPosition(h->pos,false));
+			auto nextObject = getObj(nextCoord);
+			if(CGTeleport::isConnected(currentObject, nextObject))
 			{ //we use special login if hero standing on teleporter it's mean we need
 				nextTileTeleportId = nextObject->id;
-
-				stillMoveHero.data = DURING_MOVE;
-				doMovement(h->pos);
-				while(stillMoveHero.data != STOP_MOVE && stillMoveHero.data != CONTINUE_MOVE)
-					stillMoveHero.cond.wait(un);
+				doMovement(currentCoord);
+				nextTileTeleportId = ObjectInstanceID();
 
 				continue;
 			}
