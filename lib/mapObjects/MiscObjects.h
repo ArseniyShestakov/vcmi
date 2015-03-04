@@ -315,6 +315,7 @@ class DLL_LINKAGE CGSubterraneanGate : public CGTeleport
 {
 public:
 	void onHeroVisit(const CGHeroInstance * h) const override;
+	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;
 	void initObj() override;
 	static void postInit(CGameState * gs);
 
