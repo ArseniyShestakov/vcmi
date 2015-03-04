@@ -274,18 +274,19 @@ public:
 	enum EType {UNKNOWN, ENTRANCE, EXIT, BOTH};
 
 	EType type;
-	shared_ptr<TeleportChannel> channel;
+	TeleportChannelID channel;
 
 	CGTeleport();
 	bool isChannelEntrance(ObjectInstanceID src) const;
 	bool isChannelExit(ObjectInstanceID dst) const;
 	TeleportChannel::EType getChannelType() const;
-	shared_ptr<TeleportChannel> findMeChannel(std::vector<Obj> IDs, int SubID) const;
+	TeleportChannelID findMeChannel(std::vector<Obj> IDs, int SubID) const;
 	void addToChannel();
 
 	bool isEntrance() const;
 	bool isExit() const;
-	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = true) const;
+	std::vector<ObjectInstanceID> getAllEntrances(bool excludeCurrent = false) const;
+	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = false) const;
 	ObjectInstanceID getRandomExit() const;
 
 	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;

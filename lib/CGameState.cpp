@@ -3355,12 +3355,12 @@ void CPathfinder::calculatePaths()
 		if(CGTeleport::isPassable(cObj)
 			&& ((!objWhirlpool
 				 && ((allowTeleportTwoWay && cObj->getChannelType() == TeleportChannel::BIDIRECTIONAL)
-					|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() == 1)
-					|| (allowTeleportOneWayRandom && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits().size() > 1)))
+					|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits(true).size() == 1)
+					|| (allowTeleportOneWayRandom && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits(true).size() > 1)))
 				|| (allowTeleportWhirlPool && objWhirlpool
 					&& cObj->getChannelType() != TeleportChannel::DUMMY)))
 		{
-			for(auto objId : cObj->getAllExits())
+			for(auto objId : cObj->getAllExits(true))
 				neighbours.push_back(getObj(objId)->visitablePos());
 		}
 

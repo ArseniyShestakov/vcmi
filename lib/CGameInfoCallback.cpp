@@ -688,6 +688,32 @@ const CGObjectInstance * CGameInfoCallback::getObjInstance( ObjectInstanceID oid
 	return gs->map->objects[oid.num];
 }
 
+std::vector<ObjectInstanceID> CGameInfoCallback::getTeleportChannelEntraces(TeleportChannelID id) const
+{
+	std::vector<ObjectInstanceID> ret;
+	auto channel = gs->map->teleportChannels[id];
+	for(auto entrance : channel->entrances)
+	{
+		if(getObj(entrance))
+			ret.push_back(entrance);
+	}
+
+	return ret;
+}
+
+std::vector<ObjectInstanceID> CGameInfoCallback::getTeleportChannelExits(TeleportChannelID id) const
+{
+	std::vector<ObjectInstanceID> ret;
+	auto channel = gs->map->teleportChannels[id];
+	for(auto exit : channel->exits)
+	{
+		if(getObj(exit))
+			ret.push_back(exit);
+	}
+
+	return ret;
+}
+
 void IGameEventRealizer::showInfoDialog( InfoWindow *iw )
 {
 	commitPackage(iw);

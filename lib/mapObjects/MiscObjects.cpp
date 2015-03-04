@@ -742,7 +742,7 @@ void CGResource::blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer)
 }
 
 CGTeleport::CGTeleport() :
-	type(UNKNOWN), channel(nullptr)
+	type(UNKNOWN), channel(TeleportChannelID())
 {
 }
 
@@ -760,26 +760,49 @@ std::vector<ObjectInstanceID> CGTeleport::instersection(std::vector<ObjectInstan
 
 void CGTeleport::addToChannel()
 {
-	if(isEntrance() && !vstd::contains(channel->entrances, id))
-		channel->entrances.push_back(id);
+	auto tc = cb->gameState()->map->teleportChannels[channel];
+	if(isEntrance() && !vstd::contains(tc->entrances, id))
+		tc->entrances.push_back(id);
 
-	if(isExit() && !vstd::contains(channel->exits, id))
-		channel->exits.push_back(id);
+	if(isExit() && !vstd::contains(tc->exits, id))
+		tc->exits.push_back(id);
 }
 
 TeleportChannel::EType CGTeleport::getChannelType() const
 {
-	if((!channel->entrances.size() || !channel->exits.size())
-		|| (channel->entrances.size() == 1 && channel->entrances == channel->exits))
+	std::vector<ObjectInstanceID> entrances = getAllEntrances();
+	std::vector<ObjectInstanceID> exits = getAllExits();
+	if((!entrances.size() || !exits.size())
+		|| (entrances.size() == 1 && entrances == exits))
+	{
 		return TeleportChannel::DUMMY;
+	}
 
-	auto intersection = instersection(channel->entrances, channel->exits);
-	if(intersection.size() == channel->entrances.size() && intersection.size() == channel->exits.size())
+	auto intersection = instersection(entrances, exits);
+	if(intersection.size() == entrances.size() && intersection.size() == exits.size())
 		return TeleportChannel::BIDIRECTIONAL;
 	else if(!intersection.size())
 		return TeleportChannel::UNIDIRECTIONAL;
 	else
 		return TeleportChannel::MIXED;
+}
+
+std::vector<ObjectInstanceID> CGTeleport::getAllEntrances(bool excludeCurrent) const
+{
+	std::vector<ObjectInstanceID> ret = cb->getTeleportChannelEntraces(channel);
+	if(excludeCurrent)
+		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
+
+	return ret;
+}
+
+std::vector<ObjectInstanceID> CGTeleport::getAllExits(bool excludeCurrent) const
+{
+	std::vector<ObjectInstanceID> ret = cb->getTeleportChannelExits(channel);
+	if(excludeCurrent)
+		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
+
+	return ret;
 }
 
 bool CGTeleport::isEntrance() const
@@ -794,7 +817,7 @@ bool CGTeleport::isExit() const
 
 bool CGTeleport::isChannelEntrance(ObjectInstanceID src) const
 {
-	if(vstd::contains(channel->entrances, src))
+	if(vstd::contains(getAllEntrances(), src))
 		return true;
 	else
 		return false;
@@ -802,19 +825,10 @@ bool CGTeleport::isChannelEntrance(ObjectInstanceID src) const
 
 bool CGTeleport::isChannelExit(ObjectInstanceID dst) const
 {
-	if(vstd::contains(channel->exits, dst))
+	if(vstd::contains(getAllExits(), dst))
 		return true;
 	else
 		return false;
-}
-
-std::vector<ObjectInstanceID> CGTeleport::getAllExits(bool excludeCurrent) const
-{
-	std::vector<ObjectInstanceID> ret = channel->exits;
-	if(excludeCurrent)
-		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
-
-	return ret;
 }
 
 ObjectInstanceID CGTeleport::getRandomExit() const
@@ -843,7 +857,7 @@ void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer,
 		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
 }
 
-shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) const
+TeleportChannelID CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) const
 {
 	for(auto obj : cb->gameState()->map->objects)
 	{
@@ -852,7 +866,7 @@ shared_ptr<TeleportChannel> CGTeleport::findMeChannel(std::vector<Obj> IDs, int 
 			return teleportObj->channel;
 	}
 
-	return nullptr;
+	return TeleportChannelID();
 }
 
 bool CGTeleport::isConnected(const CGTeleport * src, const CGTeleport * dst)
@@ -919,10 +933,11 @@ void CGMonolith::initObj()
 	}
 
 	channel = findMeChannel(IDs, subID);
-	if(!channel)
+	if(channel == TeleportChannelID())
 	{
-		channel = make_shared<TeleportChannel>();
-		cb->gameState()->map->teleportChannels.push_back(channel);
+		auto tc = make_shared<TeleportChannel>();
+		channel = TeleportChannelID(cb->gameState()->map->teleportChannels.size());
+		cb->gameState()->map->teleportChannels.insert(std::make_pair(channel, tc));
 	}
 	addToChannel();
 }
@@ -1016,10 +1031,11 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 				}
 			}
 
-			if(!objCurrent->channel)
+			if(objCurrent->channel == TeleportChannelID())
 			{ // if object not linked to channel then create new channel
-				objCurrent->channel = make_shared<TeleportChannel>();
-				gs->map->teleportChannels.push_back(objCurrent->channel);
+				auto tc = make_shared<TeleportChannel>();
+				objCurrent->channel = TeleportChannelID(gs->map->teleportChannels.size());
+				cb->gameState()->map->teleportChannels.insert(std::make_pair(objCurrent->channel, tc));
 				objCurrent->addToChannel();
 			}
 
