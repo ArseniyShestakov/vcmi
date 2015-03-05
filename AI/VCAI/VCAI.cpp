@@ -1682,8 +1682,8 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 	auto afterMovementCheck = [&]() -> void
 	{
 		waitTillFree(); //movement may cause battle or blocking dialog
-		if(!h) // TODO is it feasible to hero get killed there if game work properly?
-		{ // not sure if AI can currently reconsider to attack bank while staying on it. Check issue 2084 on mantis for more information.
+		if(!h)
+		{
 			lostHero(h);
 			throw std::runtime_error("Hero was lost!");
 		}
@@ -1724,7 +1724,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 		auto visitMoreTeleporters = [&]() -> void
 		{
 			auto currentTeleporter = getObj(CGHeroInstance::convertPosition(h->pos,false));
-			if (!currentTeleporter)
+			if(!currentTeleporter)
 				return;
 			teleportVisitingMode = true;
 			for(auto teleporter : checkTeleportChannelExitsNow)

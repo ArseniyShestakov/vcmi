@@ -3363,7 +3363,7 @@ void CPathfinder::calculatePaths()
 
 		std::vector<int3> neighbour_tiles;
 		gs->getNeighbours(*ct, cp->coord, neighbour_tiles, boost::logic::indeterminate, !cp->land);
-		if (sObj)
+		if(sObj)
 		{
 			for(int3 neighbour_tile: neighbour_tiles)
 			{

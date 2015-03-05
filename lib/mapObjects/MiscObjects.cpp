@@ -908,46 +908,18 @@ void CGMonolith::initObj()
 
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
-	if(getRandomExit() == ObjectInstanceID()) //no exit
+	ObjectInstanceID destinationid = getRandomExit();
+	TeleportDialog td;
+	td.hero = h;
+	if(destinationid == ObjectInstanceID()) //no exit
 	{
 		showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
 		logGlobal->debugStream() << "Cannot find exit subterranean gate for "<< id << " (obj at " << pos << ") :(";
 	}
-
-	TeleportDialog td;
-	td.hero = h;
-	td.exits = getAllExits(true);
-	cb->showTeleportDialog(&td);
-}
-
-void CGSubterraneanGate::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
-{
-	ObjectInstanceID objId = ObjectInstanceID(answer);
-	auto realExits = getAllExits();
-	if(!exits.size() && !realExits.size())
-		return;
-	else if(objId == ObjectInstanceID())
-	{
-		int nextLayer = hero->pos.z < cb->getMapSize().z-1 ? hero->pos.z+1 : 0;
-
-		std::vector<ObjectInstanceID> nextLayerExits;
-		for(auto exit : getAllExits())
-		{
-			auto exitObj = cb->getObj(exit);
-			if(exitObj->pos.z == nextLayer)
-				nextLayerExits.push_back(exit);
-		}
-
-		if(nextLayerExits.size())
-			objId = *RandomGeneratorUtil::nextItem(nextLayerExits, cb->gameState()->getRandomGenerator());
-
-	}
 	else
-		assert(vstd::contains(exits, objId)); // Likely cheating attempt: not random teleporter choosen, but it's not from provided list
+		td.exits.push_back(destinationid);
 
-	auto obj = cb->getObj(objId);
-	if(obj)
-		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
+	cb->showTeleportDialog(&td);
 }
 
 void CGSubterraneanGate::initObj()
@@ -957,9 +929,8 @@ void CGSubterraneanGate::initObj()
 
 void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gates into pairs
 {
-	std::vector < std::vector<CGSubterraneanGate *> > gatesSplit;
-	gatesSplit.resize(cb->getMapSize().z);
-	int maxZ = cb->getMapSize().z-1;
+	//split on underground and surface gates
+	std::vector<CGSubterraneanGate *> gatesSplit[2]; //surface and underground gates
 	for(auto & obj : cb->gameState()->map->objects)
 	{
 		auto hlp = dynamic_cast<CGSubterraneanGate *>(gs->getObjInstance(obj->id));
@@ -967,47 +938,43 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 			gatesSplit[hlp->pos.z].push_back(hlp);
 	}
 
-	for(int z = 0; z <= maxZ; z++)
+	//sort by position
+	std::sort(gatesSplit[0].begin(), gatesSplit[0].end(), [](CGSubterraneanGate * a, CGSubterraneanGate * b)
 	{
-		int nextZ = (z == maxZ) ? 0 : z+1; // for deepest layer next layer is 0
-		//sort by position
-		std::sort(gatesSplit[z].begin(), gatesSplit[z].end(), [](CGSubterraneanGate * a, CGSubterraneanGate * b)
+		return a->pos < b->pos;
+	});
+
+	for(size_t i = 0; i < gatesSplit[0].size(); i++)
+	{
+		CGSubterraneanGate * objCurrent = gatesSplit[0][i];
+
+		//find nearest underground exit
+		std::pair<int, si32> best(-1, std::numeric_limits<si32>::max()); //pair<pos_in_vector, distance^2>
+		for(int j = 0; j < gatesSplit[1].size(); j++)
 		{
-			return a->pos < b->pos;
-		});
+			CGSubterraneanGate *checked = gatesSplit[1][j];
+			if(!checked)
+				continue;
+			si32 hlp = checked->pos.dist2dSQ(objCurrent->pos);
+			if(hlp < best.second)
+			{
+				best.first = j;
+				best.second = hlp;
+			}
+		}
 
-		for(size_t i = 0; i < gatesSplit[z].size(); i++)
+		if(objCurrent->channel == TeleportChannelID())
+		{ // if object not linked to channel then create new channel
+			auto tc = make_shared<TeleportChannel>();
+			objCurrent->channel = TeleportChannelID(gs->map->teleportChannels.size());
+			cb->gameState()->map->teleportChannels.insert(std::make_pair(objCurrent->channel, tc));
+			objCurrent->addToChannel();
+		}
+
+		if(best.first >= 0) //found pair
 		{
-			CGSubterraneanGate * objCurrent = gatesSplit[z][i];
-
-			//find nearest underground exit
-			std::pair<int, si32> best(-1, std::numeric_limits<si32>::max()); //pair<pos_in_vector, distance^2>
-			for(int j = 0; j < gatesSplit[nextZ].size(); j++)
-			{
-				CGSubterraneanGate *checked = gatesSplit[nextZ][j];
-				if(!checked)
-					continue;
-				si32 hlp = checked->pos.dist2dSQ(objCurrent->pos);
-				if(hlp < best.second)
-				{
-					best.first = j;
-					best.second = hlp;
-				}
-			}
-
-			if(objCurrent->channel == TeleportChannelID())
-			{ // if object not linked to channel then create new channel
-				auto tc = make_shared<TeleportChannel>();
-				objCurrent->channel = TeleportChannelID(gs->map->teleportChannels.size());
-				cb->gameState()->map->teleportChannels.insert(std::make_pair(objCurrent->channel, tc));
-				objCurrent->addToChannel();
-			}
-
-			if(best.first >= 0) //found pair
-			{
-				gatesSplit[nextZ][best.first]->channel = objCurrent->channel;
-				gatesSplit[nextZ][best.first]->addToChannel();
-			}
+			gatesSplit[1][best.first]->channel = objCurrent->channel;
+			gatesSplit[1][best.first]->addToChannel();
 		}
 	}
 }
