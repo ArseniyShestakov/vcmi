@@ -867,7 +867,7 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 			destinationids.push_back(getRandomExit());
 	}
 
-	if(!destinationids.size())
+	if(!destinationids.size() && isEntrance())
 		logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
 
 	TeleportDialog td;
