@@ -3351,14 +3351,11 @@ void CPathfinder::calculatePaths()
 
 		auto sObj = ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false));
 		auto cObj = dynamic_cast<const CGTeleport *>(sObj);
-		auto objWhirlpool = dynamic_cast<const CGWhirlpool *>(cObj);
 		if(gs->isTeleportPassable(cObj, hero->tempOwner)
-			&& ((!objWhirlpool
-				 && ((allowTeleportTwoWay && gs->getTeleportChannelType(cObj->channel, hero->tempOwner) == ETeleportChannelType::BIDIRECTIONAL)
-					|| (allowTeleportOneWay && gs->getTeleportChannelType(cObj->channel, hero->tempOwner) == ETeleportChannelType::UNIDIRECTIONAL && gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner).size() == 1)
-					|| (allowTeleportOneWayRandom && gs->getTeleportChannelType(cObj->channel, hero->tempOwner) == ETeleportChannelType::UNIDIRECTIONAL && gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner).size() > 1)))
-				|| (allowTeleportWhirlPool && objWhirlpool
-					&& gs->getTeleportChannelType(cObj->channel, hero->tempOwner) != ETeleportChannelType::DUMMY)))
+			&& (addTeleportWhirlpool(dynamic_cast<const CGWhirlpool *>(cObj))
+				|| addTeleportTwoWay(cObj)
+				|| addTeleportOneWay(cObj)
+				|| addTeleportOneWayRandom(cObj)))
 		{
 			for(auto objId : gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner))
 				neighbours.push_back(getObj(objId)->visitablePos());
@@ -3551,13 +3548,59 @@ CPathfinder::CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance
 	allowTeleportTwoWay = true;
 	allowTeleportOneWay = true;
 	allowTeleportOneWayRandom = false;
-	allowTeleportWhirlPool = false;
+	allowTeleportWhirlpool = false;
 	if (CGWhirlpool::isProtected(hero))
-		allowTeleportWhirlPool = true;
+		allowTeleportWhirlpool = true;
 }
 
 CRandomGenerator & CGameState::getRandomGenerator()
 {
 	//logGlobal->traceStream() << "Fetching CGameState::rand with seed " << rand.nextInt();
 	return rand;
+}
+
+bool CPathfinder::addTeleportTwoWay(const CGTeleport * obj) const
+{
+	if(allowTeleportTwoWay)
+	{
+		if(ETeleportChannelType::BIDIRECTIONAL == gs->getTeleportChannelType(obj->channel, hero->tempOwner))
+			return true;
+	}
+	return false;
+}
+
+bool CPathfinder::addTeleportOneWay(const CGTeleport * obj) const
+{
+	if(allowTeleportOneWay)
+	{
+		if(ETeleportChannelType::UNIDIRECTIONAL == gs->getTeleportChannelType(obj->channel, hero->tempOwner)
+		   && 1 == gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner).size())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CPathfinder::addTeleportOneWayRandom(const CGTeleport * obj) const
+{
+	if(allowTeleportOneWayRandom)
+	{
+		if(ETeleportChannelType::UNIDIRECTIONAL == gs->getTeleportChannelType(obj->channel, hero->tempOwner)
+		   && 1 < gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner).size())
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool CPathfinder::addTeleportWhirlpool(const CGWhirlpool * obj) const
+{
+   if(allowTeleportWhirlpool && obj)
+   {
+	   if(ETeleportChannelType::DUMMY != gs->getTeleportChannelType(obj->channel, hero->tempOwner))
+		   return true;
+   }
+   return false;
 }
