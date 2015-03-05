@@ -718,15 +718,6 @@ std::vector<ObjectInstanceID> CGameInfoCallback::getTeleportChannelExits(Telepor
 
 ETeleportChannelType::ETeleportChannelType CGameInfoCallback::getTeleportChannelType(TeleportChannelID id, PlayerColor Player) const
 {
-	auto checkIntersection = [](std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2)
-	{
-		std::vector<ObjectInstanceID> v3;
-		std::sort(v1.begin(), v1.end());
-		std::sort(v2.begin(), v2.end());
-		std::set_intersection(v1.begin(),v1.end(),v2.begin(),v2.end(),back_inserter(v3));
-		return v3;
-	};
-
 	std::vector<ObjectInstanceID> entrances = getTeleportChannelEntraces(id, ObjectInstanceID(), Player);
 	std::vector<ObjectInstanceID> exits = getTeleportChannelExits(id, ObjectInstanceID(), Player);
 	if((!entrances.size() || !exits.size())
@@ -735,7 +726,7 @@ ETeleportChannelType::ETeleportChannelType CGameInfoCallback::getTeleportChannel
 		return ETeleportChannelType::DUMMY;
 	}
 
-	auto intersection = checkIntersection(entrances, exits);
+	auto intersection = vstd::intersection(entrances, exits);
 	if(intersection.size() == entrances.size() && intersection.size() == exits.size())
 		return ETeleportChannelType::BIDIRECTIONAL;
 	else if(!intersection.size())
