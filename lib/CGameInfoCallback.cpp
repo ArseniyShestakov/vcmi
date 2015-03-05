@@ -688,30 +688,68 @@ const CGObjectInstance * CGameInfoCallback::getObjInstance( ObjectInstanceID oid
 	return gs->map->objects[oid.num];
 }
 
-std::vector<ObjectInstanceID> CGameInfoCallback::getTeleportChannelEntraces(TeleportChannelID id) const
+std::vector<ObjectInstanceID> CGameInfoCallback::getTeleportChannelEntraces(TeleportChannelID id, ObjectInstanceID excludeId, PlayerColor Player) const
 {
 	std::vector<ObjectInstanceID> ret;
 	auto channel = gs->map->teleportChannels[id];
 	for(auto entrance : channel->entrances)
 	{
-		if(getObj(entrance))
+		auto obj = getObj(entrance);
+		if(obj && (Player == PlayerColor::UNFLAGGABLE || isVisible(obj->pos, Player)))
 			ret.push_back(entrance);
 	}
 
 	return ret;
 }
 
-std::vector<ObjectInstanceID> CGameInfoCallback::getTeleportChannelExits(TeleportChannelID id) const
+std::vector<ObjectInstanceID> CGameInfoCallback::getTeleportChannelExits(TeleportChannelID id, ObjectInstanceID excludeId, PlayerColor Player) const
 {
 	std::vector<ObjectInstanceID> ret;
 	auto channel = gs->map->teleportChannels[id];
 	for(auto exit : channel->exits)
 	{
-		if(getObj(exit))
+		auto obj = getObj(exit);
+		if(obj && (Player == PlayerColor::UNFLAGGABLE || isVisible(obj->pos, Player)))
 			ret.push_back(exit);
 	}
 
 	return ret;
+}
+
+ETeleportChannelType::ETeleportChannelType CGameInfoCallback::getTeleportChannelType(TeleportChannelID id, PlayerColor Player) const
+{
+	auto checkIntersection = [](std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2)
+	{
+		std::vector<ObjectInstanceID> v3;
+		std::sort(v1.begin(), v1.end());
+		std::sort(v2.begin(), v2.end());
+		std::set_intersection(v1.begin(),v1.end(),v2.begin(),v2.end(),back_inserter(v3));
+		return v3;
+	};
+
+	std::vector<ObjectInstanceID> entrances = getTeleportChannelEntraces(id, ObjectInstanceID(), Player);
+	std::vector<ObjectInstanceID> exits = getTeleportChannelExits(id, ObjectInstanceID(), Player);
+	if((!entrances.size() || !exits.size())
+		|| (entrances.size() == 1 && entrances == exits))
+	{
+		return ETeleportChannelType::DUMMY;
+	}
+
+	auto intersection = checkIntersection(entrances, exits);
+	if(intersection.size() == entrances.size() && intersection.size() == exits.size())
+		return ETeleportChannelType::BIDIRECTIONAL;
+	else if(!intersection.size())
+		return ETeleportChannelType::UNIDIRECTIONAL;
+	else
+		return ETeleportChannelType::MIXED;
+}
+
+bool CGameInfoCallback::isTeleportPassable(const CGTeleport * obj, PlayerColor Player) const
+{
+	if(obj && obj->isEntrance() && getTeleportChannelType(obj->channel, Player) != ETeleportChannelType::DUMMY)
+		return true;
+	else
+		return false;
 }
 
 void IGameEventRealizer::showInfoDialog( InfoWindow *iw )

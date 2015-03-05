@@ -252,11 +252,6 @@ public:
  */
 struct DLL_LINKAGE TeleportChannel
 {
-	enum EType
-	{
-		DUMMY, BIDIRECTIONAL, UNIDIRECTIONAL, MIXED
-	};
-
 	std::vector<ObjectInstanceID> entrances;
 	std::vector<ObjectInstanceID> exits;
 
@@ -279,7 +274,6 @@ public:
 	CGTeleport();
 	bool isChannelEntrance(ObjectInstanceID src) const;
 	bool isChannelExit(ObjectInstanceID dst) const;
-	TeleportChannel::EType getChannelType() const;
 	TeleportChannelID findMeChannel(std::vector<Obj> IDs, int SubID) const;
 	void addToChannel();
 
@@ -292,7 +286,6 @@ public:
 	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
 	static bool isConnected(const CGObjectInstance * src, const CGObjectInstance * dst);
-	static bool isPassable(const CGTeleport * obj);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{

@@ -3352,15 +3352,15 @@ void CPathfinder::calculatePaths()
 		auto sObj = ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false));
 		auto cObj = dynamic_cast<const CGTeleport *>(sObj);
 		auto objWhirlpool = dynamic_cast<const CGWhirlpool *>(cObj);
-		if(CGTeleport::isPassable(cObj)
+		if(gs->isTeleportPassable(cObj, hero->tempOwner)
 			&& ((!objWhirlpool
-				 && ((allowTeleportTwoWay && cObj->getChannelType() == TeleportChannel::BIDIRECTIONAL)
-					|| (allowTeleportOneWay && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits(true).size() == 1)
-					|| (allowTeleportOneWayRandom && cObj->getChannelType() == TeleportChannel::UNIDIRECTIONAL && cObj->getAllExits(true).size() > 1)))
+				 && ((allowTeleportTwoWay && gs->getTeleportChannelType(cObj->channel, hero->tempOwner) == ETeleportChannelType::BIDIRECTIONAL)
+					|| (allowTeleportOneWay && gs->getTeleportChannelType(cObj->channel, hero->tempOwner) == ETeleportChannelType::UNIDIRECTIONAL && gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner).size() == 1)
+					|| (allowTeleportOneWayRandom && gs->getTeleportChannelType(cObj->channel, hero->tempOwner) == ETeleportChannelType::UNIDIRECTIONAL && gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner).size() > 1)))
 				|| (allowTeleportWhirlPool && objWhirlpool
-					&& cObj->getChannelType() != TeleportChannel::DUMMY)))
+					&& gs->getTeleportChannelType(cObj->channel, hero->tempOwner) != ETeleportChannelType::DUMMY)))
 		{
-			for(auto objId : cObj->getAllExits(true))
+			for(auto objId : gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner))
 				neighbours.push_back(getObj(objId)->visitablePos());
 		}
 
@@ -3447,7 +3447,7 @@ void CPathfinder::calculatePaths()
 						&& (dt->topVisitableObj()->getOwner() == PlayerColor::UNFLAGGABLE
 							|| dt->topVisitableObj()->passableFor(hero->tempOwner)))
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| CGTeleport::isPassable(dObj) // Always add entry teleport with non-dummy channel
+					|| gs->isTeleportPassable(cObj, hero->tempOwner) // Always add entry teleport with non-dummy channel
 					|| CGTeleport::isConnected(cObj, dObj) // Always add exit points of teleport
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
@@ -3549,7 +3549,7 @@ CPathfinder::CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance
 
 	allowEmbarkAndDisembark = true;
 	allowTeleportTwoWay = true;
-	allowTeleportOneWay = false;
+	allowTeleportOneWay = true;
 	allowTeleportOneWayRandom = false;
 	allowTeleportWhirlPool = false;
 	if (CGWhirlpool::isProtected(hero))

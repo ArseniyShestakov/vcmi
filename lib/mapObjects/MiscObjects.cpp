@@ -746,18 +746,6 @@ CGTeleport::CGTeleport() :
 {
 }
 
-std::vector<ObjectInstanceID> CGTeleport::instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const
-{
-	std::vector<ObjectInstanceID> v3;
-
-	std::sort(v1.begin(), v1.end());
-	std::sort(v2.begin(), v2.end());
-
-	std::set_intersection(v1.begin(),v1.end(),v2.begin(),v2.end(),back_inserter(v3));
-
-	return v3;
-}
-
 void CGTeleport::addToChannel()
 {
 	auto tc = cb->gameState()->map->teleportChannels[channel];
@@ -766,25 +754,6 @@ void CGTeleport::addToChannel()
 
 	if(isExit() && !vstd::contains(tc->exits, id))
 		tc->exits.push_back(id);
-}
-
-TeleportChannel::EType CGTeleport::getChannelType() const
-{
-	std::vector<ObjectInstanceID> entrances = getAllEntrances();
-	std::vector<ObjectInstanceID> exits = getAllExits();
-	if((!entrances.size() || !exits.size())
-		|| (entrances.size() == 1 && entrances == exits))
-	{
-		return TeleportChannel::DUMMY;
-	}
-
-	auto intersection = instersection(entrances, exits);
-	if(intersection.size() == entrances.size() && intersection.size() == exits.size())
-		return TeleportChannel::BIDIRECTIONAL;
-	else if(!intersection.size())
-		return TeleportChannel::UNIDIRECTIONAL;
-	else
-		return TeleportChannel::MIXED;
 }
 
 std::vector<ObjectInstanceID> CGTeleport::getAllEntrances(bool excludeCurrent) const
@@ -884,21 +853,16 @@ bool CGTeleport::isConnected(const CGObjectInstance * src, const CGObjectInstanc
 	return isConnected(srcObj, dstObj);
 }
 
-bool CGTeleport::isPassable(const CGTeleport * obj)
-{
-	if(obj && obj->isEntrance() && obj->getChannelType() != TeleportChannel::DUMMY)
-		return true;
-	else
-		return false;
-}
-
 void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 {
 	std::vector<ObjectInstanceID> destinationids;
 	if(isEntrance())
 	{
-		if(getChannelType() == TeleportChannel::BIDIRECTIONAL && getAllExits().size() > 1)
-			destinationids = getAllExits();
+		if(cb->getTeleportChannelType(channel) == ETeleportChannelType::BIDIRECTIONAL
+		   && cb->getTeleportChannelExits(channel).size() > 1)
+		{
+			destinationids = cb->getTeleportChannelExits(channel);
+		}
 		else
 			destinationids.push_back(getRandomExit());
 	}

@@ -474,6 +474,17 @@ namespace ETileType
 	};
 }
 
+namespace ETeleportChannelType
+{
+	enum ETeleportChannelType
+	{
+		DUMMY,
+		BIDIRECTIONAL,
+		UNIDIRECTIONAL,
+		MIXED
+	};
+}
+
 class Obj
 {
 public:
