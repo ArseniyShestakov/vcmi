@@ -803,7 +803,7 @@ bool CGTeleport::isChannelExit(ObjectInstanceID dst) const
 ObjectInstanceID CGTeleport::getRandomExit() const
 {
 	ObjectInstanceID destinationid;
-	auto exits = getAllExits();
+	auto exits = getAllExits(true);
 	if(exits.size())
 		destinationid = *RandomGeneratorUtil::nextItem(exits, cb->gameState()->getRandomGenerator());
 
@@ -813,8 +813,8 @@ ObjectInstanceID CGTeleport::getRandomExit() const
 void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
 {
 	ObjectInstanceID objId = ObjectInstanceID(answer);
-	auto realExits = getAllExits();
-	if(!exits.size() && !realExits.size())
+	auto realExits = getAllExits(true);
+	if(!isEntrance() || (!exits.size() && !realExits.size()))
 		return;
 	else if(objId == ObjectInstanceID())
 		objId = getRandomExit();
@@ -916,7 +916,7 @@ void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 
 	TeleportDialog td;
 	td.hero = h;
-	td.exits = getAllExits();
+	td.exits = getAllExits(true);
 	cb->showTeleportDialog(&td);
 }
 
@@ -1038,7 +1038,7 @@ void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 		cb->changeStackCount(StackLocation(h, targetstack), -countToTake);
 	}
 	else
-		 destinationids = getAllExits();
+		 destinationids = getAllExits(true);
 
 	TeleportDialog td;
 	td.hero = h;
