@@ -275,7 +275,6 @@ public:
 	bool isChannelEntrance(ObjectInstanceID src) const;
 	bool isChannelExit(ObjectInstanceID dst) const;
 	TeleportChannelID findMeChannel(std::vector<Obj> IDs, int SubID) const;
-	void addToChannel();
 
 	bool isEntrance() const;
 	bool isExit() const;
@@ -286,6 +285,7 @@ public:
 	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
 	static bool isConnected(const CGObjectInstance * src, const CGObjectInstance * dst);
+	static void addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{

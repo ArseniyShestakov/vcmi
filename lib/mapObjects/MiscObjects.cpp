@@ -746,14 +746,22 @@ CGTeleport::CGTeleport() :
 {
 }
 
-void CGTeleport::addToChannel()
+void CGTeleport::addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj)
 {
-	auto tc = cb->gameState()->map->teleportChannels[channel];
-	if(isEntrance() && !vstd::contains(tc->entrances, id))
-		tc->entrances.push_back(id);
+	shared_ptr<TeleportChannel> tc;
+	if(channelsList.find(obj->channel) == channelsList.end())
+	{
+		tc = make_shared<TeleportChannel>();
+		channelsList.insert(std::make_pair(obj->channel, tc));
+	}
+	else
+		tc = channelsList[obj->channel];
 
-	if(isExit() && !vstd::contains(tc->exits, id))
-		tc->exits.push_back(id);
+	if(obj->isEntrance() && !vstd::contains(tc->entrances, obj->id))
+		tc->entrances.push_back(obj->id);
+
+	if(obj->isExit() && !vstd::contains(tc->exits, obj->id))
+		tc->exits.push_back(obj->id);
 }
 
 std::vector<ObjectInstanceID> CGTeleport::getAllEntrances(bool excludeCurrent) const
@@ -898,12 +906,9 @@ void CGMonolith::initObj()
 
 	channel = findMeChannel(IDs, subID);
 	if(channel == TeleportChannelID())
-	{
-		auto tc = make_shared<TeleportChannel>();
 		channel = TeleportChannelID(cb->gameState()->map->teleportChannels.size());
-		cb->gameState()->map->teleportChannels.insert(std::make_pair(channel, tc));
-	}
-	addToChannel();
+
+	addToChannel(cb->gameState()->map->teleportChannels, this);
 }
 
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
@@ -965,16 +970,14 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 
 		if(objCurrent->channel == TeleportChannelID())
 		{ // if object not linked to channel then create new channel
-			auto tc = make_shared<TeleportChannel>();
 			objCurrent->channel = TeleportChannelID(gs->map->teleportChannels.size());
-			cb->gameState()->map->teleportChannels.insert(std::make_pair(objCurrent->channel, tc));
-			objCurrent->addToChannel();
+			addToChannel(cb->gameState()->map->teleportChannels, objCurrent);
 		}
 
 		if(best.first >= 0) //found pair
 		{
 			gatesSplit[1][best.first]->channel = objCurrent->channel;
-			gatesSplit[1][best.first]->addToChannel();
+			addToChannel(cb->gameState()->map->teleportChannels, gatesSplit[1][best.first]);
 		}
 	}
 }
