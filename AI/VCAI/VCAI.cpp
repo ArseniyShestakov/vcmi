@@ -1679,6 +1679,16 @@ bool VCAI::isAccessibleForHero(const int3 & pos, HeroPtr h, bool includeAllies /
 
 bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 {
+	auto afterMovementCheck = [&]() -> void
+	{
+		waitTillFree(); //movement may cause battle or blocking dialog
+		if(!h) // TODO is it feasible to hero get killed there if game work properly?
+		{ // not sure if AI can currently reconsider to attack bank while staying on it. Check issue 2084 on mantis for more information.
+			lostHero(h);
+			throw std::runtime_error("Hero was lost!");
+		}
+	};
+
 	logAi->debugStream() << boost::format("Moving hero %s to tile %s") % h->name % dst;
 	int3 startHpos = h->visitablePos();
 	bool ret = false;
@@ -1687,12 +1697,8 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 		//FIXME: this assertion fails also if AI moves onto defeated guarded object
 		assert(cb->getVisitableObjs(dst).size() > 1); //there's no point in revisiting tile where there is no visitable object
 		cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true));
-		waitTillFree(); //movement may cause battle or blocking dialog
-		if(!h) // TODO is it feasible to hero get killed there if game work properly?
-		{ // not sure if AI can currently reconsider to attack bank while staying on it. Check issue 2084 on mantis for more information.
-			lostHero(h);
-			throw std::runtime_error("Hero was lost!");
-		}
+		afterMovementCheck();// TODO: is it feasible to hero get killed there if game work properly?
+							 // not sure if AI can currently reconsider to attack bank while staying on it. Check issue 2084 on mantis for more information.
 		ret = true;
 	}
 	else
@@ -1727,12 +1733,14 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 				doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
 				nextTileTeleportId = ObjectInstanceID();
 			}
+			afterMovementCheck();
 
 			nextTileTeleportId = currentTeleporter->id;
 			doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
 			nextTileTeleportId = ObjectInstanceID();
 			checkTeleportChannelExitsNow.clear();
 			teleportVisitingMode = false;
+			afterMovementCheck(); //this shouldn't be needed, but we want to be sure
 		};
 
 		int i=path.nodes.size()-1;
@@ -1748,6 +1756,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 				nextTileTeleportId = nextObject->id;
 				doMovement(currentCoord);
 				nextTileTeleportId = ObjectInstanceID();
+				afterMovementCheck();
 
 				if(checkTeleportChannelExitsNow.size())
 					visitMoreTeleporters();
@@ -1775,14 +1784,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			else
 				doMovement(endpos);
 
-			waitTillFree(); //movement may cause battle or blocking dialog
-			boost::this_thread::interruption_point();
-			if(!h) //we lost hero - remove all tasks assigned to him/her
-			{
-				lostHero(h);
-				//we need to throw, otherwise hero will be assigned to sth again
-				throw std::runtime_error("Hero was lost!");
-			}
+			afterMovementCheck();
 
 			if(checkTeleportChannelExitsNow.size())
 				visitMoreTeleporters();
