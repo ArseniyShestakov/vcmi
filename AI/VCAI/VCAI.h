@@ -138,6 +138,9 @@ public:
 
 	friend class FuzzyHelper;
 
+	std::map<TeleportChannelID, shared_ptr<TeleportChannel> > knownTeleportChannels;
+	std::vector<ObjectInstanceID> checkTeleportChannelExitsNow;
+	bool teleportVisitingMode;
 	std::map<const CGObjectInstance *, const CGObjectInstance *> knownSubterraneanGates;
 	ObjectInstanceID nextTileTeleportId;
 	//std::vector<const CGObjectInstance *> visitedThisWeek; //only OPWs
@@ -344,7 +347,7 @@ public:
 
 	template <typename Handler> void serializeInternal(Handler &h, const int version)
 	{
-		h & knownSubterraneanGates & townVisitsThisWeek & lockedHeroes & reservedHeroesMap; //FIXME: cannot instantiate abstract class
+		h & knownTeleportChannels & knownSubterraneanGates & townVisitsThisWeek & lockedHeroes & reservedHeroesMap; //FIXME: cannot instantiate abstract class
 		h & visitableObjs & alreadyVisited & reservedObjs;
 		h & saving & status & battlename;
 		h & heroesUnableToExplore;

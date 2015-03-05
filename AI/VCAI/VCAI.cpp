@@ -123,11 +123,19 @@ void VCAI::heroMoved(const TryMoveHero & details)
 		const CGObjectInstance *o1 = frontOrNull(cb->getVisitableObjs(from)),
 			*o2 = frontOrNull(cb->getVisitableObjs(to));
 
-		if(o1 && o2 && o1->ID == Obj::SUBTERRANEAN_GATE && o2->ID == Obj::SUBTERRANEAN_GATE)
+		auto t1 = dynamic_cast<const CGTeleport *>(o1);
+		auto t2 = dynamic_cast<const CGTeleport *>(o2);
+		if(t1 && t2)
 		{
-			knownSubterraneanGates[o1] = o2;
-			knownSubterraneanGates[o2] = o1;
-            logAi->debugStream() << boost::format("Found a pair of subterranean gates between %s and %s!") % from % to;
+			if(ETeleportChannelType::BIDIRECTIONAL == cb->getTeleportChannelType(t1->channel))
+			{
+				if(o1->ID == Obj::SUBTERRANEAN_GATE)
+				{
+					knownSubterraneanGates[o1] = o2;
+					knownSubterraneanGates[o2] = o1;
+					logAi->debugStream() << boost::format("Found a pair of subterranean gates between %s and %s!") % from % to;
+				}
+			}
 		}
 	}
 }
@@ -601,6 +609,16 @@ void VCAI::showTeleportDialog(const std::vector<ObjectInstanceID> exits, QueryID
 	ObjectInstanceID choosenExit;
 	if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
 		choosenExit = nextTileTeleportId;
+
+	if(!teleportVisitingMode)
+	{
+		auto suggestedChannelExits = exits;
+		suggestedChannelExits.erase(boost::remove_if(suggestedChannelExits, [&](ObjectInstanceID id) -> bool
+		{
+			return vstd::contains(visitableObjs, cb->getObj(id)) || id == choosenExit;
+		}), suggestedChannelExits.end());
+		checkTeleportChannelExitsNow = suggestedChannelExits;
+	}
 
 	requestActionASAP([=]()
 	{
@@ -1697,6 +1715,26 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true), transit);
 		};
 
+		auto visitMoreTeleporters = [&]() -> void
+		{
+			auto currentTeleporter = getObj(CGHeroInstance::convertPosition(h->pos,false));
+			if (!currentTeleporter)
+				return;
+			teleportVisitingMode = true;
+			for(auto teleporter : checkTeleportChannelExitsNow)
+			{
+				nextTileTeleportId = teleporter;
+				doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
+				nextTileTeleportId = ObjectInstanceID();
+			}
+
+			nextTileTeleportId = currentTeleporter->id;
+			doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
+			nextTileTeleportId = ObjectInstanceID();
+			checkTeleportChannelExitsNow.clear();
+			teleportVisitingMode = false;
+		};
+
 		int i=path.nodes.size()-1;
 		for(; i>0; i--)
 		{
@@ -1710,6 +1748,9 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 				nextTileTeleportId = nextObject->id;
 				doMovement(currentCoord);
 				nextTileTeleportId = ObjectInstanceID();
+
+				if(checkTeleportChannelExitsNow.size())
+					visitMoreTeleporters();
 
 				continue;
 			}
@@ -1743,6 +1784,8 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 				throw std::runtime_error("Hero was lost!");
 			}
 
+			if(checkTeleportChannelExitsNow.size())
+				visitMoreTeleporters();
 		}
 		ret = !i;
 	}
