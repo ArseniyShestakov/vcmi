@@ -901,7 +901,7 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	std::vector<ObjectInstanceID> destinationids;
 	if(isEntrance())
 	{
-		if(cb->getTeleportChannelType(channel) == ETeleportChannelType::BIDIRECTIONAL
+		if(ETeleportChannelType::BIDIRECTIONAL == cb->getTeleportChannelType(channel)
 		   && cb->getTeleportChannelExits(channel).size() > 1)
 		{
 			destinationids = cb->getTeleportChannelExits(channel);
@@ -910,11 +910,17 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 			destinationids.push_back(getRandomExit(h));
 	}
 
-	if(isEntrance() && cb->getTeleportChannelType(channel))
+	if(isEntrance())
 	{
-		logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
-		td.impassable = true;
+		if(ETeleportChannelType::IMPASSABLE == cb->getTeleportChannelType(channel))
+		{
+			logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
+			td.impassable = true;
+		}
+		else if(getRandomExit(h) == ObjectInstanceID())
+			logGlobal->warnStream() << "All exits blocked for monolith "<< id << " (obj at " << pos << ") :(";
 	}
+
 	td.exits = destinationids;
 	cb->showTeleportDialog(&td);
 }
@@ -950,7 +956,7 @@ void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
 	ObjectInstanceID destinationid = getRandomExit(h);
 	TeleportDialog td(h, channel);
-	if(destinationid == ObjectInstanceID()) //no exit
+	if(ETeleportChannelType::IMPASSABLE == cb->getTeleportChannelType(channel)) //no exit
 	{
 		showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
 		logGlobal->debugStream() << "Cannot find exit subterranean gate for "<< id << " (obj at " << pos << ") :(";
@@ -1021,11 +1027,13 @@ void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 {
 	TeleportDialog td(h, channel);
 	std::vector<ObjectInstanceID> destinationids;
-	if(getRandomExit(h) == ObjectInstanceID())
+	if(ETeleportChannelType::IMPASSABLE == cb->getTeleportChannelType(channel))
 	{
 		logGlobal->warnStream() << "Cannot find exit whirlpool for "<< id << " (obj at " << pos << ") :(";
 		td.impassable = true;
 	}
+	else if(getRandomExit(h) == ObjectInstanceID())
+		logGlobal->warnStream() << "All exits are blocked for whirlpool "<< id << " (obj at " << pos << ") :(";
 
 	if(!isProtected(h))
 	{
