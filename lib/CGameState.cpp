@@ -3448,7 +3448,7 @@ void CPathfinder::calculatePaths()
 						&& (dt->topVisitableObj()->getOwner() == PlayerColor::UNFLAGGABLE
 							|| dt->topVisitableObj()->passableFor(hero->tempOwner)))
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| gs->isTeleportPassable(cObj, hero->tempOwner) // Always add entry teleport with non-dummy channel
+					|| gs->isTeleportPassable(dObj, hero->tempOwner) // Always add entry teleport with non-dummy channel
 					|| CGTeleport::isConnected(cObj, dObj) // Always add exit points of teleport
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
