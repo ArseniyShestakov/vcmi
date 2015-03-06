@@ -869,8 +869,7 @@ bool CGTeleport::isConnected(const CGObjectInstance * src, const CGObjectInstanc
 
 void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 {
-	TeleportDialog td;
-	td.hero = h;
+	TeleportDialog td(h, channel);
 	std::vector<ObjectInstanceID> destinationids;
 	if(isEntrance())
 	{
@@ -922,8 +921,7 @@ void CGMonolith::initObj()
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
 	ObjectInstanceID destinationid = getRandomExit();
-	TeleportDialog td;
-	td.hero = h;
+	TeleportDialog td(h, channel);
 	if(destinationid == ObjectInstanceID()) //no exit
 	{
 		showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
@@ -993,8 +991,7 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 
 void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 {
-	TeleportDialog td;
-	td.hero = h;
+	TeleportDialog td(h, channel);
 	std::vector<ObjectInstanceID> destinationids;
 	if(getRandomExit() == ObjectInstanceID())
 	{

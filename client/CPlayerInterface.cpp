@@ -1142,7 +1142,7 @@ void CPlayerInterface::showBlockingDialog( const std::string &text, const std::v
 
 }
 
-void CPlayerInterface::showTeleportDialog( const std::vector<ObjectInstanceID> exits, bool impassable, QueryID askID )
+void CPlayerInterface::showTeleportDialog(TeleportChannelID channel, const std::vector<ObjectInstanceID> exits, bool impassable, QueryID askID)
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
 	ObjectInstanceID choosenExit;
