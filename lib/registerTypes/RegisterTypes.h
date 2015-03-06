@@ -36,8 +36,8 @@ void registerTypesMapObjects1(Serializer &s)
 
 	// Non-armed objects
 	s.template registerType<CGObjectInstance, CGTeleport>();
-		s.template registerType<CGTeleport, CGSubterraneanGate>();
 		s.template registerType<CGTeleport, CGMonolith>();
+			s.template registerType<CGMonolith, CGSubterraneanGate>();
 			s.template registerType<CGMonolith, CGWhirlpool>();
 	s.template registerType<CGObjectInstance, CGSignBottle>();
 	s.template registerType<CGObjectInstance, CGScholar>();

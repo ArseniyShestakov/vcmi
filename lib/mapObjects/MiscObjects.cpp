@@ -824,7 +824,7 @@ ObjectInstanceID CGTeleport::getRandomExit(const CGHeroInstance * h) const
 	return destinationid;
 }
 
-void CGTeleport::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
+void CGMonolith::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
 {
 	ObjectInstanceID objId = ObjectInstanceID(answer);
 	auto realExits = getAllExits(true);
