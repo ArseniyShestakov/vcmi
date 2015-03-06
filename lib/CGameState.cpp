@@ -3577,11 +3577,9 @@ bool CPathfinder::addTeleportOneWay(const CGTeleport * obj) const
 {
 	if(allowTeleportOneWay)
 	{
-		if(ETeleportChannelType::UNIDIRECTIONAL == gs->getTeleportChannelType(obj->channel, hero->tempOwner)
-		   && 1 == gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner).size())
-		{
+		auto filteredExits = CGTeleport::filterExits(gs, hero, gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner));
+		if(filteredExits.size() == 1)
 			return true;
-		}
 	}
 	return false;
 }
@@ -3590,10 +3588,11 @@ bool CPathfinder::addTeleportOneWayRandom(const CGTeleport * obj) const
 {
 	if(allowTeleportOneWayRandom)
 	{
-		if(ETeleportChannelType::UNIDIRECTIONAL == gs->getTeleportChannelType(obj->channel, hero->tempOwner)
-		   && 1 < gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner).size())
+		if(ETeleportChannelType::UNIDIRECTIONAL == gs->getTeleportChannelType(obj->channel, hero->tempOwner))
 		{
-			return true;
+			auto filteredExits = CGTeleport::filterExits(gs, hero, gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner));
+			if(filteredExits.size() > 1)
+				return true;
 		}
 	}
 	return false;
