@@ -3358,7 +3358,11 @@ void CPathfinder::calculatePaths()
 				|| addTeleportOneWayRandom(cObj)))
 		{
 			for(auto objId : gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner))
-				neighbours.push_back(getObj(objId)->visitablePos());
+			{
+				auto obj = getObj(objId);
+				if(CGTeleport::canPassThrough(gs, hero, obj))
+					neighbours.push_back(obj->visitablePos());
+			}
 		}
 
 		std::vector<int3> neighbour_tiles;

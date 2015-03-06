@@ -285,12 +285,13 @@ public:
 	bool isExit() const;
 	std::vector<ObjectInstanceID> getAllEntrances(bool excludeCurrent = false) const;
 	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = false) const;
-	ObjectInstanceID getRandomExit() const;
+	ObjectInstanceID getRandomExit(const CGHeroInstance * h) const;
 
 	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const;
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
 	static bool isConnected(const CGObjectInstance * src, const CGObjectInstance * dst);
 	static void addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj);
+	static bool canPassThrough(CGameState * gs, const CGHeroInstance * h, const CGObjectInstance * obj);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
