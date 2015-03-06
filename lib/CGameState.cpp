@@ -3444,9 +3444,7 @@ void CPathfinder::calculatePaths()
 				if(dp->accessible == CGPathNode::ACCESSIBLE
 					|| dp->coord == CGHeroInstance::convertPosition(hero->pos, false) // This one is tricky, we can ignore fact that tile is not ACCESSIBLE in case if it's our hero block it. Though this need investigation.
 					|| (dp->accessible == CGPathNode::VISITABLE
-						&& CGTeleport::isTeleport(dt->topVisitableObj())
-						&& (dt->topVisitableObj()->getOwner() == PlayerColor::UNFLAGGABLE
-							|| dt->topVisitableObj()->passableFor(hero->tempOwner)))
+						&& CGTeleport::isTeleport(dt->topVisitableObj())) // For now we'll walways allos transit for teleports
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
 					|| gs->isTeleportPassable(dObj, hero->tempOwner) // Always add entry teleport with non-dummy channel
 					|| CGTeleport::isConnected(cObj, dObj) // Always add exit points of teleport

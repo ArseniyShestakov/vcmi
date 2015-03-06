@@ -1762,14 +1762,8 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, bo
 		}
 		else if(visitDest == VISIT_DEST)
 		{
-			if(!transit || !CGTeleport::isTeleport(t.topVisitableObj())
-				|| (t.topVisitableObj()->getOwner() != PlayerColor::UNFLAGGABLE
-					&& !t.topVisitableObj()->passableFor(h->tempOwner)))
-			{
+			if(!transit || !CGTeleport::isTeleport(t.topVisitableObj()))
 				visitObjectOnTile(t, h);
-			}
-			else if(t.topVisitableObj()->getOwner() != PlayerColor::UNFLAGGABLE)
-				setOwner(t.topVisitableObj(), h->tempOwner);
 		}
 
 		queries.popIfTop(moveQuery);
