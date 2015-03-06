@@ -863,6 +863,8 @@ bool CGTeleport::isConnected(const CGObjectInstance * src, const CGObjectInstanc
 
 void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 {
+	TeleportDialog td;
+	td.hero = h;
 	std::vector<ObjectInstanceID> destinationids;
 	if(isEntrance())
 	{
@@ -876,10 +878,10 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	}
 
 	if(!destinationids.size() && isEntrance())
+	{
 		logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
-
-	TeleportDialog td;
-	td.hero = h;
+		td.impassable = true;
+	}
 	td.exits = destinationids;
 	cb->showTeleportDialog(&td);
 }
@@ -920,6 +922,7 @@ void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 	{
 		showInfoDialog(h,153,0);//Just inside the entrance you find a large pile of rubble blocking the tunnel. You leave discouraged.
 		logGlobal->debugStream() << "Cannot find exit subterranean gate for "<< id << " (obj at " << pos << ") :(";
+		td.impassable = true;
 	}
 	else
 		td.exits.push_back(destinationid);
@@ -984,9 +987,14 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 
 void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 {
+	TeleportDialog td;
+	td.hero = h;
 	std::vector<ObjectInstanceID> destinationids;
 	if(getRandomExit() == ObjectInstanceID())
+	{
 		logGlobal->warnStream() << "Cannot find exit whirlpool for "<< id << " (obj at " << pos << ") :(";
+		td.impassable = true;
+	}
 
 	if(!isProtected(h))
 	{
@@ -1010,8 +1018,6 @@ void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 	else
 		 destinationids = getAllExits(true);
 
-	TeleportDialog td;
-	td.hero = h;
 	td.exits = destinationids;
 	cb->showTeleportDialog(&td);
 }
