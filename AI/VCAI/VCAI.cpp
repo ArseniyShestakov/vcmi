@@ -599,7 +599,7 @@ void VCAI::showBlockingDialog(const std::string &text, const std::vector<Compone
 	});
 }
 
-void VCAI::showTeleportDialog(const std::vector<ObjectInstanceID> exits, QueryID askID)
+void VCAI::showTeleportDialog(const std::vector<ObjectInstanceID> exits, bool impassable, QueryID askID)
 {
 	LOG_TRACE_PARAMS(logAi, "askID '%i', exits '%s'", askID % exits);
 	NET_EVENT_HANDLER;

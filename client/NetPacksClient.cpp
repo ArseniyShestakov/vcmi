@@ -580,7 +580,7 @@ void BlockingDialog::applyCl( CClient *cl )
 
 void TeleportDialog::applyCl( CClient *cl )
 {
-	CALL_ONLY_THAT_INTERFACE(hero->tempOwner,showTeleportDialog,exits,queryID);
+	CALL_ONLY_THAT_INTERFACE(hero->tempOwner,showTeleportDialog,exits,impassable,queryID);
 }
 
 void GarrisonDialog::applyCl(CClient *cl)
