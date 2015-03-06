@@ -607,17 +607,22 @@ void VCAI::showTeleportDialog(TeleportChannelID channel, const std::vector<Objec
 																			% exits.size()));
 
 	ObjectInstanceID choosenExit;
-	if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
-		choosenExit = nextTileTeleportId;
-
-	if(!teleportVisitingMode)
+	if(impassable)
+		knownTeleportChannels[channel]->passability = TeleportChannel::IMPASSABLE;
+	else
 	{
-		auto suggestedChannelExits = exits;
-		suggestedChannelExits.erase(boost::remove_if(suggestedChannelExits, [&](ObjectInstanceID id) -> bool
+		if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
+			choosenExit = nextTileTeleportId;
+
+		if(!teleportVisitingMode)
 		{
-			return vstd::contains(visitableObjs, cb->getObj(id)) || id == choosenExit;
-		}), suggestedChannelExits.end());
-		checkTeleportChannelExitsNow = suggestedChannelExits;
+			auto suggestedChannelExits = exits;
+			suggestedChannelExits.erase(boost::remove_if(suggestedChannelExits, [&](ObjectInstanceID id) -> bool
+			{
+				return vstd::contains(visitableObjs, cb->getObj(id)) || id == choosenExit;
+			}), suggestedChannelExits.end());
+			checkTeleportChannelExitsNow = suggestedChannelExits;
+		}
 	}
 
 	requestActionASAP([=]()
