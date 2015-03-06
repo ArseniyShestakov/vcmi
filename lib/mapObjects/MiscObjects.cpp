@@ -854,6 +854,15 @@ TeleportChannelID CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) con
 	return TeleportChannelID();
 }
 
+bool CGTeleport::isTeleport(const CGObjectInstance * obj)
+{
+	auto teleportObj = dynamic_cast<const CGTeleport *>(obj);
+	if(teleportObj)
+		return true;
+	else
+		return false;
+}
+
 bool CGTeleport::isConnected(const CGTeleport * src, const CGTeleport * dst)
 {
 	if(src && dst && src->isChannelExit(dst->id) && src != dst)

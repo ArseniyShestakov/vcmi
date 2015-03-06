@@ -3444,7 +3444,7 @@ void CPathfinder::calculatePaths()
 				if(dp->accessible == CGPathNode::ACCESSIBLE
 					|| dp->coord == CGHeroInstance::convertPosition(hero->pos, false) // This one is tricky, we can ignore fact that tile is not ACCESSIBLE in case if it's our hero block it. Though this need investigation.
 					|| (dp->accessible == CGPathNode::VISITABLE
-						&& dt->topVisitableObj()->isAllowTransit()
+						&& CGTeleport::isTeleport(dt->topVisitableObj())
 						&& (dt->topVisitableObj()->getOwner() == PlayerColor::UNFLAGGABLE
 							|| dt->topVisitableObj()->passableFor(hero->tempOwner)))
 					|| (useEmbarkCost && allowEmbarkAndDisembark)

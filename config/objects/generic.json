@@ -97,9 +97,6 @@
 	"event" : {
 		"index" :26, 
 		"handler" : "event",
-		"base" : {
-			"denyTransit" : true
-		},
 		"types" : {
 			"object" : {
 				"index" : 0,
@@ -157,9 +154,6 @@
 	"whirlpool" : {
 		"index" :111,
 		"handler" : "whirlpool",
-		"base" : {
-			"denyTransit" : true
-		},
 		"types" : {
 			"object" : {
 				"index" : 0,
@@ -171,9 +165,6 @@
 	"subterraneanGate" : {
 		"index" :103,
 		"handler" : "subterraneanGate",
-		"base" : {
-			"denyTransit" : true
-		},
 		"types" : {
 			"object" : {
 				"index" : 0 },

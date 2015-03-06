@@ -1787,7 +1787,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 
 			if((i-2 >= 0) // Check there is node after next one; otherwise transit is pointless
 				&& (CGTeleport::isConnected(nextObject, getObj(path.nodes[i-2].coord))
-					|| (nextObject && nextObject->isAllowTransit())))
+					|| CGTeleport::isTeleport(nextObject)))
 			{ // Hero should be able to go through object if it's allow transit
 				doMovement(endpos, true);
 			}

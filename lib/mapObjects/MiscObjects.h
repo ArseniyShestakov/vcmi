@@ -288,6 +288,7 @@ public:
 	ObjectInstanceID getRandomExit(const CGHeroInstance * h) const;
 
 	virtual void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const = 0;
+	static bool isTeleport(const CGObjectInstance * dst);
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
 	static bool isConnected(const CGObjectInstance * src, const CGObjectInstance * dst);
 	static void addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj);
