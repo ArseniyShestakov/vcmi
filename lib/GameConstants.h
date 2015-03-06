@@ -478,7 +478,7 @@ namespace ETeleportChannelType
 {
 	enum ETeleportChannelType
 	{
-		DUMMY,
+		IMPASSABLE,
 		BIDIRECTIONAL,
 		UNIDIRECTIONAL,
 		MIXED

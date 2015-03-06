@@ -762,6 +762,12 @@ void CGTeleport::addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportCha
 
 	if(obj->isExit() && !vstd::contains(tc->exits, obj->id))
 		tc->exits.push_back(obj->id);
+
+	if(tc->entrances.size() && tc->exits.size()
+		&& (tc->entrances.size() != 1 || tc->entrances != tc->exits))
+	{
+		tc->passability = TeleportChannel::PASSABLE;
+	}
 }
 
 std::vector<ObjectInstanceID> CGTeleport::getAllEntrances(bool excludeCurrent) const
@@ -877,7 +883,7 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 			destinationids.push_back(getRandomExit());
 	}
 
-	if(!destinationids.size() && isEntrance())
+	if(isEntrance() && cb->getTeleportChannelType(channel))
 	{
 		logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
 		td.impassable = true;

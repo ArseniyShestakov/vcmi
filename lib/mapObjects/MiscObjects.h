@@ -252,12 +252,17 @@ public:
  */
 struct DLL_LINKAGE TeleportChannel
 {
+	enum EPassability {UNKNOWN, IMPASSABLE, PASSABLE};
+
+	TeleportChannel() : passability(UNKNOWN) {}
+
 	std::vector<ObjectInstanceID> entrances;
 	std::vector<ObjectInstanceID> exits;
+	EPassability passability;
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & entrances & exits;
+		h & entrances & exits & passability;
 	}
 };
 

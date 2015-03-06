@@ -723,7 +723,7 @@ ETeleportChannelType::ETeleportChannelType CGameInfoCallback::getTeleportChannel
 	if((!entrances.size() || !exits.size())
 		|| (entrances.size() == 1 && entrances == exits))
 	{
-		return ETeleportChannelType::DUMMY;
+		return ETeleportChannelType::IMPASSABLE;
 	}
 
 	auto intersection = vstd::intersection(entrances, exits);
@@ -737,7 +737,7 @@ ETeleportChannelType::ETeleportChannelType CGameInfoCallback::getTeleportChannel
 
 bool CGameInfoCallback::isTeleportPassable(const CGTeleport * obj, PlayerColor Player) const
 {
-	if(obj && obj->isEntrance() && getTeleportChannelType(obj->channel, Player) != ETeleportChannelType::DUMMY)
+	if(obj && obj->isEntrance() && ETeleportChannelType::IMPASSABLE != getTeleportChannelType(obj->channel, Player))
 		return true;
 	else
 		return false;

@@ -3599,7 +3599,7 @@ bool CPathfinder::addTeleportWhirlpool(const CGWhirlpool * obj) const
 {
    if(allowTeleportWhirlpool && obj)
    {
-	   if(ETeleportChannelType::DUMMY != gs->getTeleportChannelType(obj->channel, hero->tempOwner))
+	   if(ETeleportChannelType::IMPASSABLE != gs->getTeleportChannelType(obj->channel, hero->tempOwner))
 		   return true;
    }
    return false;
