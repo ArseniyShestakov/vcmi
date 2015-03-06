@@ -1620,6 +1620,11 @@ void VCAI::addVisitableObj(const CGObjectInstance *obj)
 {
 	visitableObjs.insert(obj);
 	helperObjInfo[obj] = ObjInfo(obj);
+
+	// All teleport objects seen automatically assigned to appropriate channels
+	auto teleportObj = dynamic_cast<const CGTeleport *>(obj);
+	if(teleportObj)
+		CGTeleport::addToChannel(knownTeleportChannels, teleportObj);
 }
 
 const CGObjectInstance * VCAI::lookForArt(int aid) const
