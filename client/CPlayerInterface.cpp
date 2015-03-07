@@ -97,7 +97,7 @@ static bool objectBlitOrderSorter(const TerrainTileObject  & a, const TerrainTil
 CPlayerInterface::CPlayerInterface(PlayerColor Player)
 {
 	logGlobal->traceStream() << "\tHuman player interface for player " << Player << " being constructed";
-	nextTileTeleportId = ObjectInstanceID();
+	destinationTeleport = ObjectInstanceID();
 	observerInDuelMode = false;
 	howManyPeople++;
 	GH.defActionsDef = 0;
@@ -1146,8 +1146,8 @@ void CPlayerInterface::showTeleportDialog(TeleportChannelID channel, const std::
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
 	ObjectInstanceID choosenExit;
-	if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
-		choosenExit = nextTileTeleportId;
+	if(destinationTeleport != ObjectInstanceID() && vstd::contains(exits, destinationTeleport))
+		choosenExit = destinationTeleport;
 
 	cb->selectionMade(choosenExit.getNum(), askID);
 }
@@ -1401,14 +1401,14 @@ void CPlayerInterface::requestRealized( PackageApplied *pa )
 {
 	EVENT_HANDLER_CALLED_BY_CLIENT;
 	if(pa->packType == typeList.getTypeID<MoveHero>()  &&  stillMoveHero.get() == DURING_MOVE
-	   && nextTileTeleportId == ObjectInstanceID())
+	   && destinationTeleport == ObjectInstanceID())
 		stillMoveHero.setn(CONTINUE_MOVE);
 
-	if(nextTileTeleportId != ObjectInstanceID()
+	if(destinationTeleport != ObjectInstanceID()
 	   && pa->packType == typeList.getTypeID<QueryReply>()
 	   && stillMoveHero.get() == DURING_MOVE)
 	{ // After teleportation via CGTeleport object is finished
-		nextTileTeleportId = ObjectInstanceID();
+		destinationTeleport = ObjectInstanceID();
 		stillMoveHero.setn(CONTINUE_MOVE);
 	}
 }
@@ -2677,7 +2677,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 			if(CGTeleport::isConnected(getObj(currentCoord, currentCoord == h->pos), nextObject))
 			{
 				CCS->soundh->stopSound(sh);
-				nextTileTeleportId = nextObject->id;
+				destinationTeleport = nextObject->id;
 				doMovement(h->pos);
 				sh = CCS->soundh->playSound(CCS->soundh->horseSounds[currentTerrain], -1);
 				continue;

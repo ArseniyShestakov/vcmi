@@ -92,7 +92,7 @@ struct ObjInfo
 std::map<const CGObjectInstance *, ObjInfo> helperObjInfo;
 
 VCAI::VCAI(void)
-	: nextTileTeleportId(-1)
+	: destinationTeleport(-1)
 {
 	LOG_TRACE(logAi);
 	makingTurn = nullptr;
@@ -611,8 +611,8 @@ void VCAI::showTeleportDialog(TeleportChannelID channel, const std::vector<Objec
 		knownTeleportChannels[channel]->passability = TeleportChannel::IMPASSABLE;
 	else
 	{
-		if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
-			choosenExit = nextTileTeleportId;
+		if(destinationTeleport != ObjectInstanceID() && vstd::contains(exits, destinationTeleport))
+			choosenExit = destinationTeleport;
 
 		if(!status.channelProbing())
 		{
@@ -1731,9 +1731,9 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 
 		auto doTeleportMovement = [&](int3 dst, ObjectInstanceID exitId)
 		{
-			nextTileTeleportId = exitId;
+			destinationTeleport = exitId;
 			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true));
-			nextTileTeleportId = ObjectInstanceID();
+			destinationTeleport = ObjectInstanceID();
 			afterMovementCheck();
 		};
 
