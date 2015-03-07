@@ -829,8 +829,8 @@ void CGMonolith::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer,
 	ObjectInstanceID objId = ObjectInstanceID(answer);
 	auto realExits = getAllExits(true);
 	if(!isEntrance() // Do nothing if hero visited exit only object
-	   || (!exits.size() && !realExits.size()) // Do nothing if there no exits on this channel
-	   || (!exits.size() && ObjectInstanceID() == getRandomExit(hero))) // Do nothing if all exits are blocked by friendly hero and it's not subterranean gate
+		|| (!exits.size() && !realExits.size()) // Do nothing if there no exits on this channel
+		|| (!exits.size() && ObjectInstanceID() == getRandomExit(hero))) // Do nothing if all exits are blocked by friendly hero and it's not subterranean gate
 	{
 		return;
 	}
@@ -919,7 +919,7 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	if(isEntrance())
 	{
 		if(ETeleportChannelType::BIDIRECTIONAL == cb->getTeleportChannelType(channel)
-		   && cb->getTeleportChannelExits(channel).size() > 1)
+			&& cb->getTeleportChannelExits(channel).size() > 1)
 		{
 			destinationids = cb->getTeleportChannelExits(channel);
 		}
@@ -1103,7 +1103,7 @@ void CGWhirlpool::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer
 bool CGWhirlpool::isProtected( const CGHeroInstance * h )
 {
 	if(h->hasBonusOfType(Bonus::WHIRLPOOL_PROTECTION)
-	   || (h->Slots().size() == 1 && h->Slots().begin()->second->count == 1)) //we can't remove last unit
+		|| (h->Slots().size() == 1 && h->Slots().begin()->second->count == 1)) //we can't remove last unit
 	{
 		return true;
 	}
