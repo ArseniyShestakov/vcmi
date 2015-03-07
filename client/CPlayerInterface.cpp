@@ -2675,7 +2675,7 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 
 			auto nextObject = getObj(nextCoord, nextCoord == h->pos);
 			if(CGTeleport::isConnected(getObj(currentCoord, currentCoord == h->pos), nextObject))
-			{ //we use special login if hero standing on teleporter it's mean we need
+			{
 				CCS->soundh->stopSound(sh);
 				nextTileTeleportId = nextObject->id;
 				doMovement(h->pos);
