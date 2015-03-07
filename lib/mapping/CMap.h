@@ -15,7 +15,6 @@
 #include "../mapObjects/MiscObjects.h" // To serialize static props
 #include "../mapObjects/CQuest.h" // To serialize static props
 #include "../mapObjects/CGTownInstance.h" // To serialize static props
-#include "../mapObjects/MiscObjects.h"
 #include "../ResourceSet.h"
 #include "../int3.h"
 #include "../GameConstants.h"
