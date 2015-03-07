@@ -3386,38 +3386,33 @@ void CPathfinder::calculatePaths()
 			destTopVisObjID = dt->topVisitableId();
 
 			useEmbarkCost = 0; //0 - usual movement; 1 - embark; 2 - disembark
-
-			int turnAtNextTile = turn;
-
-
 			const bool destIsGuardian = sourceGuardPosition == n;
 
-			if(!goodForLandSeaTransition())
-				continue;
-
 			auto dObj = dynamic_cast<const CGTeleport*>(dt->topVisitableObj());
-			if((!canMoveBetween(cp->coord, dp->coord) && !CGTeleport::isConnected(cObj, dObj))
+			if(!goodForLandSeaTransition()
+			   || (!canMoveBetween(cp->coord, dp->coord) && !CGTeleport::isConnected(cObj, dObj))
 			   || dp->accessible == CGPathNode::BLOCKED)
+			{
 				continue;
+			}
 
 			//special case -> hero embarked a boat standing on a guarded tile -> we must allow to move away from that tile
-            if(cp->accessible == CGPathNode::VISITABLE && guardedSource && cp->theNodeBefore->land && ct->topVisitableId() == Obj::BOAT)
+			if(cp->accessible == CGPathNode::VISITABLE && guardedSource && cp->theNodeBefore->land && ct->topVisitableId() == Obj::BOAT)
 				guardedSource = false;
 
 			int cost = gs->getMovementCost(hero, cp->coord, dp->coord, flying, movement);
-
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
 			if(CGTeleport::isConnected(cObj, dObj))
 				cost = 0;
 
 			int remains = movement - cost;
-
 			if(useEmbarkCost)
 			{
 				remains = hero->movementPointsAfterEmbark(movement, cost, useEmbarkCost - 1);
 				cost = movement - remains;
 			}
 
+			int turnAtNextTile = turn;
 			if(remains < 0)
 			{
 				//occurs rarely, when hero with low movepoints tries to leave the road
@@ -3432,7 +3427,6 @@ void CPathfinder::calculatePaths()
 				|| (dp->turns >= turnAtNextTile  &&  dp->moveRemains < remains)) //this route is faster
 				&& (!guardedSource || destIsGuardian)) // Can step into tile of guard
 			{
-
 				assert(dp != cp->theNodeBefore); //two tiles can't point to each other
 				dp->moveRemains = remains;
 				dp->turns = turnAtNextTile;
