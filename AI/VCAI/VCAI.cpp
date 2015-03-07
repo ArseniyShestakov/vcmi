@@ -1730,6 +1730,14 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true), transit);
 		};
 
+		auto doTeleportMovement = [&](int3 dst, ObjectInstanceID exitId)
+		{
+			nextTileTeleportId = exitId;
+			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true));
+			nextTileTeleportId = ObjectInstanceID();
+			afterMovementCheck();
+		};
+
 		auto doChannelProbing = [&]() -> void
 		{
 			auto currentExit = getObj(CGHeroInstance::convertPosition(h->pos,false));
@@ -1737,18 +1745,9 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 
 			status.setChannelProbing(true);
 			for(auto exit : teleportChannelProbingList)
-			{
-				nextTileTeleportId = exit;
-				doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
-				nextTileTeleportId = ObjectInstanceID();
-				afterMovementCheck();
-			}
+				doTeleportMovement(CGHeroInstance::convertPosition(h->pos,false), exit);
 			teleportChannelProbingList.clear();
-
-			nextTileTeleportId = currentExit->id;
-			doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
-			nextTileTeleportId = ObjectInstanceID();
-			afterMovementCheck(); //this shouldn't be needed, but we want to be sure
+			doTeleportMovement(CGHeroInstance::convertPosition(h->pos,false), currentExit->id);
 			status.setChannelProbing(false);
 		};
 
@@ -1762,11 +1761,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			auto nextObject = getObj(nextCoord);
 			if(CGTeleport::isConnected(currentObject, nextObject))
 			{ //we use special login if hero standing on teleporter it's mean we need
-				nextTileTeleportId = nextObject->id;
-				doMovement(currentCoord);
-				nextTileTeleportId = ObjectInstanceID();
-				afterMovementCheck();
-
+				doTeleportMovement(currentCoord, nextObject->id);
 				if(teleportChannelProbingList.size())
 					doChannelProbing();
 
