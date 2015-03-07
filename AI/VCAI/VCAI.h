@@ -41,6 +41,7 @@ class AIStatus
 	std::map<int, QueryID> requestToQueryID; //IDs of answer-requests sent to server => query ids (so we can match answer confirmation from server to the query)
 	std::vector<const CGObjectInstance*> objectsBeingVisited;
 	bool ongoingHeroMovement;
+	bool ongoingChannelProbing; // true if AI currently explore bidirectional teleport channel exits
 
 	bool havingTurn;
 
@@ -49,6 +50,8 @@ public:
 	~AIStatus();
 	void setBattle(BattleState BS);
 	void setMove(bool ongoing);
+	void setChannelProbing(bool ongoing);
+	bool channelProbing();
 	BattleState getBattle();
 	void addQuery(QueryID ID, std::string description);
 	void removeQuery(QueryID ID);
@@ -139,9 +142,8 @@ public:
 	friend class FuzzyHelper;
 
 	std::map<TeleportChannelID, shared_ptr<TeleportChannel> > knownTeleportChannels;
-	std::vector<ObjectInstanceID> checkTeleportChannelExitsNow;
-	bool teleportVisitingMode;
 	std::map<const CGObjectInstance *, const CGObjectInstance *> knownSubterraneanGates;
+	std::vector<ObjectInstanceID> teleportChannelProbingList; //list of teleport channel exits that not visible and need to be (re-)explored
 	ObjectInstanceID nextTileTeleportId;
 	//std::vector<const CGObjectInstance *> visitedThisWeek; //only OPWs
 	std::map<HeroPtr, std::set<const CGTownInstance *> > townVisitsThisWeek;

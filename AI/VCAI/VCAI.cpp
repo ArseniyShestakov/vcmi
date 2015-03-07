@@ -614,14 +614,14 @@ void VCAI::showTeleportDialog(TeleportChannelID channel, const std::vector<Objec
 		if(nextTileTeleportId != ObjectInstanceID() && vstd::contains(exits, nextTileTeleportId))
 			choosenExit = nextTileTeleportId;
 
-		if(!teleportVisitingMode)
+		if(!status.channelProbing())
 		{
 			auto suggestedChannelExits = exits;
 			suggestedChannelExits.erase(boost::remove_if(suggestedChannelExits, [&](ObjectInstanceID id) -> bool
 			{
 				return vstd::contains(visitableObjs, cb->getObj(id)) || id == choosenExit;
 			}), suggestedChannelExits.end());
-			checkTeleportChannelExitsNow = suggestedChannelExits;
+			teleportChannelProbingList = suggestedChannelExits;
 		}
 	}
 
@@ -1692,6 +1692,8 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 		if(!h)
 		{
 			lostHero(h);
+			if (status.channelProbing()) // if hero lost during channel probing we need to switch this mode off
+				status.setChannelProbing(false);
 			throw std::runtime_error("Hero was lost!");
 		}
 	};
@@ -1728,26 +1730,26 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true), transit);
 		};
 
-		auto visitMoreTeleporters = [&]() -> void
+		auto doChannelProbing = [&]() -> void
 		{
-			auto currentTeleporter = getObj(CGHeroInstance::convertPosition(h->pos,false));
-			if(!currentTeleporter)
-				return;
-			teleportVisitingMode = true;
-			for(auto teleporter : checkTeleportChannelExitsNow)
+			auto currentExit = getObj(CGHeroInstance::convertPosition(h->pos,false));
+			assert(currentExit);
+
+			status.setChannelProbing(true);
+			for(auto exit : teleportChannelProbingList)
 			{
-				nextTileTeleportId = teleporter;
+				nextTileTeleportId = exit;
 				doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
 				nextTileTeleportId = ObjectInstanceID();
 				afterMovementCheck();
 			}
+			teleportChannelProbingList.clear();
 
-			nextTileTeleportId = currentTeleporter->id;
+			nextTileTeleportId = currentExit->id;
 			doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
 			nextTileTeleportId = ObjectInstanceID();
-			checkTeleportChannelExitsNow.clear();
-			teleportVisitingMode = false;
 			afterMovementCheck(); //this shouldn't be needed, but we want to be sure
+			status.setChannelProbing(false);
 		};
 
 		int i=path.nodes.size()-1;
@@ -1765,8 +1767,8 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 				nextTileTeleportId = ObjectInstanceID();
 				afterMovementCheck();
 
-				if(checkTeleportChannelExitsNow.size())
-					visitMoreTeleporters();
+				if(teleportChannelProbingList.size())
+					doChannelProbing();
 
 				continue;
 			}
@@ -1793,8 +1795,8 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 
 			afterMovementCheck();
 
-			if(checkTeleportChannelExitsNow.size())
-				visitMoreTeleporters();
+			if(teleportChannelProbingList.size())
+				doChannelProbing();
 		}
 		ret = !i;
 	}
@@ -2626,6 +2628,7 @@ AIStatus::AIStatus()
 	battle = NO_BATTLE;
 	havingTurn = false;
 	ongoingHeroMovement = false;
+	ongoingChannelProbing = false;
 }
 
 AIStatus::~AIStatus()
@@ -2756,6 +2759,18 @@ void AIStatus::setMove(bool ongoing)
 	boost::unique_lock<boost::mutex> lock(mx);
 	ongoingHeroMovement = ongoing;
 	cv.notify_all();
+}
+
+void AIStatus::setChannelProbing(bool ongoing)
+{
+	boost::unique_lock<boost::mutex> lock(mx);
+	ongoingHeroMovement = ongoing;
+	cv.notify_all();
+}
+
+bool AIStatus::channelProbing()
+{
+	return ongoingChannelProbing;
 }
 
 SectorMap::SectorMap()
