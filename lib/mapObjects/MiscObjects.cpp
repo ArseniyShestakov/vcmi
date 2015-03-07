@@ -831,7 +831,9 @@ void CGMonolith::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer,
 	if(!isEntrance() // Do nothing if hero visited exit only object
 	   || (!exits.size() && !realExits.size()) // Do nothing if there no exits on this channel
 	   || (!exits.size() && ObjectInstanceID() == getRandomExit(hero))) // Do nothing if all exits are blocked by friendly hero and it's not subterranean gate
+	{
 		return;
+	}
 	else if(objId == ObjectInstanceID())
 		objId = getRandomExit(hero);
 	else
