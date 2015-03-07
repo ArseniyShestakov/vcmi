@@ -552,7 +552,7 @@ void VCAI::init(shared_ptr<CCallback> CB)
 	if(!fh)
 		fh = new FuzzyHelper();
 
-	retreiveVisitableObjs(visitableObjs);
+	retreiveVisitableObjs();
 }
 
 void VCAI::yourTurn()
@@ -1593,15 +1593,12 @@ void VCAI::retreiveVisitableObjs(std::vector<const CGObjectInstance *> &out, boo
 		}
 	});
 }
-void VCAI::retreiveVisitableObjs(std::set<const CGObjectInstance *> &out, bool includeOwned /*= false*/) const
+void VCAI::retreiveVisitableObjs()
 {
 	foreach_tile_pos([&](const int3 &pos)
 	{
 		for(const CGObjectInstance *obj : myCb->getVisitableObjs(pos, false))
-		{
-			if(includeOwned || obj->tempOwner != playerID)
-				out.insert(obj);
-		}
+			visitableObjs.insert(obj);
 	});
 }
 

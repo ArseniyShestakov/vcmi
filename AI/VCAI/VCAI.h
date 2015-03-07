@@ -294,7 +294,7 @@ public:
 	void validateObject(ObjectIdRef obj); //checks if object is still visible and if not, removes references to it
 	void validateVisitableObjs();
 	void retreiveVisitableObjs(std::vector<const CGObjectInstance *> &out, bool includeOwned = false) const;
-	void retreiveVisitableObjs(std::set<const CGObjectInstance *> &out, bool includeOwned = false) const;
+	void retreiveVisitableObjs();
 	std::vector<const CGObjectInstance *> getFlaggedObjects() const;
 
 	const CGObjectInstance *lookForArt(int aid) const;
