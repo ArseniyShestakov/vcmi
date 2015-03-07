@@ -514,7 +514,7 @@ void VCAI::objectPropertyChanged(const SetObjectProperty * sop)
 			auto obj = myCb->getObj(sop->id, false);
 			if (obj)
 			{
-				visitableObjs.insert(obj);
+				addVisitableObj(obj);
 				erase_if_present(alreadyVisited, obj);
 			}
 		}
@@ -708,7 +708,7 @@ void VCAI::makeTurn()
 			{
 				if (isWeeklyRevisitable(obj))
 				{
-					visitableObjs.insert(obj); //set doesn't need duplicate check
+					addVisitableObj(obj);
 					erase_if_present (alreadyVisited, obj);
 				}
 			}
@@ -1598,7 +1598,7 @@ void VCAI::retreiveVisitableObjs()
 	foreach_tile_pos([&](const int3 &pos)
 	{
 		for(const CGObjectInstance *obj : myCb->getVisitableObjs(pos, false))
-			visitableObjs.insert(obj);
+			addVisitableObj(obj);
 	});
 }
 
