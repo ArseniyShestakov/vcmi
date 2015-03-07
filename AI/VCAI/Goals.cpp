@@ -597,9 +597,11 @@ TGoalVec Explore::getAllPossibleSubgoals()
 				case Obj::MONOLITH_TWO_WAY:
 				case Obj::SUBTERRANEAN_GATE:
 					auto tObj = dynamic_cast<const CGTeleport *>(obj);
-					if(TeleportChannel::IMPASSABLE != ai->knownTeleportChannels[tObj->channel]->passability)
+					if(tObj)
 					{
-						objs.push_back (obj);
+						assert(ai->knownTeleportChannels.find(tObj->channel) != ai->knownTeleportChannels.end());
+						if(TeleportChannel::IMPASSABLE != ai->knownTeleportChannels[tObj->channel]->passability)
+							objs.push_back (obj);
 					}
 			}
 		}
