@@ -1739,8 +1739,8 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 				nextTileTeleportId = teleporter;
 				doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
 				nextTileTeleportId = ObjectInstanceID();
+				afterMovementCheck();
 			}
-			afterMovementCheck();
 
 			nextTileTeleportId = currentTeleporter->id;
 			doMovement(CGHeroInstance::convertPosition(h->pos,false)); // Back to original location
