@@ -819,7 +819,7 @@ ObjectInstanceID CGTeleport::getRandomExit(const CGHeroInstance * h) const
 	ObjectInstanceID destinationid;
 	auto passableExits = getPassableExits(cb->gameState(), h, getAllExits(true));
 	if(passableExits.size())
-		destinationid = *RandomGeneratorUtil::nextItem(filteredExits, cb->gameState()->getRandomGenerator());
+		destinationid = *RandomGeneratorUtil::nextItem(passableExits, cb->gameState()->getRandomGenerator());
 
 	return destinationid;
 }
