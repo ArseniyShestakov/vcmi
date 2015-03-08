@@ -735,7 +735,7 @@ ETeleportChannelType::ETeleportChannelType CGameInfoCallback::getTeleportChannel
 		return ETeleportChannelType::MIXED;
 }
 
-bool CGameInfoCallback::isTeleportPassable(const CGTeleport * obj, PlayerColor Player) const
+bool CGameInfoCallback::isTeleportEntrancePassable(const CGTeleport * obj, PlayerColor Player) const
 {
 	if(obj && obj->isEntrance() && ETeleportChannelType::IMPASSABLE != getTeleportChannelType(obj->channel, Player))
 		return true;

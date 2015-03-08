@@ -3351,7 +3351,7 @@ void CPathfinder::calculatePaths()
 
 		auto sObj = ct->topVisitableObj(cp->coord == CGHeroInstance::convertPosition(hero->pos, false));
 		auto cObj = dynamic_cast<const CGTeleport *>(sObj);
-		if(gs->isTeleportPassable(cObj, hero->tempOwner)
+		if(gs->isTeleportEntrancePassable(cObj, hero->tempOwner)
 			&& (addTeleportWhirlpool(dynamic_cast<const CGWhirlpool *>(cObj))
 				|| addTeleportTwoWay(cObj)
 				|| addTeleportOneWay(cObj)
@@ -3440,7 +3440,7 @@ void CPathfinder::calculatePaths()
 					|| (dp->accessible == CGPathNode::VISITABLE
 						&& CGTeleport::isTeleport(dt->topVisitableObj())) // For now we'll walways allos transit for teleports
 					|| (useEmbarkCost && allowEmbarkAndDisembark)
-					|| gs->isTeleportPassable(dObj, hero->tempOwner) // Always add entry teleport with non-dummy channel
+					|| gs->isTeleportEntrancePassable(dObj, hero->tempOwner) // Always add entry teleport with non-dummy channel
 					|| CGTeleport::isConnected(cObj, dObj) // Always add exit points of teleport
 					|| (guardedDst && !guardedSource)) // Can step into a hostile tile once.
 				{
