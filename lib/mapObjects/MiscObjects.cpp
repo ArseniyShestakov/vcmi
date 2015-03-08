@@ -844,10 +844,10 @@ bool CGTeleport::isExitPassable(CGameState * gs, const CGHeroInstance * h, const
 
 std::vector<ObjectInstanceID> CGTeleport::getPassableExits(CGameState * gs, const CGHeroInstance * h, std::vector<ObjectInstanceID> exits)
 {
-	exits.erase(boost::remove_if(exits, [&](ObjectInstanceID exit) -> bool
+	vstd::erase_if(exits, [&](ObjectInstanceID exit) -> bool
 	{
 		return !isExitPassable(gs, h, gs->getObj(exit));
-	}), exits.end());
+	});
 	return exits;
 }
 
