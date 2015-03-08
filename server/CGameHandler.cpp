@@ -1662,7 +1662,7 @@ void CGameHandler::setAmount(ObjectInstanceID objid, ui32 val)
 	sendAndApply(&sop);
 }
 
-bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, PlayerColor asker /*= 255*/ )
+bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, bool transit, PlayerColor asker /*= 255*/ )
 {
 	const CGHeroInstance *h = getHero(hid);
 
@@ -1762,7 +1762,8 @@ bool CGameHandler::moveHero( ObjectInstanceID hid, int3 dst, ui8 teleporting, Pl
 		}
 		else if(visitDest == VISIT_DEST)
 		{
-			visitObjectOnTile(t, h);
+			if(!transit || !CGTeleport::isTeleport(t.topVisitableObj()))
+				visitObjectOnTile(t, h);
 		}
 
 		queries.popIfTop(moveQuery);
@@ -1892,6 +1893,14 @@ void CGameHandler::setOwner(const CGObjectInstance * obj, PlayerColor owner)
 void CGameHandler::showBlockingDialog( BlockingDialog *iw )
 {
 	auto dialogQuery = make_shared<CBlockingDialogQuery>(*iw);
+	queries.addQuery(dialogQuery);
+	iw->queryID = dialogQuery->queryID;
+	sendToAllClients(iw);
+}
+
+void CGameHandler::showTeleportDialog( TeleportDialog *iw )
+{
+	auto dialogQuery = make_shared<CTeleportDialogQuery>(*iw);
 	queries.addQuery(dialogQuery);
 	iw->queryID = dialogQuery->queryID;
 	sendToAllClients(iw);

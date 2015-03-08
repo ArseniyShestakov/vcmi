@@ -191,7 +191,7 @@
 	// Subtype: paired monoliths
 	"monolithOneWayEntrance" : {
 		"index" :43,
-		"handler": "teleport",
+		"handler": "monolith",
 		"types" : {
 			"monolith1" : { "index" : 0 },
 			"monolith2" : { "index" : 1 },
@@ -205,7 +205,7 @@
 	},
 	"monolithOneWayExit" : {
 		"index" :44,
-		"handler": "teleport",
+		"handler": "monolith",
 		"types" : {
 			"monolith1" : { "index" : 0 },
 			"monolith2" : { "index" : 1 },
@@ -219,7 +219,7 @@
 	},
 	"monolithTwoWay" : {
 		"index" :45,
-		"handler": "teleport",
+		"handler": "monolith",
 		"types" : {
 			"monolith1" : { "index" : 0 },
 			"monolith2" : { "index" : 1 },

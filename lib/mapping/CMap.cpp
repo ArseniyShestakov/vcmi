@@ -125,14 +125,18 @@ bool TerrainTile::isClear(const TerrainTile *from /*= nullptr*/) const
 	return entrableTerrain(from) && !blocked;
 }
 
-int TerrainTile::topVisitableId() const
+Obj TerrainTile::topVisitableId(bool excludeTop) const
 {
-	return visitableObjects.size() ? visitableObjects.back()->ID : -1;
+	return topVisitableObj(excludeTop) ? topVisitableObj(excludeTop)->ID : Obj(-1);
 }
 
-CGObjectInstance * TerrainTile::topVisitableObj() const
+CGObjectInstance * TerrainTile::topVisitableObj(bool excludeTop) const
 {
-	return visitableObjects.size() ? visitableObjects.back() : nullptr;
+	auto visitableObj = visitableObjects;
+	if(excludeTop && visitableObj.size())
+		visitableObj.pop_back();
+
+	return visitableObj.size() ? visitableObj.back() : nullptr;
 }
 
 bool TerrainTile::isCoastal() const
@@ -343,7 +347,7 @@ bool CMap::checkForVisitableDir(const int3 & src, const TerrainTile *pom, const 
 
 		const CGObjectInstance * obj = pom->visitableObjects[b];
 
-		if (!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
+		if(!obj->appearance.isVisitableFrom(src.x - dst.x, src.y - dst.y))
 			return false;
 	}
 	return true;
