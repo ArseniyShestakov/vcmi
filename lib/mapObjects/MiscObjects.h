@@ -247,9 +247,6 @@ public:
 	ui32 defaultResProduction();
 };
 
-/**
- * This struct contain information about teleportation channel
- */
 struct DLL_LINKAGE TeleportChannel
 {
 	enum EPassability {UNKNOWN, IMPASSABLE, PASSABLE};
@@ -275,10 +272,10 @@ public:
 	TeleportChannelID channel;
 
 	CGTeleport();
-	bool isChannelEntrance(ObjectInstanceID id) const;
-	bool isChannelExit(ObjectInstanceID id) const;
 	bool isEntrance() const;
 	bool isExit() const;
+	bool isChannelEntrance(ObjectInstanceID id) const;
+	bool isChannelExit(ObjectInstanceID id) const;
 	std::vector<ObjectInstanceID> getAllEntrances(bool excludeCurrent = false) const;
 	std::vector<ObjectInstanceID> getAllExits(bool excludeCurrent = false) const;
 	ObjectInstanceID getRandomExit(const CGHeroInstance * h) const;

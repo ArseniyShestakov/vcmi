@@ -746,48 +746,6 @@ CGTeleport::CGTeleport() :
 {
 }
 
-void CGTeleport::addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj)
-{
-	shared_ptr<TeleportChannel> tc;
-	if(channelsList.find(obj->channel) == channelsList.end())
-	{
-		tc = make_shared<TeleportChannel>();
-		channelsList.insert(std::make_pair(obj->channel, tc));
-	}
-	else
-		tc = channelsList[obj->channel];
-
-	if(obj->isEntrance() && !vstd::contains(tc->entrances, obj->id))
-		tc->entrances.push_back(obj->id);
-
-	if(obj->isExit() && !vstd::contains(tc->exits, obj->id))
-		tc->exits.push_back(obj->id);
-
-	if(tc->entrances.size() && tc->exits.size()
-		&& (tc->entrances.size() != 1 || tc->entrances != tc->exits))
-	{
-		tc->passability = TeleportChannel::PASSABLE;
-	}
-}
-
-std::vector<ObjectInstanceID> CGTeleport::getAllEntrances(bool excludeCurrent) const
-{
-	std::vector<ObjectInstanceID> ret = cb->getTeleportChannelEntraces(channel);
-	if(excludeCurrent)
-		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
-
-	return ret;
-}
-
-std::vector<ObjectInstanceID> CGTeleport::getAllExits(bool excludeCurrent) const
-{
-	std::vector<ObjectInstanceID> ret = cb->getTeleportChannelExits(channel);
-	if(excludeCurrent)
-		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
-
-	return ret;
-}
-
 bool CGTeleport::isEntrance() const
 {
 	return type == BOTH || type == ENTRANCE;
@@ -812,6 +770,24 @@ bool CGTeleport::isChannelExit(ObjectInstanceID id) const
 		return true;
 	else
 		return false;
+}
+
+std::vector<ObjectInstanceID> CGTeleport::getAllEntrances(bool excludeCurrent) const
+{
+	std::vector<ObjectInstanceID> ret = cb->getTeleportChannelEntraces(channel);
+	if(excludeCurrent)
+		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
+
+	return ret;
+}
+
+std::vector<ObjectInstanceID> CGTeleport::getAllExits(bool excludeCurrent) const
+{
+	std::vector<ObjectInstanceID> ret = cb->getTeleportChannelExits(channel);
+	if(excludeCurrent)
+		ret.erase(std::remove(ret.begin(), ret.end(), id), ret.end());
+
+	return ret;
 }
 
 ObjectInstanceID CGTeleport::getRandomExit(const CGHeroInstance * h) const
@@ -864,7 +840,6 @@ bool CGTeleport::isExitPassable(CGameState * gs, const CGHeroInstance * h, const
 				return false;
 		}
 	}
-
 	return true;
 }
 
@@ -876,8 +851,42 @@ std::vector<ObjectInstanceID> CGTeleport::getPassableExits(CGameState * gs, cons
 		if(isExitPassable(gs, h, gs->getObj(exit)))
 			ret.push_back(exit);
 	}
-
 	return ret;
+}
+
+void CGTeleport::addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj)
+{
+	shared_ptr<TeleportChannel> tc;
+	if(channelsList.find(obj->channel) == channelsList.end())
+	{
+		tc = make_shared<TeleportChannel>();
+		channelsList.insert(std::make_pair(obj->channel, tc));
+	}
+	else
+		tc = channelsList[obj->channel];
+
+	if(obj->isEntrance() && !vstd::contains(tc->entrances, obj->id))
+		tc->entrances.push_back(obj->id);
+
+	if(obj->isExit() && !vstd::contains(tc->exits, obj->id))
+		tc->exits.push_back(obj->id);
+
+	if(tc->entrances.size() && tc->exits.size()
+		&& (tc->entrances.size() != 1 || tc->entrances != tc->exits))
+	{
+		tc->passability = TeleportChannel::PASSABLE;
+	}
+}
+
+TeleportChannelID CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
+{
+	for(auto obj : cb->gameState()->map->objects)
+	{
+		auto teleportObj = dynamic_cast<const CGTeleport *>(cb->getObj(obj->id));
+		if(teleportObj && vstd::contains(IDs, teleportObj->ID) && teleportObj->subID == SubID)
+			return teleportObj->channel;
+	}
+	return TeleportChannelID();
 }
 
 void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
@@ -955,18 +964,6 @@ void CGMonolith::initObj()
 		channel = TeleportChannelID(cb->gameState()->map->teleportChannels.size());
 
 	addToChannel(cb->gameState()->map->teleportChannels, this);
-}
-
-TeleportChannelID CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
-{
-	for(auto obj : cb->gameState()->map->objects)
-	{
-		auto teleportObj = dynamic_cast<const CGTeleport *>(cb->getObj(obj->id));
-		if(teleportObj && vstd::contains(IDs, teleportObj->ID) && teleportObj->subID == SubID)
-			return teleportObj->channel;
-	}
-
-	return TeleportChannelID();
 }
 
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
