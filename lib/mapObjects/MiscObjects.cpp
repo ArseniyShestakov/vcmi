@@ -792,12 +792,11 @@ std::vector<ObjectInstanceID> CGTeleport::getAllExits(bool excludeCurrent) const
 
 ObjectInstanceID CGTeleport::getRandomExit(const CGHeroInstance * h) const
 {
-	ObjectInstanceID destinationid;
 	auto passableExits = getPassableExits(cb->gameState(), h, getAllExits(true));
 	if(passableExits.size())
-		destinationid = *RandomGeneratorUtil::nextItem(passableExits, cb->gameState()->getRandomGenerator());
+		return *RandomGeneratorUtil::nextItem(passableExits, cb->gameState()->getRandomGenerator());
 
-	return destinationid;
+	return ObjectInstanceID();
 }
 
 bool CGTeleport::isTeleport(const CGObjectInstance * obj)
@@ -845,13 +844,11 @@ bool CGTeleport::isExitPassable(CGameState * gs, const CGHeroInstance * h, const
 
 std::vector<ObjectInstanceID> CGTeleport::getPassableExits(CGameState * gs, const CGHeroInstance * h, std::vector<ObjectInstanceID> exits)
 {
-	std::vector<ObjectInstanceID> ret;
-	for(auto exit : exits)
+	exits.erase(boost::remove_if(exits, [&](ObjectInstanceID exit) -> bool
 	{
-		if(isExitPassable(gs, h, gs->getObj(exit)))
-			ret.push_back(exit);
-	}
-	return ret;
+		return !isExitPassable(gs, h, gs->getObj(exit));
+	}), exits.end());
+	return exits;
 }
 
 void CGTeleport::addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj)
@@ -892,20 +889,16 @@ TeleportChannelID CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) con
 void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 {
 	TeleportDialog td(h, channel);
-	std::vector<ObjectInstanceID> destinationids;
 	if(isEntrance())
 	{
 		if(ETeleportChannelType::BIDIRECTIONAL == cb->getTeleportChannelType(channel)
 			&& cb->getTeleportChannelExits(channel).size() > 1)
 		{
-			destinationids = cb->getTeleportChannelExits(channel);
+			td.exits = cb->getTeleportChannelExits(channel);
 		}
 		else
-			destinationids.push_back(getRandomExit(h));
-	}
+			td.exits.push_back(getRandomExit(h));
 
-	if(isEntrance())
-	{
 		if(ETeleportChannelType::IMPASSABLE == cb->getTeleportChannelType(channel))
 		{
 			logGlobal->warnStream() << "Cannot find corresponding exit monolith for "<< id << " (obj at " << pos << ") :(";
@@ -915,7 +908,6 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 			logGlobal->warnStream() << "All exits blocked for monolith "<< id << " (obj at " << pos << ") :(";
 	}
 
-	td.exits = destinationids;
 	cb->showTeleportDialog(&td);
 }
 
@@ -968,7 +960,6 @@ void CGMonolith::initObj()
 
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 {
-	ObjectInstanceID destinationid = getRandomExit(h);
 	TeleportDialog td(h, channel);
 	if(ETeleportChannelType::IMPASSABLE == cb->getTeleportChannelType(channel)) //no exit
 	{
@@ -977,7 +968,7 @@ void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const
 		td.impassable = true;
 	}
 	else
-		td.exits.push_back(destinationid);
+		td.exits.push_back(getRandomExit(h));
 
 	cb->showTeleportDialog(&td);
 }
@@ -1040,7 +1031,6 @@ void CGSubterraneanGate::postInit( CGameState * gs ) //matches subterranean gate
 void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 {
 	TeleportDialog td(h, channel);
-	std::vector<ObjectInstanceID> destinationids;
 	if(ETeleportChannelType::IMPASSABLE == cb->getTeleportChannelType(channel))
 	{
 		logGlobal->warnStream() << "Cannot find exit whirlpool for "<< id << " (obj at " << pos << ") :(";
@@ -1069,9 +1059,8 @@ void CGWhirlpool::onHeroVisit( const CGHeroInstance * h ) const
 		cb->changeStackCount(StackLocation(h, targetstack), -countToTake);
 	}
 	else
-		 destinationids = getAllExits(true);
+		 td.exits = getAllExits(true);
 
-	td.exits = destinationids;
 	cb->showTeleportDialog(&td);
 }
 
