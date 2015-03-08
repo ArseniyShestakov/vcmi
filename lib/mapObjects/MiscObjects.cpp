@@ -817,8 +817,8 @@ bool CGTeleport::isChannelExit(ObjectInstanceID dst) const
 ObjectInstanceID CGTeleport::getRandomExit(const CGHeroInstance * h) const
 {
 	ObjectInstanceID destinationid;
-	auto filteredExits = filterExits(cb->gameState(), h, getAllExits(true));
-	if(filteredExits.size())
+	auto passableExits = getPassableExits(cb->gameState(), h, getAllExits(true));
+	if(passableExits.size())
 		destinationid = *RandomGeneratorUtil::nextItem(filteredExits, cb->gameState()->getRandomGenerator());
 
 	return destinationid;
@@ -880,7 +880,7 @@ bool CGTeleport::isConnected(const CGObjectInstance * src, const CGObjectInstanc
 	return isConnected(srcObj, dstObj);
 }
 
-bool CGTeleport::canPassThrough(CGameState * gs, const CGHeroInstance * h, const CGObjectInstance * obj)
+bool CGTeleport::isExitPassable(CGameState * gs, const CGHeroInstance * h, const CGObjectInstance * obj)
 {
 	auto objTopVisObj = gs->map->getTile(obj->visitablePos()).topVisitableObj();
 	if(objTopVisObj->ID == Obj::HERO)
@@ -900,12 +900,12 @@ bool CGTeleport::canPassThrough(CGameState * gs, const CGHeroInstance * h, const
 	return true;
 }
 
-std::vector<ObjectInstanceID> CGTeleport::filterExits(CGameState * gs, const CGHeroInstance * h, std::vector<ObjectInstanceID> exits)
+std::vector<ObjectInstanceID> CGTeleport::getPassableExits(CGameState * gs, const CGHeroInstance * h, std::vector<ObjectInstanceID> exits)
 {
 	std::vector<ObjectInstanceID> ret;
 	for(auto exit : exits)
 	{
-		if(canPassThrough(gs, h, gs->getObj(exit)))
+		if(isExitPassable(gs, h, gs->getObj(exit)))
 			ret.push_back(exit);
 	}
 

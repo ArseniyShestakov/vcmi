@@ -3360,7 +3360,7 @@ void CPathfinder::calculatePaths()
 			for(auto objId : gs->getTeleportChannelExits(cObj->channel, ObjectInstanceID(), hero->tempOwner))
 			{
 				auto obj = getObj(objId);
-				if(CGTeleport::canPassThrough(gs, hero, obj))
+				if(CGTeleport::isExitPassable(gs, hero, obj))
 					neighbours.push_back(obj->visitablePos());
 			}
 		}
@@ -3569,8 +3569,8 @@ bool CPathfinder::addTeleportOneWay(const CGTeleport * obj) const
 {
 	if(allowTeleportOneWay)
 	{
-		auto filteredExits = CGTeleport::filterExits(gs, hero, gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner));
-		if(filteredExits.size() == 1)
+		auto passableExits = CGTeleport::getPassableExits(gs, hero, gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner));
+		if(passableExits.size() == 1)
 			return true;
 	}
 	return false;
@@ -3582,8 +3582,8 @@ bool CPathfinder::addTeleportOneWayRandom(const CGTeleport * obj) const
 	{
 		if(ETeleportChannelType::UNIDIRECTIONAL == gs->getTeleportChannelType(obj->channel, hero->tempOwner))
 		{
-			auto filteredExits = CGTeleport::filterExits(gs, hero, gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner));
-			if(filteredExits.size() > 1)
+			auto passableExits = CGTeleport::getPassableExits(gs, hero, gs->getTeleportChannelExits(obj->channel, ObjectInstanceID(), hero->tempOwner));
+			if(passableExits.size() > 1)
 				return true;
 		}
 	}

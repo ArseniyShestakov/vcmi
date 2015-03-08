@@ -292,8 +292,8 @@ public:
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
 	static bool isConnected(const CGObjectInstance * src, const CGObjectInstance * dst);
 	static void addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj);
-	static bool canPassThrough(CGameState * gs, const CGHeroInstance * h, const CGObjectInstance * obj);
-	static std::vector<ObjectInstanceID> filterExits(CGameState * gs, const CGHeroInstance * h, std::vector<ObjectInstanceID> exits);
+	static bool isExitPassable(CGameState * gs, const CGHeroInstance * h, const CGObjectInstance * obj);
+	static std::vector<ObjectInstanceID> getPassableExits(CGameState * gs, const CGHeroInstance * h, std::vector<ObjectInstanceID> exits);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
