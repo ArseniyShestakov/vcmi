@@ -798,17 +798,17 @@ bool CGTeleport::isExit() const
 	return type == BOTH || type == EXIT;
 }
 
-bool CGTeleport::isChannelEntrance(ObjectInstanceID src) const
+bool CGTeleport::isChannelEntrance(ObjectInstanceID id) const
 {
-	if(vstd::contains(getAllEntrances(), src))
+	if(vstd::contains(getAllEntrances(), id))
 		return true;
 	else
 		return false;
 }
 
-bool CGTeleport::isChannelExit(ObjectInstanceID dst) const
+bool CGTeleport::isChannelExit(ObjectInstanceID id) const
 {
-	if(vstd::contains(getAllExits(), dst))
+	if(vstd::contains(getAllExits(), id))
 		return true;
 	else
 		return false;
@@ -822,38 +822,6 @@ ObjectInstanceID CGTeleport::getRandomExit(const CGHeroInstance * h) const
 		destinationid = *RandomGeneratorUtil::nextItem(passableExits, cb->gameState()->getRandomGenerator());
 
 	return destinationid;
-}
-
-void CGMonolith::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
-{
-	ObjectInstanceID objId = ObjectInstanceID(answer);
-	auto realExits = getAllExits(true);
-	if(!isEntrance() // Do nothing if hero visited exit only object
-		|| (!exits.size() && !realExits.size()) // Do nothing if there no exits on this channel
-		|| (!exits.size() && ObjectInstanceID() == getRandomExit(hero))) // Do nothing if all exits are blocked by friendly hero and it's not subterranean gate
-	{
-		return;
-	}
-	else if(objId == ObjectInstanceID())
-		objId = getRandomExit(hero);
-	else
-		assert(vstd::contains(exits, objId)); // Likely cheating attempt: not random teleporter choosen, but it's not from provided list
-
-	auto obj = cb->getObj(objId);
-	if(obj)
-		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
-}
-
-TeleportChannelID CGTeleport::findMeChannel(std::vector<Obj> IDs, int SubID) const
-{
-	for(auto obj : cb->gameState()->map->objects)
-	{
-		auto teleportObj = dynamic_cast<const CGTeleport *>(cb->getObj(obj->id));
-		if(teleportObj && vstd::contains(IDs, teleportObj->ID) && teleportObj->subID == SubID)
-			return teleportObj->channel;
-	}
-
-	return TeleportChannelID();
 }
 
 bool CGTeleport::isTeleport(const CGObjectInstance * obj)
@@ -942,6 +910,26 @@ void CGMonolith::onHeroVisit( const CGHeroInstance * h ) const
 	cb->showTeleportDialog(&td);
 }
 
+void CGMonolith::teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const
+{
+	ObjectInstanceID objId = ObjectInstanceID(answer);
+	auto realExits = getAllExits(true);
+	if(!isEntrance() // Do nothing if hero visited exit only object
+		|| (!exits.size() && !realExits.size()) // Do nothing if there no exits on this channel
+		|| (!exits.size() && ObjectInstanceID() == getRandomExit(hero))) // Do nothing if all exits are blocked by friendly hero and it's not subterranean gate
+	{
+		return;
+	}
+	else if(objId == ObjectInstanceID())
+		objId = getRandomExit(hero);
+	else
+		assert(vstd::contains(exits, objId)); // Likely cheating attempt: not random teleporter choosen, but it's not from provided list
+
+	auto obj = cb->getObj(objId);
+	if(obj)
+		cb->moveHero(hero->id,CGHeroInstance::convertPosition(obj->pos,true) - getVisitableOffset(), true);
+}
+
 void CGMonolith::initObj()
 {
 	std::vector<Obj> IDs;
@@ -967,6 +955,18 @@ void CGMonolith::initObj()
 		channel = TeleportChannelID(cb->gameState()->map->teleportChannels.size());
 
 	addToChannel(cb->gameState()->map->teleportChannels, this);
+}
+
+TeleportChannelID CGMonolith::findMeChannel(std::vector<Obj> IDs, int SubID) const
+{
+	for(auto obj : cb->gameState()->map->objects)
+	{
+		auto teleportObj = dynamic_cast<const CGTeleport *>(cb->getObj(obj->id));
+		if(teleportObj && vstd::contains(IDs, teleportObj->ID) && teleportObj->subID == SubID)
+			return teleportObj->channel;
+	}
+
+	return TeleportChannelID();
 }
 
 void CGSubterraneanGate::onHeroVisit( const CGHeroInstance * h ) const

@@ -268,8 +268,6 @@ struct DLL_LINKAGE TeleportChannel
 
 class DLL_LINKAGE CGTeleport : public CGObjectInstance
 {
-	std::vector<ObjectInstanceID> instersection(std::vector<ObjectInstanceID> &v1, std::vector<ObjectInstanceID> &v2) const;
-
 public:
 	enum EType {UNKNOWN, ENTRANCE, EXIT, BOTH};
 
@@ -277,10 +275,8 @@ public:
 	TeleportChannelID channel;
 
 	CGTeleport();
-	bool isChannelEntrance(ObjectInstanceID src) const;
-	bool isChannelExit(ObjectInstanceID dst) const;
-	TeleportChannelID findMeChannel(std::vector<Obj> IDs, int SubID) const;
-
+	bool isChannelEntrance(ObjectInstanceID id) const;
+	bool isChannelExit(ObjectInstanceID id) const;
 	bool isEntrance() const;
 	bool isExit() const;
 	std::vector<ObjectInstanceID> getAllEntrances(bool excludeCurrent = false) const;
@@ -288,12 +284,13 @@ public:
 	ObjectInstanceID getRandomExit(const CGHeroInstance * h) const;
 
 	virtual void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const = 0;
+
 	static bool isTeleport(const CGObjectInstance * dst);
 	static bool isConnected(const CGTeleport * src, const CGTeleport * dst);
 	static bool isConnected(const CGObjectInstance * src, const CGObjectInstance * dst);
-	static void addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj);
 	static bool isExitPassable(CGameState * gs, const CGHeroInstance * h, const CGObjectInstance * obj);
 	static std::vector<ObjectInstanceID> getPassableExits(CGameState * gs, const CGHeroInstance * h, std::vector<ObjectInstanceID> exits);
+	static void addToChannel(std::map<TeleportChannelID, shared_ptr<TeleportChannel> > &channelsList, const CGTeleport * obj);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -303,6 +300,8 @@ public:
 
 class DLL_LINKAGE CGMonolith : public CGTeleport
 {
+	TeleportChannelID findMeChannel(std::vector<Obj> IDs, int SubID) const;
+
 public:
 	void onHeroVisit(const CGHeroInstance * h) const override;
 	void teleportDialogAnswered(const CGHeroInstance *hero, ui32 answer, std::vector<ObjectInstanceID> exits) const override;
