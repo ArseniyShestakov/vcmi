@@ -26,6 +26,17 @@
 
 const int NAMES_PER_TOWN=16; // number of town names per faction in H3 files. Json can define any number
 
+
+CBuilding::CBuilding()
+{
+
+}
+
+CBuilding::~CBuilding()
+{
+
+}
+
 const std::string & CBuilding::Name() const
 {
 	return name;
