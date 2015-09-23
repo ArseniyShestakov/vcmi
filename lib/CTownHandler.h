@@ -69,8 +69,11 @@ public:
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & identifier;
+		logGlobal->errorStream() << identifier;
 		h & town & bid & resources & produce;
+		logGlobal->errorStream() << name;
 		h & name;
+		logGlobal->errorStream() << description;
 		h & description & requirements & upgrade & mode;
 	}
 

@@ -293,7 +293,7 @@ void CTownHandler::loadBuildingRequirements(CTown &town, CBuilding & building, c
 
 void CTownHandler::loadBuilding(CTown &town, const std::string & stringID, const JsonNode & source)
 {
-	auto  ret = new CBuilding;
+	auto  ret = new CBuilding();
 
 	static const std::string modes [] = {"normal", "auto", "special", "grail"};
 
