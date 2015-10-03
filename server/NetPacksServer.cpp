@@ -209,10 +209,19 @@ bool SetFormation::applyGh( CGameHandler *gh )
 bool HireHero::applyGh( CGameHandler *gh )
 {
 	const CGObjectInstance *obj = gh->getObj(tid);
-
-	if(obj->ID == Obj::TOWN)
-		ERROR_IF_NOT_OWNS(tid);
-	//TODO check for visiting hero
+	const CGTownInstance * town = dynamic_cast<const CGTownInstance *>(obj);
+	if(town)
+	{
+		if(PlayerRelations::ENEMIES == GS(gh)->getPlayerRelations(obj->tempOwner, gh->getPlayerAt(c)))
+		{
+			WRONG_PLAYER_MSG(gh->getOwner(obj->id));
+			ERROR_AND_RETURN;
+		}
+		else if(town->visitingHero)
+		{
+			ERROR_AND_RETURN;
+		}
+	}
 
 	return gh->hireHero(obj, hid,player);
 }
