@@ -3302,7 +3302,6 @@ void CPathfinder::initializeGraph()
 
 void CPathfinder::calculatePaths()
 {
-	bool flying = hero->hasBonusOfType(Bonus::FLYING_MOVEMENT);
 	int maxMovePointsLand = hero->maxMovePoints(true);
 	int maxMovePointsWater = hero->maxMovePoints(false);
 	int3 src = hero->getPosition(false);
@@ -3415,7 +3414,7 @@ void CPathfinder::calculatePaths()
 			if(cp->accessible == CGPathNode::VISITABLE && guardedSource && cp->theNodeBefore->land && ct->topVisitableId() == Obj::BOAT)
 				guardedSource = false;
 
-			int cost = gs->getMovementCost(hero, cp->coord, dp->coord, flying, movement);
+			int cost = gs->getMovementCost(hero, cp->coord, dp->coord, allowFlying, movement);
 			//special case -> moving from src Subterranean gate to dest gate -> it's free
 			if(CGTeleport::isConnected(cObj, dObj))
 				cost = 0;
@@ -3433,7 +3432,7 @@ void CPathfinder::calculatePaths()
 				//occurs rarely, when hero with low movepoints tries to leave the road
 				turnAtNextTile++;
 				int moveAtNextTile = maxMovePoints(cp);
-				cost = gs->getMovementCost(hero, cp->coord, dp->coord, flying, moveAtNextTile); //cost must be updated, movement points changed :(
+				cost = gs->getMovementCost(hero, cp->coord, dp->coord, allowFlying, moveAtNextTile); //cost must be updated, movement points changed :(
 				remains = moveAtNextTile - cost;
 			}
 
@@ -3454,6 +3453,11 @@ void CPathfinder::calculatePaths()
 				{
 					if(dp->accessible == CGPathNode::ACCESSIBLE)
 						return true;
+					if(dp->accessible == CGPathNode::FLYABLE)
+					{
+						if(allowFlying || (!dp->land && allowWalkingOnWater))
+							return true;
+					}
 					if(dp->coord == CGHeroInstance::convertPosition(hero->pos, false))
 						return true; // This one is tricky, we can ignore fact that tile is not ACCESSIBLE in case if it's our hero block it. Though this need investigation
 					if(dp->accessible == CGPathNode::VISITABLE && CGTeleport::isTeleport(dt->topVisitableObj()))
@@ -3464,7 +3468,7 @@ void CPathfinder::calculatePaths()
 						return true; // Always add entry teleport with non-dummy channel
 					if(CGTeleport::isConnected(cObj, dObj))
 						return true; // Always add exit points of teleport
-					if(guardedDst && !guardedSource)
+					if(guardedDst && !guardedSource || allowFlying)
 						return true; // Can step into a hostile tile once
 
 					return false;
@@ -3489,7 +3493,7 @@ bool CPathfinder::canMoveBetween(const int3 &a, const int3 &b) const
 
 CGPathNode::EAccessibility CPathfinder::evaluateAccessibility(const TerrainTile *tinfo) const
 {
-	CGPathNode::EAccessibility ret = (tinfo->blocked ? CGPathNode::BLOCKED : CGPathNode::ACCESSIBLE);
+	CGPathNode::EAccessibility ret = (tinfo->blocked ? CGPathNode::FLYABLE : CGPathNode::ACCESSIBLE);
 
 
     if(tinfo->terType == ETerrainType::ROCK || !FoW[curPos.x][curPos.y][curPos.z])
@@ -3499,7 +3503,7 @@ CGPathNode::EAccessibility CPathfinder::evaluateAccessibility(const TerrainTile 
 	{
 		if(tinfo->visitableObjects.front()->ID == Obj::SANCTUARY && tinfo->visitableObjects.back()->ID == Obj::HERO && tinfo->visitableObjects.back()->tempOwner != hero->tempOwner) //non-owned hero stands on Sanctuary
 		{
-			return CGPathNode::BLOCKED;
+			return CGPathNode::FLYABLE;
 		}
 		else
 		{
@@ -3573,6 +3577,16 @@ CPathfinder::CPathfinder(CPathsInfo &_out, CGameState *_gs, const CGHeroInstance
 	allowTeleportWhirlpool = false;
 	if (CGWhirlpool::isProtected(hero))
 		allowTeleportWhirlpool = true;
+
+	allowFlying = false;
+	allowWalkingOnWater = false;
+	if (!hero->boat) // Hero can't fly or walk on water while in boat
+	{
+		if (hero->canFly())
+			allowFlying = true;
+		if (hero->canWalkOnSea())
+			allowWalkingOnWater = true;
+	}
 }
 
 CRandomGenerator & CGameState::getRandomGenerator()

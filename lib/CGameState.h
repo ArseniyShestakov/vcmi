@@ -284,6 +284,9 @@ private:
 	bool allowTeleportOneWay; // One-way monoliths with one known exit only
 	bool allowTeleportOneWayRandom; // One-way monoliths with more than one known exit
 	bool allowTeleportWhirlpool; // Force enabled if hero protected or unaffected (have one stack of one creature)
+
+	bool allowFlying;
+	bool allowWalkingOnWater;
 	CPathsInfo &out;
 	const CGHeroInstance *hero;
 	const std::vector<std::vector<std::vector<ui8> > > &FoW;

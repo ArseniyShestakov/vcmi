@@ -126,6 +126,7 @@ struct DLL_LINKAGE CGPathNode
 		ACCESSIBLE = 1, //tile can be entered and passed
 		VISITABLE, //tile can be entered as the last tile in path
 		BLOCKVIS,  //visitable from neighbouring tile but not passable
+		FLYABLE, // hero can fly through that tile
 		BLOCKED //tile can't be entered nor visited
 	};
 

@@ -1538,7 +1538,7 @@ void CAdvMapInt::tileHovered(const int3 &mapPos)
 
 		int turns = pnode->turns;
 		vstd::amin(turns, 3);
-		bool accessible  =  pnode->turns < 255;
+		bool accessible  =  pnode->turns < 255 && pnode->accessible != CGPathNode::FLYABLE;
 
 		if(objAtTile)
 		{
@@ -1632,7 +1632,7 @@ void CAdvMapInt::tileHovered(const int3 &mapPos)
 		}
 		else //no objs
 		{
-			if(accessible/* && pnode->accessible != CGPathNode::FLYABLE*/)
+			if(accessible /* && pnode->accessible != CGPathNode::FLYABLE */)
 			{
 				if (guardingCreature)
 				{
