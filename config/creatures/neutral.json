@@ -475,6 +475,14 @@
 		"index": 142,
 		"level": 3,
 		"faction": "neutral",
+		"abilities":
+		{
+			"sandWalker" :
+			{
+				"type" : "SANDWALKER",
+				"propagator" : "HERO"
+			},
+		},
 		"doubleWide" : true,
 		"graphics" :
 		{
