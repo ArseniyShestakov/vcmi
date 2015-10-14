@@ -99,8 +99,7 @@ ui32 CGHeroInstance::getTileCost(const TerrainTile &dest, const TerrainTile &fro
 				break;
 			}
 		}
-		if (!nativeArmy &&
-			!(hasBonusOfType(Bonus::SANDWALKER) && from.terType == ETerrainType::SAND))
+		if(!nativeArmy && !hasBonusOfType(Bonus::NO_TERRAIN_PENALTY, from.terType))
         {
             ret = VLC->heroh->terrCosts[from.terType];
             ret-=getSecSkillLevel(SecondarySkill::PATHFINDING)*25;

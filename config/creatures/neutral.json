@@ -479,9 +479,10 @@
 		{
 			"sandWalker" :
 			{
-				"type" : "SANDWALKER",
+				"type" : "NO_TERRAIN_PENALTY",
+				"subtype" : 1,
 				"propagator" : "HERO"
-			},
+			}
 		},
 		"doubleWide" : true,
 		"graphics" :
