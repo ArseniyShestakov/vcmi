@@ -83,8 +83,6 @@ ui32 CGHeroInstance::getTileCost(const TerrainTile &dest, const TerrainTile &fro
 	}
 	else
 	{
-		//FIXME: in H3 presence of Nomad in army will remove terrain penalty for sand. Bonus not implemented in VCMI
-
 		// NOTE: in H3 neutral stacks will ignore terrain penalty only if placed as topmost stack(s) in hero army.
 		// This is clearly bug in H3 however intended behaviour is not clear.
 		// Current VCMI behaviour will ignore neutrals in calculations so army in VCMI
