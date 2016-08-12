@@ -40,7 +40,7 @@
 
 #define BONUS_ITEM(x) { #x, Bonus::x },
 
-const std::map<std::string, ui16> bonusDurationMap = 
+const std::map<std::string, ui16> bonusDurationMap =
 {
 	BONUS_ITEM(PERMANENT)
 	BONUS_ITEM(ONE_BATTLE)
@@ -54,7 +54,7 @@ const std::map<std::string, ui16> bonusDurationMap =
 	BONUS_ITEM(COMMANDER_KILLED)
 };
 
-const std::map<std::string, Bonus::LimitEffect> bonusLimitEffect = 
+const std::map<std::string, Bonus::LimitEffect> bonusLimitEffect =
 {
 	BONUS_ITEM(NO_LIMIT)
 	BONUS_ITEM(ONLY_DISTANCE_FIGHT)
@@ -103,6 +103,12 @@ BonusList& BonusList::operator=(const BonusList &bonusList)
 	std::copy(bonusList.begin(), bonusList.end(), bonuses.begin());
 	belongsToTree = false;
 	return *this;
+}
+
+void BonusList::changed()
+{
+    if(belongsToTree)
+		CBonusSystemNode::treeHasChanged();
 }
 
 int BonusList::totalValue() const
@@ -258,24 +264,19 @@ void BonusList::eliminateDuplicates()
 void BonusList::push_back(Bonus* const &x)
 {
 	bonuses.push_back(x);
-
-	if (belongsToTree)
-		CBonusSystemNode::treeHasChanged();
+	changed();
 }
 
 std::vector<Bonus*>::iterator BonusList::erase(const int position)
 {
-	if (belongsToTree)
-		CBonusSystemNode::treeHasChanged();
+	changed();
 	return bonuses.erase(bonuses.begin() + position);
 }
 
 void BonusList::clear()
 {
 	bonuses.clear();
-
-	if (belongsToTree)
-		CBonusSystemNode::treeHasChanged();
+	changed();
 }
 
 std::vector<BonusList*>::size_type BonusList::operator-=(Bonus* const &i)
@@ -284,26 +285,20 @@ std::vector<BonusList*>::size_type BonusList::operator-=(Bonus* const &i)
 	if(itr == bonuses.end())
 		return false;
 	bonuses.erase(itr);
-
-	if (belongsToTree)
-		CBonusSystemNode::treeHasChanged();
+	changed();
 	return true;
 }
 
 void BonusList::resize(std::vector<Bonus*>::size_type sz, Bonus* c )
 {
 	bonuses.resize(sz, c);
-
-	if (belongsToTree)
-		CBonusSystemNode::treeHasChanged();
+	changed();
 }
 
 void BonusList::insert(std::vector<Bonus*>::iterator position, std::vector<Bonus*>::size_type n, Bonus* const &x)
 {
 	bonuses.insert(position, n, x);
-
-	if (belongsToTree)
-		CBonusSystemNode::treeHasChanged();
+	changed();
 }
 
 int IBonusBearer::valOfBonuses(Bonus::BonusType type, const CSelector &selector) const
@@ -486,7 +481,7 @@ ui32 IBonusBearer::Speed( int turn /*= 0*/ , bool useBind /* = false*/) const
 	}
 
 	return valOfBonuses(Selector::type(Bonus::STACKS_SPEED).And(Selector::turns(turn)));
-}	
+}
 
 bool IBonusBearer::isLiving() const //TODO: theoreticaly there exists "LIVING" bonus in stack experience documentation
 {
@@ -505,7 +500,7 @@ const TBonusListPtr IBonusBearer::getSpellBonuses() const
 		.And(CSelector([](const Bonus * b)->bool
 		{
 			return b->type != Bonus::NONE;
-		})); 
+		}));
 	return getBonuses(selector, Selector::anyRange(), cachingStr.str());
 }
 
@@ -709,6 +704,26 @@ CBonusSystemNode::CBonusSystemNode() : bonuses(true), exportedBonuses(true), nod
 {
 }
 
+CBonusSystemNode::CBonusSystemNode(CBonusSystemNode && other):
+	bonuses(other.bonuses),
+	exportedBonuses(other.exportedBonuses),
+	nodeType(other.nodeType),
+	description(other.description),
+	cachedLast(0)
+{
+	//todo: move constructor for bonuslist
+	bonuses.belongsToTree = true;
+	exportedBonuses.belongsToTree = true;
+
+	std::swap(parents, other.parents);
+	std::swap(children, other.children);
+
+	//TODO: move cache
+
+	//cachedBonuses
+	//cachedRequests
+}
+
 CBonusSystemNode::~CBonusSystemNode()
 {
 	detachFromAll();
@@ -870,7 +885,7 @@ void CBonusSystemNode::childDetached(CBonusSystemNode *child)
 		logBonus->errorStream() << std::string("Error!" + child->nodeName() + " #cannot be detached from# " + nodeName());
 		assert(0);
 	}
-	
+
 }
 
 void CBonusSystemNode::detachFromAll()
@@ -1108,7 +1123,7 @@ const CSpell * Bonus::sourceSpell() const
 std::string Bonus::Description() const
 {
 	std::ostringstream str;
-	
+
 	if(description.empty())
 		switch(source)
 		{
@@ -1126,15 +1141,15 @@ std::string Bonus::Description() const
 			break;
 		default:
 			//todo: handle all possible sources
-			str << "Unknown"; 
+			str << "Unknown";
 			break;
 		}
 	else
 		str << description;
-		
+
 	if(val != 0)
 		str << " " << std::showpos << val;
-	
+
 	return str.str();
 }
 
@@ -1156,14 +1171,14 @@ Bonus::Bonus(ui16 Dur, BonusType Type, BonusSource Src, si32 Val, ui32 ID, si32 
 	effectRange = NO_LIMIT;
 }
 
-Bonus::Bonus()   
+Bonus::Bonus()
 {
 	duration = PERMANENT;
 	turnsRemain = 0;
 	type = NONE;
 	subtype = -1;
 	additionalInfo = -1;
-	
+
 	valType = ADDITIVE_VALUE;
 	effectRange = NO_LIMIT;
 	val = 0;

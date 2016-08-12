@@ -412,7 +412,7 @@ private:
 
 	TInternalContainer bonuses;
 	bool belongsToTree;
-
+	void changed();
 
 public:
 	typedef TInternalContainer::const_reference const_reference;
@@ -495,10 +495,8 @@ public:
 		return bonuses.end();
 	}
 
-	//friend inline std::vector<Bonus*>::iterator range_begin(BonusList & x);
-	//friend inline std::vector<Bonus*>::iterator range_end(BonusList & x);
+	friend class CBonusSystemNode;
 };
-
 
 // Extensions for BOOST_FOREACH to enable iterating of BonusList objects
 // Don't touch/call this functions
@@ -614,7 +612,7 @@ public:
 	const TBonusListPtr getSpellBonuses() const;
 };
 
-class DLL_LINKAGE CBonusSystemNode : public IBonusBearer
+class DLL_LINKAGE CBonusSystemNode : public IBonusBearer, public boost::noncopyable
 {
 public:
 	enum ENodeTypes
@@ -647,8 +645,8 @@ private:
 	const TBonusListPtr getAllBonusesWithoutCaching(const CSelector &selector, const CSelector &limit, const CBonusSystemNode *root = nullptr) const;
 
 public:
-
 	explicit CBonusSystemNode();
+	CBonusSystemNode(CBonusSystemNode && other);
 	virtual ~CBonusSystemNode();
 
 	void limitBonuses(const BonusList &allBonuses, BonusList &out) const; //out will bo populed with bonuses that are not limited here
@@ -1010,23 +1008,5 @@ template <class InputIterator>
 void BonusList::insert(const int position, InputIterator first, InputIterator last)
 {
 	bonuses.insert(bonuses.begin() + position, first, last);
-
-	if (belongsToTree)
-		CBonusSystemNode::treeHasChanged();
+	changed();
 }
-
-// Extensions for BOOST_FOREACH to enable iterating of BonusList objects
-/*namespace boost
-{
-	template<>
-	struct range_mutable_iterator<BonusList>
-	{
-		typedef std::vector<Bonus*>::iterator type;
-	};
-
-	template<>
-	struct range_const_iterator<BonusList>
-	{
-		typedef std::vector<Bonus*>::const_iterator type;
-	};
-}*/
