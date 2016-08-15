@@ -1497,11 +1497,7 @@ void CRmgTemplateZone::initTerrainType (CMapGenerator* gen)
 
 void CRmgTemplateZone::paintZoneTerrain (CMapGenerator* gen, ETerrainType terrainType)
 {
-	std::vector<int3> tiles;
-	for (auto tile : tileinfo)
-	{
-		tiles.push_back (tile);
-	}
+	std::vector<int3> tiles(tileinfo.begin(), tileinfo.end());
 	gen->editManager->getTerrainSelection().setSelection(tiles);
 	gen->editManager->drawTerrain(terrainType, &gen->rand);
 }
@@ -2224,7 +2220,7 @@ ObjectInfo CRmgTemplateZone::getRandomObject(CMapGenerator* gen, CTreasurePileIn
 {
 	//int objectsVisitableFromBottom = 0; //for debug
 
-	std::vector<std::pair<ui32, ObjectInfo>> thresholds;
+	std::vector<std::pair<ui32, ObjectInfo*>> thresholds; //handle complex object via pointer
 	ui32 total = 0;
 
 	//calculate actual treasure value range based on remaining value
@@ -2305,7 +2301,6 @@ ObjectInfo CRmgTemplateZone::getRandomObject(CMapGenerator* gen, CTreasurePileIn
 
 			bool fitsBlockmap = true;
 
-
 			std::set<int3> blockedOffsets = oi.templ.getBlockedOffsets();
 			blockedOffsets.insert (newVisitableOffset);
 			for (auto blockingTile : blockedOffsets)
@@ -2327,12 +2322,9 @@ ObjectInfo CRmgTemplateZone::getRandomObject(CMapGenerator* gen, CTreasurePileIn
 
 			total += oi.probability;
 			
-			//FIXME: apparently this is quite expensive operation
-			thresholds.push_back (std::make_pair (total, oi));
+			thresholds.push_back (std::make_pair (total, &oi));
 		}
 	}
-
-	//logGlobal->infoStream() << boost::format ("Number of objects visitable  from bottom: %d") % objectsVisitableFromBottom;
 
 	if (thresholds.empty())
 	{
@@ -2369,11 +2361,11 @@ ObjectInfo CRmgTemplateZone::getRandomObject(CMapGenerator* gen, CTreasurePileIn
 
 		//binary search = fastest
 		auto it = std::lower_bound(thresholds.begin(), thresholds.end(), r,
-			[](const std::pair<ui32, ObjectInfo> &rhs, const int lhs)->bool
+			[](const std::pair<ui32, ObjectInfo*> &rhs, const int lhs)->bool
 		{
 			return rhs.first < lhs;
 		});
-		return it->second;
+		return *(it->second);
 	}
 
 	return ObjectInfo(); // unreachable
