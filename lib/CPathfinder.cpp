@@ -929,6 +929,12 @@ CPathfinderHelper::CPathfinderHelper(const CGHeroInstance * Hero, const CPathfin
 	updateTurnInfo();
 }
 
+CPathfinderHelper::~CPathfinderHelper()
+{
+	for(auto ti : turnsInfo)
+		delete ti;
+}
+
 void CPathfinderHelper::updateTurnInfo(const int Turn)
 {
 	if(turn != Turn)
@@ -1025,8 +1031,12 @@ int CPathfinderHelper::getMovementCost(const CGHeroInstance * h, const int3 & sr
 	if(src == dst) //same tile
 		return 0;
 
+	bool localTi = false;
 	if(!ti)
+	{
+		localTi = true;
 		ti = new TurnInfo(h);
+	}
 
 	if(ct == nullptr || dt == nullptr)
 	{
@@ -1062,7 +1072,12 @@ int CPathfinderHelper::getMovementCost(const CGHeroInstance * h, const int3 & sr
 		ret *= 1.414213;
 		//diagonal move costs too much but normal move is possible - allow diagonal move for remaining move points
 		if(ret > remainingMovePoints && remainingMovePoints >= old)
+		{
+			if(localTi)
+				delete ti;
+
 			return remainingMovePoints;
+		}
 	}
 
 	/// TODO: This part need rework in order to work properly with flying and water walking
@@ -1077,10 +1092,19 @@ int CPathfinderHelper::getMovementCost(const CGHeroInstance * h, const int3 & sr
 		{
 			int fcost = getMovementCost(h, dst, elem, nullptr, nullptr, left, ti, false);
 			if(fcost <= left)
+			{
+				if(localTi)
+					delete ti;
+
 				return ret;
+			}
 		}
 		ret = remainingMovePoints;
 	}
+
+	if(localTi)
+		delete ti;
+
 	return ret;
 }
 
