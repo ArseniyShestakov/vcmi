@@ -1200,6 +1200,7 @@ Bonus::Bonus()
 	effectRange = NO_LIMIT;
 	val = 0;
 	source = OTHER;
+	sid = 0;
 }
 
 Bonus::~Bonus()
