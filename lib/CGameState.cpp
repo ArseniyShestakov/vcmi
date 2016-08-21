@@ -3253,7 +3253,7 @@ TeamState::TeamState(TeamState && other):
 
 CRandomGenerator & CGameState::getRandomGenerator()
 {
-	if(scenarioOps->seedPostInit)
+	if(scenarioOps && scenarioOps->seedPostInit)
 	{
 		logGlobal->trace("CGameState::getRandomGenerator used after initialization!");
 	}
