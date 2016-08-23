@@ -123,6 +123,7 @@ public:
 
 		void resetMagicSchoolCounter();
 		void resetWisdomCounter();
+		CRandomGenerator & Rand() const;
 
 		template <typename Handler> void serialize(Handler &h, const int version)
 		{

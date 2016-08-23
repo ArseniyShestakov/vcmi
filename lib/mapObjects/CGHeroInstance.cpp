@@ -483,6 +483,11 @@ void CGHeroInstance::SecondarySkillsInfo::resetWisdomCounter()
 	wisdomCounter = 1;
 }
 
+CRandomGenerator & CGHeroInstance::SecondarySkillsInfo::Rand() const
+{
+	return rand;
+}
+
 void CGHeroInstance::initObj()
 {
 	blockVisit = true;
@@ -493,7 +498,7 @@ void CGHeroInstance::initObj()
 	if(!type)
 		initHero(); //TODO: set up everything for prison before specialties are configured
 
-	skillsInfo.rand.setSeed(cb->gameState()->getRandomGenerator().nextInt());
+	skillsInfo.Rand().setSeed(cb->gameState()->getRandomGenerator().nextInt());
 	skillsInfo.resetMagicSchoolCounter();
 	skillsInfo.resetWisdomCounter();
 
@@ -1259,7 +1264,7 @@ std::vector<SecondarySkill> CGHeroInstance::getLevelUpProposedSecondarySkills() 
 			SecondarySkill::FIRE_MAGIC, SecondarySkill::AIR_MAGIC, SecondarySkill::WATER_MAGIC, SecondarySkill::EARTH_MAGIC
 		};
 
-		std::shuffle(ss.begin(), ss.end(), skillsInfo.rand.getStdGenerator());
+		std::shuffle(ss.begin(), ss.end(), skillsInfo.Rand().getStdGenerator());
 
 		for (auto skill : ss)
 		{
@@ -1303,12 +1308,12 @@ std::vector<SecondarySkill> CGHeroInstance::getLevelUpProposedSecondarySkills() 
 	}
 	else if(none.size() && canLearnSkill()) //hero have free skill slot
 	{
-		skills.push_back(type->heroClass->chooseSecSkill(none, skillsInfo.rand)); //new skill
+		skills.push_back(type->heroClass->chooseSecSkill(none, skillsInfo.Rand())); //new skill
 		none.erase(skills.back());
 	}
 	else if(!basicAndAdv.empty())
 	{
-		skills.push_back(type->heroClass->chooseSecSkill(basicAndAdv, skillsInfo.rand)); //upgrade existing
+		skills.push_back(type->heroClass->chooseSecSkill(basicAndAdv, skillsInfo.Rand())); //upgrade existing
 		basicAndAdv.erase(skills.back());
 	}
 
@@ -1318,7 +1323,7 @@ std::vector<SecondarySkill> CGHeroInstance::getLevelUpProposedSecondarySkills() 
 	//3) give any other new skill
 	if(!basicAndAdv.empty())
 	{
-		SecondarySkill s = type->heroClass->chooseSecSkill(basicAndAdv, skillsInfo.rand);//upgrade existing
+		SecondarySkill s = type->heroClass->chooseSecSkill(basicAndAdv, skillsInfo.Rand());//upgrade existing
 		skills.push_back(s);
 		basicAndAdv.erase(s);
 	}
@@ -1328,7 +1333,7 @@ std::vector<SecondarySkill> CGHeroInstance::getLevelUpProposedSecondarySkills() 
 	}
 	else if(none.size() && canLearnSkill())
 	{
-		skills.push_back(type->heroClass->chooseSecSkill(none, skillsInfo.rand)); //give new skill
+		skills.push_back(type->heroClass->chooseSecSkill(none, skillsInfo.Rand())); //give new skill
 		none.erase(skills.back());
 	}
 
