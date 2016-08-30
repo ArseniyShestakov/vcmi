@@ -290,7 +290,6 @@ int main(int argc, char** argv)
 	console = new CConsoleHandler;
 	*console->cb = processCommand;
 	console->start();
-	atexit(dispose);
 
 	const bfs::path logPath = VCMIDirs::get().userCachePath() / "VCMI_Client_log.txt";
 	CBasicLogConfigurator logConfig(logPath, console);
@@ -363,7 +362,6 @@ int main(int argc, char** argv)
 			exit(-1);
 		}
 		GH.mainFPSmng->init(); //(!)init here AFTER SDL_Init() while using SDL for FPS management
-		atexit(SDL_Quit);
 
 		SDL_LogSetOutputFunction(&SDLLogCallback, nullptr);
 
@@ -929,37 +927,30 @@ void dispose()
 	}
 }
 
-static bool checkVideoMode(int monitorIndex, int w, int h, int& bpp, bool fullscreen)
+static bool checkVideoMode(int monitorIndex, int w, int h)
 {
+	//we only check that our desired window size fits on screen
 	SDL_DisplayMode mode;
-	const int modeCount = SDL_GetNumDisplayModes(monitorIndex);
-	for (int i = 0; i < modeCount; i++) {
-		SDL_GetDisplayMode(0, i, &mode);
-		if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
-			return true;
-		}
-	}
-	return false;
-}
 
-static bool recreateWindow(int w, int h, int bpp, bool fullscreen)
-{
-	// VCMI will only work with 2 or 4 bytes per pixel
-	vstd::amax(bpp, 16);
-	vstd::amin(bpp, 32);
-	if(bpp>16)
-		bpp = 32;
-
-	int suggestedBpp = bpp;
-
-	if(!checkVideoMode(0,w,h,suggestedBpp,fullscreen))
+	if (0 != SDL_GetDesktopDisplayMode(monitorIndex, &mode))
 	{
-		logGlobal->errorStream() << "Error: SDL says that " << w << "x" << h << " resolution is not available!";
+		logGlobal->error("SDL_GetDesktopDisplayMode failed");
+		logGlobal->error(SDL_GetError());
 		return false;
 	}
 
-	bool bufOnScreen = (screenBuf == screen);
+	logGlobal->info("Check display mode: requested %d x %d; available up to %d x %d ", w, h, mode.w, mode.h);
 
+	if (!mode.w || !mode.h || (w <= mode.w && h <= mode.h))
+	{
+		return true;
+	}
+
+	return false;
+}
+
+static void cleanupRenderer()
+{
 	screenBuf = nullptr; //it`s a link - just nullify
 
 	if(nullptr != screen2)
@@ -968,13 +959,11 @@ static bool recreateWindow(int w, int h, int bpp, bool fullscreen)
 		screen2 = nullptr;
 	}
 
-
 	if(nullptr != screen)
 	{
 		SDL_FreeSurface(screen);
 		screen = nullptr;
 	}
-
 
 	if(nullptr != screenTexture)
 	{
@@ -993,7 +982,25 @@ static bool recreateWindow(int w, int h, int bpp, bool fullscreen)
 		SDL_DestroyWindow(mainWindow);
 		mainWindow = nullptr;
 	}
+}
 
+static bool recreateWindow(int w, int h, int bpp, bool fullscreen)
+{
+	// VCMI will only work with 2 or 4 bytes per pixel
+	vstd::amax(bpp, 16);
+	vstd::amin(bpp, 32);
+	if(bpp>16)
+		bpp = 32;
+
+	if(!checkVideoMode(0,w,h))
+	{
+		logGlobal->errorStream() << "Error: SDL says that " << w << "x" << h << " resolution is not available!";
+		return false;
+	}
+
+	bool bufOnScreen = (screenBuf == screen);
+
+	cleanupRenderer();
 
 	if(fullscreen)
 	{
@@ -1005,8 +1012,6 @@ static bool recreateWindow(int w, int h, int bpp, bool fullscreen)
 	{
 		mainWindow = SDL_CreateWindow(NAME.c_str(), SDL_WINDOWPOS_CENTERED,SDL_WINDOWPOS_CENTERED, w, h, 0);
 	}
-
-
 
 	if(nullptr == mainWindow)
 	{
@@ -1145,9 +1150,6 @@ static void handleEvent(SDL_Event & ev)
 				GH.defActionsDef = 63;
 			}
 			break;
-		case STOP_CLIENT:
-			client->endGame(false);
-			break;
 		case RESTART_GAME:
 			{
 				StartInfo si = *client->getStartInfo(true);
@@ -1270,12 +1272,14 @@ void handleQuit(bool ask/* = true*/)
 	{
 		if(client)
 			endGame();
-
-		delete console;
-		console = nullptr;
+		dispose();
+		vstd::clear_pointer(console);
 		boost::this_thread::sleep(boost::posix_time::milliseconds(750));
 		if(!gNoGUI)
+		{
+			cleanupRenderer();
 			SDL_Quit();
+		}
 
 		std::cout << "Ending...\n";
 		exit(0);
