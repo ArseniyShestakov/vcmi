@@ -1955,13 +1955,13 @@ BFieldType CGameState::battleGetBattlefieldType(int3 tile, CRandomGenerator & ra
 	switch(t.terType)
 	{
 	case ETerrainType::DIRT:
-		return BFieldType(getRandomGenerator().nextInt(3, 5));
+		return BFieldType(rand.nextInt(3, 5));
 	case ETerrainType::SAND:
 		return BFieldType::SAND_MESAS; //TODO: coast support
 	case ETerrainType::GRASS:
-		return BFieldType(getRandomGenerator().nextInt(6, 7));
+		return BFieldType(rand.nextInt(6, 7));
 	case ETerrainType::SNOW:
-		return BFieldType(getRandomGenerator().nextInt(10, 11));
+		return BFieldType(rand.nextInt(10, 11));
 	case ETerrainType::SWAMP:
 		return BFieldType::SWAMP_TREES;
 	case ETerrainType::ROUGH:
