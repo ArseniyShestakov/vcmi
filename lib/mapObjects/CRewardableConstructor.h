@@ -34,7 +34,7 @@ public:
 
 	bool givesBonuses() const override;
 
-	void configureObject(CRewardableObject * object, CRandomGenerator & rng) const;
+	void configureObject(CRewardableObject * object, CRandomGenerator & rand) const;
 
 	CRandomRewardObjectInfo()
 	{}
@@ -52,7 +52,7 @@ public:
 
 	CGObjectInstance * create(const ObjectTemplate & tmpl) const override;
 
-	void configureObject(CGObjectInstance * object, CRandomGenerator & rng) const override;
+	void configureObject(CGObjectInstance * object, CRandomGenerator & rand) const override;
 
 	std::unique_ptr<IObjectInfo> getObjectInfo(const ObjectTemplate & tmpl) const override;
 };

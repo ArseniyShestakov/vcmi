@@ -44,7 +44,7 @@ void CRandomRewardObjectInfo::init(const JsonNode & objectConfig)
 	parameters = objectConfig;
 }
 
-void CRandomRewardObjectInfo::configureObject(CRewardableObject * object, CRandomGenerator & rng) const
+void CRandomRewardObjectInfo::configureObject(CRewardableObject * object, CRandomGenerator & rand) const
 {
 	std::map<si32, si32> thrownDice;
 
@@ -56,7 +56,7 @@ void CRandomRewardObjectInfo::configureObject(CRewardableObject * object, CRando
 			si32 diceID = chance["dice"].Float();
 
 			if (thrownDice.count(diceID) == 0)
-				thrownDice[diceID] = rng.getIntRange(1, 100)();
+				thrownDice[diceID] = rand.getIntRange(1, 100)();
 
 			if (!chance["min"].isNull())
 			{
@@ -75,43 +75,43 @@ void CRandomRewardObjectInfo::configureObject(CRewardableObject * object, CRando
 		const JsonNode & limiter = reward["limiter"];
 		CVisitInfo info;
 		// load limiter
-		info.limiter.numOfGrants = JsonRandom::loadValue(limiter["numOfGrants"], rng);
-		info.limiter.dayOfWeek = JsonRandom::loadValue(limiter["dayOfWeek"], rng);
-		info.limiter.minLevel = JsonRandom::loadValue(limiter["minLevel"], rng);
-		info.limiter.resources = JsonRandom::loadResources(limiter["resources"], rng);
+		info.limiter.numOfGrants = JsonRandom::loadValue(limiter["numOfGrants"], rand);
+		info.limiter.dayOfWeek = JsonRandom::loadValue(limiter["dayOfWeek"], rand);
+		info.limiter.minLevel = JsonRandom::loadValue(limiter["minLevel"], rand);
+		info.limiter.resources = JsonRandom::loadResources(limiter["resources"], rand);
 
-		info.limiter.primary = JsonRandom::loadPrimary(limiter["primary"], rng);
-		info.limiter.secondary = JsonRandom::loadSecondary(limiter["secondary"], rng);
-		info.limiter.artifacts = JsonRandom::loadArtifacts(limiter["artifacts"], rng);
-		info.limiter.creatures = JsonRandom::loadCreatures(limiter["creatures"], rng);
+		info.limiter.primary = JsonRandom::loadPrimary(limiter["primary"], rand);
+		info.limiter.secondary = JsonRandom::loadSecondary(limiter["secondary"], rand);
+		info.limiter.artifacts = JsonRandom::loadArtifacts(limiter["artifacts"], rand);
+		info.limiter.creatures = JsonRandom::loadCreatures(limiter["creatures"], rand);
 
-		info.reward.resources = JsonRandom::loadResources(reward["resources"], rng);
+		info.reward.resources = JsonRandom::loadResources(reward["resources"], rand);
 
-		info.reward.gainedExp = JsonRandom::loadValue(reward["gainedExp"], rng);
-		info.reward.gainedLevels = JsonRandom::loadValue(reward["gainedLevels"], rng);
+		info.reward.gainedExp = JsonRandom::loadValue(reward["gainedExp"], rand);
+		info.reward.gainedLevels = JsonRandom::loadValue(reward["gainedLevels"], rand);
 
-		info.reward.manaDiff = JsonRandom::loadValue(reward["manaPoints"], rng);
-		info.reward.manaPercentage = JsonRandom::loadValue(reward["manaPercentage"], rng, -1);
+		info.reward.manaDiff = JsonRandom::loadValue(reward["manaPoints"], rand);
+		info.reward.manaPercentage = JsonRandom::loadValue(reward["manaPercentage"], rand, -1);
 
-		info.reward.movePoints = JsonRandom::loadValue(reward["movePoints"], rng);
-		info.reward.movePercentage = JsonRandom::loadValue(reward["movePercentage"], rng, -1);
+		info.reward.movePoints = JsonRandom::loadValue(reward["movePoints"], rand);
+		info.reward.movePercentage = JsonRandom::loadValue(reward["movePercentage"], rand, -1);
 
 		//FIXME: compile this line on Visual
 		//info.reward.bonuses = JsonRandom::loadBonuses(reward["bonuses"]);
 
-		info.reward.primary = JsonRandom::loadPrimary(reward["primary"], rng);
-		info.reward.secondary = JsonRandom::loadSecondary(reward["secondary"], rng);
+		info.reward.primary = JsonRandom::loadPrimary(reward["primary"], rand);
+		info.reward.secondary = JsonRandom::loadSecondary(reward["secondary"], rand);
 
 		std::vector<SpellID> spells;
 		for (size_t i=0; i<6; i++)
 			IObjectInterface::cb->getAllowedSpells(spells, i);
 
-		info.reward.artifacts = JsonRandom::loadArtifacts(reward["artifacts"], rng);
-		info.reward.spells = JsonRandom::loadSpells(reward["spells"], rng, spells);
-		info.reward.creatures = JsonRandom::loadCreatures(reward["creatures"], rng);
+		info.reward.artifacts = JsonRandom::loadArtifacts(reward["artifacts"], rand);
+		info.reward.spells = JsonRandom::loadSpells(reward["spells"], rand, spells);
+		info.reward.creatures = JsonRandom::loadCreatures(reward["creatures"], rand);
 
 		info.message = loadMessage(reward["message"]);
-		info.selectChance = JsonRandom::loadValue(reward["selectChance"], rng);
+		info.selectChance = JsonRandom::loadValue(reward["selectChance"], rand);
 	}
 
 	object->onSelect  = loadMessage(parameters["onSelectMessage"]);
@@ -193,9 +193,9 @@ CGObjectInstance * CRewardableConstructor::create(const ObjectTemplate & tmpl) c
 	return ret;
 }
 
-void CRewardableConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rng) const
+void CRewardableConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rand) const
 {
-	objectInfo.configureObject(dynamic_cast<CRewardableObject*>(object), rng);
+	objectInfo.configureObject(dynamic_cast<CRewardableObject*>(object), rand);
 }
 
 std::unique_ptr<IObjectInfo> CRewardableConstructor::getObjectInfo(const ObjectTemplate & tmpl) const

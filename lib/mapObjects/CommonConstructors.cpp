@@ -79,7 +79,7 @@ CGObjectInstance * CTownInstanceConstructor::create(const ObjectTemplate & tmpl)
 	return obj;
 }
 
-void CTownInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rng) const
+void CTownInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rand) const
 {
 	auto templ = getOverride(object->cb->getTile(object->pos)->terType, object);
 	if (templ)
@@ -133,7 +133,7 @@ CGObjectInstance * CHeroInstanceConstructor::create(const ObjectTemplate & tmpl)
 	return obj;
 }
 
-void CHeroInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rng) const
+void CHeroInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rand) const
 {
 
 }
@@ -182,7 +182,7 @@ CGObjectInstance * CDwellingInstanceConstructor::create(const ObjectTemplate & t
 	return obj;
 }
 
-void CDwellingInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator &rng) const
+void CDwellingInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rand) const
 {
 	CGDwelling * dwelling = dynamic_cast<CGDwelling*>(object);
 
@@ -207,7 +207,7 @@ void CDwellingInstanceConstructor::configureObject(CGObjectInstance * object, CR
 	}
 	else if (guards.getType() == JsonNode::DATA_VECTOR) //custom guards (eg. Elemental Conflux)
 	{
-		for (auto & stack : JsonRandom::loadCreatures(guards, rng))
+		for (auto & stack : JsonRandom::loadCreatures(guards, rand))
 		{
 			dwelling->putStack(SlotID(dwelling->stacksCount()), new CStackInstance(stack.type->idNumber, stack.count));
 		}
@@ -272,13 +272,13 @@ CGObjectInstance *CBankInstanceConstructor::create(const ObjectTemplate & tmpl) 
 	return createTyped(tmpl);
 }
 
-BankConfig CBankInstanceConstructor::generateConfig(const JsonNode & level, CRandomGenerator & rng) const
+BankConfig CBankInstanceConstructor::generateConfig(const JsonNode & level, CRandomGenerator & rand) const
 {
 	BankConfig bc;
 
 	bc.chance = level["chance"].Float();
 
-	bc.guards = JsonRandom::loadCreatures(level["guards"], rng);
+	bc.guards = JsonRandom::loadCreatures(level["guards"], rand);
 	bc.upgradeChance = level["upgrade_chance"].Float();
 	bc.combatValue = level["combat_value"].Float();
 
@@ -287,18 +287,18 @@ BankConfig CBankInstanceConstructor::generateConfig(const JsonNode & level, CRan
 		IObjectInterface::cb->getAllowedSpells(spells, i);
 
 	bc.resources = Res::ResourceSet(level["reward"]["resources"]);
-	bc.creatures = JsonRandom::loadCreatures(level["reward"]["creatures"], rng);
-	bc.artifacts = JsonRandom::loadArtifacts(level["reward"]["artifacts"], rng);
-	bc.spells    = JsonRandom::loadSpells(level["reward"]["spells"], rng, spells);
+	bc.creatures = JsonRandom::loadCreatures(level["reward"]["creatures"], rand);
+	bc.artifacts = JsonRandom::loadArtifacts(level["reward"]["artifacts"], rand);
+	bc.spells    = JsonRandom::loadSpells(level["reward"]["spells"], rand, spells);
 
 	bc.value = level["value"].Float();
 
 	return bc;
 }
 
-void CBankInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rng) const
+void CBankInstanceConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rand) const
 {
-	//logGlobal->debugStream() << "Seed used to configure bank is " << rng.nextInt();
+	//logGlobal->debugStream() << "Seed used to configure bank is " << rand.nextInt();
 
 	auto bank = dynamic_cast<CBank*>(object);
 
@@ -310,7 +310,7 @@ void CBankInstanceConstructor::configureObject(CGObjectInstance * object, CRando
 
 	assert(totalChance != 0);
 
-	si32 selectedChance = rng.nextInt(totalChance - 1);
+	si32 selectedChance = rand.nextInt(totalChance - 1);
 	//logGlobal->debugStream() << "Selected chance for bank config is " << selectedChance;
 
 	int cumulativeChance = 0;
@@ -319,7 +319,7 @@ void CBankInstanceConstructor::configureObject(CGObjectInstance * object, CRando
 		cumulativeChance += node["chance"].Float();
 		if (selectedChance < cumulativeChance)
 		{
-			 bank->setConfig(generateConfig(node, rng));
+			 bank->setConfig(generateConfig(node, rand));
 			 break;
 		}
 	}

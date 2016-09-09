@@ -44,7 +44,7 @@ public:
 		return createTyped(tmpl);
 	}
 
-	virtual void configureObject(CGObjectInstance * object, CRandomGenerator & rng) const override
+	virtual void configureObject(CGObjectInstance * object, CRandomGenerator & rand) const override
 	{
 	}
 
@@ -74,7 +74,7 @@ public:
 
 	CTownInstanceConstructor();
 	CGObjectInstance * create(const ObjectTemplate & tmpl) const override;
-	void configureObject(CGObjectInstance * object, CRandomGenerator & rng) const override;
+	void configureObject(CGObjectInstance * object, CRandomGenerator & rand) const override;
 	void afterLoadFinalization() override;
 
 	template <typename Handler> void serialize(Handler &h, const int version)
@@ -97,7 +97,7 @@ public:
 
 	CHeroInstanceConstructor();
 	CGObjectInstance * create(const ObjectTemplate & tmpl) const override;
-	void configureObject(CGObjectInstance * object, CRandomGenerator & rng) const override;
+	void configureObject(CGObjectInstance * object, CRandomGenerator & rand) const override;
 	void afterLoadFinalization() override;
 
 	template <typename Handler> void serialize(Handler &h, const int version)
@@ -121,7 +121,7 @@ public:
 
 	CDwellingInstanceConstructor();
 	CGObjectInstance * create(const ObjectTemplate & tmpl) const override;
-	void configureObject(CGObjectInstance * object, CRandomGenerator & rng) const override;
+	void configureObject(CGObjectInstance * object, CRandomGenerator & rand) const override;
 
 	bool producesCreature(const CCreature * crea) const;
 	std::vector<const CCreature *> getProducedCreatures() const;
@@ -174,7 +174,7 @@ public:
 
 class CBankInstanceConstructor : public CDefaultObjectTypeHandler<CBank>
 {
-	BankConfig generateConfig(const JsonNode & conf, CRandomGenerator & rng) const;
+	BankConfig generateConfig(const JsonNode & conf, CRandomGenerator & rand) const;
 
 	JsonVector levels;
 protected:
@@ -187,7 +187,7 @@ public:
 	CBankInstanceConstructor();
 
 	CGObjectInstance * create(const ObjectTemplate & tmpl) const override;
-	void configureObject(CGObjectInstance * object, CRandomGenerator & rng) const override;
+	void configureObject(CGObjectInstance * object, CRandomGenerator & rand) const override;
 
 	std::unique_ptr<IObjectInfo> getObjectInfo(const ObjectTemplate & tmpl) const override;
 

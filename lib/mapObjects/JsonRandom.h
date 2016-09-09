@@ -30,19 +30,19 @@ namespace JsonRandom
 		si32 maxAmount;
 	};
 
-	DLL_LINKAGE si32 loadValue(const JsonNode & value, CRandomGenerator & rng, si32 defaultValue = 0);
-	DLL_LINKAGE TResources loadResources(const JsonNode & value, CRandomGenerator & rng);
-	DLL_LINKAGE std::vector<si32> loadPrimary(const JsonNode & value, CRandomGenerator & rng);
-	DLL_LINKAGE std::map<SecondarySkill, si32> loadSecondary(const JsonNode & value, CRandomGenerator & rng);
+	DLL_LINKAGE si32 loadValue(const JsonNode & value, CRandomGenerator & rand, si32 defaultValue = 0);
+	DLL_LINKAGE TResources loadResources(const JsonNode & value, CRandomGenerator & rand);
+	DLL_LINKAGE std::vector<si32> loadPrimary(const JsonNode & value, CRandomGenerator & rand);
+	DLL_LINKAGE std::map<SecondarySkill, si32> loadSecondary(const JsonNode & value, CRandomGenerator & rand);
 
-	DLL_LINKAGE ArtifactID loadArtifact(const JsonNode & value, CRandomGenerator & rng);
-	DLL_LINKAGE std::vector<ArtifactID> loadArtifacts(const JsonNode & value, CRandomGenerator & rng);
+	DLL_LINKAGE ArtifactID loadArtifact(const JsonNode & value, CRandomGenerator & rand);
+	DLL_LINKAGE std::vector<ArtifactID> loadArtifacts(const JsonNode & value, CRandomGenerator & rand);
 
-	DLL_LINKAGE SpellID loadSpell(const JsonNode & value, CRandomGenerator & rng, std::vector<SpellID> spells);
-	DLL_LINKAGE std::vector<SpellID> loadSpells(const JsonNode & value, CRandomGenerator & rng, std::vector<SpellID> spells);
+	DLL_LINKAGE SpellID loadSpell(const JsonNode & value, CRandomGenerator & rand, std::vector<SpellID> spells);
+	DLL_LINKAGE std::vector<SpellID> loadSpells(const JsonNode & value, CRandomGenerator & rand, std::vector<SpellID> spells);
 
-	DLL_LINKAGE CStackBasicDescriptor loadCreature(const JsonNode & value, CRandomGenerator & rng);
-	DLL_LINKAGE std::vector<CStackBasicDescriptor> loadCreatures(const JsonNode & value, CRandomGenerator & rng);
+	DLL_LINKAGE CStackBasicDescriptor loadCreature(const JsonNode & value, CRandomGenerator & rand);
+	DLL_LINKAGE std::vector<CStackBasicDescriptor> loadCreatures(const JsonNode & value, CRandomGenerator & rand);
 	DLL_LINKAGE std::vector<RandomStackInfo> evaluateCreatures(const JsonNode & value);
 
 	DLL_LINKAGE std::vector<Bonus> loadBonuses(const JsonNode & value);
