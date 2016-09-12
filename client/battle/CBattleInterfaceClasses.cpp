@@ -182,6 +182,9 @@ void CBattleHero::clickLeft(tribool down, bool previousState)
 	if(myOwner->spellDestSelectMode) //we are casting a spell
 		return;
 
+	if(myOwner->getCurrentPlayerInterface()->playerID == PlayerColor::UNFLAGGABLE)
+		return;
+
 	if(!down && myHero != nullptr && myOwner->myTurn && myOwner->getCurrentPlayerInterface()->cb->battleCanCastSpell()) //check conditions
 	{
 		for(int it=0; it<GameConstants::BFIELD_SIZE; ++it) //do nothing when any hex is hovered - hero's animation overlaps battlefield

@@ -95,6 +95,7 @@
 #define BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(function,...) 				\
 	CALL_ONLY_THAT_BATTLE_INTERFACE(GS(cl)->curB->sides[0].color, function, __VA_ARGS__)	\
 	CALL_ONLY_THAT_BATTLE_INTERFACE(GS(cl)->curB->sides[1].color, function, __VA_ARGS__)	\
+	CALL_ONLY_THAT_BATTLE_INTERFACE(PlayerColor::UNFLAGGABLE, function, __VA_ARGS__)	\
 	BATTLE_INTERFACE_CALL_RECEIVERS(function, __VA_ARGS__)
 /*
  * NetPacksClient.cpp, part of VCMI engine
@@ -155,6 +156,9 @@ void ChangeSpells::applyCl( CClient *cl )
 
 void SetMana::applyCl( CClient *cl )
 {
+	if(GS(cl)->initialOpts->mode == StartInfo::DUEL)
+		return;
+
 	const CGHeroInstance *h = cl->getHero(hid);
 	INTERFACE_CALL_IF_PRESENT(h->tempOwner, heroManaPointsChanged, h);
 }
@@ -717,6 +721,9 @@ void SetStackEffect::applyCl( CClient *cl )
 
 void StacksInjured::applyCl( CClient *cl )
 {
+	if(GS(cl)->initialOpts->mode == StartInfo::DUEL)
+		return;
+
 	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked,stacks);
 }
 

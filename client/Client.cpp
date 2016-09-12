@@ -729,7 +729,7 @@ void CClient::battleStarted(const BattleInfo * info)
 // 		if(battleCallbacks.count(side))
 // 			battleCallbacks[side]->setBattle(info);
 
-	std::shared_ptr<CPlayerInterface> att, def;
+	std::shared_ptr<CPlayerInterface> att, def, obs;
 	auto &leftSide = info->sides[0], &rightSide = info->sides[1];
 
 
@@ -746,9 +746,15 @@ void CClient::battleStarted(const BattleInfo * info)
 	if(!gNoGUI && (!!att || !!def || gs->scenarioOps->mode == StartInfo::DUEL))
 	{
 		boost::unique_lock<boost::recursive_mutex> un(*LOCPLINT->pim);
+		if(gs->scenarioOps->mode == StartInfo::DUEL)
+		{
+			obs = std::dynamic_pointer_cast<CPlayerInterface>( playerint[PlayerColor::UNFLAGGABLE]);
+		}
+		else
+			obs = def;
 		auto bi = new CBattleInterface(leftSide.armyObject, rightSide.armyObject, leftSide.hero, rightSide.hero,
 			Rect((screen->w - 800)/2,
-			     (screen->h - 600)/2, 800, 600), att, def);
+				 (screen->h - 600)/2, 800, 600), att, def, obs);
 
 		GH.pushInt(bi);
 	}

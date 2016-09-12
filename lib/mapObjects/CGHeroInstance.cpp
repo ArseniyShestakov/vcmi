@@ -244,10 +244,11 @@ CGHeroInstance::CGHeroInstance()
 	secSkills.push_back(std::make_pair(SecondarySkill::DEFAULT, -1));
 }
 
-void CGHeroInstance::initHero(CRandomGenerator & rand, HeroTypeID SUBID)
+void CGHeroInstance::initHero(CRandomGenerator & rand, HeroTypeID SUBID, bool duel)
 {
 	subID = SUBID.getNum();
 	initHero(rand);
+	isDuel = duel;
 }
 
 void CGHeroInstance::setType(si32 ID, si32 subID)
@@ -499,7 +500,12 @@ void CGHeroInstance::initObj(CRandomGenerator & rand)
 
 	if (ID != Obj::PRISON)
 	{
-		auto customApp = VLC->objtypeh->getHandlerFor(ID, type->heroClass->id)->getOverride(cb->gameState()->getTile(visitablePos())->terType, this);
+		ETerrainType tert;
+		if(isDuel)
+			tert = ETerrainType::GRASS;
+		else
+			tert = cb->gameState()->getTile(visitablePos())->terType;
+		auto customApp = VLC->objtypeh->getHandlerFor(ID, type->heroClass->id)->getOverride(tert, this);
 		if (customApp)
 			appearance = customApp.get();
 	}
@@ -957,6 +963,9 @@ bool CGHeroInstance::canCastThisSpell(const CSpell * spell) const
 {
 	if(nullptr == getArt(ArtifactPosition::SPELLBOOK))
 		return false;
+
+	if(isDuel)
+		return true;
 
 	const bool isAllowed = IObjectInterface::cb->isAllowed(0, spell->id);
 

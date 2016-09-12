@@ -95,11 +95,11 @@ void CBattleInterface::addNewAnim(CBattleAnimation * anim)
 CBattleInterface::CBattleInterface(const CCreatureSet * army1, const CCreatureSet * army2,
 								   const CGHeroInstance *hero1, const CGHeroInstance *hero2,
 								   const SDL_Rect & myRect,
-								   std::shared_ptr<CPlayerInterface> att, std::shared_ptr<CPlayerInterface> defen)
+								   std::shared_ptr<CPlayerInterface> att, std::shared_ptr<CPlayerInterface> defen, std::shared_ptr<CPlayerInterface> obs)
 	: background(nullptr), queue(nullptr), attackingHeroInstance(hero1), defendingHeroInstance(hero2), animCount(0),
       activeStack(nullptr), mouseHoveredStack(nullptr), stackToActivate(nullptr), selectedStack(nullptr), previouslyHoveredHex(-1),
 	  currentlyHoveredHex(-1), attackingHex(-1), stackCanCastSpell(false), creatureCasting(false), spellDestSelectMode(false), spellSelMode(NO_LOCATION), spellToCast(nullptr), sp(nullptr),
-	  siegeH(nullptr), attackerInt(att), defenderInt(defen), curInt(att), animIDhelper(0),
+	  siegeH(nullptr), attackerInt(att), defenderInt(defen), curInt(obs), animIDhelper(0),
 	  givenCommand(nullptr), myTurn(false), resWindow(nullptr), moveStarted(false), moveSoundHander(-1), bresult(nullptr)
 {
 	OBJ_CONSTRUCTION;
@@ -124,23 +124,27 @@ CBattleInterface::CBattleInterface(const CCreatureSet * army1, const CCreatureSe
 	//if we found interface of player with tactics, then enter tactics mode
 	tacticsMode = static_cast<bool>(tacticianInterface);
 
-	//create stack queue
-	bool embedQueue = screen->h < 700;
-	queue = new CStackQueue(embedQueue, this);
-	if(!embedQueue)
+	if(!curInt->observerInDuelMode)
 	{
-		if(settings["battle"]["showQueue"].Bool())
-			pos.y += queue->pos.h / 2; //center whole window
+		//create stack queue
+		bool embedQueue = screen->h < 700;
+		queue = new CStackQueue(embedQueue, this);
+		if(!embedQueue)
+		{
+			if(settings["battle"]["showQueue"].Bool())
+				pos.y += queue->pos.h / 2; //center whole window
 
-		queue->moveTo(Point(pos.x, pos.y - queue->pos.h));
-// 		queue->pos.x = pos.x;
-// 		queue->pos.y = pos.y - queue->pos.h;
-//  		pos.h += queue->pos.h;
-//  		center();
+			queue->moveTo(Point(pos.x, pos.y - queue->pos.h));
+	// 		queue->pos.x = pos.x;
+	// 		queue->pos.y = pos.y - queue->pos.h;
+	//  		pos.h += queue->pos.h;
+	//  		center();
+		}
+		queue->update();
 	}
-	queue->update();
 
 	//preparing siege info
+
 	const CGTownInstance * town = curInt->cb->battleGetDefendedTown();
 	if(town && town->hasFort())
 	{
@@ -1712,6 +1716,9 @@ void CBattleInterface::printConsoleAttacked( const CStack * defender, int dmg, i
 
 void CBattleInterface::endAction(const BattleAction* action)
 {
+	if(curInt->observerInDuelMode)
+		return;
+
 	const CStack * stack = curInt->cb->battleGetStackByID(action->stackNumber);
 
 	if(action->actionType == Battle::HERO_SPELL)
@@ -1741,7 +1748,8 @@ void CBattleInterface::endAction(const BattleAction* action)
 		}
 	}
 
-	queue->update();
+	if(!curInt->observerInDuelMode)
+		queue->update();
 
 	if(tacticsMode) //stack ended movement in tactics phase -> select the next one
 		bTacticNextStack(stack);
@@ -1792,7 +1800,11 @@ void CBattleInterface::showQueue()
 void CBattleInterface::blockUI(bool on)
 {
 	ESpellCastProblem::ESpellCastProblem spellcastingProblem;
-	bool canCastSpells = curInt->cb->battleCanCastSpell(&spellcastingProblem);
+	bool canCastSpells;
+	if(curInt->observerInDuelMode)
+		canCastSpells = true;
+	else
+		canCastSpells = curInt->cb->battleCanCastSpell(&spellcastingProblem);
 	bool canWait = activeStack ? !activeStack->waited() : false;
 
 	bOptions->block(on);
@@ -1839,7 +1851,8 @@ void CBattleInterface::startAction(const BattleAction* action)
 
 	if(stack)
 	{
-		queue->update();
+		if(!curInt->observerInDuelMode)
+			queue->update();
 	}
 	else
 	{

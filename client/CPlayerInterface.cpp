@@ -657,8 +657,8 @@ void CPlayerInterface::battleStart(const CCreatureSet *army1, const CCreatureSet
 	}
 
 	//Don't wait for dialogs when we are non-active hot-seat player
-	if(LOCPLINT == this)
-		waitForAllDialogs();
+//	if(LOCPLINT == this)
+//		waitForAllDialogs();
 
 	BATTLE_EVENT_POSSIBLE_RETURN;
 }

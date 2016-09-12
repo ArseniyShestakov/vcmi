@@ -190,7 +190,20 @@ DLL_LINKAGE void ChangeSpells::applyGs( CGameState *gs )
 
 DLL_LINKAGE void SetMana::applyGs( CGameState *gs )
 {
-	CGHeroInstance * hero = gs->getHero(hid);
+	CGHeroInstance * hero;
+
+	if(gs->initialOpts->mode == StartInfo::DUEL)
+	{
+		for(auto & side : gs->curB->sides)
+		{
+			if(side.hero && side.hero->id == hid)
+			{
+				hero = const_cast<CGHeroInstance *>(side.hero);
+			}
+		}
+	}
+	else
+		hero = gs->getHero(hid);
 
 	assert(hero);
 

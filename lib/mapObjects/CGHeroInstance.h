@@ -50,6 +50,7 @@ public:
 
 	//////////////////////////////////////////////////////////////////////////
 
+	bool isDuel;
 	ConstTransitivePtr<CHero> type;
 	TExpType exp; //experience points
 	ui32 level; //current level of hero
@@ -200,7 +201,7 @@ public:
 	void setType(si32 ID, si32 subID) override;
 
 	void initHero(CRandomGenerator & rand);
-	void initHero(CRandomGenerator & rand, HeroTypeID SUBID);
+	void initHero(CRandomGenerator & rand, HeroTypeID SUBID, bool duel = false);
 
 	void putArtifact(ArtifactPosition pos, CArtifactInstance *art);
 	void putInBackpack(CArtifactInstance *art);

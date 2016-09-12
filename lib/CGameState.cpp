@@ -913,7 +913,7 @@ void CGameState::initDuel()
 			for(TSecSKill secSkill : ss.heroSecSkills)
 				h->setSecSkillLevel(SecondarySkill(secSkill.first), secSkill.second, 1);
 
-			h->initHero(getRandomGenerator(), HeroTypeID(h->subID));
+			h->initHero(getRandomGenerator(), HeroTypeID(h->subID), true);
 			obj->initObj(getRandomGenerator());
 		}
 		else
