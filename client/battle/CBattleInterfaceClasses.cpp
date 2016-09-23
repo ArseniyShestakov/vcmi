@@ -177,6 +177,15 @@ void CBattleHero::setPhase(int newPhase)
 	nextPhase = 0;
 }
 
+void CBattleHero::hover(bool on)
+{
+	// Doesn't work
+	if(on)
+		CCS->curh->changeGraphic(ECursor::ADVENTURE, 2);
+	else
+		CCS->curh->changeGraphic(ECursor::ADVENTURE, 0);
+}
+
 void CBattleHero::clickLeft(tribool down, bool previousState)
 {
 	if(myOwner->spellDestSelectMode) //we are casting a spell
@@ -193,6 +202,14 @@ void CBattleHero::clickLeft(tribool down, bool previousState)
 
 		auto  spellWindow = new CSpellWindow(genRect(595, 620, (screen->w - 620)/2, (screen->h - 595)/2), myHero, myOwner->getCurrentPlayerInterface());
 		GH.pushInt(spellWindow);
+	}
+}
+
+void CBattleHero::clickRight(tribool down, bool previousState)
+{
+	if(!down && myHero != nullptr && myOwner->myTurn) //check conditions
+	{
+		GH.pushInt(new CHeroInfoWindow(myHero));
 	}
 }
 
@@ -247,7 +264,7 @@ CBattleHero::CBattleHero(const std::string & defName, bool flipG, PlayerColor pl
 		CSDL_Ext::alphaTransform(elem.bitmap);
 		graphics->blueToPlayersAdv(elem.bitmap, player);
 	}
-	addUsedEvents(LCLICK);
+	addUsedEvents(LCLICK | RCLICK | HOVER);
 
 	switchToNextPhase();
 }
@@ -612,6 +629,31 @@ void CClickableHex::clickRight(tribool down, bool previousState)
 			GH.pushInt(new CStackWindow(myst, true));
 		}
 	}
+}
+
+CHeroInfoWindow::CHeroInfoWindow(const CGHeroInstance *hero)
+	: CWindowObject(PLAYER_COLORED | RCLICK_POPUP | SHADOW_DISABLED, "CHRPOP")
+{
+	// use CStackWindow / CHeroWindows as an example
+	OBJ_CONSTRUCTION_CAPTURING_ALL;
+	// Make screenshot of H3 or use one from bug tracker to find right positions
+	portrait = new CAnimImage("PortraitsLarge", 0, 0, 19, 19);
+	portrait->setFrame(hero->portrait);
+
+	// breakpoint into CGeneralTextHandler::CGeneralTextHandler to find texts
+	// allTexts[380+]
+	//Attrv
+	new CLabel( 10, 10, FONT_SMALL, CENTER, Colors::WHITE, "Att");
+	//Def
+	//Pwr
+	//Know
+
+	//Morale
+	//Luck
+
+	//Spell Points
+
+	center();
 }
 
 void CStackQueue::update()
