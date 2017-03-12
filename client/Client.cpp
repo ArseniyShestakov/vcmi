@@ -435,10 +435,13 @@ void CClient::newGame( CConnection *con, StartInfo *si )
 	// Init map handler
 	if(gs->map)
 	{
-		const_cast<CGameInfo*>(CGI)->mh = new CMapHandler();
-		CGI->mh->map = gs->map;
-		logNetwork->infoStream() << "Creating mapHandler: " << tmh.getDiff();
-		CGI->mh->init();
+		if(!gNoGUI)
+		{
+			const_cast<CGameInfo*>(CGI)->mh = new CMapHandler();
+			CGI->mh->map = gs->map;
+			logNetwork->infoStream() << "Creating mapHandler: " << tmh.getDiff();
+			CGI->mh->init();
+		}
 		pathInfo = make_unique<CPathsInfo>(getMapSize());
 		logNetwork->infoStream() << "Initializing mapHandler (together): " << tmh.getDiff();
 	}

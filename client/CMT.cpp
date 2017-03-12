@@ -111,6 +111,29 @@ void endGame();
 #include <getopt.h>
 #endif
 
+void startTestMap(const std::string &mapname)
+{
+	StartInfo si;
+	si.mapname = mapname;
+	si.mode = StartInfo::NEW_GAME;
+	for (int i = 0; i < 8; i++)
+	{
+		PlayerSettings &pset = si.playerInfos[PlayerColor(i)];
+		pset.color = PlayerColor(i);
+		pset.name = CGI->generaltexth->allTexts[468];//Computer
+		pset.playerID = i;
+		pset.compOnly = true;
+		pset.castle = 0;
+		pset.hero = -1;
+		pset.heroPortrait = -1;
+		pset.handicap = PlayerSettings::NO_HANDICAP;
+	}
+
+	while(GH.topInt())
+		GH.popIntTotally(GH.topInt());
+	startGame(&si);
+}
+
 void startGameFromFile(const bfs::path &fname)
 {
 	StartInfo si;
@@ -237,6 +260,7 @@ int main(int argc, char** argv)
 		("version,v", "display version information and exit")
 		("battle,b", po::value<std::string>(), "runs game in duel mode (battle-only")
 		("start", po::value<bfs::path>(), "starts game from saved StartInfo file")
+		("testmap", po::value<std::string>(), "")
 		("onlyAI", "runs without human player, all players will be default AI")
 		("noGUI", "runs without GUI, implies --onlyAI")
 		("ai", po::value<std::vector<std::string>>(), "AI to be used for the player, can be specified several times for the consecutive players")
@@ -485,8 +509,13 @@ int main(int argc, char** argv)
 		bfs::path fileToStartFrom; //none by default
 		if(vm.count("start"))
 			fileToStartFrom = vm["start"].as<bfs::path>();
+		std::string testmap;
+		if(vm.count("testmap"))
+			testmap = vm["testmap"].as<std::string>();
 
-		if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
+		if(!testmap.empty())
+			startTestMap(testmap);
+		else if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
 			startGameFromFile(fileToStartFrom); //ommit pregame and start the game using settings from file
 		else
 		{
