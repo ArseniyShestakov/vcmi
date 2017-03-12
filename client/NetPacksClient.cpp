@@ -299,6 +299,12 @@ void ChangeObjPos::applyCl(CClient *cl)
 void PlayerEndsGame::applyCl(CClient *cl)
 {
 	CALL_IN_ALL_INTERFACES(gameOver, player, victoryLossCheckResult);
+	if(gNoGUI && victoryLossCheckResult.victory()
+	   || (player.getNum() == 0 && victoryLossCheckResult.loss()))
+	{
+		cl->endGame();
+		exit(1);
+	}
 }
 
 void RemoveBonus::applyCl(CClient *cl)
