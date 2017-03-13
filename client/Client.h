@@ -150,6 +150,7 @@ public:
 	void installNewPlayerInterface(std::shared_ptr<CGameInterface> gameInterface, boost::optional<PlayerColor> color, bool battlecb = false);
 	void installNewBattleInterface(std::shared_ptr<CBattleGameInterface> battleInterface, boost::optional<PlayerColor> color, bool needCallback = true);
 	std::string aiNameForPlayer(const PlayerSettings &ps, bool battleAI); //empty means no AI -> human
+	std::string aiNameForPlayer(bool battleAI);
 
 	void endGame(bool closeConnection = true);
 	void stopConnection();
