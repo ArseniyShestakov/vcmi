@@ -211,14 +211,10 @@ void CBattleHero::clickRight(tribool down, bool previousState)
 	windowPosition.y = myOwner->pos.y + 135;
 
 	InfoAboutHero targetHero;
-
-	if (down && myOwner->myTurn)
+	if (down && (myOwner->myTurn || myOwner->curInt->playerID == PlayerColor::SPECTATOR))
 	{
-		if (myHero != nullptr)
-			targetHero.initFromHero(myHero, InfoAboutHero::EInfoLevel::INBATTLE);
-		else
-			targetHero = myOwner->enemyHero();
-
+		auto h = flip ? myOwner->defendingHeroInstance : myOwner->attackingHeroInstance;
+		targetHero.initFromHero(h, InfoAboutHero::EInfoLevel::INBATTLE);
 		GH.pushInt(new CHeroInfoWindow(targetHero, &windowPosition));
 	}
 }

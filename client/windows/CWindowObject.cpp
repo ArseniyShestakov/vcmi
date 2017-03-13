@@ -227,7 +227,7 @@ void CWindowObject::showAll(SDL_Surface *to)
 {
 	auto color = LOCPLINT ? LOCPLINT->playerID : PlayerColor(1);
 	if(color == PlayerColor::SPECTATOR)
-		color = PlayerColor::NEUTRAL;
+		color = PlayerColor(0); // TODO: Spectator shouldn't need special code for UI colors
 
 	CIntObject::showAll(to);
 	if ((options & BORDERED) && (pos.h != to->h || pos.w != to->w))
