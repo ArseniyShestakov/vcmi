@@ -435,7 +435,7 @@ void CClient::newGame( CConnection *con, StartInfo *si )
 	// Init map handler
 	if(gs->map)
 	{
-		if(!gNoGUI)
+		if(!settings["session"]["headless"].Bool())
 		{
 			const_cast<CGameInfo*>(CGI)->mh = new CMapHandler();
 			CGI->mh->map = gs->map;
@@ -478,7 +478,7 @@ void CClient::newGame( CConnection *con, StartInfo *si )
 
 	if(si->mode == StartInfo::DUEL)
 	{
-		if(!gNoGUI)
+		if(!settings["session"]["headless"].Bool())
 		{
 			boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
 			auto p = std::make_shared<CPlayerInterface>(PlayerColor::NEUTRAL);
@@ -751,7 +751,7 @@ void CClient::battleStarted(const BattleInfo * info)
 			def = std::dynamic_pointer_cast<CPlayerInterface>( playerint[rightSide.color] );
 	}
 
-	if(!gNoGUI)
+	if(!settings["session"]["headless"].Bool())
 	{
 		if(!!att || !!def || gs->scenarioOps->mode == StartInfo::DUEL)
 		{
