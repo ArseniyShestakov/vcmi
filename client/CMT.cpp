@@ -261,6 +261,7 @@ int main(int argc, char** argv)
 		("battle,b", po::value<std::string>(), "runs game in duel mode (battle-only")
 		("start", po::value<bfs::path>(), "starts game from saved StartInfo file")
 		("testmap", po::value<std::string>(), "")
+		("spectate,s", "enable spectator interface for AI-only games")
 		("onlyAI", "runs without human player, all players will be default AI")
 		("noGUI", "runs without GUI, implies --onlyAI")
 		("ai", po::value<std::vector<std::string>>(), "AI to be used for the player, can be specified several times for the consecutive players")
@@ -519,16 +520,21 @@ int main(int argc, char** argv)
 			session["spectator"].Bool() = true;
 			startTestMap(testmap);
 		}
-		else if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
-			startGameFromFile(fileToStartFrom); //ommit pregame and start the game using settings from file
 		else
 		{
-			if(!fileToStartFrom.empty())
+			session["spectator"].Bool() = vm.count("spectate");
+
+			if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
+				startGameFromFile(fileToStartFrom); //ommit pregame and start the game using settings from file
+			else
 			{
-				logGlobal->warnStream() << "Warning: cannot find given file to start from (" << fileToStartFrom
-					<< "). Falling back to main menu.";
+				if(!fileToStartFrom.empty())
+				{
+					logGlobal->warnStream() << "Warning: cannot find given file to start from (" << fileToStartFrom
+						<< "). Falling back to main menu.";
+				}
+				GH.curInt = CGPreGame::create(); //will set CGP pointer to itself
 			}
-			GH.curInt = CGPreGame::create(); //will set CGP pointer to itself
 		}
 	}
 	else
