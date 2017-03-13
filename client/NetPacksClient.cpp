@@ -95,6 +95,7 @@
 #define BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(function,...) 				\
 	CALL_ONLY_THAT_BATTLE_INTERFACE(GS(cl)->curB->sides[0].color, function, __VA_ARGS__)	\
 	CALL_ONLY_THAT_BATTLE_INTERFACE(GS(cl)->curB->sides[1].color, function, __VA_ARGS__)	\
+	CALL_ONLY_THAT_BATTLE_INTERFACE(PlayerColor::SPECTATOR, function, __VA_ARGS__)	\
 	BATTLE_INTERFACE_CALL_RECEIVERS(function, __VA_ARGS__)
 /*
  * NetPacksClient.cpp, part of VCMI engine
@@ -299,8 +300,9 @@ void ChangeObjPos::applyCl(CClient *cl)
 void PlayerEndsGame::applyCl(CClient *cl)
 {
 	CALL_IN_ALL_INTERFACES(gameOver, player, victoryLossCheckResult);
-	if(gNoGUI && victoryLossCheckResult.victory()
-	   || (player.getNum() == 0 && victoryLossCheckResult.loss()))
+	if(settings["session"]["spectator"].Bool() && (
+		victoryLossCheckResult.victory()
+		|| (player.getNum() == 0 && victoryLossCheckResult.loss())))
 	{
 		cl->endGame();
 		exit(1);
@@ -605,6 +607,8 @@ void BattleStart::applyFirstCl(CClient *cl)
 		info->tile, info->sides[0].hero, info->sides[1].hero);
 	CALL_ONLY_THAT_BATTLE_INTERFACE(info->sides[1].color, battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
 		info->tile, info->sides[0].hero, info->sides[1].hero);
+	CALL_ONLY_THAT_BATTLE_INTERFACE(PlayerColor::SPECTATOR, battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
+		info->tile, info->sides[0].hero, info->sides[1].hero);
 	BATTLE_INTERFACE_CALL_RECEIVERS(battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
 		info->tile, info->sides[0].hero, info->sides[1].hero);
 }
@@ -724,7 +728,7 @@ void BattleResultsApplied::applyCl(CClient *cl)
 {
 	INTERFACE_CALL_IF_PRESENT(player1, battleResultsApplied);
 	INTERFACE_CALL_IF_PRESENT(player2, battleResultsApplied);
-	INTERFACE_CALL_IF_PRESENT(PlayerColor::UNFLAGGABLE, battleResultsApplied);
+	INTERFACE_CALL_IF_PRESENT(PlayerColor::SPECTATOR, battleResultsApplied);
 	if(GS(cl)->initialOpts->mode == StartInfo::DUEL)
 	{
 		handleQuit();

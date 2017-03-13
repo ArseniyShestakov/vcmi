@@ -681,6 +681,24 @@ CGameInfoCallback::CGameInfoCallback(CGameState *GS, boost::optional<PlayerColor
 const std::vector< std::vector< std::vector<ui8> > > & CPlayerSpecificInfoCallback::getVisibilityMap() const
 {
 	//boost::shared_lock<boost::shared_mutex> lock(*gs->mx);
+	if(player == PlayerColor::SPECTATOR)
+	{
+		static std::vector<std::vector<std::vector<ui8> > > map;
+		map.resize(gs->map->width);
+		for(int g=0; g<gs->map->width; ++g)
+			map[g].resize(gs->map->height);
+
+		for(int g=-0; g<gs->map->width; ++g)
+			for(int h=0; h<gs->map->height; ++h)
+				map[g][h].resize(2, 0);
+
+		for(int g=0; g<gs->map->width; ++g)
+			for(int h=0; h<gs->map->height; ++h)
+				for(int v = 0; v < 2; ++v)
+					map[g][h][v] = 1;
+
+		return map;
+	}
 	return gs->getPlayerTeam(*player)->fogOfWarMap;
 }
 

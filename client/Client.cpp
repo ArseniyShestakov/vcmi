@@ -490,6 +490,10 @@ void CClient::newGame( CConnection *con, StartInfo *si )
 	}
 	else
 	{
+		if(settings["session"]["spectator"].Bool())
+		{
+			installNewPlayerInterface(std::make_shared<CPlayerInterface>(PlayerColor::SPECTATOR), PlayerColor::SPECTATOR, true);
+		}
 		loadNeutralBattleAI();
 	}
 
@@ -747,14 +751,28 @@ void CClient::battleStarted(const BattleInfo * info)
 			def = std::dynamic_pointer_cast<CPlayerInterface>( playerint[rightSide.color] );
 	}
 
-	if(!gNoGUI && (!!att || !!def || gs->scenarioOps->mode == StartInfo::DUEL))
+	if(!gNoGUI)
 	{
-		boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
-		auto bi = new CBattleInterface(leftSide.armyObject, rightSide.armyObject, leftSide.hero, rightSide.hero,
-			Rect((screen->w - 800)/2,
-			     (screen->h - 600)/2, 800, 600), att, def);
+		if(!!att || !!def || gs->scenarioOps->mode == StartInfo::DUEL)
+		{
+			boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
+			auto bi = new CBattleInterface(leftSide.armyObject, rightSide.armyObject, leftSide.hero, rightSide.hero,
+				Rect((screen->w - 800)/2,
+					 (screen->h - 600)/2, 800, 600), att, def);
 
-		GH.pushInt(bi);
+			GH.pushInt(bi);
+		}
+		else if(settings["session"]["spectator"].Bool())
+		{
+			auto wtf = std::dynamic_pointer_cast<CPlayerInterface>(playerint[PlayerColor::SPECTATOR]);
+			wtf->cb->setBattle(info);
+			boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
+			auto bi = new CBattleInterface(leftSide.armyObject, rightSide.armyObject, leftSide.hero, rightSide.hero,
+				Rect((screen->w - 800)/2,
+					 (screen->h - 600)/2, 800, 600), att, def, wtf);
+
+			GH.pushInt(bi);
+		}
 	}
 
 	auto callBattleStart = [&](PlayerColor color, ui8 side){
@@ -765,6 +783,7 @@ void CClient::battleStarted(const BattleInfo * info)
 	callBattleStart(leftSide.color, 0);
 	callBattleStart(rightSide.color, 1);
 	callBattleStart(PlayerColor::UNFLAGGABLE, 1);
+	callBattleStart(PlayerColor::SPECTATOR, 1);
 
 	if(info->tacticDistance && vstd::contains(battleints,info->sides[info->tacticsSide].color))
 	{
@@ -777,6 +796,9 @@ void CClient::battleFinished()
 	for(auto & side : gs->curB->sides)
 		if(battleCallbacks.count(side.color))
 			battleCallbacks[side.color]->setBattle(nullptr);
+
+	if(settings["session"]["spectator"].Bool())
+		battleCallbacks[PlayerColor::SPECTATOR]->setBattle(nullptr);
 }
 
 void CClient::loadNeutralBattleAI()
@@ -874,7 +896,7 @@ void CClient::campaignMapFinished( std::shared_ptr<CCampaignState> camp )
 	}
 }
 
-void CClient::installNewPlayerInterface(std::shared_ptr<CGameInterface> gameInterface, boost::optional<PlayerColor> color)
+void CClient::installNewPlayerInterface(std::shared_ptr<CGameInterface> gameInterface, boost::optional<PlayerColor> color, bool battlecb)
 {
 	boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
 	PlayerColor colorUsed = color.get_value_or(PlayerColor::UNFLAGGABLE);
@@ -890,7 +912,7 @@ void CClient::installNewPlayerInterface(std::shared_ptr<CGameInterface> gameInte
 	battleCallbacks[colorUsed] = cb;
 	gameInterface->init(cb);
 
-	installNewBattleInterface(gameInterface, color, false);
+	installNewBattleInterface(gameInterface, color, battlecb);
 }
 
 void CClient::installNewBattleInterface(std::shared_ptr<CBattleGameInterface> battleInterface, boost::optional<PlayerColor> color, bool needCallback /*= true*/)

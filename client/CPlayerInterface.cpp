@@ -2128,7 +2128,7 @@ void CPlayerInterface::gameOver(PlayerColor player, const EVictoryLossCheckResul
 
 		--howManyPeople;
 
-		if (howManyPeople == 0) //all human players eliminated
+		if (howManyPeople == 0 && !settings["session"]["spectator"].Bool()) //all human players eliminated
 		{
 			if (adventureInt)
 			{
@@ -2149,7 +2149,7 @@ void CPlayerInterface::gameOver(PlayerColor player, const EVictoryLossCheckResul
 		}
 		else
 		{
-			if (howManyPeople == 0) //all human players eliminated
+			if (howManyPeople == 0 && !settings["session"]["spectator"].Bool()) //all human players eliminated
 			{
 				requestReturningToMainMenu();
 			}

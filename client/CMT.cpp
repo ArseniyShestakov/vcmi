@@ -121,7 +121,7 @@ void startTestMap(const std::string &mapname)
 		PlayerSettings &pset = si.playerInfos[PlayerColor(i)];
 		pset.color = PlayerColor(i);
 		pset.name = CGI->generaltexth->allTexts[468];//Computer
-		pset.playerID = i;
+		pset.playerID = PlayerSettings::PLAYER_AI;
 		pset.compOnly = true;
 		pset.castle = 0;
 		pset.hero = -1;
@@ -513,8 +513,12 @@ int main(int argc, char** argv)
 		if(vm.count("testmap"))
 			testmap = vm["testmap"].as<std::string>();
 
+		session["spectator"].Bool() = false;
 		if(!testmap.empty())
+		{
+			session["spectator"].Bool() = true;
 			startTestMap(testmap);
+		}
 		else if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
 			startGameFromFile(fileToStartFrom); //ommit pregame and start the game using settings from file
 		else

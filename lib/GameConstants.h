@@ -256,6 +256,7 @@ class PlayerColor : public BaseForID<PlayerColor, ui8>
 		PLAYER_LIMIT_I = 8
 	};
 
+	DLL_LINKAGE static const PlayerColor SPECTATOR; //252
 	DLL_LINKAGE static const PlayerColor CANNOT_DETERMINE; //253
 	DLL_LINKAGE static const PlayerColor UNFLAGGABLE; //254 - neutral objects (pandora, banks)
 	DLL_LINKAGE static const PlayerColor NEUTRAL; //255

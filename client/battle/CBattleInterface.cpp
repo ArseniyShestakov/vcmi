@@ -95,7 +95,7 @@ void CBattleInterface::addNewAnim(CBattleAnimation *anim)
 CBattleInterface::CBattleInterface(const CCreatureSet *army1, const CCreatureSet *army2,
 								   const CGHeroInstance *hero1, const CGHeroInstance *hero2,
 								   const SDL_Rect & myRect,
-								   std::shared_ptr<CPlayerInterface> att, std::shared_ptr<CPlayerInterface> defen)
+								   std::shared_ptr<CPlayerInterface> att, std::shared_ptr<CPlayerInterface> defen, std::shared_ptr<CPlayerInterface> spec)
 	: background(nullptr), queue(nullptr), attackingHeroInstance(hero1), defendingHeroInstance(hero2), animCount(0),
       activeStack(nullptr), mouseHoveredStack(nullptr), stackToActivate(nullptr), selectedStack(nullptr), previouslyHoveredHex(-1),
 	  currentlyHoveredHex(-1), attackingHex(-1), stackCanCastSpell(false), creatureCasting(false), spellDestSelectMode(false), spellToCast(nullptr), sp(nullptr),
@@ -105,11 +105,16 @@ CBattleInterface::CBattleInterface(const CCreatureSet *army1, const CCreatureSet
 {
 	OBJ_CONSTRUCTION;
 
-	if (!curInt)
+	if(spec)
+	{
+		curInt = spec;
+	}
+	else if (!curInt)
 	{
 		//May happen when we are defending during network MP game -> attacker interface is just not present
 		curInt = defenderInt;
 	}
+
 
 	animsAreDisplayed.setn(false);
 	pos = myRect;
@@ -1245,6 +1250,9 @@ void CBattleInterface::displayBattleFinished()
 	SDL_Rect temp_rect = genRect(561, 470, (screen->w - 800)/2 + 165, (screen->h - 600)/2 + 19);
 	resWindow = new CBattleResultWindow(*bresult, temp_rect, *this->curInt);
 	GH.pushInt(resWindow);
+	// Wait for dialog to avoid crashing in spectator mode
+	// FIXME: CClient::battleFinished shouldn't touch BattleInfo until CBattleInterface destroyed
+	curInt->waitWhileDialog();
 }
 
 void CBattleInterface::spellCast(const BattleSpellCast *sc)
