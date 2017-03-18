@@ -1378,7 +1378,7 @@ void CAdvMapInt::setPlayer(PlayerColor Player)
 void CAdvMapInt::startTurn()
 {
 	state = INGAME;
-	if(LOCPLINT->cb->getCurrentPlayer() == LOCPLINT->playerID)
+	if(LOCPLINT->cb->getCurrentPlayer() == LOCPLINT->playerID || settings["session"]["spectator"].Bool())
 	{
 		adjustActiveness(false);
 		minimap.setAIRadar(false);
@@ -1387,6 +1387,9 @@ void CAdvMapInt::startTurn()
 
 void CAdvMapInt::endingTurn()
 {
+	if(settings["session"]["spectator"].Bool())
+		return;
+
 	if(LOCPLINT->cingconsole->active)
 		LOCPLINT->cingconsole->deactivate();
 	LOCPLINT->makingTurn = false;

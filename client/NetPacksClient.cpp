@@ -406,7 +406,14 @@ void TryMoveHero::applyCl(CClient *cl)
 	//notify interfaces about move
 	for(auto i=cl->playerint.begin(); i!=cl->playerint.end(); i++)
 	{
-		if(i->first >= PlayerColor::PLAYER_LIMIT) continue;
+		if(i->first == PlayerColor::SPECTATOR && settings["session"]["showmovement"].Bool())
+		{
+			i->second->heroMoved(*this);
+		}
+
+		if(i->first >= PlayerColor::PLAYER_LIMIT)
+			continue;
+
 		TeamState *t = GS(cl)->getPlayerTeam(i->first);
 		if(t->fogOfWarMap[start.x-1][start.y][start.z] || t->fogOfWarMap[end.x-1][end.y][end.z])
 		{
