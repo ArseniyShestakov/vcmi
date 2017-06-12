@@ -14,18 +14,18 @@ matrix:
   exclude:
   - env: ignore=this
   include:
-  - os: linux
-    compiler: clang
-    env: VCMI_PLATFORM='linux' REAL_CC=clang-3.6 REAL_CXX=clang++-3.6 PACKAGE=clang-3.6
-      SUPPORT=libstdc++-4.8-dev VCMI_CMAKE_FLAGS='-DENABLE_TEST=0'
-  - os: linux
-    compiler: clang
-    env: VCMI_PLATFORM='linux' REAL_CC=clang-3.4 REAL_CXX=clang++-3.4 PACKAGE=clang-3.4
-      SUPPORT=libstdc++-4.8-dev VCMI_CMAKE_FLAGS='-DENABLE_TEST=0'
-  - os: linux
-    compiler: gcc
-    env: VCMI_PLATFORM='linux' REAL_CC=gcc-4.8   REAL_CXX=g++-4.8     PACKAGE=g++-4.8   SUPPORT=
-      VCMI_CMAKE_FLAGS='-DENABLE_TEST=0'
+#  - os: linux
+#    compiler: clang
+#    env: VCMI_PLATFORM='linux' REAL_CC=clang-3.6 REAL_CXX=clang++-3.6 PACKAGE=clang-3.6
+#      SUPPORT=libstdc++-4.8-dev VCMI_CMAKE_FLAGS='-DENABLE_TEST=0'
+#  - os: linux
+#    compiler: clang
+#    env: VCMI_PLATFORM='linux' REAL_CC=clang-3.4 REAL_CXX=clang++-3.4 PACKAGE=clang-3.4
+#      SUPPORT=libstdc++-4.8-dev VCMI_CMAKE_FLAGS='-DENABLE_TEST=0'
+#  - os: linux
+#    compiler: gcc
+#    env: VCMI_PLATFORM='linux' REAL_CC=gcc-4.8   REAL_CXX=g++-4.8     PACKAGE=g++-4.8   SUPPORT=
+#      VCMI_CMAKE_FLAGS='-DENABLE_TEST=0'
   - os: linux
     env: VCMI_PLATFORM='mxe' MXE_TARGET=i686-w64-mingw32.shared VCMI_CMAKE_FLAGS='-DENABLE_TEST=0'
     sudo: required
@@ -68,6 +68,9 @@ script:
 - make -j2
 
 after_success:
+- echo $TRAVIS_BUILD_DIR
+- echo `pwd`
+- cpack
 - wget https://download.vcmi.eu/deploy_rsa_CHANGEME.enc
 - touch /tmp/deploy_rsa_CHANGEME
 - chmod 600 /tmp/deploy_rsa_CHANGEME
