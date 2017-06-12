@@ -238,14 +238,17 @@ endif()
 # For apple these files will be already inside vcmiclient bundle
 if (NOT APPLE)
 	# copy whole directory but .svn control files
-	install(DIRECTORY config DESTINATION ${DATA_DIR} PATTERN ".svn" EXCLUDE)
+	install(DIRECTORY config DESTINATION ${DATA_DIR})
 	# copy vcmi mod along with all its content
-	install(DIRECTORY Mods/vcmi DESTINATION ${DATA_DIR}/Mods PATTERN ".svn" EXCLUDE)
+	install(DIRECTORY Mods/vcmi DESTINATION ${DATA_DIR}/Mods)
 
-	install(FILES vcmibuilder DESTINATION ${BIN_DIR} PERMISSIONS
-		OWNER_WRITE OWNER_READ OWNER_EXECUTE
-		            GROUP_READ GROUP_EXECUTE
-		            WORLD_READ WORLD_EXECUTE)
+	# that script is useless for Windows
+	if (NOT WIN32)
+		install(FILES vcmibuilder DESTINATION ${BIN_DIR} PERMISSIONS
+			OWNER_WRITE OWNER_READ OWNER_EXECUTE
+						GROUP_READ GROUP_EXECUTE
+						WORLD_READ WORLD_EXECUTE)			
+	endif()
 endif()
 
 if(WIN32)
@@ -340,8 +343,9 @@ else()
 	set(CPACK_GENERATOR TGZ)
 endif()
 
-INCLUDE(CPack)
 
 include(GetGitRevisionDescription)
 get_git_head_revision(GIT_REFSPEC GIT_SHA1)
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Version.cpp.in" "${CMAKE_BINARY_DIR}/Version.cpp" @ONLY)
+
+INCLUDE(CPack)
