@@ -8,4 +8,4 @@ openssl aes-256-cbc -K $encrypted_1d30f79f8582_key -iv $encrypted_1d30f79f8582_i
 eval "$(ssh-agent -s)"
 ssh-add /tmp/deploy_rsa_CHANGEME
 
-sftp -r -o StrictHostKeyChecking=no travis@beholder.vcmi.eu <<< "put -r $TRAVIS_BUILD_DIR /incoming/$TRAVIS_JOB_ID"
+sftp -r -o StrictHostKeyChecking=no travis@beholder.vcmi.eu <<< "put $VCMI_PACKAGE_FILE_NAME.exe /incoming/$VCMI_PACKAGE_FILE_NAME.exe"
