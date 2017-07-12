@@ -38,7 +38,7 @@ namespace Unicode
 	/// NOTE: usage of these functions should be avoided if possible
 	std::string DLL_LINKAGE fromUnicode(const std::string & text);
 	std::string DLL_LINKAGE fromUnicode(const std::string & text, const std::string & encoding);
-	
+
 	///delete (amount) UTF characters from right
 	DLL_LINKAGE void trimRight(std::string & text, const size_t amount = 1);
 };
@@ -65,17 +65,18 @@ class DLL_LINKAGE CLegacyConfigParser
 
 	/// reads "raw" string without encoding conversion
 	std::string readRawString();
+
 public:
 	/// read one entry from current line. Return ""/0 if end of line reached
 	std::string readString();
 	float readNumber();
 
-	template <typename numeric>
+	template<typename numeric>
 	std::vector<numeric> readNumArray(size_t size)
 	{
 		std::vector<numeric> ret;
 		ret.reserve(size);
-		while (size--)
+		while(size--)
 			ret.push_back(readNumber());
 		return ret;
 	}
@@ -101,17 +102,17 @@ public:
 	std::vector<std::string> primarySkillNames;
 	std::vector<std::string> jktexts;
 	std::vector<std::string> heroscrn;
-	std::vector<std::string> overview;//text for Kingdom Overview window
+	std::vector<std::string> overview; //text for Kingdom Overview window
 	std::vector<std::string> colors; //names of player colors ("red",...)
 	std::vector<std::string> capColors; //names of player colors with first letter capitalized ("Red",...)
-	std::vector<std::string> turnDurations; //turn durations for pregame (1 Minute ... Unlimited) 
+	std::vector<std::string> turnDurations; //turn durations for pregame (1 Minute ... Unlimited)
 
 	//towns
 	std::vector<std::string> tcommands, hcommands, fcommands; //texts for town screen, town hall screen and fort screen
 	std::vector<std::string> tavernInfo;
 	std::vector<std::string> tavernRumors;
 
-	std::vector<std::pair<std::string,std::string>> zelp;
+	std::vector<std::pair<std::string, std::string>> zelp;
 	std::vector<std::string> lossCondtions;
 	std::vector<std::string> victoryConditions;
 
@@ -123,9 +124,9 @@ public:
 	std::vector<std::string> restypes; //names of resources
 	std::vector<std::string> terrainNames;
 	std::vector<std::string> randsign;
-	std::vector<std::pair<std::string,std::string>> mines; //first - name; second - event description
+	std::vector<std::pair<std::string, std::string>> mines; //first - name; second - event description
 	std::vector<std::string> seerEmpty;
-	std::vector<std::vector<std::vector<std::string>>>  quests; //[quest][type][index]
+	std::vector<std::vector<std::vector<std::string>>> quests; //[quest][type][index]
 	//type: quest, progress, complete, rollover, log OR time limit //index: 0-2 seer hut, 3-5 border guard
 	std::vector<std::string> seerNames;
 	std::vector<std::string> tentColors;
@@ -142,9 +143,9 @@ public:
 	std::vector<std::string> campaignMapNames;
 	std::vector<std::vector<std::string>> campaignRegionNames;
 
-	static void readToVector(std::string sourceName, std::vector<std::string> &dest);
+	static void readToVector(std::string sourceName, std::vector<std::string> & dest);
 
 	CGeneralTextHandler();
-	CGeneralTextHandler(const CGeneralTextHandler&) = delete;
-	CGeneralTextHandler operator=(const CGeneralTextHandler&) = delete;
+	CGeneralTextHandler(const CGeneralTextHandler &) = delete;
+	CGeneralTextHandler operator=(const CGeneralTextHandler &) = delete;
 };

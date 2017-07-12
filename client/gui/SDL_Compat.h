@@ -9,7 +9,7 @@
  * Full text of license available in license.txt file, in main folder
  *
  */
- 
+
 #include <SDL_version.h>
 
 #if (SDL_MAJOR_VERSION == 2)
@@ -22,5 +22,5 @@ typedef int SDLX_Size;
 #else
 #error "unknown or unsupported SDL version"
 #endif
- 
+
 

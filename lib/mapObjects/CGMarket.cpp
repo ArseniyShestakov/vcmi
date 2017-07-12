@@ -29,100 +29,106 @@ static void openWindow(const OpenWindow::EWindow type, const int id1, const int 
 	IObjectInterface::cb->sendAndApply(&ow);
 }
 
-bool IMarket::getOffer(int id1, int id2, int &val1, int &val2, EMarketMode::EMarketMode mode) const
+bool IMarket::getOffer(int id1, int id2, int & val1, int & val2, EMarketMode::EMarketMode mode) const
 {
 	switch(mode)
 	{
 	case EMarketMode::RESOURCE_RESOURCE:
+	{
+		double effectiveness = std::min((getMarketEfficiency() + 1.0) / 20.0, 0.5);
+
+		double r = VLC->objh->resVals[id1], //value of given resource
+		       g = VLC->objh->resVals[id2] / effectiveness; //value of wanted resource
+
+		if(r > g) //if given resource is more expensive than wanted
 		{
-			double effectiveness = std::min((getMarketEfficiency() + 1.0) / 20.0, 0.5);
-
-			double r = VLC->objh->resVals[id1], //value of given resource
-				g = VLC->objh->resVals[id2] / effectiveness; //value of wanted resource
-
-			if(r>g) //if given resource is more expensive than wanted
-			{
-				val2 = ceil(r / g);
-				val1 = 1;
-			}
-			else //if wanted resource is more expensive
-			{
-				val1 = (g / r) + 0.5;
-				val2 = 1;
-			}
+			val2 = ceil(r / g);
+			val1 = 1;
 		}
-		break;
+		else //if wanted resource is more expensive
+		{
+			val1 = (g / r) + 0.5;
+			val2 = 1;
+		}
+	}
+	break;
 	case EMarketMode::CREATURE_RESOURCE:
+	{
+		const double effectivenessArray[] =
 		{
-			const double effectivenessArray[] = {0.0, 0.3, 0.45, 0.50, 0.65, 0.7, 0.85, 0.9, 1.0};
-			double effectiveness = effectivenessArray[std::min(getMarketEfficiency(), 8)];
+			0.0, 0.3, 0.45, 0.50, 0.65, 0.7, 0.85, 0.9, 1.0
+		};
+		double effectiveness = effectivenessArray[std::min(getMarketEfficiency(), 8)];
 
-			double r = VLC->creh->creatures[id1]->cost[6], //value of given creature in gold
-				g = VLC->objh->resVals[id2] / effectiveness; //value of wanted resource
+		double r = VLC->creh->creatures[id1]->cost[6], //value of given creature in gold
+		       g = VLC->objh->resVals[id2] / effectiveness; //value of wanted resource
 
-			if(r>g) //if given resource is more expensive than wanted
-			{
-				val2 = ceil(r / g);
-				val1 = 1;
-			}
-			else //if wanted resource is more expensive
-			{
-				val1 = (g / r) + 0.5;
-				val2 = 1;
-			}
+		if(r > g) //if given resource is more expensive than wanted
+		{
+			val2 = ceil(r / g);
+			val1 = 1;
 		}
-		break;
+		else //if wanted resource is more expensive
+		{
+			val1 = (g / r) + 0.5;
+			val2 = 1;
+		}
+	}
+	break;
 	case EMarketMode::RESOURCE_PLAYER:
 		val1 = 1;
 		val2 = 1;
 		break;
 	case EMarketMode::RESOURCE_ARTIFACT:
-		{
-			double effectiveness = std::min((getMarketEfficiency() + 3.0) / 20.0, 0.6);
-			double r = VLC->objh->resVals[id1], //value of offered resource
-				g = VLC->arth->artifacts[id2]->price / effectiveness; //value of bought artifact in gold
+	{
+		double effectiveness = std::min((getMarketEfficiency() + 3.0) / 20.0, 0.6);
+		double r = VLC->objh->resVals[id1], //value of offered resource
+		       g = VLC->arth->artifacts[id2]->price / effectiveness; //value of bought artifact in gold
 
-			if(id1 != 6) //non-gold prices are doubled
-				r /= 2;
+		if(id1 != 6) //non-gold prices are doubled
+			r /= 2;
 
-			val1 = std::max(1, (int)((g / r) + 0.5)); //don't sell arts for less than 1 resource
-			val2 = 1;
-		}
-		break;
+		val1 = std::max(1, (int)((g / r) + 0.5)); //don't sell arts for less than 1 resource
+		val2 = 1;
+	}
+	break;
 	case EMarketMode::ARTIFACT_RESOURCE:
-		{
-			double effectiveness = std::min((getMarketEfficiency() + 3.0) / 20.0, 0.6);
-			double r = VLC->arth->artifacts[id1]->price * effectiveness,
-				g = VLC->objh->resVals[id2];
+	{
+		double effectiveness = std::min((getMarketEfficiency() + 3.0) / 20.0, 0.6);
+		double r = VLC->arth->artifacts[id1]->price * effectiveness,
+		       g = VLC->objh->resVals[id2];
 
-// 			if(id2 != 6) //non-gold prices are doubled
-// 				r /= 2;
+//if(id2 != 6) //non-gold prices are doubled
+//r /= 2;
 
-			val1 = 1;
-			val2 = std::max(1, (int)((r / g) + 0.5)); //at least one resource is given in return
-		}
-		break;
+		val1 = 1;
+		val2 = std::max(1, (int)((r / g) + 0.5)); //at least one resource is given in return
+	}
+	break;
 	case EMarketMode::CREATURE_EXP:
-		{
-			val1 = 1;
-			val2 = (VLC->creh->creatures[id1]->AIValue / 40) * 5;
-		}
-		break;
+	{
+		val1 = 1;
+		val2 = (VLC->creh->creatures[id1]->AIValue / 40) * 5;
+	}
+	break;
 	case EMarketMode::ARTIFACT_EXP:
+	{
+		val1 = 1;
+
+		int givenClass = VLC->arth->artifacts[id1]->getArtClassSerial();
+		if(givenClass < 0 || givenClass > 3)
 		{
-			val1 = 1;
-
-			int givenClass = VLC->arth->artifacts[id1]->getArtClassSerial();
-			if(givenClass < 0 || givenClass > 3)
-			{
-				val2 = 0;
-				return false;
-			}
-
-			static const int expPerClass[] = {1000, 1500, 3000, 6000};
-			val2 = expPerClass[givenClass];
+			val2 = 0;
+			return false;
 		}
-		break;
+
+		static const int expPerClass[] =
+		{
+			1000, 1500, 3000, 6000
+		};
+		val2 = expPerClass[givenClass];
+	}
+	break;
 	default:
 		assert(0);
 		return false;
@@ -143,9 +149,9 @@ int IMarket::availableUnits(EMarketMode::EMarketMode mode, int marketItemSerial)
 	case EMarketMode::RESOURCE_RESOURCE:
 	case EMarketMode::ARTIFACT_RESOURCE:
 	case EMarketMode::CREATURE_RESOURCE:
-			return -1;
+		return -1;
 	default:
-			return 1;
+		return 1;
 	}
 }
 
@@ -157,26 +163,26 @@ std::vector<int> IMarket::availableItemsIds(EMarketMode::EMarketMode mode) const
 	case EMarketMode::RESOURCE_RESOURCE:
 	case EMarketMode::ARTIFACT_RESOURCE:
 	case EMarketMode::CREATURE_RESOURCE:
-		for (int i = 0; i < 7; i++)
+		for(int i = 0; i < 7; i++)
 			ret.push_back(i);
 	}
 	return ret;
 }
 
-const IMarket * IMarket::castFrom(const CGObjectInstance *obj, bool verbose /*= true*/)
+const IMarket * IMarket::castFrom(const CGObjectInstance * obj, bool verbose /*= true*/)
 {
 	switch(obj->ID)
 	{
 	case Obj::TOWN:
-		return static_cast<const CGTownInstance*>(obj);
+		return static_cast<const CGTownInstance *>(obj);
 	case Obj::ALTAR_OF_SACRIFICE:
 	case Obj::BLACK_MARKET:
 	case Obj::TRADING_POST:
 	case Obj::TRADING_POST_SNOW:
 	case Obj::FREELANCERS_GUILD:
-		return static_cast<const CGMarket*>(obj);
+		return static_cast<const CGMarket *>(obj);
 	case Obj::UNIVERSITY:
-		return static_cast<const CGUniversity*>(obj);
+		return static_cast<const CGUniversity *>(obj);
 	default:
 		if(verbose)
 			logGlobal->errorStream() << "Cannot cast to IMarket object with ID " << obj->ID;
@@ -184,16 +190,15 @@ const IMarket * IMarket::castFrom(const CGObjectInstance *obj, bool verbose /*= 
 	}
 }
 
-IMarket::IMarket(const CGObjectInstance *O)
-	:o(O)
+IMarket::IMarket(const CGObjectInstance * O) :
+	o(O)
 {
-
 }
 
 std::vector<EMarketMode::EMarketMode> IMarket::availableModes() const
 {
 	std::vector<EMarketMode::EMarketMode> ret;
-	for (int i = 0; i < EMarketMode::MARTKET_AFTER_LAST_PLACEHOLDER; i++)
+	for(int i = 0; i < EMarketMode::MARTKET_AFTER_LAST_PLACEHOLDER; i++)
 		if(allowsTrade((EMarketMode::EMarketMode)i))
 			ret.push_back((EMarketMode::EMarketMode)i);
 
@@ -202,7 +207,7 @@ std::vector<EMarketMode::EMarketMode> IMarket::availableModes() const
 
 void CGMarket::onHeroVisit(const CGHeroInstance * h) const
 {
-	openWindow(OpenWindow::MARKET_WINDOW,id.getNum(),h->id.getNum());
+	openWindow(OpenWindow::MARKET_WINDOW, id.getNum(), h->id.getNum());
 }
 
 int CGMarket::getMarketEfficiency() const
@@ -256,8 +261,8 @@ std::vector<int> CGMarket::availableItemsIds(EMarketMode::EMarketMode mode) cons
 	}
 }
 
-CGMarket::CGMarket()
-	:IMarket(this)
+CGMarket::CGMarket() :
+	IMarket(this)
 {
 }
 
@@ -268,15 +273,15 @@ std::vector<int> CGBlackMarket::availableItemsIds(EMarketMode::EMarketMode mode)
 	case EMarketMode::ARTIFACT_RESOURCE:
 		return IMarket::availableItemsIds(mode);
 	case EMarketMode::RESOURCE_ARTIFACT:
-		{
-			std::vector<int> ret;
-			for(const CArtifact *a : artifacts)
-				if(a)
-					ret.push_back(a->id);
-				else
-					ret.push_back(-1);
-			return ret;
-		}
+	{
+		std::vector<int> ret;
+		for(const CArtifact * a : artifacts)
+			if(a)
+				ret.push_back(a->id);
+			else
+				ret.push_back(-1);
+		return ret;
+	}
 	default:
 		return std::vector<int>();
 	}
@@ -305,14 +310,14 @@ void CGUniversity::initObj(CRandomGenerator & rand)
 	}
 	if(toChoose.size() < 4)
 	{
-		logGlobal->warnStream()<<"Warning: less then 4 available skills was found by University initializer!";
+		logGlobal->warnStream() << "Warning: less then 4 available skills was found by University initializer!";
 		return;
 	}
 
-	// get 4 skills
+	//get 4 skills
 	for(int i = 0; i < 4; ++i)
 	{
-		// move randomly one skill to selected and remove from list
+		//move randomly one skill to selected and remove from list
 		auto it = RandomGeneratorUtil::nextItem(toChoose, rand);
 		skills.push_back(*it);
 		toChoose.erase(it);
@@ -321,17 +326,17 @@ void CGUniversity::initObj(CRandomGenerator & rand)
 
 std::vector<int> CGUniversity::availableItemsIds(EMarketMode::EMarketMode mode) const
 {
-	switch (mode)
+	switch(mode)
 	{
-		case EMarketMode::RESOURCE_SKILL:
-			return skills;
+	case EMarketMode::RESOURCE_SKILL:
+		return skills;
 
-		default:
-			return std::vector <int> ();
+	default:
+		return std::vector<int>();
 	}
 }
 
 void CGUniversity::onHeroVisit(const CGHeroInstance * h) const
 {
-	openWindow(OpenWindow::UNIVERSITY_WINDOW,id.getNum(),h->id.getNum());
+	openWindow(OpenWindow::UNIVERSITY_WINDOW, id.getNum(), h->id.getNum());
 }

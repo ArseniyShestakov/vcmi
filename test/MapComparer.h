@@ -35,12 +35,12 @@ struct MapComparer
 
 	void compare();
 
-	void operator() (const std::unique_ptr<CMap>& actual, const std::unique_ptr<CMap>& expected);
+	void operator()(const std::unique_ptr<CMap> & actual, const std::unique_ptr<CMap> & expected);
 };
 
 struct JsonMapComparer
 {
-	typedef std::function<void(void)> TScopeGuard;
+	typedef std::function<void (void)> TScopeGuard;
 
 	bool strict;
 	std::list<std::string> namePath;
@@ -69,7 +69,7 @@ struct JsonMapComparer
 	void checkEqualJson(const JsonMap & actual, const JsonMap & expected);
 	void checkEqualJson(const JsonVector & actual, const JsonVector & expected);
 
-    void compareHeader(const JsonNode & actual, const JsonNode & expected);
+	void compareHeader(const JsonNode & actual, const JsonNode & expected);
 	void compareObjects(const JsonNode & actual, const JsonNode & expected);
 	void compareTerrain(const std::string & levelName, const JsonNode & actual, const JsonNode & expected);
 };

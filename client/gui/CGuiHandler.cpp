@@ -20,8 +20,8 @@ extern boost::mutex eventsM;
 CondSh<bool> CGuiHandler::terminate_cond(false);
 boost::thread_specific_ptr<bool> inGuiThread;
 
-SObjectConstruction::SObjectConstruction(CIntObject *obj)
-:myObj(obj)
+SObjectConstruction::SObjectConstruction(CIntObject * obj) :
+	myObj(obj)
 {
 	GH.createdObj.push_front(obj);
 	GH.captureChildren = true;
@@ -49,30 +49,30 @@ SSetCaptureState::~SSetCaptureState()
 	GH.defActionsDef = prevActions;
 }
 
-static inline void
-processList(const ui16 mask, const ui16 flag, std::list<CIntObject*> *lst, std::function<void (std::list<CIntObject*> *)> cb)
+static inline void processList(const ui16 mask, const ui16 flag, std::list<CIntObject *> * lst, std::function<void(std::list<CIntObject *> *)> cb)
 {
-	if (mask & flag)
+	if(mask & flag)
 		cb(lst);
 }
 
-void CGuiHandler::processLists(const ui16 activityFlag, std::function<void (std::list<CIntObject*> *)> cb)
+void CGuiHandler::processLists(const ui16 activityFlag, std::function<void(std::list<CIntObject *> *)> cb)
 {
-	processList(CIntObject::LCLICK,activityFlag,&lclickable,cb);
-	processList(CIntObject::RCLICK,activityFlag,&rclickable,cb);
-	processList(CIntObject::MCLICK,activityFlag,&mclickable,cb);
-	processList(CIntObject::HOVER,activityFlag,&hoverable,cb);
-	processList(CIntObject::MOVE,activityFlag,&motioninterested,cb);
-	processList(CIntObject::KEYBOARD,activityFlag,&keyinterested,cb);
-	processList(CIntObject::TIME,activityFlag,&timeinterested,cb);
-	processList(CIntObject::WHEEL,activityFlag,&wheelInterested,cb);
-	processList(CIntObject::DOUBLECLICK,activityFlag,&doubleClickInterested,cb);
-	processList(CIntObject::TEXTINPUT,activityFlag,&textInterested,cb);
+	processList(CIntObject::LCLICK, activityFlag, &lclickable, cb);
+	processList(CIntObject::RCLICK, activityFlag, &rclickable, cb);
+	processList(CIntObject::MCLICK, activityFlag, &mclickable, cb);
+	processList(CIntObject::HOVER, activityFlag, &hoverable, cb);
+	processList(CIntObject::MOVE, activityFlag, &motioninterested, cb);
+	processList(CIntObject::KEYBOARD, activityFlag, &keyinterested, cb);
+	processList(CIntObject::TIME, activityFlag, &timeinterested, cb);
+	processList(CIntObject::WHEEL, activityFlag, &wheelInterested, cb);
+	processList(CIntObject::DOUBLECLICK, activityFlag, &doubleClickInterested, cb);
+	processList(CIntObject::TEXTINPUT, activityFlag, &textInterested, cb);
 }
 
 void CGuiHandler::handleElementActivate(CIntObject * elem, ui16 activityFlag)
 {
-	processLists(activityFlag,[&](std::list<CIntObject*> * lst){
+	processLists(activityFlag, [&](std::list<CIntObject *> * lst)
+	{
 		lst->push_front(elem);
 	});
 	elem->active_m |= activityFlag;
@@ -80,15 +80,16 @@ void CGuiHandler::handleElementActivate(CIntObject * elem, ui16 activityFlag)
 
 void CGuiHandler::handleElementDeActivate(CIntObject * elem, ui16 activityFlag)
 {
-	processLists(activityFlag,[&](std::list<CIntObject*> * lst){
-		auto hlp = std::find(lst->begin(),lst->end(),elem);
+	processLists(activityFlag, [&](std::list<CIntObject *> * lst)
+	{
+		auto hlp = std::find(lst->begin(), lst->end(), elem);
 		assert(hlp != lst->end());
 		lst->erase(hlp);
 	});
 	elem->active_m &= ~activityFlag;
 }
 
-void CGuiHandler::popInt(IShowActivatable *top)
+void CGuiHandler::popInt(IShowActivatable * top)
 {
 	assert(listInt.front() == top);
 	top->deactivate();
@@ -99,7 +100,7 @@ void CGuiHandler::popInt(IShowActivatable *top)
 	totalRedraw();
 }
 
-void CGuiHandler::popIntTotally(IShowActivatable *top)
+void CGuiHandler::popIntTotally(IShowActivatable * top)
 {
 	assert(listInt.front() == top);
 	popInt(top);
@@ -107,10 +108,10 @@ void CGuiHandler::popIntTotally(IShowActivatable *top)
 	fakeMouseMove();
 }
 
-void CGuiHandler::pushInt(IShowActivatable *newInt)
+void CGuiHandler::pushInt(IShowActivatable * newInt)
 {
 	assert(newInt);
-	assert(boost::range::find(listInt, newInt) == listInt.end()); // do not add same object twice
+	assert(boost::range::find(listInt, newInt) == listInt.end()); //do not add same object twice
 
 	//a new interface will be present, we'll need to use buffer surface (unless it's advmapint that will alter screenBuf on activate anyway)
 	screenBuf = screen2;
@@ -125,11 +126,12 @@ void CGuiHandler::pushInt(IShowActivatable *newInt)
 
 void CGuiHandler::popInts(int howMany)
 {
-	if(!howMany) return; //senseless but who knows...
+	if(!howMany)
+		return; //senseless but who knows...
 
 	assert(listInt.size() >= howMany);
 	listInt.front()->deactivate();
-	for(int i=0; i < howMany; i++)
+	for(int i = 0; i < howMany; i++)
 	{
 		objsToBlit -= listInt.front();
 		delete listInt.front();
@@ -156,16 +158,17 @@ void CGuiHandler::totalRedraw()
 {
 	for(auto & elem : objsToBlit)
 		elem->showAll(screen2);
-	blitAt(screen2,0,0,screen);
+	blitAt(screen2, 0, 0, screen);
 }
 
 void CGuiHandler::updateTime()
 {
 	int ms = mainFPSmng->getElapsedMilliseconds();
-	std::list<CIntObject*> hlp = timeinterested;
-	for (auto & elem : hlp)
+	std::list<CIntObject *> hlp = timeinterested;
+	for(auto & elem : hlp)
 	{
-		if(!vstd::contains(timeinterested,elem)) continue;
+		if(!vstd::contains(timeinterested, elem))
+			continue;
 		(elem)->onTimer(ms);
 	}
 }
@@ -185,12 +188,12 @@ void CGuiHandler::handleEvents()
 	}
 }
 
-void CGuiHandler::handleEvent(SDL_Event *sEvent)
+void CGuiHandler::handleEvent(SDL_Event * sEvent)
 {
 	current = sEvent;
 	bool prev;
 
-	if (sEvent->type==SDL_KEYDOWN || sEvent->type==SDL_KEYUP)
+	if(sEvent->type == SDL_KEYDOWN || sEvent->type == SDL_KEYUP)
 	{
 		SDL_KeyboardEvent key = sEvent->key;
 		if(sEvent->type == SDL_KEYDOWN && key.keysym.sym >= SDLK_F1 && key.keysym.sym <= SDLK_F15 && settings["session"]["spectate"].Bool())
@@ -242,7 +245,7 @@ void CGuiHandler::handleEvent(SDL_Event *sEvent)
 		}
 
 		bool keysCaptured = false;
-		for(auto i=keyinterested.begin(); i != keyinterested.end() && current; i++)
+		for(auto i = keyinterested.begin(); i != keyinterested.end() && current; i++)
 		{
 			if((*i)->captureThisEvent(key))
 			{
@@ -251,12 +254,12 @@ void CGuiHandler::handleEvent(SDL_Event *sEvent)
 			}
 		}
 
-		std::list<CIntObject*> miCopy = keyinterested;
-		for(auto i=miCopy.begin(); i != miCopy.end() && current; i++)
-			if(vstd::contains(keyinterested,*i) && (!keysCaptured || (*i)->captureThisEvent(key)))
+		std::list<CIntObject *> miCopy = keyinterested;
+		for(auto i = miCopy.begin(); i != miCopy.end() && current; i++)
+			if(vstd::contains(keyinterested, *i) && (!keysCaptured || (*i)->captureThisEvent(key)))
 				(**i).keyPressed(key);
 	}
-	else if(sEvent->type==SDL_MOUSEMOTION)
+	else if(sEvent->type == SDL_MOUSEMOTION)
 	{
 		CCS->curh->cursorMove(sEvent->motion.x, sEvent->motion.y);
 		handleMouseMotion(sEvent);
@@ -268,16 +271,16 @@ void CGuiHandler::handleEvent(SDL_Event *sEvent)
 		case SDL_BUTTON_LEFT:
 			if(lastClick == sEvent->motion && (SDL_GetTicks() - lastClickTime) < 300)
 			{
-				std::list<CIntObject*> hlp = doubleClickInterested;
+				std::list<CIntObject *> hlp = doubleClickInterested;
 				for(auto i = hlp.begin(); i != hlp.end() && current; i++)
 				{
-					if(!vstd::contains(doubleClickInterested, *i)) continue;
+					if(!vstd::contains(doubleClickInterested, *i))
+						continue;
 					if(isItIn(&(*i)->pos, sEvent->motion.x, sEvent->motion.y))
 					{
 						(*i)->onDoubleClick();
 					}
 				}
-
 			}
 
 			lastClick = sEvent->motion;
@@ -295,13 +298,14 @@ void CGuiHandler::handleEvent(SDL_Event *sEvent)
 			break;
 		}
 	}
-	else if (sEvent->type == SDL_MOUSEWHEEL)
+	else if(sEvent->type == SDL_MOUSEWHEEL)
 	{
-		std::list<CIntObject*> hlp = wheelInterested;
-		for(auto i=hlp.begin(); i != hlp.end() && current; i++)
+		std::list<CIntObject *> hlp = wheelInterested;
+		for(auto i = hlp.begin(); i != hlp.end() && current; i++)
 		{
-			if(!vstd::contains(wheelInterested,*i)) continue;
-			// SDL doesn't have the proper values for mouse positions on SDL_MOUSEWHEEL, refetch them
+			if(!vstd::contains(wheelInterested, *i))
+				continue;
+			//SDL doesn't have the proper values for mouse positions on SDL_MOUSEWHEEL, refetch them
 			int x = 0, y = 0;
 			SDL_GetMouseState(&x, &y);
 			(*i)->wheelScrolled(sEvent->wheel.y < 0, isItIn(&(*i)->pos, x, y));
@@ -345,7 +349,8 @@ void CGuiHandler::handleMouseButtonClick(CIntObjectList & interestedObjs, EIntOb
 	auto hlp = interestedObjs;
 	for(auto i = hlp.begin(); i != hlp.end() && current; i++)
 	{
-		if(!vstd::contains(interestedObjs, *i)) continue;
+		if(!vstd::contains(interestedObjs, *i))
+			continue;
 
 		auto prev = (*i)->mouseState(btn);
 		if(!isPressed)
@@ -361,18 +366,18 @@ void CGuiHandler::handleMouseButtonClick(CIntObjectList & interestedObjs, EIntOb
 	}
 }
 
-void CGuiHandler::handleMouseMotion(SDL_Event *sEvent)
+void CGuiHandler::handleMouseMotion(SDL_Event * sEvent)
 {
 	//sending active, hovered hoverable objects hover() call
-	std::vector<CIntObject*> hlp;
+	std::vector<CIntObject *> hlp;
 	for(auto & elem : hoverable)
 	{
-		if (isItIn(&(elem)->pos,sEvent->motion.x,sEvent->motion.y))
+		if(isItIn(&(elem)->pos, sEvent->motion.x, sEvent->motion.y))
 		{
-			if (!(elem)->hovered)
+			if(!(elem)->hovered)
 				hlp.push_back((elem));
 		}
-		else if ((elem)->hovered)
+		else if((elem)->hovered)
 		{
 			(elem)->hover(false);
 			(elem)->hovered = false;
@@ -391,7 +396,7 @@ void CGuiHandler::simpleRedraw()
 {
 	//update only top interface and draw background
 	if(objsToBlit.size() > 1)
-		blitAt(screen2,0,0,screen); //blit background
+		blitAt(screen2, 0, 0, screen); //blit background
 	if(!objsToBlit.empty())
 		objsToBlit.back()->show(screen); //blit active interface/window
 }
@@ -399,7 +404,7 @@ void CGuiHandler::simpleRedraw()
 void CGuiHandler::handleMoveInterested(const SDL_MouseMotionEvent & motion)
 {
 	//sending active, MotionInterested objects mouseMoved() call
-	std::list<CIntObject*> miCopy = motioninterested;
+	std::list<CIntObject *> miCopy = motioninterested;
 	for(auto & elem : miCopy)
 	{
 		if(elem->strongInterest || isItInOrLowerBounds(&elem->pos, motion.x, motion.y)) //checking lower bounds fixes bug #2476
@@ -412,7 +417,10 @@ void CGuiHandler::handleMoveInterested(const SDL_MouseMotionEvent & motion)
 void CGuiHandler::fakeMouseMove()
 {
 	SDL_Event evnt;
-	SDL_MouseMotionEvent sme = {SDL_MOUSEMOTION, 0, 0, 0, 0, 0, 0, 0, 0};
+	SDL_MouseMotionEvent sme =
+	{
+		SDL_MOUSEMOTION, 0, 0, 0, 0, 0, 0, 0, 0
+	};
 	int x, y;
 
 	sme.state = SDL_GetMouseState(&x, &y);
@@ -426,11 +434,10 @@ void CGuiHandler::fakeMouseMove()
 
 void CGuiHandler::renderFrame()
 {
-
-	// Updating GUI requires locking pim mutex (that protects screen and GUI state).
-	// During game:
-	// When ending the game, the pim mutex might be hold by other thread,
-	// that will notify us about the ending game by setting terminate_cond flag.
+	//Updating GUI requires locking pim mutex (that protects screen and GUI state).
+	//During game:
+	//When ending the game, the pim mutex might be hold by other thread,
+	//that will notify us about the ending game by setting terminate_cond flag.
 	//in PreGame terminate_cond stay false
 
 	bool acquiredTheLockOnPim = false; //for tracking whether pim mutex locking succeeded
@@ -439,16 +446,16 @@ void CGuiHandler::renderFrame()
 
 	if(acquiredTheLockOnPim)
 	{
-		// If we are here, pim mutex has been successfully locked - let's store it in a safe RAII lock.
+		//If we are here, pim mutex has been successfully locked - let's store it in a safe RAII lock.
 		boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim, boost::adopt_lock);
 
 		if(nullptr != curInt)
 			curInt->update();
 
-		if (settings["general"]["showfps"].Bool())
+		if(settings["general"]["showfps"].Bool())
 			drawFPSCounter();
 
-		// draw the mouse cursor and update the screen
+		//draw the mouse cursor and update the screen
 		CCS->curh->render();
 
 		if(0 != SDL_RenderCopy(mainRenderer, screenTexture, nullptr, nullptr))
@@ -457,18 +464,18 @@ void CGuiHandler::renderFrame()
 		SDL_RenderPresent(mainRenderer);
 	}
 
-	mainFPSmng->framerateDelay(); // holds a constant FPS
+	mainFPSmng->framerateDelay(); //holds a constant FPS
 }
 
 
-CGuiHandler::CGuiHandler()
-	: lastClick(-500, -500),lastClickTime(0), defActionsDef(0), captureChildren(false)
+CGuiHandler::CGuiHandler() :
+	lastClick(-500, -500), lastClickTime(0), defActionsDef(0), captureChildren(false)
 {
 	curInt = nullptr;
 	current = nullptr;
 	statusbar = nullptr;
 
-	// Creates the FPS manager and sets the framerate to 48 which is doubled the value of the original Heroes 3 FPS rate
+	//Creates the FPS manager and sets the framerate to 48 which is doubled the value of the original Heroes 3 FPS rate
 	mainFPSmng = new CFramerateManager(48);
 	//do not init CFramerateManager here --AVS
 
@@ -487,8 +494,14 @@ void CGuiHandler::breakEventHandling()
 
 void CGuiHandler::drawFPSCounter()
 {
-	const static SDL_Color yellow = {255, 255, 0, 0};
-	static SDL_Rect overlay = { 0, 0, 64, 32};
+	const static SDL_Color yellow =
+	{
+		255, 255, 0, 0
+	};
+	static SDL_Rect overlay =
+	{
+		0, 0, 64, 32
+	};
 	Uint32 black = SDL_MapRGB(screen->format, 10, 10, 10);
 	SDL_FillRect(screen, &overlay, black);
 	std::string fps = boost::lexical_cast<std::string>(mainFPSmng->fps);
@@ -514,8 +527,8 @@ SDL_Keycode CGuiHandler::arrowToNum(SDL_Keycode key)
 
 SDL_Keycode CGuiHandler::numToDigit(SDL_Keycode key)
 {
-
-#define REMOVE_KP(keyName) case SDLK_KP_ ## keyName : return SDLK_ ## keyName;
+#define REMOVE_KP(keyName) case SDLK_KP_ ## keyName: \
+	return SDLK_ ## keyName;
 	switch(key)
 	{
 		REMOVE_KP(0)
@@ -567,7 +580,7 @@ void CGuiHandler::pushSDLEvent(int type, int usercode)
 {
 	SDL_Event event;
 	event.type = type;
-	event.user.code = usercode;	// not necessarily used
+	event.user.code = usercode; //not necessarily used
 	SDL_PushEvent(&event);
 }
 
@@ -592,8 +605,8 @@ void CFramerateManager::framerateDelay()
 	ui32 currentTicks = SDL_GetTicks();
 	timeElapsed = currentTicks - lastticks;
 
-	// FPS is higher than it should be, then wait some time
-	if (timeElapsed < rateticks)
+	//FPS is higher than it should be, then wait some time
+	if(timeElapsed < rateticks)
 	{
 		SDL_Delay(ceil(this->rateticks) - timeElapsed);
 	}
@@ -604,14 +617,15 @@ void CFramerateManager::framerateDelay()
 	if(accumulatedFrames >= 100)
 	{
 		//about 2 second should be passed
-		fps = ceil(1000.0 / (accumulatedTime/accumulatedFrames));
+		fps = ceil(1000.0 / (accumulatedTime / accumulatedFrames));
 		accumulatedTime = 0;
 		accumulatedFrames = 0;
-	};
+	}
+	;
 
 	currentTicks = SDL_GetTicks();
-	// recalculate timeElapsed for external calls via getElapsed()
-	// limit it to 1000 ms to avoid breaking animation in case of huge lag (e.g. triggered breakpoint)
+	//recalculate timeElapsed for external calls via getElapsed()
+	//limit it to 1000 ms to avoid breaking animation in case of huge lag (e.g. triggered breakpoint)
 	timeElapsed = std::min<ui32>(currentTicks - lastticks, 1000);
 
 	lastticks = SDL_GetTicks();

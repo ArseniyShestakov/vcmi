@@ -21,7 +21,9 @@ public:
 	/**
 	 * D-tor.
 	 */
-	virtual ~COutputStream() {}
+	virtual ~COutputStream()
+	{
+	}
 
 	/**
 	 * Write n bytes from the stream into the data buffer.

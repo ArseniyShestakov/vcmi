@@ -1,4 +1,3 @@
-
 /*
  * CBasicLogConfigurator.h, part of VCMI engine
  *
@@ -30,12 +29,13 @@ public:
 
 	/// Configures a default logging system by adding the console target and the file target to the global logger.
 	void configureDefault();
+
 private:
-	// Gets ELogLevel enum from string. (Should be moved to CLogger as a separate function?)
-	// Throws: std::runtime_error
+	//Gets ELogLevel enum from string. (Should be moved to CLogger as a separate function?)
+	//Throws: std::runtime_error
 	static ELogLevel::ELogLevel getLogLevel(const std::string & level);
-	// Gets EConsoleTextColor enum from strings. (Should be moved to CLogger as a separate function?)
-	// Throws: std::runtime_error
+	//Gets EConsoleTextColor enum from strings. (Should be moved to CLogger as a separate function?)
+	//Throws: std::runtime_error
 	static EConsoleTextColor::EConsoleTextColor getConsoleColor(const std::string & colorName);
 
 	boost::filesystem::path filePath;

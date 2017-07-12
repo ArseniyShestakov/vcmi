@@ -24,24 +24,25 @@ namespace ELogLevel
 
 	inline std::string to_string(ELogLevel level)
 	{
-		switch (level) {
-			case NOT_SET:
-				return "not set";
-			case TRACE:
-				return "trace";
-			case DEBUG:
-				return "debug";
-			case INFO:
-				return "info";
-			case WARN:
-				return "warn";
-			case ERROR:
-				return "error";
-			default:
+		switch(level)
+		{
+		case NOT_SET:
+			return "not set";
+		case TRACE:
+			return "trace";
+		case DEBUG:
+			return "debug";
+		case INFO:
+			return "info";
+		case WARN:
+			return "warn";
+		case ERROR:
+			return "error";
+		default:
 #ifdef NO_STD_TOSTRING
-				return "invalid";
+			return "invalid";
 #else
-				return std::string("invalid (") + std::to_string(level) + ")";
+			return std::string("invalid (") + std::to_string(level) + ")";
 #endif
 		}
 	}
@@ -51,8 +52,10 @@ namespace vstd
 {
 	class DLL_LINKAGE CLoggerBase
 	{
-	public:
-		virtual ~CLoggerBase(){};
+public:
+		virtual ~CLoggerBase()
+		{
+		};
 
 		virtual void log(ELogLevel::ELogLevel level, const std::string & message) const = 0;
 		virtual void log(ELogLevel::ELogLevel level, const boost::format & fmt) const = 0;
@@ -61,7 +64,7 @@ namespace vstd
 		void log(ELogLevel::ELogLevel level, const std::string & format, T t, Args ... args) const
 		{
 			boost::format fmt(format);
-			makeFormat(fmt, t, args...);
+			makeFormat(fmt, t, args ...);
 			log(level, fmt);
 		}
 
@@ -74,7 +77,7 @@ namespace vstd
 		template<typename T, typename ... Args>
 		void error(const std::string & format, T t, Args ... args) const
 		{
-			log(ELogLevel::ERROR, format, t, args...);
+			log(ELogLevel::ERROR, format, t, args ...);
 		}
 
 		inline void warn(const std::string & message) const
@@ -85,7 +88,7 @@ namespace vstd
 		template<typename T, typename ... Args>
 		void warn(const std::string & format, T t, Args ... args) const
 		{
-			log(ELogLevel::WARN, format, t, args...);
+			log(ELogLevel::WARN, format, t, args ...);
 		}
 
 		inline void info(const std::string & message) const
@@ -96,7 +99,7 @@ namespace vstd
 		template<typename T, typename ... Args>
 		void info(const std::string & format, T t, Args ... args) const
 		{
-			log(ELogLevel::INFO, format, t, args...);
+			log(ELogLevel::INFO, format, t, args ...);
 		}
 
 		inline void debug(const std::string & message) const
@@ -108,7 +111,7 @@ namespace vstd
 		template<typename T, typename ... Args>
 		void debug(const std::string & format, T t, Args ... args) const
 		{
-			log(ELogLevel::DEBUG, format, t, args...);
+			log(ELogLevel::DEBUG, format, t, args ...);
 		}
 
 		inline void trace(const std::string & message) const
@@ -119,21 +122,21 @@ namespace vstd
 		template<typename T, typename ... Args>
 		void trace(const std::string & format, T t, Args ... args) const
 		{
-			log(ELogLevel::TRACE, format, t, args...);
+			log(ELogLevel::TRACE, format, t, args ...);
 		}
 
-	private:
-		template <typename T>
+private:
+		template<typename T>
 		void makeFormat(boost::format & fmt, T t) const
 		{
 			fmt % t;
 		}
 
-		template <typename T, typename ... Args>
+		template<typename T, typename ... Args>
 		void makeFormat(boost::format & fmt, T t, Args ... args) const
 		{
 			fmt % t;
-			makeFormat(fmt, args...);
+			makeFormat(fmt, args ...);
 		}
 	};
 }

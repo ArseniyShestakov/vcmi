@@ -23,11 +23,11 @@ public:
 	bool human; //true if human controlled player, false for AI
 	TeamID team;
 	TResources resources;
-	std::set<ObjectInstanceID> visitedObjects; // as a std::set, since most accesses here will be from visited status checks
-	std::vector<ConstTransitivePtr<CGHeroInstance> > heroes;
-	std::vector<ConstTransitivePtr<CGTownInstance> > towns;
-	std::vector<ConstTransitivePtr<CGHeroInstance> > availableHeroes; //heroes available in taverns
-	std::vector<ConstTransitivePtr<CGDwelling> > dwellings; //used for town growth
+	std::set<ObjectInstanceID> visitedObjects; //as a std::set, since most accesses here will be from visited status checks
+	std::vector<ConstTransitivePtr<CGHeroInstance>> heroes;
+	std::vector<ConstTransitivePtr<CGTownInstance>> towns;
+	std::vector<ConstTransitivePtr<CGHeroInstance>> availableHeroes; //heroes available in taverns
+	std::vector<ConstTransitivePtr<CGDwelling>> dwellings; //used for town growth
 	std::vector<QuestInfo> quests; //store info about all received quests
 
 	bool enteredWinningCheatCode, enteredLosingCheatCode; //if true, this player has entered cheat codes for loss / victory
@@ -39,7 +39,7 @@ public:
 
 	std::string nodeName() const override;
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & color & human & team & resources & status;
 		h & heroes & towns & availableHeroes & dwellings & quests & visitedObjects;
@@ -53,7 +53,7 @@ public:
 
 		h & status & daysWithoutCastle;
 		h & enteredLosingCheatCode & enteredWinningCheatCode;
-		h & static_cast<CBonusSystemNode&>(*this);
+		h & static_cast<CBonusSystemNode &>(*this);
 	}
 };
 
@@ -61,17 +61,16 @@ struct DLL_LINKAGE TeamState : public CBonusSystemNode
 {
 public:
 	TeamID id; //position in gameState::teams
-	std::set<PlayerColor> players; // members of this team
+	std::set<PlayerColor> players; //members of this team
 	//TODO: boost::array, bool if possible
-	std::vector<std::vector<std::vector<ui8> > >  fogOfWarMap; //true - visible, false - hidden
+	std::vector<std::vector<std::vector<ui8>>> fogOfWarMap; //true - visible, false - hidden
 
 	TeamState();
 	TeamState(TeamState && other);
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & id & players & fogOfWarMap;
-		h & static_cast<CBonusSystemNode&>(*this);
+		h & static_cast<CBonusSystemNode &>(*this);
 	}
-
 };

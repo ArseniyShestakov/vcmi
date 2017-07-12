@@ -23,26 +23,26 @@ static const JsonNode nullNode;
 template<typename Iterator>
 void JsonWriter::writeContainer(Iterator begin, Iterator end)
 {
-	if (begin == end)
+	if(begin == end)
 		return;
 
 	prefix += '\t';
 
 	writeEntry(begin++);
 
-	while (begin != end)
+	while(begin != end)
 	{
-		out<<",\n";
+		out << ",\n";
 		writeEntry(begin++);
 	}
 
-	out<<"\n";
-	prefix.resize(prefix.size()-1);
+	out << "\n";
+	prefix.resize(prefix.size() - 1);
 }
 
 void JsonWriter::writeEntry(JsonMap::const_iterator entry)
 {
-	if (!entry->second.meta.empty())
+	if(!entry->second.meta.empty())
 		out << prefix << " // " << entry->second.meta << "\n";
 	out << prefix;
 	writeString(entry->first);
@@ -52,26 +52,27 @@ void JsonWriter::writeEntry(JsonMap::const_iterator entry)
 
 void JsonWriter::writeEntry(JsonVector::const_iterator entry)
 {
-	if (!entry->meta.empty())
+	if(!entry->meta.empty())
 		out << prefix << " // " << entry->meta << "\n";
 	out << prefix;
 	writeNode(*entry);
 }
 
-void JsonWriter::writeString(const std::string &string)
+void JsonWriter::writeString(const std::string & string)
 {
 	static const std::string escaped = "\"\\\b\f\n\r\t/";
 
-	static const std::array<char, 8> escaped_code = {'\"', '\\', 'b', 'f', 'n', 'r', 't', '/'};
+	static const std::array<char, 8> escaped_code =
+	{
+		'\"', '\\', 'b', 'f', 'n', 'r', 't', '/'
+	};
 
-	out <<'\"';
-	size_t pos=0, start=0;
-	for (; pos<string.size(); pos++)
+	out << '\"';
+	size_t pos = 0, start = 0;
+	for(; pos < string.size(); pos++)
 	{
 		//we need to check if special character was been already escaped
-		if((string[pos] == '\\')
-			&& (pos+1 < string.size())
-			&& (std::find(escaped_code.begin(), escaped_code.end(), string[pos+1]) != escaped_code.end()) )
+		if((string[pos] == '\\') && (pos + 1 < string.size()) && (std::find(escaped_code.begin(), escaped_code.end(), string[pos + 1]) != escaped_code.end()))
 		{
 			pos++; //write unchanged, next simbol also checked
 		}
@@ -79,53 +80,59 @@ void JsonWriter::writeString(const std::string &string)
 		{
 			size_t escapedPos = escaped.find(string[pos]);
 
-			if (escapedPos != std::string::npos)
+			if(escapedPos != std::string::npos)
 			{
-				out.write(string.data()+start, pos - start);
+				out.write(string.data() + start, pos - start);
 				out << '\\' << escaped_code[escapedPos];
-				start = pos+1;
+				start = pos + 1;
 			}
 		}
-
 	}
-	out.write(string.data()+start, pos - start);
-	out <<'\"';
+	out.write(string.data() + start, pos - start);
+	out << '\"';
 }
 
-void JsonWriter::writeNode(const JsonNode &node)
+void JsonWriter::writeNode(const JsonNode & node)
 {
 	switch(node.getType())
 	{
-		break; case JsonNode::DATA_NULL:
-			out << "null";
+		break;
+	case JsonNode::DATA_NULL:
+		out << "null";
 
-		break; case JsonNode::DATA_BOOL:
-			if (node.Bool())
-				out << "true";
-			else
-				out << "false";
+		break;
+	case JsonNode::DATA_BOOL:
+		if(node.Bool())
+			out << "true";
+		else
+			out << "false";
 
-		break; case JsonNode::DATA_FLOAT:
-			out << node.Float();
+		break;
+	case JsonNode::DATA_FLOAT:
+		out << node.Float();
 
-		break; case JsonNode::DATA_STRING:
-			writeString(node.String());
+		break;
+	case JsonNode::DATA_STRING:
+		writeString(node.String());
 
-		break; case JsonNode::DATA_VECTOR:
-			out << "[" << "\n";
-			writeContainer(node.Vector().begin(), node.Vector().end());
-			out << prefix << "]";
+		break;
+	case JsonNode::DATA_VECTOR:
+		out << "[" << "\n";
+		writeContainer(node.Vector().begin(), node.Vector().end());
+		out << prefix << "]";
 
-		break; case JsonNode::DATA_STRUCT:
-			out << "{" << "\n";
-			writeContainer(node.Struct().begin(), node.Struct().end());
-			out << prefix << "}";
-		break; case JsonNode::DATA_INTEGER:
-			out << node.Integer();
+		break;
+	case JsonNode::DATA_STRUCT:
+		out << "{" << "\n";
+		writeContainer(node.Struct().begin(), node.Struct().end());
+		out << prefix << "}";
+		break;
+	case JsonNode::DATA_INTEGER:
+		out << node.Integer();
 	}
 }
 
-JsonWriter::JsonWriter(std::ostream &output, const JsonNode &node):
+JsonWriter::JsonWriter(std::ostream & output, const JsonNode & node) :
 	out(output)
 {
 	writeNode(node);
@@ -133,7 +140,7 @@ JsonWriter::JsonWriter(std::ostream &output, const JsonNode &node):
 
 ////////////////////////////////////////////////////////////////////////////////
 
-JsonParser::JsonParser(const char * inputString, size_t stringSize):
+JsonParser::JsonParser(const char * inputString, size_t stringSize) :
 	input(inputString, stringSize),
 	lineCount(1),
 	lineStart(0),
@@ -145,27 +152,27 @@ JsonNode JsonParser::parse(std::string fileName)
 {
 	JsonNode root;
 
-	if (input.size() == 0)
+	if(input.size() == 0)
 	{
 		error("File is empty", false);
 	}
 	else
 	{
-		if (!Unicode::isValidString(&input[0], input.size()))
+		if(!Unicode::isValidString(&input[0], input.size()))
 			error("Not a valid UTF-8 file", false);
 
 		extractValue(root);
 		extractWhitespace(false);
 
 		//Warn if there are any non-whitespace symbols left
-		if (pos < input.size())
+		if(pos < input.size())
 			error("Not all file was parsed!", true);
 	}
 
-	if (!errors.empty())
+	if(!errors.empty())
 	{
-		logGlobal->warnStream()<<"File " << fileName << " is not a valid JSON file!";
-		logGlobal->warnStream()<<errors;
+		logGlobal->warnStream() << "File " << fileName << " is not a valid JSON file!";
+		logGlobal->warnStream() << errors;
 	}
 	return root;
 }
@@ -177,123 +184,149 @@ bool JsonParser::isValid()
 
 bool JsonParser::extractSeparator()
 {
-	if (!extractWhitespace())
+	if(!extractWhitespace())
 		return false;
 
-	if ( input[pos] !=':')
+	if(input[pos] != ':')
 		return error("Separator expected");
 
 	pos++;
 	return true;
 }
 
-bool JsonParser::extractValue(JsonNode &node)
+bool JsonParser::extractValue(JsonNode & node)
 {
-	if (!extractWhitespace())
+	if(!extractWhitespace())
 		return false;
 
-	switch (input[pos])
+	switch(input[pos])
 	{
-		case '\"': return extractString(node);
-		case 'n' : return extractNull(node);
-		case 't' : return extractTrue(node);
-		case 'f' : return extractFalse(node);
-		case '{' : return extractStruct(node);
-		case '[' : return extractArray(node);
-		case '-' : return extractFloat(node);
-		default:
-		{
-			if (input[pos] >= '0' && input[pos] <= '9')
-				return extractFloat(node);
-			return error("Value expected!");
-		}
+	case '\"':
+		return extractString(node);
+	case 'n':
+		return extractNull(node);
+	case 't':
+		return extractTrue(node);
+	case 'f':
+		return extractFalse(node);
+	case '{':
+		return extractStruct(node);
+	case '[':
+		return extractArray(node);
+	case '-':
+		return extractFloat(node);
+	default:
+	{
+		if(input[pos] >= '0' && input[pos] <= '9')
+			return extractFloat(node);
+		return error("Value expected!");
+	}
 	}
 }
 
 bool JsonParser::extractWhitespace(bool verbose)
 {
-	while (true)
+	while(true)
 	{
-		while (pos < input.size() && (ui8)input[pos] <= ' ')
+		while(pos < input.size() && (ui8)input[pos] <= ' ')
 		{
-			if (input[pos] == '\n')
+			if(input[pos] == '\n')
 			{
 				lineCount++;
-				lineStart = pos+1;
+				lineStart = pos + 1;
 			}
 			pos++;
 		}
-		if (pos >= input.size() || input[pos] != '/')
+		if(pos >= input.size() || input[pos] != '/')
 			break;
 
 		pos++;
-		if (pos == input.size())
+		if(pos == input.size())
 			break;
-		if (input[pos] == '/')
+		if(input[pos] == '/')
 			pos++;
 		else
 			error("Comments must consist from two slashes!", true);
 
-		while (pos < input.size() && input[pos] != '\n')
+		while(pos < input.size() && input[pos] != '\n')
 			pos++;
 	}
 
-	if (pos >= input.size() && verbose)
+	if(pos >= input.size() && verbose)
 		return error("Unexpected end of file!");
 	return true;
 }
 
-bool JsonParser::extractEscaping(std::string &str)
+bool JsonParser::extractEscaping(std::string & str)
 {
 	switch(input[pos])
 	{
-		break; case '\"': str += '\"';
-		break; case '\\': str += '\\';
-		break; case 'b': str += '\b';
-		break; case 'f': str += '\f';
-		break; case 'n': str += '\n';
-		break; case 'r': str += '\r';
-		break; case 't': str += '\t';
-		break; case '/': str += '/';
-		break; default: return error("Unknown escape sequence!", true);
-	};
+		break;
+	case '\"':
+		str += '\"';
+		break;
+	case '\\':
+		str += '\\';
+		break;
+	case 'b':
+		str += '\b';
+		break;
+	case 'f':
+		str += '\f';
+		break;
+	case 'n':
+		str += '\n';
+		break;
+	case 'r':
+		str += '\r';
+		break;
+	case 't':
+		str += '\t';
+		break;
+	case '/':
+		str += '/';
+		break;
+	default:
+		return error("Unknown escape sequence!", true);
+	}
+	;
 	return true;
 }
 
-bool JsonParser::extractString(std::string &str)
+bool JsonParser::extractString(std::string & str)
 {
-	if (input[pos] != '\"')
+	if(input[pos] != '\"')
 		return error("String expected!");
 	pos++;
 
 	size_t first = pos;
 
-	while (pos != input.size())
+	while(pos != input.size())
 	{
-		if (input[pos] == '\"') // Correct end of string
+		if(input[pos] == '\"') //Correct end of string
 		{
-			str.append( &input[first], pos-first);
+			str.append(&input[first], pos - first);
 			pos++;
 			return true;
 		}
-		if (input[pos] == '\\') // Escaping
+		if(input[pos] == '\\') //Escaping
 		{
-			str.append( &input[first], pos-first);
+			str.append(&input[first], pos - first);
 			pos++;
-			if (pos == input.size())
+			if(pos == input.size())
 				break;
 			extractEscaping(str);
 			first = pos + 1;
 		}
-		if (input[pos] == '\n') // end-of-line
+		if(input[pos] == '\n') //end-of-line
 		{
-			str.append( &input[first], pos-first);
+			str.append(&input[first], pos - first);
 			return error("Closing quote not found!", true);
 		}
-		if ((unsigned char)(input[pos]) < ' ') // control character
+		if((unsigned char)(input[pos]) < ' ') //control character
 		{
-			str.append( &input[first], pos-first);
-			first = pos+1;
+			str.append(&input[first], pos - first);
+			first = pos + 1;
 			error("Illegal character in the string!", true);
 		}
 		pos++;
@@ -301,10 +334,10 @@ bool JsonParser::extractString(std::string &str)
 	return error("Unterminated string!");
 }
 
-bool JsonParser::extractString(JsonNode &node)
+bool JsonParser::extractString(JsonNode & node)
 {
 	std::string str;
-	if (!extractString(str))
+	if(!extractString(str))
 		return false;
 
 	node.setType(JsonNode::DATA_STRING);
@@ -312,12 +345,11 @@ bool JsonParser::extractString(JsonNode &node)
 	return true;
 }
 
-bool JsonParser::extractLiteral(const std::string &literal)
+bool JsonParser::extractLiteral(const std::string & literal)
 {
-	if (literal.compare(0, literal.size(), &input[pos], literal.size()) != 0)
+	if(literal.compare(0, literal.size(), &input[pos], literal.size()) != 0)
 	{
-		while (pos < input.size() && ((input[pos]>'a' && input[pos]<'z')
-								   || (input[pos]>'A' && input[pos]<'Z')))
+		while(pos < input.size() && ((input[pos] > 'a' && input[pos] < 'z') || (input[pos] > 'A' && input[pos] < 'Z')))
 			pos++;
 		return error("Unknown literal found", true);
 	}
@@ -326,67 +358,67 @@ bool JsonParser::extractLiteral(const std::string &literal)
 	return true;
 }
 
-bool JsonParser::extractNull(JsonNode &node)
+bool JsonParser::extractNull(JsonNode & node)
 {
-	if (!extractLiteral("null"))
+	if(!extractLiteral("null"))
 		return false;
 
 	node.clear();
 	return true;
 }
 
-bool JsonParser::extractTrue(JsonNode &node)
+bool JsonParser::extractTrue(JsonNode & node)
 {
-	if (!extractLiteral("true"))
+	if(!extractLiteral("true"))
 		return false;
 
 	node.Bool() = true;
 	return true;
 }
 
-bool JsonParser::extractFalse(JsonNode &node)
+bool JsonParser::extractFalse(JsonNode & node)
 {
-	if (!extractLiteral("false"))
+	if(!extractLiteral("false"))
 		return false;
 
 	node.Bool() = false;
 	return true;
 }
 
-bool JsonParser::extractStruct(JsonNode &node)
+bool JsonParser::extractStruct(JsonNode & node)
 {
 	node.setType(JsonNode::DATA_STRUCT);
 	pos++;
 
-	if (!extractWhitespace())
+	if(!extractWhitespace())
 		return false;
 
 	//Empty struct found
-	if (input[pos] == '}')
+	if(input[pos] == '}')
 	{
 		pos++;
 		return true;
 	}
 
-	while (true)
+	while(true)
 	{
-		if (!extractWhitespace())
+		if(!extractWhitespace())
 			return false;
 
 		std::string key;
-		if (!extractString(key))
+		if(!extractString(key))
 			return false;
 
-		if (node.Struct().find(key) != node.Struct().end())
+		if(node.Struct().find(key) != node.Struct().end())
 			error("Dublicated element encountered!", true);
 
-		if (!extractSeparator())
+		if(!extractSeparator())
 			return false;
 
-		if (!extractElement(node.Struct()[key], '}'))
+		if(!extractElement(node.Struct()[key], '}'))
 			return false;
 
-		if (input[pos] == '}')
+		if(input[pos] == '}')
 		{
 			pos++;
 			return true;
@@ -394,31 +426,31 @@ bool JsonParser::extractStruct(JsonNode &node)
 	}
 }
 
-bool JsonParser::extractArray(JsonNode &node)
+bool JsonParser::extractArray(JsonNode & node)
 {
 	pos++;
 	node.setType(JsonNode::DATA_VECTOR);
 
-	if (!extractWhitespace())
+	if(!extractWhitespace())
 		return false;
 
 	//Empty array found
-	if (input[pos] == ']')
+	if(input[pos] == ']')
 	{
 		pos++;
 		return true;
 	}
 
-	while (true)
+	while(true)
 	{
 		//NOTE: currently 50% of time is this vector resizing.
 		//May be useful to use list during parsing and then swap() all items to vector
-		node.Vector().resize(node.Vector().size()+1);
+		node.Vector().resize(node.Vector().size() + 1);
 
-		if (!extractElement(node.Vector().back(), ']'))
+		if(!extractElement(node.Vector().back(), ']'))
 			return false;
 
-		if (input[pos] == ']')
+		if(input[pos] == ']')
 		{
 			pos++;
 			return true;
@@ -426,74 +458,74 @@ bool JsonParser::extractArray(JsonNode &node)
 	}
 }
 
-bool JsonParser::extractElement(JsonNode &node, char terminator)
+bool JsonParser::extractElement(JsonNode & node, char terminator)
 {
-	if (!extractValue(node))
+	if(!extractValue(node))
 		return false;
 
-	if (!extractWhitespace())
+	if(!extractWhitespace())
 		return false;
 
 	bool comma = (input[pos] == ',');
-	if (comma )
+	if(comma)
 	{
 		pos++;
-		if (!extractWhitespace())
+		if(!extractWhitespace())
 			return false;
 	}
 
-	if (input[pos] == terminator)
+	if(input[pos] == terminator)
 	{
 		//FIXME: MOD COMPATIBILITY: Too many of these right now, re-enable later
 		//if (comma)
-			//error("Extra comma found!", true);
+		//error("Extra comma found!", true);
 		return true;
 	}
 
-	if (!comma)
+	if(!comma)
 		error("Comma expected!", true);
 
 	return true;
 }
 
-bool JsonParser::extractFloat(JsonNode &node)
+bool JsonParser::extractFloat(JsonNode & node)
 {
 	assert(input[pos] == '-' || (input[pos] >= '0' && input[pos] <= '9'));
-	bool negative=false;
-	double result=0;
+	bool negative = false;
+	double result = 0;
 	si64 integerPart = 0;
 	bool isFloat = false;
 
-	if (input[pos] == '-')
+	if(input[pos] == '-')
 	{
 		pos++;
 		negative = true;
 	}
 
-	if (input[pos] < '0' || input[pos] > '9')
+	if(input[pos] < '0' || input[pos] > '9')
 		return error("Number expected!");
 
 	//Extract integer part
-	while (input[pos] >= '0' && input[pos] <= '9')
+	while(input[pos] >= '0' && input[pos] <= '9')
 	{
-		integerPart = integerPart*10+(input[pos]-'0');
+		integerPart = integerPart * 10 + (input[pos] - '0');
 		pos++;
 	}
 
 	result = integerPart;
 
-	if (input[pos] == '.')
+	if(input[pos] == '.')
 	{
 		//extract fractional part
 		isFloat = true;
 		pos++;
 		double fractMult = 0.1;
-		if (input[pos] < '0' || input[pos] > '9')
+		if(input[pos] < '0' || input[pos] > '9')
 			return error("Decimal part expected!");
 
-		while (input[pos] >= '0' && input[pos] <= '9')
+		while(input[pos] >= '0' && input[pos] <= '9')
 		{
-			result = result + fractMult*(input[pos]-'0');
+			result = result + fractMult * (input[pos] - '0');
 			fractMult /= 10;
 			pos++;
 		}
@@ -517,12 +549,12 @@ bool JsonParser::extractFloat(JsonNode &node)
 			pos++;
 		}
 
-		if (input[pos] < '0' || input[pos] > '9')
+		if(input[pos] < '0' || input[pos] > '9')
 			return error("Exponential part expected!");
 
-		while (input[pos] >= '0' && input[pos] <= '9')
+		while(input[pos] >= '0' && input[pos] <= '9')
 		{
-			power = power*10 + (input[pos]-'0');
+			power = power * 10 + (input[pos] - '0');
 			pos++;
 		}
 
@@ -552,13 +584,13 @@ bool JsonParser::extractFloat(JsonNode &node)
 	return true;
 }
 
-bool JsonParser::error(const std::string &message, bool warning)
+bool JsonParser::error(const std::string & message, bool warning)
 {
 	std::ostringstream stream;
-	std::string type(warning?" warning: ":" error: ");
+	std::string type(warning ? " warning: " : " error: ");
 
-	stream << "At line " << lineCount << ", position "<<pos-lineStart
-		   << type << message <<"\n";
+	stream << "At line " << lineCount << ", position " << pos - lineStart
+	<< type << message << "\n";
 	errors += stream.str();
 
 	return warning;
@@ -570,12 +602,12 @@ bool JsonParser::error(const std::string &message, bool warning)
 
 static const std::unordered_map<std::string, JsonNode::JsonType> stringToType =
 {
-	{"null",   JsonNode::DATA_NULL},
+	{"null", JsonNode::DATA_NULL},
 	{"boolean", JsonNode::DATA_BOOL},
 	{"number", JsonNode::DATA_FLOAT},
-	{"string",  JsonNode::DATA_STRING},
-	{"array",  JsonNode::DATA_VECTOR},
-	{"object",  JsonNode::DATA_STRUCT}
+	{"string", JsonNode::DATA_STRING},
+	{"array", JsonNode::DATA_VECTOR},
+	{"object", JsonNode::DATA_STRUCT}
 };
 
 namespace
@@ -584,7 +616,7 @@ namespace
 	{
 		std::string emptyCheck(Validation::ValidationData &, const JsonNode &, const JsonNode &, const JsonNode &)
 		{
-			// check is not needed - e.g. incorporated into another check
+			//check is not needed - e.g. incorporated into another check
 			return "";
 		}
 
@@ -593,8 +625,7 @@ namespace
 			return "Not implemented entry in schema";
 		}
 
-		std::string schemaListCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data,
-									std::string errorMsg, std::function<bool(size_t)> isValid)
+		std::string schemaListCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data, std::string errorMsg, std::function<bool(size_t)> isValid)
 		{
 			std::string errors = "<tested schemas>\n";
 			size_t result = 0;
@@ -602,7 +633,7 @@ namespace
 			for(auto & schemaEntry : schema.Vector())
 			{
 				std::string error = check(schemaEntry, data, validator);
-				if (error.empty())
+				if(error.empty())
 				{
 					result++;
 				}
@@ -612,7 +643,7 @@ namespace
 					errors += "<end of schema>\n";
 				}
 			}
-			if (isValid(result))
+			if(isValid(result))
 				return "";
 			else
 				return validator.makeErrorMessage(errorMsg) + errors;
@@ -644,7 +675,7 @@ namespace
 
 		std::string notCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (check(schema, data, validator).empty())
+			if(check(schema, data, validator).empty())
 				return validator.makeErrorMessage("Successful validation against negative check");
 			return "";
 		}
@@ -653,7 +684,7 @@ namespace
 		{
 			for(auto & enumEntry : schema.Vector())
 			{
-				if (data == enumEntry)
+				if(data == enumEntry)
 					return "";
 			}
 			return validator.makeErrorMessage("Key must have one of predefined values");
@@ -684,7 +715,7 @@ namespace
 			std::string URI = schema.String();
 			//node must be validated using schema pointed by this reference and not by data here
 			//Local reference. Turn it into more easy to handle remote ref
-			if (boost::algorithm::starts_with(URI, "#"))
+			if(boost::algorithm::starts_with(URI, "#"))
 				URI = validator.usedSchemas.back() + URI;
 			return check(URI, data, validator);
 		}
@@ -694,10 +725,10 @@ namespace
 			auto formats = Validation::getKnownFormats();
 			std::string errors;
 			auto checker = formats.find(schema.String());
-			if (checker != formats.end())
+			if(checker != formats.end())
 			{
 				std::string result = checker->second(data);
-				if (!result.empty())
+				if(!result.empty())
 					errors += validator.makeErrorMessage(result);
 			}
 			else
@@ -710,14 +741,14 @@ namespace
 	{
 		std::string maxLengthCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (data.String().size() > schema.Float())
+			if(data.String().size() > schema.Float())
 				return validator.makeErrorMessage((boost::format("String is longer than %d symbols") % schema.Float()).str());
 			return "";
 		}
 
 		std::string minLengthCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (data.String().size() < schema.Float())
+			if(data.String().size() < schema.Float())
 				return validator.makeErrorMessage((boost::format("String is shorter than %d symbols") % schema.Float()).str());
 			return "";
 		}
@@ -725,17 +756,16 @@ namespace
 
 	namespace Number
 	{
-
 		std::string maximumCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (baseSchema["exclusiveMaximum"].Bool())
+			if(baseSchema["exclusiveMaximum"].Bool())
 			{
-				if (data.Float() >= schema.Float())
+				if(data.Float() >= schema.Float())
 					return validator.makeErrorMessage((boost::format("Value is bigger than %d") % schema.Float()).str());
 			}
 			else
 			{
-				if (data.Float() >  schema.Float())
+				if(data.Float() > schema.Float())
 					return validator.makeErrorMessage((boost::format("Value is bigger than %d") % schema.Float()).str());
 			}
 			return "";
@@ -743,14 +773,14 @@ namespace
 
 		std::string minimumCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (baseSchema["exclusiveMinimum"].Bool())
+			if(baseSchema["exclusiveMinimum"].Bool())
 			{
-				if (data.Float() <= schema.Float())
+				if(data.Float() <= schema.Float())
 					return validator.makeErrorMessage((boost::format("Value is smaller than %d") % schema.Float()).str());
 			}
 			else
 			{
-				if (data.Float() <  schema.Float())
+				if(data.Float() < schema.Float())
 					return validator.makeErrorMessage((boost::format("Value is smaller than %d") % schema.Float()).str());
 			}
 			return "";
@@ -759,7 +789,7 @@ namespace
 		std::string multipleOfCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
 			double result = data.Float() / schema.Float();
-			if (floor(result) != result)
+			if(floor(result) != result)
 				return validator.makeErrorMessage((boost::format("Value is not divisible by %d") % schema.Float()).str());
 			return "";
 		}
@@ -776,7 +806,7 @@ namespace
 				validator.currentPath.pop_back();
 			});
 
-			if (!schema.isNull())
+			if(!schema.isNull())
 				return check(schema, items[index], validator);
 			return "";
 		}
@@ -784,11 +814,11 @@ namespace
 		std::string itemsCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
 			std::string errors;
-			for (size_t i=0; i<data.Vector().size(); i++)
+			for(size_t i = 0; i < data.Vector().size(); i++)
 			{
-				if (schema.getType() == JsonNode::DATA_VECTOR)
+				if(schema.getType() == JsonNode::DATA_VECTOR)
 				{
-					if (schema.Vector().size() > i)
+					if(schema.Vector().size() > i)
 						errors += itemEntryCheck(validator, data.Vector(), schema.Vector()[i], i);
 				}
 				else
@@ -802,16 +832,16 @@ namespace
 		std::string additionalItemsCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
 			std::string errors;
-			// "items" is struct or empty (defaults to empty struct) - validation always successful
+			//"items" is struct or empty (defaults to empty struct) - validation always successful
 			const JsonNode & items = baseSchema["items"];
-			if (items.getType() != JsonNode::DATA_VECTOR)
+			if(items.getType() != JsonNode::DATA_VECTOR)
 				return "";
 
-			for (size_t i=items.Vector().size(); i<data.Vector().size(); i++)
+			for(size_t i = items.Vector().size(); i < data.Vector().size(); i++)
 			{
-				if (schema.getType() == JsonNode::DATA_STRUCT)
+				if(schema.getType() == JsonNode::DATA_STRUCT)
 					errors += itemEntryCheck(validator, data.Vector(), schema, i);
-				else if (!schema.isNull() && schema.Bool() == false)
+				else if(!schema.isNull() && schema.Bool() == false)
 					errors += validator.makeErrorMessage("Unknown entry found");
 			}
 			return errors;
@@ -819,28 +849,28 @@ namespace
 
 		std::string minItemsCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (data.Vector().size() < schema.Float())
+			if(data.Vector().size() < schema.Float())
 				return validator.makeErrorMessage((boost::format("Length is smaller than %d") % schema.Float()).str());
 			return "";
 		}
 
 		std::string maxItemsCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (data.Vector().size() > schema.Float())
+			if(data.Vector().size() > schema.Float())
 				return validator.makeErrorMessage((boost::format("Length is bigger than %d") % schema.Float()).str());
 			return "";
 		}
 
 		std::string uniqueItemsCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (schema.Bool())
+			if(schema.Bool())
 			{
-				for (auto itA = schema.Vector().begin(); itA != schema.Vector().end(); itA++)
+				for(auto itA = schema.Vector().begin(); itA != schema.Vector().end(); itA++)
 				{
 					auto itB = itA;
-					while (++itB != schema.Vector().end())
+					while(++itB != schema.Vector().end())
 					{
-						if (*itA == *itB)
+						if(*itA == *itB)
 							return validator.makeErrorMessage("List must consist from unique items");
 					}
 				}
@@ -853,26 +883,26 @@ namespace
 	{
 		std::string maxPropertiesCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (data.Struct().size() > schema.Float())
+			if(data.Struct().size() > schema.Float())
 				return validator.makeErrorMessage((boost::format("Number of entries is bigger than %d") % schema.Float()).str());
 			return "";
 		}
 
 		std::string minPropertiesCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			if (data.Struct().size() < schema.Float())
+			if(data.Struct().size() < schema.Float())
 				return validator.makeErrorMessage((boost::format("Number of entries is less than %d") % schema.Float()).str());
 			return "";
 		}
 
 		std::string uniquePropertiesCheck(Validation::ValidationData & validator, const JsonNode & baseSchema, const JsonNode & schema, const JsonNode & data)
 		{
-			for (auto itA = data.Struct().begin(); itA != data.Struct().end(); itA++)
+			for(auto itA = data.Struct().begin(); itA != data.Struct().end(); itA++)
 			{
 				auto itB = itA;
-				while (++itB != data.Struct().end())
+				while(++itB != data.Struct().end())
 				{
-					if (itA->second == itB->second)
+					if(itA->second == itB->second)
 						return validator.makeErrorMessage("List must consist from unique items");
 				}
 			}
@@ -884,7 +914,7 @@ namespace
 			std::string errors;
 			for(auto & required : schema.Vector())
 			{
-				if (data[required.String()].isNull())
+				if(data[required.String()].isNull())
 					errors += validator.makeErrorMessage("Required entry " + required.String() + " is missing");
 			}
 			return errors;
@@ -895,20 +925,20 @@ namespace
 			std::string errors;
 			for(auto & deps : schema.Struct())
 			{
-				if (!data[deps.first].isNull())
+				if(!data[deps.first].isNull())
 				{
-					if (deps.second.getType() == JsonNode::DATA_VECTOR)
+					if(deps.second.getType() == JsonNode::DATA_VECTOR)
 					{
 						JsonVector depList = deps.second.Vector();
 						for(auto & depEntry : depList)
 						{
-							if (data[depEntry.String()].isNull())
+							if(data[depEntry.String()].isNull())
 								errors += validator.makeErrorMessage("Property " + depEntry.String() + " required for " + deps.first + " is missing");
 						}
 					}
 					else
 					{
-						if (!check(deps.second, data, validator).empty())
+						if(!check(deps.second, data, validator).empty())
 							errors += validator.makeErrorMessage("Requirements for " + deps.first + " are not fulfilled");
 					}
 				}
@@ -916,7 +946,7 @@ namespace
 			return errors;
 		}
 
-		std::string propertyEntryCheck(Validation::ValidationData & validator, const JsonNode &node, const JsonNode & schema, std::string nodeName)
+		std::string propertyEntryCheck(Validation::ValidationData & validator, const JsonNode & node, const JsonNode & schema, std::string nodeName)
 		{
 			validator.currentPath.push_back(JsonNode());
 			validator.currentPath.back().String() = nodeName;
@@ -925,8 +955,8 @@ namespace
 				validator.currentPath.pop_back();
 			});
 
-			// there is schema specifically for this item
-			if (!schema.isNull())
+			//there is schema specifically for this item
+			if(!schema.isNull())
 				return check(schema, node, validator);
 			return "";
 		}
@@ -945,14 +975,14 @@ namespace
 			std::string errors;
 			for(auto & entry : data.Struct())
 			{
-				if (baseSchema["properties"].Struct().count(entry.first) == 0)
+				if(baseSchema["properties"].Struct().count(entry.first) == 0)
 				{
-					// try generic additionalItems schema
-					if (schema.getType() == JsonNode::DATA_STRUCT)
+					//try generic additionalItems schema
+					if(schema.getType() == JsonNode::DATA_STRUCT)
 						errors += propertyEntryCheck(validator, entry.second, schema, entry.first);
 
-					// or, additionalItems field can be bool which indicates if such items are allowed
-					else if (!schema.isNull() && schema.Bool() == false) // present and set to false - error
+					//or, additionalItems field can be bool which indicates if such items are allowed
+					else if(!schema.isNull() && schema.Bool() == false) //present and set to false - error
 						errors += validator.makeErrorMessage("Unknown entry found: " + entry.first);
 				}
 			}
@@ -965,25 +995,25 @@ namespace
 		bool testFilePresence(std::string scope, ResourceID resource)
 		{
 			std::set<std::string> allowedScopes;
-			if (scope != "core" && scope != "") // all real mods may have dependencies
+			if(scope != "core" && scope != "") //all real mods may have dependencies
 			{
 				//NOTE: recursive dependencies are not allowed at the moment - update code if this changes
 				allowedScopes = VLC->modh->getModData(scope).dependencies;
-				allowedScopes.insert("core"); // all mods can use H3 files
+				allowedScopes.insert("core"); //all mods can use H3 files
 			}
-			allowedScopes.insert(scope); // mods can use their own files
+			allowedScopes.insert(scope); //mods can use their own files
 
-			for (auto & entry : allowedScopes)
+			for(auto & entry : allowedScopes)
 			{
-				if (CResourceHandler::get(entry)->existsResource(resource))
+				if(CResourceHandler::get(entry)->existsResource(resource))
 					return true;
 			}
 			return false;
 		}
 
 		#define TEST_FILE(scope, prefix, file, type) \
-			if (testFilePresence(scope, ResourceID(prefix + file, type))) \
-				return ""
+	if(testFilePresence(scope, ResourceID(prefix + file, type))) \
+		return ""
 
 		std::string testAnimation(std::string path, std::string scope)
 		{
@@ -1025,7 +1055,7 @@ namespace
 		{
 			TEST_FILE(node.meta, "Data/", node.String(), EResType::IMAGE);
 			TEST_FILE(node.meta, "Sprites/", node.String(), EResType::IMAGE);
-			if (node.String().find(':') != std::string::npos)
+			if(node.String().find(':') != std::string::npos)
 				return testAnimation(node.String().substr(0, node.String().find(':')), node.meta);
 			return "Image file \"" + node.String() + "\" was not found";
 		}
@@ -1043,16 +1073,16 @@ namespace
 	{
 		Validation::TValidatorMap ret;
 
-		ret["format"] =  Common::formatCheck;
+		ret["format"] = Common::formatCheck;
 		ret["allOf"] = Common::allOfCheck;
 		ret["anyOf"] = Common::anyOfCheck;
 		ret["oneOf"] = Common::oneOfCheck;
-		ret["enum"]  = Common::enumCheck;
-		ret["type"]  = Common::typeCheck;
-		ret["not"]   = Common::notCheck;
-		ret["$ref"]  = Common::refCheck;
+		ret["enum"] = Common::enumCheck;
+		ret["type"] = Common::typeCheck;
+		ret["not"] = Common::notCheck;
+		ret["$ref"] = Common::refCheck;
 
-		// fields that don't need implementation
+		//fields that don't need implementation
 		ret["title"] = Common::emptyCheck;
 		ret["$schema"] = Common::emptyCheck;
 		ret["default"] = Common::emptyCheck;
@@ -1074,8 +1104,8 @@ namespace
 	Validation::TValidatorMap createNumberFields()
 	{
 		Validation::TValidatorMap ret = createCommonFields();
-		ret["maximum"]    = Number::maximumCheck;
-		ret["minimum"]    = Number::minimumCheck;
+		ret["maximum"] = Number::maximumCheck;
+		ret["minimum"] = Number::minimumCheck;
 		ret["multipleOf"] = Number::multipleOfCheck;
 
 		ret["exclusiveMaximum"] = Common::emptyCheck;
@@ -1086,10 +1116,10 @@ namespace
 	Validation::TValidatorMap createVectorFields()
 	{
 		Validation::TValidatorMap ret = createCommonFields();
-		ret["items"]           = Vector::itemsCheck;
-		ret["minItems"]        = Vector::minItemsCheck;
-		ret["maxItems"]        = Vector::maxItemsCheck;
-		ret["uniqueItems"]     = Vector::uniqueItemsCheck;
+		ret["items"] = Vector::itemsCheck;
+		ret["minItems"] = Vector::minItemsCheck;
+		ret["maxItems"] = Vector::maxItemsCheck;
+		ret["uniqueItems"] = Vector::uniqueItemsCheck;
 		ret["additionalItems"] = Vector::additionalItemsCheck;
 		return ret;
 	}
@@ -1097,13 +1127,13 @@ namespace
 	Validation::TValidatorMap createStructFields()
 	{
 		Validation::TValidatorMap ret = createCommonFields();
-		ret["additionalProperties"]  = Struct::additionalPropertiesCheck;
-		ret["uniqueProperties"]      = Struct::uniquePropertiesCheck;
-		ret["maxProperties"]         = Struct::maxPropertiesCheck;
-		ret["minProperties"]         = Struct::minPropertiesCheck;
-		ret["dependencies"]          = Struct::dependenciesCheck;
-		ret["properties"]            = Struct::propertiesCheck;
-		ret["required"]              = Struct::requiredCheck;
+		ret["additionalProperties"] = Struct::additionalPropertiesCheck;
+		ret["uniqueProperties"] = Struct::uniquePropertiesCheck;
+		ret["maxProperties"] = Struct::maxPropertiesCheck;
+		ret["minProperties"] = Struct::minPropertiesCheck;
+		ret["dependencies"] = Struct::dependenciesCheck;
+		ret["properties"] = Struct::propertiesCheck;
+		ret["required"] = Struct::requiredCheck;
 
 		ret["patternProperties"] = Common::notImplementedCheck;
 		return ret;
@@ -1112,13 +1142,13 @@ namespace
 	Validation::TFormatMap createFormatMap()
 	{
 		Validation::TFormatMap ret;
-		ret["textFile"]      = Formats::textFile;
-		ret["musicFile"]     = Formats::musicFile;
-		ret["soundFile"]     = Formats::soundFile;
-		ret["defFile"]       = Formats::defFile;
+		ret["textFile"] = Formats::textFile;
+		ret["musicFile"] = Formats::musicFile;
+		ret["soundFile"] = Formats::soundFile;
+		ret["defFile"] = Formats::defFile;
 		ret["animationFile"] = Formats::animationFile;
-		ret["imageFile"]     = Formats::imageFile;
-		ret["videoFile"]     = Formats::videoFile;
+		ret["imageFile"] = Formats::imageFile;
+		ret["videoFile"] = Formats::videoFile;
 
 		return ret;
 	}
@@ -1126,16 +1156,16 @@ namespace
 
 namespace Validation
 {
-	std::string ValidationData::makeErrorMessage(const std::string &message)
+	std::string ValidationData::makeErrorMessage(const std::string & message)
 	{
 		std::string errors;
 		errors += "At ";
-		if (!currentPath.empty())
+		if(!currentPath.empty())
 		{
-			for(const JsonNode &path : currentPath)
+			for(const JsonNode & path : currentPath)
 			{
 				errors += "/";
-				if (path.getType() == JsonNode::DATA_STRING)
+				if(path.getType() == JsonNode::DATA_STRING)
 					errors += path.String();
 				else
 					errors += boost::lexical_cast<std::string>(static_cast<unsigned>(path.Float()));
@@ -1170,10 +1200,10 @@ namespace Validation
 		for(auto & entry : schema.Struct())
 		{
 			auto checker = knownFields.find(entry.first);
-			if (checker != knownFields.end())
+			if(checker != knownFields.end())
 				errors += checker->second(validator, schema, entry.second, data);
 			//else
-			//	errors += validator.makeErrorMessage("Unknown entry in schema " + entry.first);
+			//errors += validator.makeErrorMessage("Unknown entry in schema " + entry.first);
 		}
 		return errors;
 	}
@@ -1186,15 +1216,19 @@ namespace Validation
 		static const TValidatorMap vectorFields = createVectorFields();
 		static const TValidatorMap structFields = createStructFields();
 
-		switch (type)
+		switch(type)
 		{
-			case JsonNode::DATA_FLOAT:
-			case JsonNode::DATA_INTEGER:
-				return numberFields;
-			case JsonNode::DATA_STRING: return stringFields;
-			case JsonNode::DATA_VECTOR: return vectorFields;
-			case JsonNode::DATA_STRUCT: return structFields;
-			default: return commonFields;
+		case JsonNode::DATA_FLOAT:
+		case JsonNode::DATA_INTEGER:
+			return numberFields;
+		case JsonNode::DATA_STRING:
+			return stringFields;
+		case JsonNode::DATA_VECTOR:
+			return vectorFields;
+		case JsonNode::DATA_STRUCT:
+			return structFields;
+		default:
+			return commonFields;
 		}
 	}
 
@@ -1203,5 +1237,4 @@ namespace Validation
 		static TFormatMap knownFormats = createFormatMap();
 		return knownFormats;
 	}
-
-} // Validation namespace
+} //Validation namespace

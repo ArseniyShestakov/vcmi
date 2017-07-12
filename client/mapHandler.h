@@ -49,7 +49,6 @@ enum class EWorldViewIcon
 	RES_CRYSTAL,
 	RES_GEM,
 	RES_GOLD,
-
 };
 
 enum class EMapObjectFadingType
@@ -62,16 +61,16 @@ enum class EMapObjectFadingType
 enum class EMapAnimRedrawStatus
 {
 	OK,
-	REDRAW_REQUESTED // map blitter requests quick redraw due to current animation
+	REDRAW_REQUESTED //map blitter requests quick redraw due to current animation
 };
 
 struct TerrainTileObject
 {
-	const CGObjectInstance *obj;
+	const CGObjectInstance * obj;
 	SDL_Rect rect;
 	int fadeAnimKey;
 
-	TerrainTileObject(const CGObjectInstance *obj_, SDL_Rect rect_);
+	TerrainTileObject(const CGObjectInstance * obj_, SDL_Rect rect_);
 	~TerrainTileObject();
 };
 
@@ -83,62 +82,69 @@ struct TerrainTile2
 struct MapDrawingInfo
 {
 	bool scaled;
-	int3 &topTile; // top-left tile in viewport [in tiles]
-	const std::vector< std::vector< std::vector<ui8> > > * visibilityMap;
-	SDL_Rect * drawBounds; // map rect drawing bounds on screen
-	std::shared_ptr<CAnimation> icons; // holds overlay icons for world view mode
-	float scale; // map scale for world view mode (only if scaled == true)
+	int3 & topTile; //top-left tile in viewport [in tiles]
+	const std::vector<std::vector<std::vector<ui8>>> * visibilityMap;
+	SDL_Rect * drawBounds; //map rect drawing bounds on screen
+	std::shared_ptr<CAnimation> icons; //holds overlay icons for world view mode
+	float scale; //map scale for world view mode (only if scaled == true)
 
 	bool otherheroAnim;
 	ui8 anim;
 	ui8 heroAnim;
 
-	int3 movement; // used for smooth map movement
+	int3 movement; //used for smooth map movement
 
 	bool puzzleMode;
-	int3 grailPos; // location of grail for puzzle mode [in tiles]
+	int3 grailPos; //location of grail for puzzle mode [in tiles]
 
 	const std::vector<ObjectPosInfo> * additionalIcons;
 
 	bool showAllTerrain; //for expert viewEarth
 
-	MapDrawingInfo(int3 &topTile_, const std::vector< std::vector< std::vector<ui8> > > * visibilityMap_, SDL_Rect * drawBounds_, std::shared_ptr<CAnimation> icons_ = nullptr)
-		: scaled(false),
-		  topTile(topTile_),
-		  visibilityMap(visibilityMap_),
-		  drawBounds(drawBounds_),
-		  icons(icons_),
-		  scale(1.0f),
-		  otherheroAnim(false),
-		  anim(0u),
-		  heroAnim(0u),
-		  movement(int3()),
-		  puzzleMode(false),
-		  grailPos(int3()),
-		  additionalIcons(nullptr),
-		  showAllTerrain(false)
-	{}
+	MapDrawingInfo(int3 & topTile_, const std::vector<std::vector<std::vector<ui8>>> * visibilityMap_, SDL_Rect * drawBounds_, std::shared_ptr<CAnimation> icons_ = nullptr) :
+		scaled(false),
+		topTile(topTile_),
+		visibilityMap(visibilityMap_),
+		drawBounds(drawBounds_),
+		icons(icons_),
+		scale(1.0f),
+		otherheroAnim(false),
+		anim(0u),
+		heroAnim(0u),
+		movement(int3()),
+		puzzleMode(false),
+		grailPos(int3()),
+		additionalIcons(nullptr),
+		showAllTerrain(false)
+	{
+	}
 
-	ui8 getHeroAnim() const { return otherheroAnim ? anim : heroAnim; }
+	ui8 getHeroAnim() const
+	{
+		return otherheroAnim ? anim : heroAnim;
+	}
 };
 
 
-template <typename T> class PseudoV
+template<typename T> class PseudoV
 {
 public:
-	PseudoV() : offset(0) { }
+	PseudoV() :
+		offset(0)
+	{
+	}
 	inline T & operator[](const int & n)
 	{
-		return inver[n+offset];
+		return inver[n + offset];
 	}
 	inline const T & operator[](const int & n) const
 	{
-		return inver[n+offset];
+		return inver[n + offset];
 	}
 	void resize(int rest, int before, int after)
 	{
 		inver.resize(before + rest + after);
-		offset=before;
+		offset = before;
 	}
 	int size() const
 	{
@@ -149,19 +155,29 @@ private:
 	int offset;
 	std::vector<T> inver;
 };
+
 class CMapHandler
 {
 	enum class EMapCacheType : ui8
 	{
-		TERRAIN, OBJECTS, ROADS, RIVERS, FOW, HEROES, HERO_FLAGS, FRAME, AFTER_LAST
+		TERRAIN,
+		OBJECTS,
+		ROADS,
+		RIVERS,
+		FOW,
+		HEROES,
+		HERO_FLAGS,
+		FRAME,
+		AFTER_LAST
 	};
 
 	/// temporarily caches rescaled frames for map world view redrawing
 	class CMapCache
 	{
-		std::array< std::map<intptr_t, std::unique_ptr<IImage>>, (ui8)EMapCacheType::AFTER_LAST> data;
+		std::array<std::map<intptr_t, std::unique_ptr<IImage>>, (ui8)EMapCacheType::AFTER_LAST> data;
 		float worldViewCachedScale;
-	public:
+
+public:
 		CMapCache();
 		/// destroys all cached data (frees surfaces)
 		void discardWorldViewCache();
@@ -174,37 +190,38 @@ class CMapHandler
 	/// helper struct to pass around resolved bitmaps of an object; images can be nullptr if object doesn't have bitmap of that type
 	struct AnimBitmapHolder
 	{
-		IImage * objBitmap; // main object bitmap
-		IImage * flagBitmap; // flag bitmap for the object (probably only for heroes and boats with heroes)
-		bool isMoving; // indicates if the object is moving (again, heroes/boats only)
+		IImage * objBitmap; //main object bitmap
+		IImage * flagBitmap; //flag bitmap for the object (probably only for heroes and boats with heroes)
+		bool isMoving; //indicates if the object is moving (again, heroes/boats only)
 
-		AnimBitmapHolder(IImage * objBitmap_ = nullptr, IImage * flagBitmap_ = nullptr, bool moving = false)
-			: objBitmap(objBitmap_),
-			  flagBitmap(flagBitmap_),
-			  isMoving(moving)
-		{}
+		AnimBitmapHolder(IImage * objBitmap_ = nullptr, IImage * flagBitmap_ = nullptr, bool moving = false) :
+			objBitmap(objBitmap_),
+			flagBitmap(flagBitmap_),
+			isMoving(moving)
+		{
+		}
 	};
 
 	class CMapBlitter
 	{
-	protected:
+protected:
 		const int FRAMES_PER_MOVE_ANIM_GROUP = 8;
-		CMapHandler * parent; // ptr to enclosing map handler; generally for legacy reasons, probably could/should be refactored out of here
-		int tileSize; // size of a tile drawn on map [in pixels]
-		int halfTileSizeCeil; // half of the tile size, rounded up
-		int3 tileCount; // number of tiles in current viewport
-		int3 topTile; // top-left tile of the viewport
-		int3 initPos; // starting drawing position [in pixels]
-		int3 pos; // current position [in tiles]
-		int3 realPos; // current position [in pixels]
-		Rect realTileRect; // default rect based on current pos: [realPos.x, realPos.y, tileSize, tileSize]
-		Rect defaultTileRect; // default rect based on 0: [0, 0, tileSize, tileSize]
-		const MapDrawingInfo * info; // data for drawing passed from outside
+		CMapHandler * parent; //ptr to enclosing map handler; generally for legacy reasons, probably could/should be refactored out of here
+		int tileSize; //size of a tile drawn on map [in pixels]
+		int halfTileSizeCeil; //half of the tile size, rounded up
+		int3 tileCount; //number of tiles in current viewport
+		int3 topTile; //top-left tile of the viewport
+		int3 initPos; //starting drawing position [in pixels]
+		int3 pos; //current position [in tiles]
+		int3 realPos; //current position [in pixels]
+		Rect realTileRect; //default rect based on current pos: [realPos.x, realPos.y, tileSize, tileSize]
+		Rect defaultTileRect; //default rect based on 0: [0, 0, tileSize, tileSize]
+		const MapDrawingInfo * info; //data for drawing passed from outside
 
 		/// general drawing method, called internally by more specialized ones
 		virtual void drawElement(EMapCacheType cacheType, const IImage * source, SDL_Rect * sourceRect, SDL_Surface * targetSurf, SDL_Rect * destRect) const = 0;
 
-		// first drawing pass
+		//first drawing pass
 
 		/// draws terrain bitmap (or custom bitmap if applicable) on current tile
 		virtual void drawTileTerrain(SDL_Surface * targetSurf, const TerrainTile & tinfo, const TerrainTile2 & tile) const;
@@ -217,7 +234,7 @@ class CMapHandler
 		virtual void drawObject(SDL_Surface * targetSurf, const IImage * source, SDL_Rect * sourceRect, bool moving) const;
 		virtual void drawHeroFlag(SDL_Surface * targetSurf, const IImage * source, SDL_Rect * sourceRect, SDL_Rect * destRect, bool moving) const;
 
-		// second drawing pass
+		//second drawing pass
 
 		/// current tile: draws overlay over the map, used to draw world view icons
 		virtual void drawTileOverlay(SDL_Surface * targetSurf, const TerrainTile2 & tile) const = 0;
@@ -228,12 +245,14 @@ class CMapHandler
 		/// draws additional icons (for VIEW_AIR, VIEW_EARTH spells atm)
 		virtual void drawOverlayEx(SDL_Surface * targetSurf);
 
-		// third drawing pass
+		//third drawing pass
 
 		/// custom post-processing, if needed (used by puzzle view)
-		virtual void postProcessing(SDL_Surface * targetSurf) const {}
+		virtual void postProcessing(SDL_Surface * targetSurf) const
+		{
+		}
 
-		// misc methods
+		//misc methods
 
 		/// initializes frame-drawing (called at the start of every redraw)
 		virtual void init(const MapDrawingInfo * drawingInfo) = 0;
@@ -241,12 +260,12 @@ class CMapHandler
 		virtual SDL_Rect clip(SDL_Surface * targetSurf) const = 0;
 
 		virtual ui8 getHeroFrameGroup(ui8 dir, bool isMoving) const;
-		virtual ui8 getPhaseShift(const CGObjectInstance *object) const;
+		virtual ui8 getPhaseShift(const CGObjectInstance * object) const;
 
 		virtual bool canDrawObject(const CGObjectInstance * obj) const;
 		virtual bool canDrawCurrentTile() const;
 
-		// internal helper methods to choose correct bitmap(s) for object; called internally by findObjectBitmap
+		//internal helper methods to choose correct bitmap(s) for object; called internally by findObjectBitmap
 		AnimBitmapHolder findHeroBitmap(const CGHeroInstance * hero, int anim) const;
 		AnimBitmapHolder findBoatBitmap(const CGBoat * hero, int anim) const;
 		IImage * findFlagBitmap(const CGHeroInstance * obj, int anim, const PlayerColor * color, int group) const;
@@ -254,7 +273,7 @@ class CMapHandler
 		IImage * findBoatFlagBitmap(const CGBoat * obj, int anim, const PlayerColor * color, int group, ui8 dir) const;
 		IImage * findFlagBitmapInternal(std::shared_ptr<CAnimation> animation, int anim, int group, ui8 dir, bool moving) const;
 
-	public:
+public:
 		CMapBlitter(CMapHandler * p);
 		virtual ~CMapBlitter();
 		void blit(SDL_Surface * targetSurf, const MapDrawingInfo * info);
@@ -264,34 +283,48 @@ class CMapHandler
 
 	class CMapNormalBlitter : public CMapBlitter
 	{
-	protected:
+protected:
 		void drawElement(EMapCacheType cacheType, const IImage * source, SDL_Rect * sourceRect, SDL_Surface * targetSurf, SDL_Rect * destRect) const override;
-		void drawTileOverlay(SDL_Surface * targetSurf,const TerrainTile2 & tile) const override {}
+		void drawTileOverlay(SDL_Surface * targetSurf, const TerrainTile2 & tile) const override
+		{
+		}
 		void init(const MapDrawingInfo * info) override;
 		SDL_Rect clip(SDL_Surface * targetSurf) const override;
-	public:
+
+public:
 		CMapNormalBlitter(CMapHandler * parent);
-		virtual ~CMapNormalBlitter(){}
+		virtual ~CMapNormalBlitter()
+		{
+		}
 	};
 
 	class CMapWorldViewBlitter : public CMapBlitter
 	{
-	private:
+private:
 		IImage * objectToIcon(Obj id, si32 subId, PlayerColor owner) const;
-	protected:
+
+protected:
 		void drawElement(EMapCacheType cacheType, const IImage * source, SDL_Rect * sourceRect, SDL_Surface * targetSurf, SDL_Rect * destRect) const override;
 		void drawTileOverlay(SDL_Surface * targetSurf, const TerrainTile2 & tile) const override;
 		void drawHeroFlag(SDL_Surface * targetSurf, const IImage * source, SDL_Rect * sourceRect, SDL_Rect * destRect, bool moving) const override;
 		void drawObject(SDL_Surface * targetSurf, const IImage * source, SDL_Rect * sourceRect, bool moving) const override;
-		void drawFrame(SDL_Surface * targetSurf) const override {}
+		void drawFrame(SDL_Surface * targetSurf) const override
+		{
+		}
 		void drawOverlayEx(SDL_Surface * targetSurf) override;
 		void init(const MapDrawingInfo * info) override;
 		SDL_Rect clip(SDL_Surface * targetSurf) const override;
-		ui8 getPhaseShift(const CGObjectInstance *object) const override { return 0u; }
+		ui8 getPhaseShift(const CGObjectInstance * object) const override
+		{
+			return 0u;
+		}
 		void calculateWorldViewCameraPos();
-	public:
+
+public:
 		CMapWorldViewBlitter(CMapHandler * parent);
-		virtual ~CMapWorldViewBlitter(){}
+		virtual ~CMapWorldViewBlitter()
+		{
+		}
 	};
 
 	class CMapPuzzleViewBlitter : public CMapNormalBlitter
@@ -299,11 +332,17 @@ class CMapHandler
 		std::vector<int> unblittableObjects;
 
 		void drawObjects(SDL_Surface * targetSurf, const TerrainTile2 & tile) const override;
-		void drawFow(SDL_Surface * targetSurf) const override {} // skipping FoW in puzzle view
+		void drawFow(SDL_Surface * targetSurf) const override
+		{
+		} //skipping FoW in puzzle view
 		void postProcessing(SDL_Surface * targetSurf) const override;
 		bool canDrawObject(const CGObjectInstance * obj) const override;
-		bool canDrawCurrentTile() const override { return true; }
-	public:
+		bool canDrawCurrentTile() const override
+		{
+			return true;
+		}
+
+public:
 		CMapPuzzleViewBlitter(CMapHandler * parent);
 	};
 
@@ -312,7 +351,7 @@ class CMapHandler
 	CMapBlitter * worldViewBlitter;
 	CMapBlitter * puzzleViewBlitter;
 
-	std::map<int, std::pair<int3, CFadeAnimation*>> fadeAnims;
+	std::map<int, std::pair<int3, CFadeAnimation *>> fadeAnims;
 	int fadeAnimCounter;
 
 	CMapBlitter * resolveBlitter(const MapDrawingInfo * info) const;
@@ -323,23 +362,24 @@ class CMapHandler
 	void initBorderGraphics();
 	void initTerrainGraphics();
 	void prepareFOWDefs();
+
 public:
-	PseudoV< PseudoV< PseudoV<TerrainTile2> > > ttiles; //informations about map tiles
+	PseudoV<PseudoV<PseudoV<TerrainTile2>>> ttiles; //informations about map tiles
 	int3 sizes; //map size (x = width, y = height, z = number of levels)
 	const CMap * map;
 
-	// Max number of tiles that will fit in the map screen. Tiles
-	// can be partial on each edges.
+	//Max number of tiles that will fit in the map screen. Tiles
+	//can be partial on each edges.
 	int tilesW;
 	int tilesH;
 
-	// size of each side of the frame around the whole map, in tiles
+	//size of each side of the frame around the whole map, in tiles
 	int frameH;
 	int frameW;
 
-	// Coord in pixels of the top left corner of the top left tile to
-	// draw. Values range is [-31..0]. A negative value
-	// implies that part of the tile won't be displayed.
+	//Coord in pixels of the top left corner of the top left tile to
+	//draw. Values range is [-31..0]. A negative value
+	//implies that part of the tile won't be displayed.
 	int offsetX;
 	int offsetY;
 
@@ -347,34 +387,34 @@ public:
 
 	//FIXME: unique_ptr should be enough, but fails to compile in MSVS 2013
 	typedef std::vector<std::array<std::shared_ptr<CAnimation>, 4>> TFlippedAnimations; //[type, rotation]
-	typedef std::vector<std::vector<std::array<IImage *, 4>>> TFlippedCache;//[type, view type, rotation]
+	typedef std::vector<std::vector<std::array<IImage *, 4>>> TFlippedCache; //[type, view type, rotation]
 
-	TFlippedAnimations terrainAnimations;//[terrain type, rotation]
-	TFlippedCache terrainImages;//[terrain type, view type, rotation]
+	TFlippedAnimations terrainAnimations; //[terrain type, rotation]
+	TFlippedCache terrainImages; //[terrain type, view type, rotation]
 
-	TFlippedAnimations roadAnimations;//[road type, rotation]
-	TFlippedCache roadImages;//[road type, view type, rotation]
+	TFlippedAnimations roadAnimations; //[road type, rotation]
+	TFlippedCache roadImages; //[road type, view type, rotation]
 
-	TFlippedAnimations riverAnimations;//[river type, rotation]
-	TFlippedCache riverImages;//[river type, view type, rotation]
+	TFlippedAnimations riverAnimations; //[river type, rotation]
+	TFlippedCache riverImages; //[river type, view type, rotation]
 
 	//Fog of War cache (not owned)
 	std::vector<const IImage *> FoWfullHide;
-	std::vector<std::vector<std::vector<ui8> > > hideBitmap; //frame indexes (in FoWfullHide) of graphic that should be used to fully hide a tile
+	std::vector<std::vector<std::vector<ui8>>> hideBitmap; //frame indexes (in FoWfullHide) of graphic that should be used to fully hide a tile
 
 	std::vector<const IImage *> FoWpartialHide;
 
 	//edge graphics
 	std::unique_ptr<CAnimation> egdeAnimation;
-	std::vector<const IImage *> egdeImages;//cache of links to egdeAnimation (for faster access)
-	PseudoV< PseudoV< PseudoV <ui8> > > edgeFrames; //frame indexes (in egdeImages) of tile outside of map
+	std::vector<const IImage *> egdeImages; //cache of links to egdeAnimation (for faster access)
+	PseudoV<PseudoV<PseudoV<ui8>>> edgeFrames; //frame indexes (in egdeImages) of tile outside of map
 
-	mutable std::map<const CGObjectInstance*, ui8> animationPhase;
+	mutable std::map<const CGObjectInstance *, ui8> animationPhase;
 
 	CMapHandler(); //c-tor
 	~CMapHandler(); //d-tor
 
-	void getTerrainDescr(const int3 &pos, std::string & out, bool terName); //if tername == false => empty string when tile is clear
+	void getTerrainDescr(const int3 & pos, std::string & out, bool terName); //if tername == false => empty string when tile is clear
 	bool printObject(const CGObjectInstance * obj, bool fadein = false); //puts appropriate things to tiles, so obj will be visible on map
 	bool hideObject(const CGObjectInstance * obj, bool fadeout = false); //removes appropriate things from ttiles, so obj will be no longer visible on map (but still will exist)
 	void init();

@@ -37,7 +37,8 @@ class CSpellWindow : public CWindowObject
 		CAnimImage * image;
 		IImage * schoolBorder;
 		CLabel * name, * level, * cost;
-	public:
+
+public:
 		SpellArea(SDL_Rect pos, CSpellWindow * owner);
 		~SpellArea();
 		void setSpell(const CSpell * spell);
@@ -48,19 +49,20 @@ class CSpellWindow : public CWindowObject
 		void showAll(SDL_Surface * to) override;
 	};
 
-	class InteractiveArea : public CIntObject
+	class InteractiveArea :	public CIntObject
 	{
 		std::function<void()> onLeft;
 		CSpellWindow * owner;
 
 		std::string hoverText;
 		std::string helpText;
-	public:
+
+public:
 		void clickLeft(tribool down, bool previousState) override;
 		void clickRight(tribool down, bool previousState) override;
 		void hover(bool on) override;
 
-		InteractiveArea(const SDL_Rect & myRect, std::function<void()> funcL, int helpTextId, CSpellWindow * _owner);//c-tor
+		InteractiveArea(const SDL_Rect & myRect, std::function<void()> funcL, int helpTextId, CSpellWindow * _owner); //c-tor
 	};
 
 	CPicture * leftCorner, * rightCorner;
@@ -69,7 +71,7 @@ class CSpellWindow : public CWindowObject
 
 	CAnimImage * spellTab; //school select
 	CAnimImage * schools; //schools' pictures
-	std::array< std::shared_ptr<CAnimation>, 4> schoolBorders; //schools' 'borders': [0]: air, [1]: fire, [2]: water, [3]: earth
+	std::array<std::shared_ptr<CAnimation>, 4> schoolBorders; //schools' 'borders': [0]: air, [1]: fire, [2]: water, [3]: earth
 
 	SpellArea * spellAreas[12];
 	CLabel * mana;
@@ -79,7 +81,7 @@ class CSpellWindow : public CWindowObject
 	int sitesPerTabBattle[5];
 
 	bool battleSpellsOnly; //if true, only battle spells are displayed; if false, only adventure map spells are displayed
-	Uint8 selectedTab; // 0 - air magic, 1 - fire magic, 2 - water magic, 3 - earth magic, 4 - all schools
+	Uint8 selectedTab; //0 - air magic, 1 - fire magic, 2 - water magic, 3 - earth magic, 4 - all schools
 	int currentPage; //changes when corners are clicked
 	std::vector<const CSpell *> mySpells; //all spels in this spellbook
 

@@ -14,10 +14,9 @@
 
 #include "../JsonNode.h"
 
-JsonSerializer::JsonSerializer(const IInstanceResolver * instanceResolver_, JsonNode & root_):
+JsonSerializer::JsonSerializer(const IInstanceResolver * instanceResolver_, JsonNode & root_) :
 	JsonSerializeFormat(instanceResolver_, root_, true)
 {
-
 }
 
 void JsonSerializer::serializeInternal(const std::string & fieldName, boost::logic::tribool & value)
@@ -63,9 +62,9 @@ void JsonSerializer::serializeInternal(const std::string & fieldName, std::vecto
 
 	for(const si32 rawId : value)
 	{
-        JsonNode jsonElement(JsonNode::DATA_STRING);
-        jsonElement.String() = encoder(rawId);
-        data.push_back(std::move(jsonElement));
+		JsonNode jsonElement(JsonNode::DATA_STRING);
+		jsonElement.String() = encoder(rawId);
+		data.push_back(std::move(jsonElement));
 	}
 }
 

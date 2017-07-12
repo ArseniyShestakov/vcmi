@@ -1,4 +1,3 @@
-
 /*
  * CRmgTemplate.cpp, part of VCMI engine
  *
@@ -15,9 +14,9 @@
 #include "CRmgTemplateZone.h"
 #include "../mapping/CMap.h"
 
-CRmgTemplateZoneConnection::CRmgTemplateZoneConnection() : zoneA(nullptr), zoneB(nullptr), guardStrength(0)
+CRmgTemplateZoneConnection::CRmgTemplateZoneConnection() :
+	zoneA(nullptr), zoneB(nullptr), guardStrength(0)
 {
-
 }
 
 CRmgTemplateZone * CRmgTemplateZoneConnection::getZoneA() const
@@ -47,16 +46,18 @@ int CRmgTemplateZoneConnection::getGuardStrength() const
 
 void CRmgTemplateZoneConnection::setGuardStrength(int value)
 {
-	if(value < 0) throw std::runtime_error("Negative value for guard strength not allowed.");
+	if(value < 0)
+		throw std::runtime_error("Negative value for guard strength not allowed.");
 	guardStrength = value;
 }
 
-CRmgTemplate::CSize::CSize() : width(CMapHeader::MAP_SIZE_MIDDLE), height(CMapHeader::MAP_SIZE_MIDDLE), under(true)
+CRmgTemplate::CSize::CSize() :
+	width(CMapHeader::MAP_SIZE_MIDDLE), height(CMapHeader::MAP_SIZE_MIDDLE), under(true)
 {
-
 }
 
-CRmgTemplate::CSize::CSize(int width, int height, bool under) : under(under)
+CRmgTemplate::CSize::CSize(int width, int height, bool under) :
+	under(under)
 {
 	setWidth(width);
 	setHeight(height);
@@ -69,7 +70,8 @@ int CRmgTemplate::CSize::getWidth() const
 
 void CRmgTemplate::CSize::setWidth(int value)
 {
-	if(value <= 0) throw std::runtime_error("Width > 0 failed.");
+	if(value <= 0)
+		throw std::runtime_error("Width > 0 failed.");
 	width = value;
 }
 
@@ -80,7 +82,8 @@ int CRmgTemplate::CSize::getHeight() const
 
 void CRmgTemplate::CSize::setHeight(int value)
 {
-	if(value <= 0) throw std::runtime_error("Height > 0 failed.");
+	if(value <= 0)
+		throw std::runtime_error("Height > 0 failed.");
 	height = value;
 }
 
@@ -128,12 +131,12 @@ bool CRmgTemplate::CSize::operator>=(const CSize & value) const
 
 CRmgTemplate::CRmgTemplate()
 {
-
 }
 
 CRmgTemplate::~CRmgTemplate()
 {
-	for (auto & pair : zones) delete pair.second;
+	for(auto & pair : zones)
+		delete pair.second;
 }
 
 const std::string & CRmgTemplate::getName() const
@@ -225,7 +228,8 @@ bool CRmgTemplate::CPlayerCountRange::isInRange(int count) const
 {
 	for(const auto & pair : range)
 	{
-		if(count >= pair.first && count <= pair.second) return true;
+		if(count >= pair.first && count <= pair.second)
+			return true;
 	}
 	return false;
 }
@@ -235,7 +239,8 @@ std::set<int> CRmgTemplate::CPlayerCountRange::getNumbers() const
 	std::set<int> numbers;
 	for(const auto & pair : range)
 	{
-		for(int i = pair.first; i <= pair.second; ++i) numbers.insert(i);
+		for(int i = pair.first; i <= pair.second; ++i)
+			numbers.insert(i);
 	}
 	return numbers;
 }

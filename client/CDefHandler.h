@@ -22,8 +22,8 @@ struct Cimage
 	SDL_Surface * bitmap;
 };
 
-// Def entry in file. Integer fields are all little endian and will
-// need to be converted.
+//Def entry in file. Integer fields are all little endian and will
+//need to be converted.
 struct SDefEntryBlock
 {
 	ui32 unknown1;
@@ -33,8 +33,8 @@ struct SDefEntryBlock
 	ui8 data[0];
 } PACKED_STRUCT;
 
-// Def entry in file. Integer fields are all little endian and will
-// need to be converted.
+//Def entry in file. Integer fields are all little endian and will
+//need to be converted.
 struct SDefEntry
 {
 	ui32 DEFType;
@@ -42,19 +42,20 @@ struct SDefEntry
 	ui32 height;
 	ui32 totalBlocks;
 
-	struct {
+	struct
+	{
 		ui8 R;
 		ui8 G;
 		ui8 B;
 	} palette[256];
 
-	// SDefEntry is followed by a series of SDefEntryBlock
-	// This is commented out because VC++ doesn't accept C99 syntax.
+	//SDefEntry is followed by a series of SDefEntryBlock
+	//This is commented out because VC++ doesn't accept C99 syntax.
 	//struct SDefEntryBlock blocks[];
 } PACKED_STRUCT;
 
-// Def entry in file. Integer fields are all little endian and will
-// need to be converted.
+//Def entry in file. Integer fields are all little endian and will
+//need to be converted.
 struct SSpriteDef
 {
 	ui32 prSize;
@@ -83,11 +84,12 @@ private:
 		std::string name;
 		int offset;
 		int group;
-	} ;
-	std::vector<SEntry> SEntries ;
-	
-	void openFromMemory(ui8 * table, const std::string & name);	
-	SDL_Surface * getSprite (int SIndex, const ui8 * FDef, const SDL_Color * palette) const;
+	};
+	std::vector<SEntry> SEntries;
+
+	void openFromMemory(ui8 * table, const std::string & name);
+	SDL_Surface * getSprite(int SIndex, const ui8 * FDef, const SDL_Color * palette) const;
+
 public:
 	int width, height; //width and height
 	std::string defName;
@@ -96,7 +98,7 @@ public:
 
 	CDefHandler(); //c-tor
 	~CDefHandler(); //d-tor
-	
+
 	CDefEssential * essentialize();
 
 	static CDefHandler * giveDef(const std::string & defName);

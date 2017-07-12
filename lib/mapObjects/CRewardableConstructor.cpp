@@ -17,11 +17,12 @@
  *
  */
 
-namespace {
+namespace
+{
 	MetaString loadMessage(const JsonNode & value)
 	{
 		MetaString ret;
-		if (value.isNumber())
+		if(value.isNumber())
 			ret.addTxt(MetaString::ADVOB_TXT, value.Float());
 		else
 			ret << value.String();
@@ -30,9 +31,9 @@ namespace {
 
 	bool testForKey(const JsonNode & value, const std::string & key)
 	{
-		for( auto & reward : value["rewards"].Vector() )
+		for(auto & reward : value["rewards"].Vector())
 		{
-			if (!reward[key].isNull())
+			if(!reward[key].isNull())
 				return true;
 		}
 		return false;
@@ -48,33 +49,33 @@ void CRandomRewardObjectInfo::configureObject(CRewardableObject * object, CRando
 {
 	std::map<si32, si32> thrownDice;
 
-	for (const JsonNode & reward : parameters["rewards"].Vector())
+	for(const JsonNode & reward : parameters["rewards"].Vector())
 	{
-		if (!reward["appearChance"].isNull())
+		if(!reward["appearChance"].isNull())
 		{
 			JsonNode chance = reward["appearChance"];
 			si32 diceID = chance["dice"].Float();
 
-			if (thrownDice.count(diceID) == 0)
+			if(thrownDice.count(diceID) == 0)
 				thrownDice[diceID] = rng.getIntRange(1, 100)();
 
-			if (!chance["min"].isNull())
+			if(!chance["min"].isNull())
 			{
 				int min = chance["min"].Float();
-				if (min > thrownDice[diceID])
+				if(min > thrownDice[diceID])
 					continue;
 			}
-			if (!chance["max"].isNull())
+			if(!chance["max"].isNull())
 			{
 				int max = chance["max"].Float();
-				if (max < thrownDice[diceID])
+				if(max < thrownDice[diceID])
 					continue;
 			}
 		}
 
 		const JsonNode & limiter = reward["limiter"];
 		CVisitInfo info;
-		// load limiter
+		//load limiter
 		info.limiter.numOfGrants = JsonRandom::loadValue(limiter["numOfGrants"], rng);
 		info.limiter.dayOfWeek = JsonRandom::loadValue(limiter["dayOfWeek"], rng);
 		info.limiter.minLevel = JsonRandom::loadValue(limiter["minLevel"], rng);
@@ -103,7 +104,7 @@ void CRandomRewardObjectInfo::configureObject(CRewardableObject * object, CRando
 		info.reward.secondary = JsonRandom::loadSecondary(reward["secondary"], rng);
 
 		std::vector<SpellID> spells;
-		for (size_t i=0; i<6; i++)
+		for(size_t i = 0; i < 6; i++)
 			IObjectInterface::cb->getAllowedSpells(spells, i);
 
 		info.reward.artifacts = JsonRandom::loadArtifacts(reward["artifacts"], rng);
@@ -114,15 +115,15 @@ void CRandomRewardObjectInfo::configureObject(CRewardableObject * object, CRando
 		info.selectChance = JsonRandom::loadValue(reward["selectChance"], rng);
 	}
 
-	object->onSelect  = loadMessage(parameters["onSelectMessage"]);
+	object->onSelect = loadMessage(parameters["onSelectMessage"]);
 	object->onVisited = loadMessage(parameters["onVisitedMessage"]);
-	object->onEmpty   = loadMessage(parameters["onEmptyMessage"]);
+	object->onEmpty = loadMessage(parameters["onEmptyMessage"]);
 
 	//TODO: visitMode and selectMode
 
 	object->soundID = parameters["soundID"].Float();
 	object->resetDuration = parameters["resetDuration"].Float();
-	object->canRefuse =parameters["canRefuse"].Bool();
+	object->canRefuse = parameters["canRefuse"].Bool();
 }
 
 bool CRandomRewardObjectInfo::givesResources() const
@@ -195,7 +196,7 @@ CGObjectInstance * CRewardableConstructor::create(const ObjectTemplate & tmpl) c
 
 void CRewardableConstructor::configureObject(CGObjectInstance * object, CRandomGenerator & rng) const
 {
-	objectInfo.configureObject(dynamic_cast<CRewardableObject*>(object), rng);
+	objectInfo.configureObject(dynamic_cast<CRewardableObject *>(object), rng);
 }
 
 std::unique_ptr<IObjectInfo> CRewardableConstructor::getObjectInfo(const ObjectTemplate & tmpl) const

@@ -2,7 +2,8 @@
 #include <QMainWindow>
 #include <QStringList>
 
-namespace Ui {
+namespace Ui
+{
 	class MainWindow;
 }
 
@@ -11,12 +12,14 @@ class QTableWidgetItem;
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
+
 private:
-	Ui::MainWindow *ui;
+	Ui::MainWindow * ui;
 	void load();
 	void startExecutable(QString name);
+
 public:
-	explicit MainWindow(const QStringList& displayList, QWidget *parent = 0);
+	explicit MainWindow(const QStringList & displayList, QWidget * parent = 0);
 	~MainWindow();
 
 private slots:

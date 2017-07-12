@@ -37,20 +37,22 @@ CPathfinder::PathfinderOptions::PathfinderOptions()
 	originalMovementRules = settings["pathfinder"]["originalMovementRules"].Bool();
 }
 
-CPathfinder::CPathfinder(CPathsInfo & _out, CGameState * _gs, const CGHeroInstance * _hero)
-	: CGameInfoCallback(_gs, boost::optional<PlayerColor>()), out(_out), hero(_hero), FoW(getPlayerTeam(hero->tempOwner)->fogOfWarMap), patrolTiles({})
+CPathfinder::CPathfinder(CPathsInfo & _out, CGameState * _gs, const CGHeroInstance * _hero) :
+	CGameInfoCallback(_gs, boost::optional<PlayerColor>()), out(_out), hero(_hero), FoW(getPlayerTeam(hero->tempOwner)->fogOfWarMap), patrolTiles(
+{
+})
 {
 	assert(hero);
 	assert(hero == getHero(hero->id));
 
-    cp = dp = nullptr;
-    ct = dt = nullptr;
-    ctObj = dtObj = nullptr;
-    destAction = CGPathNode::UNKNOWN;
+	cp = dp = nullptr;
+	ct = dt = nullptr;
+	ctObj = dtObj = nullptr;
+	destAction = CGPathNode::UNKNOWN;
 
 	out.hero = hero;
 	out.hpos = hero->getPosition(false);
-	if(!isInTheMap(out.hpos)/* || !gs->map->isInTheMap(dest)*/) //check input
+	if(!isInTheMap(out.hpos) /* || !gs->map->isInTheMap(dest)*/) //check input
 	{
 		logGlobal->errorStream() << "CGameState::calculatePaths: Hero outside the gs->map? How dare you...";
 		throw std::runtime_error("Wrong checksum");
@@ -67,34 +69,34 @@ CPathfinder::CPathfinder(CPathsInfo & _out, CGameState * _gs, const CGHeroInstan
 void CPathfinder::calculatePaths()
 {
 	auto passOneTurnLimitCheck = [&]() -> bool
-	{
-		if(!options.oneTurnSpecialLayersLimit)
-			return true;
-
-		if(cp->layer == ELayer::WATER)
-			return false;
-		if(cp->layer == ELayer::AIR)
 		{
-			if(options.originalMovementRules && cp->accessible == CGPathNode::ACCESSIBLE)
+			if(!options.oneTurnSpecialLayersLimit)
 				return true;
-			else
-				return false;
-		}
 
-		return true;
-	};
+			if(cp->layer == ELayer::WATER)
+				return false;
+			if(cp->layer == ELayer::AIR)
+			{
+				if(options.originalMovementRules && cp->accessible == CGPathNode::ACCESSIBLE)
+					return true;
+				else
+					return false;
+			}
+
+			return true;
+		};
 
 	auto isBetterWay = [&](int remains, int turn) -> bool
-	{
-		if(dp->turns == 0xff) //we haven't been here before
-			return true;
-		else if(dp->turns > turn)
-			return true;
-		else if(dp->turns >= turn && dp->moveRemains < remains) //this route is faster
-			return true;
+		{
+			if(dp->turns == 0xff) //we haven't been here before
+				return true;
+			else if(dp->turns > turn)
+				return true;
+			else if(dp->turns >= turn && dp->moveRemains < remains) //this route is faster
+				return true;
 
-		return false;
-	};
+			return false;
+		};
 
 	//logGlobal->infoStream() << boost::format("Calculating paths for hero %s (adress  %d) of player %d") % hero->name % hero % hero->tempOwner;
 
@@ -176,8 +178,7 @@ void CPathfinder::calculatePaths()
 					cost = moveAtNextTile - remains;
 				}
 
-				if(isBetterWay(remains, turnAtNextTile) &&
-					((cp->turns == turnAtNextTile && remains) || passOneTurnLimitCheck()))
+				if(isBetterWay(remains, turnAtNextTile) && ((cp->turns == turnAtNextTile && remains) || passOneTurnLimitCheck()))
 				{
 					assert(dp != cp->theNodeBefore); //two tiles can't point to each other
 					dp->moveRemains = remains;
@@ -228,7 +229,7 @@ void CPathfinder::addNeighbours()
 	CPathfinderHelper::getNeighbours(gs->map, *ct, cp->coord, neighbourTiles, boost::logic::indeterminate, cp->layer == ELayer::SAIL);
 	if(isSourceVisitableObj())
 	{
-		for(int3 tile: neighbourTiles)
+		for(int3 tile : neighbourTiles)
 		{
 			if(canMoveBetween(tile, ctObj->visitablePos()))
 				neighbours.push_back(tile);
@@ -266,17 +267,14 @@ void CPathfinder::addTeleportExits()
 		}
 	}
 
-	if(options.useCastleGate
-		&& (ctObj->ID == Obj::TOWN && ctObj->subID == ETownType::INFERNO
-		&& getPlayerRelations(hero->tempOwner, ctObj->tempOwner) != PlayerRelations::ENEMIES))
+	if(options.useCastleGate && (ctObj->ID == Obj::TOWN && ctObj->subID == ETownType::INFERNO && getPlayerRelations(hero->tempOwner, ctObj->tempOwner) != PlayerRelations::ENEMIES))
 	{
 		/// TODO: Find way to reuse CPlayerSpecificInfoCallback::getTownsInfo
 		/// This may be handy if we allow to use teleportation to friendly towns
 		auto towns = getPlayer(hero->tempOwner)->towns;
 		for(const auto & town : towns)
 		{
-			if(town->id != ctObj->id && town->visitingHero == nullptr
-				&& town->hasBuilt(BuildingID::CASTLE_GATE, ETownType::INFERNO))
+			if(town->id != ctObj->id && town->visitingHero == nullptr && town->hasBuilt(BuildingID::CASTLE_GATE, ETownType::INFERNO))
 			{
 				neighbours.push_back(town->visitablePos());
 			}
@@ -362,8 +360,7 @@ bool CPathfinder::isLayerTransitionPossible() const
 
 	case ELayer::SAIL:
 		//tile must be accessible -> exception: unblocked blockvis tiles -> clear but guarded by nearby monster coast
-		if((dp->accessible != CGPathNode::ACCESSIBLE && (dp->accessible != CGPathNode::BLOCKVIS || dt->blocked))
-			|| dt->visitable)  //TODO: passableness problem -> town says it's passable (thus accessible) but we obviously can't disembark onto town gate
+		if((dp->accessible != CGPathNode::ACCESSIBLE && (dp->accessible != CGPathNode::BLOCKVIS || dt->blocked)) || dt->visitable) //TODO: passableness problem -> town says it's passable (thus accessible) but we obviously can't disembark onto town gate
 		{
 			return false;
 		}
@@ -373,15 +370,12 @@ bool CPathfinder::isLayerTransitionPossible() const
 	case ELayer::AIR:
 		if(options.originalMovementRules)
 		{
-			if((cp->accessible != CGPathNode::ACCESSIBLE &&
-				cp->accessible != CGPathNode::VISITABLE) &&
-				(dp->accessible != CGPathNode::VISITABLE &&
-				 dp->accessible != CGPathNode::ACCESSIBLE))
+			if((cp->accessible != CGPathNode::ACCESSIBLE &&	cp->accessible != CGPathNode::VISITABLE) && (dp->accessible != CGPathNode::VISITABLE && dp->accessible != CGPathNode::ACCESSIBLE))
 			{
 				return false;
 			}
 		}
-		else if(cp->accessible != CGPathNode::ACCESSIBLE &&	dp->accessible != CGPathNode::ACCESSIBLE)
+		else if(cp->accessible != CGPathNode::ACCESSIBLE && dp->accessible != CGPathNode::ACCESSIBLE)
 		{
 			/// Hero that fly can only land on accessible tiles
 			return false;
@@ -415,8 +409,7 @@ bool CPathfinder::isMovementToDestPossible() const
 			return false;
 		if(isSourceGuarded())
 		{
-			if(!(options.originalMovementRules && cp->layer == ELayer::AIR) &&
-				!isDestinationGuardian()) // Can step into tile of guard
+			if(!(options.originalMovementRules && cp->layer == ELayer::AIR) && !isDestinationGuardian()) //Can step into tile of guard
 			{
 				return false;
 			}
@@ -429,7 +422,7 @@ bool CPathfinder::isMovementToDestPossible() const
 			return false;
 		if(isSourceGuarded())
 		{
-			// Hero embarked a boat standing on a guarded tile -> we must allow to move away from that tile
+			//Hero embarked a boat standing on a guarded tile -> we must allow to move away from that tile
 			if(cp->action != CGPathNode::EMBARK && !isDestinationGuardian())
 				return false;
 		}
@@ -522,12 +515,12 @@ CGPathNode::ENodeAction CPathfinder::getDestAction() const
 	case ELayer::LAND:
 		if(cp->layer == ELayer::SAIL)
 		{
-			// TODO: Handle dismebark into guarded areaa
+			//TODO: Handle dismebark into guarded areaa
 			action = CGPathNode::DISEMBARK;
 			break;
 		}
 
-		/// don't break - next case shared for both land and sail layers
+	/// don't break - next case shared for both land and sail layers
 
 	case ELayer::SAIL:
 		if(isDestVisitableObj())
@@ -641,8 +634,7 @@ bool CPathfinder::isDestinationGuarded(const bool ignoreAccessibility) const
 {
 	/// isDestinationGuarded is exception needed for garrisons.
 	/// When monster standing behind garrison it's visitable and guarded at the same time.
-	if(gs->guardingCreaturePosition(dp->coord).valid()
-		&& (ignoreAccessibility || dp->accessible == CGPathNode::BLOCKVIS))
+	if(gs->guardingCreaturePosition(dp->coord).valid() && (ignoreAccessibility || dp->accessible == CGPathNode::BLOCKVIS))
 	{
 		return true;
 	}
@@ -675,18 +667,18 @@ void CPathfinder::initializePatrol()
 void CPathfinder::initializeGraph()
 {
 	auto updateNode = [&](int3 pos, ELayer layer, const TerrainTile * tinfo)
-	{
-		auto node = out.getNode(pos, layer);
-		auto accessibility = evaluateAccessibility(pos, tinfo, layer);
-		node->update(pos, layer, accessibility);
-	};
+		{
+			auto node = out.getNode(pos, layer);
+			auto accessibility = evaluateAccessibility(pos, tinfo, layer);
+			node->update(pos, layer, accessibility);
+		};
 
 	int3 pos;
-	for(pos.x=0; pos.x < out.sizes.x; ++pos.x)
+	for(pos.x = 0; pos.x < out.sizes.x; ++pos.x)
 	{
-		for(pos.y=0; pos.y < out.sizes.y; ++pos.y)
+		for(pos.y = 0; pos.y < out.sizes.y; ++pos.y)
 		{
-			for(pos.z=0; pos.z < out.sizes.z; ++pos.z)
+			for(pos.z = 0; pos.z < out.sizes.z; ++pos.z)
 			{
 				const TerrainTile * tinfo = &gs->map->getTile(pos);
 				switch(tinfo->terType)
@@ -753,7 +745,7 @@ CGPathNode::EAccessibility CPathfinder::evaluateAccessibility(const int3 & pos, 
 		}
 		else if(gs->guardingCreaturePosition(pos).valid())
 		{
-			// Monster close by; blocked visit for battle
+			//Monster close by; blocked visit for battle
 			return CGPathNode::BLOCKVIS;
 		}
 
@@ -847,7 +839,7 @@ TurnInfo::BonusCache::BonusCache(TBonusListPtr bl)
 	for(int i = 0; i < ETerrainType::ROCK; i++)
 	{
 		noTerrainPenalty.push_back(static_cast<bool>(
-				bl->getFirst(Selector::type(Bonus::NO_TERRAIN_PENALTY).And(Selector::subtype(i)))));
+						   bl->getFirst(Selector::type(Bonus::NO_TERRAIN_PENALTY).And(Selector::subtype(i)))));
 	}
 
 	freeShipBoarding = static_cast<bool>(bl->getFirst(Selector::type(Bonus::FREE_SHIP_BOARDING)));
@@ -857,8 +849,8 @@ TurnInfo::BonusCache::BonusCache(TBonusListPtr bl)
 	waterWalkingVal = bl->valOfBonuses(Selector::type(Bonus::WATER_WALKING));
 }
 
-TurnInfo::TurnInfo(const CGHeroInstance * Hero, const int turn)
-	: hero(Hero), maxMovePointsLand(-1), maxMovePointsWater(-1)
+TurnInfo::TurnInfo(const CGHeroInstance * Hero, const int turn) :
+	hero(Hero), maxMovePointsLand(-1), maxMovePointsWater(-1)
 {
 	std::stringstream cachingStr;
 	cachingStr << "days_" << turn;
@@ -903,7 +895,7 @@ bool TurnInfo::hasBonusOfType(Bonus::BonusType type, int subtype) const
 	}
 
 	return static_cast<bool>(
-			bonuses->getFirst(Selector::type(type).And(Selector::subtype(subtype))));
+		bonuses->getFirst(Selector::type(type).And(Selector::subtype(subtype))));
 }
 
 int TurnInfo::valOfBonuses(Bonus::BonusType type, int subtype) const
@@ -929,8 +921,8 @@ int TurnInfo::getMaxMovePoints(const EPathfindingLayer layer) const
 	return layer == EPathfindingLayer::SAIL ? maxMovePointsWater : maxMovePointsLand;
 }
 
-CPathfinderHelper::CPathfinderHelper(const CGHeroInstance * Hero, const CPathfinder::PathfinderOptions & Options)
-	: turn(-1), hero(Hero), options(Options)
+CPathfinderHelper::CPathfinderHelper(const CGHeroInstance * Hero, const CPathfinder::PathfinderOptions & Options) :
+	turn(-1), hero(Hero), options(Options)
 {
 	turnsInfo.reserve(16);
 	updateTurnInfo();
@@ -992,10 +984,11 @@ int CPathfinderHelper::getMaxMovePoints(const EPathfindingLayer layer) const
 
 void CPathfinderHelper::getNeighbours(const CMap * map, const TerrainTile & srct, const int3 & tile, std::vector<int3> & vec, const boost::logic::tribool & onLand, const bool limitCoastSailing)
 {
-	static const int3 dirs[] = {
-		int3(-1, +1, +0),	int3(0, +1, +0),	int3(+1, +1, +0),
-		int3(-1, +0, +0),	/* source pos */	int3(+1, +0, +0),
-		int3(-1, -1, +0),	int3(0, -1, +0),	int3(+1, -1, +0)
+	static const int3 dirs[] =
+	{
+		int3(-1, +1, +0), int3(0, +1, +0), int3(+1, +1, +0),
+		int3(-1, +0, +0), /* source pos */ int3(+1, +0, +0),
+		int3(-1, -1, +0), int3(0, -1, +0), int3(+1, -1, +0)
 	};
 
 	for(auto & dir : dirs)
@@ -1008,17 +1001,17 @@ void CPathfinderHelper::getNeighbours(const CMap * map, const TerrainTile & srct
 		if(hlpt.terType == ETerrainType::ROCK)
 			continue;
 
-// 		//we cannot visit things from blocked tiles
-// 		if(srct.blocked && !srct.visitable && hlpt.visitable && srct.blockingObjects.front()->ID != HEROI_TYPE)
-// 		{
-// 			continue;
-// 		}
+////we cannot visit things from blocked tiles
+//if(srct.blocked && !srct.visitable && hlpt.visitable && srct.blockingObjects.front()->ID != HEROI_TYPE)
+//{
+//continue;
+//}
 
 		/// Following condition let us avoid diagonal movement over coast when sailing
 		if(srct.terType == ETerrainType::WATER && limitCoastSailing && hlpt.terType == ETerrainType::WATER && dir.x && dir.y) //diagonal move through water
 		{
 			int3 hlp1 = tile,
-				hlp2 = tile;
+			     hlp2 = tile;
 			hlp1.x += dir.x;
 			hlp2.y += dir.y;
 
@@ -1089,8 +1082,8 @@ int CPathfinderHelper::getMovementCost(const CGHeroInstance * h, const int3 & sr
 
 	/// TODO: This part need rework in order to work properly with flying and water walking
 	/// Currently it's only work properly for normal movement or sailing
-	int left = remainingMovePoints-ret;
-	if(checkLast && left > 0 && remainingMovePoints-ret < 250) //it might be the last tile - if no further move possible we take all move points
+	int left = remainingMovePoints - ret;
+	if(checkLast && left > 0 && remainingMovePoints - ret < 250) //it might be the last tile - if no further move possible we take all move points
 	{
 		std::vector<int3> vec;
 		vec.reserve(8); //optimization
@@ -1120,8 +1113,8 @@ int CPathfinderHelper::getMovementCost(const CGHeroInstance * h, const int3 & ds
 	return getMovementCost(h, h->visitablePos(), dst, nullptr, nullptr, h->movement);
 }
 
-CGPathNode::CGPathNode()
-	: coord(int3(-1, -1, -1)), layer(ELayer::WRONG)
+CGPathNode::CGPathNode() :
+	coord(int3(-1, -1, -1)), layer(ELayer::WRONG)
 {
 	reset();
 }
@@ -1156,7 +1149,7 @@ bool CGPathNode::reachable() const
 
 int3 CGPath::startPos() const
 {
-	return nodes[nodes.size()-1].coord;
+	return nodes[nodes.size() - 1].coord;
 }
 
 int3 CGPath::endPos() const
@@ -1166,17 +1159,17 @@ int3 CGPath::endPos() const
 
 void CGPath::convert(ui8 mode)
 {
-	if(mode==0)
+	if(mode == 0)
 	{
 		for(auto & elem : nodes)
 		{
-			elem.coord = CGHeroInstance::convertPosition(elem.coord,true);
+			elem.coord = CGHeroInstance::convertPosition(elem.coord, true);
 		}
 	}
 }
 
-CPathsInfo::CPathsInfo(const int3 & Sizes)
-	: sizes(Sizes)
+CPathsInfo::CPathsInfo(const int3 & Sizes) :
+	sizes(Sizes)
 {
 	hero = nullptr;
 	nodes.resize(boost::extents[sizes.x][sizes.y][sizes.z][ELayer::NUM_LAYERS]);
@@ -1207,7 +1200,7 @@ bool CPathsInfo::getPath(CGPath & out, const int3 & dst) const
 
 	while(curnode)
 	{
-		const CGPathNode cpn = * curnode;
+		const CGPathNode cpn = *curnode;
 		curnode = curnode->theNodeBefore;
 		out.nodes.push_back(cpn);
 	}

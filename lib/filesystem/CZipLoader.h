@@ -47,7 +47,8 @@ class DLL_LINKAGE CZipLoader : public ISimpleResourceLoader
 
 	std::unordered_map<ResourceID, unz64_file_pos> files;
 
-	std::unordered_map<ResourceID, unz64_file_pos> listFiles(const std::string & mountPoint, const boost::filesystem::path &archive);
+	std::unordered_map<ResourceID, unz64_file_pos> listFiles(const std::string & mountPoint, const boost::filesystem::path & archive);
+
 public:
 	CZipLoader(const std::string & mountPoint, const boost::filesystem::path & archive, std::shared_ptr<CIOApi> api = std::shared_ptr<CIOApi>(new CDefaultIOApi()));
 
@@ -56,7 +57,9 @@ public:
 	std::unique_ptr<CInputStream> load(const ResourceID & resourceName) const override;
 	bool existsResource(const ResourceID & resourceName) const override;
 	std::string getMountPoint() const override;
-	void updateFilteredFiles(std::function<bool(const std::string &)> filter) const override {}
+	void updateFilteredFiles(std::function<bool(const std::string &)> filter) const override
+	{
+	}
 	std::unordered_set<ResourceID> getFilteredFiles(std::function<bool(const ResourceID &)> filter) const override;
 };
 

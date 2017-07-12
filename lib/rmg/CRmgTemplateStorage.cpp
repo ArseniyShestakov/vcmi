@@ -1,4 +1,3 @@
-
 /*
  * CRmgTemplateStorage.cpp, part of VCMI engine
  *
@@ -38,20 +37,20 @@ void CRmgTemplateStorage::loadObject(std::string scope, std::string name, const 
 	try
 	{
 		const auto & templateNode = data;
-		if (!templateNode["name"].isNull())
+		if(!templateNode["name"].isNull())
 			tpl->setName(templateNode["name"].String()); //name can be customised. Allow duplicated names for different template versions.
 		else
 			tpl->setName(name); //identifier becomes default name
 
-		// Parse main template data
+		//Parse main template data
 		tpl->setMinSize(parseMapTemplateSize(templateNode["minSize"].String()));
 		tpl->setMaxSize(parseMapTemplateSize(templateNode["maxSize"].String()));
 		tpl->setPlayers(parsePlayers(templateNode["players"].String()));
 		tpl->setCpuPlayers(parsePlayers(templateNode["cpu"].String()));
 
-		// Parse zones
+		//Parse zones
 		std::map<TRmgTemplateZoneId, CRmgTemplateZone *> zones;
-		for (const auto & zonePair : templateNode["zones"].Struct())
+		for(const auto & zonePair : templateNode["zones"].Struct())
 		{
 			auto zone = new CRmgTemplateZone();
 			auto zoneId = boost::lexical_cast<TRmgTemplateZoneId>(zonePair.first);
@@ -60,67 +59,68 @@ void CRmgTemplateStorage::loadObject(std::string scope, std::string name, const 
 			const auto & zoneNode = zonePair.second;
 			zone->setType(parseZoneType(zoneNode["type"].String()));
 			zone->setSize(zoneNode["size"].Float());
-			if (!zoneNode["owner"].isNull()) zone->setOwner(zoneNode["owner"].Float());
+			if(!zoneNode["owner"].isNull())
+				zone->setOwner(zoneNode["owner"].Float());
 
 			zone->setPlayerTowns(parseTemplateZoneTowns(zoneNode["playerTowns"]));
 			zone->setNeutralTowns(parseTemplateZoneTowns(zoneNode["neutralTowns"]));
-			if (!zoneNode["matchTerrainToTown"].isNull()) //default : true
+			if(!zoneNode["matchTerrainToTown"].isNull()) //default : true
 				zone->setMatchTerrainToTown(zoneNode["matchTerrainToTown"].Bool());
 			zone->setTerrainTypes(parseTerrainTypes(zoneNode["terrainTypes"].Vector(), zone->getDefaultTerrainTypes()));
 
-			if (!zoneNode["townsAreSameType"].isNull()) //default : false
+			if(!zoneNode["townsAreSameType"].isNull()) //default : false
 				zone->setTownsAreSameType((zoneNode["townsAreSameType"].Bool()));
 
-			for (int i = 0; i < 2; ++i)
+			for(int i = 0; i < 2; ++i)
 			{
 				std::set<TFaction> allowedTownTypes;
-				if (i)
+				if(i)
 				{
-					if (zoneNode["allowedTowns"].isNull())
+					if(zoneNode["allowedTowns"].isNull())
 						allowedTownTypes = zone->getDefaultTownTypes();
 				}
 				else
 				{
-					if (zoneNode["allowedMonsters"].isNull())
+					if(zoneNode["allowedMonsters"].isNull())
 						allowedTownTypes = VLC->townh->getAllowedFactions(false);
 				}
 
-				if (allowedTownTypes.empty())
+				if(allowedTownTypes.empty())
 				{
-					for (const JsonNode & allowedTown : zoneNode[i ? "allowedTowns" : "allowedMonsters"].Vector())
+					for(const JsonNode & allowedTown : zoneNode[i ? "allowedTowns" : "allowedMonsters"].Vector())
 					{
 						//complain if the town type is not present in our game
-						if (auto id = VLC->modh->identifiers.getIdentifier("faction", allowedTown, false))
+						if(auto id = VLC->modh->identifiers.getIdentifier("faction", allowedTown, false))
 							allowedTownTypes.insert(id.get());
 					}
 				}
 
-				if (!zoneNode[i ? "bannedTowns" : "bannedMonsters"].isNull())
+				if(!zoneNode[i ? "bannedTowns" : "bannedMonsters"].isNull())
 				{
-					for (const JsonNode & bannedTown : zoneNode[i ? "bannedTowns" : "bannedMonsters"].Vector())
+					for(const JsonNode & bannedTown : zoneNode[i ? "bannedTowns" : "bannedMonsters"].Vector())
 					{
 						//erase unindentified towns silently
-						if (auto id = VLC->modh->identifiers.getIdentifier("faction", bannedTown, true))
+						if(auto id = VLC->modh->identifiers.getIdentifier("faction", bannedTown, true))
 							vstd::erase_if_present(allowedTownTypes, id.get());
 					}
 				}
-				if (i)
+				if(i)
 					zone->setTownTypes(allowedTownTypes);
 				else
 					zone->setMonsterTypes(allowedTownTypes);
 			}
 
 			const std::string monsterStrength = zoneNode["monsters"].String();
-			if (monsterStrength == "weak")
+			if(monsterStrength == "weak")
 				zone->setMonsterStrength(EMonsterStrength::ZONE_WEAK);
-			else if (monsterStrength == "normal")
+			else if(monsterStrength == "normal")
 				zone->setMonsterStrength(EMonsterStrength::ZONE_NORMAL);
-			else if (monsterStrength == "strong")
+			else if(monsterStrength == "strong")
 				zone->setMonsterStrength(EMonsterStrength::ZONE_STRONG);
 			else
 				throw (rmgException("incorrect monster power"));
 
-			if (!zoneNode["mines"].isNull())
+			if(!zoneNode["mines"].isNull())
 			{
 				auto mines = zoneNode["mines"].Struct();
 				//FIXME: maybe there is a smarter way to parse it already?
@@ -135,10 +135,10 @@ void CRmgTemplateStorage::loadObject(std::string scope, std::string name, const 
 			}
 
 			//treasures
-			if (!zoneNode["treasure"].isNull())
+			if(!zoneNode["treasure"].isNull())
 			{
 				//TODO: parse vector of different treasure settings
-				if (zoneNode["treasure"].getType() == JsonNode::DATA_STRUCT)
+				if(zoneNode["treasure"].getType() == JsonNode::DATA_STRUCT)
 				{
 					auto treasureInfo = zoneNode["treasure"].Struct();
 					{
@@ -149,9 +149,9 @@ void CRmgTemplateStorage::loadObject(std::string scope, std::string name, const 
 						zone->addTreasureInfo(ti);
 					}
 				}
-				else if (zoneNode["treasure"].getType() == JsonNode::DATA_VECTOR)
+				else if(zoneNode["treasure"].getType() == JsonNode::DATA_VECTOR)
 				{
-					for (auto treasureInfo : zoneNode["treasure"].Vector())
+					for(auto treasureInfo : zoneNode["treasure"].Vector())
 					{
 						CTreasureInfo ti;
 						ti.min = treasureInfo["min"].Float();
@@ -166,44 +166,43 @@ void CRmgTemplateStorage::loadObject(std::string scope, std::string name, const 
 		}
 
 		//copy settings from already parsed zones
-		for (const auto & zonePair : templateNode["zones"].Struct())
+		for(const auto & zonePair : templateNode["zones"].Struct())
 		{
 			auto zoneId = boost::lexical_cast<TRmgTemplateZoneId>(zonePair.first);
 			auto zone = zones[zoneId];
 
 			const auto & zoneNode = zonePair.second;
 
-			if (!zoneNode["terrainTypeLikeZone"].isNull())
+			if(!zoneNode["terrainTypeLikeZone"].isNull())
 			{
 				int id = zoneNode["terrainTypeLikeZone"].Float();
 				zone->setTerrainTypes(zones[id]->getTerrainTypes());
 				zone->setMatchTerrainToTown(zones[id]->getMatchTerrainToTown());
 			}
 
-			if (!zoneNode["townTypeLikeZone"].isNull())
-				zone->setTownTypes (zones[zoneNode["townTypeLikeZone"].Float()]->getTownTypes());
+			if(!zoneNode["townTypeLikeZone"].isNull())
+				zone->setTownTypes(zones[zoneNode["townTypeLikeZone"].Float()]->getTownTypes());
 
-			if (!zoneNode["treasureLikeZone"].isNull())
+			if(!zoneNode["treasureLikeZone"].isNull())
 			{
-				for (auto treasureInfo : zones[zoneNode["treasureLikeZone"].Float()]->getTreasureInfo())
+				for(auto treasureInfo : zones[zoneNode["treasureLikeZone"].Float()]->getTreasureInfo())
 				{
 					zone->addTreasureInfo(treasureInfo);
 				}
 			}
 
-			if (!zoneNode["minesLikeZone"].isNull())
+			if(!zoneNode["minesLikeZone"].isNull())
 			{
-				for (auto mineInfo : zones[zoneNode["minesLikeZone"].Float()]->getMinesInfo())
+				for(auto mineInfo : zones[zoneNode["minesLikeZone"].Float()]->getMinesInfo())
 				{
-					zone->setMinesAmount (mineInfo.first, mineInfo.second);
+					zone->setMinesAmount(mineInfo.first, mineInfo.second);
 				}
-
 			}
 		}
 
 		tpl->setZones(zones);
 
-		// Parse connections
+		//Parse connections
 		std::list<CRmgTemplateZoneConnection> connections;
 		for(const auto & connPair : templateNode["connections"].Vector())
 		{
@@ -216,7 +215,7 @@ void CRmgTemplateStorage::loadObject(std::string scope, std::string name, const 
 		tpl->setConnections(connections);
 		{
 			auto zones = tpl->getZones();
-			for (auto con : tpl->getConnections())
+			for(auto con : tpl->getConnections())
 			{
 				auto idA = con.getZoneA()->getId();
 				auto idB = con.getZoneB()->getId();
@@ -236,7 +235,8 @@ void CRmgTemplateStorage::loadObject(std::string scope, std::string name, const 
 CRmgTemplate::CSize CRmgTemplateStorage::parseMapTemplateSize(const std::string & text) const
 {
 	CRmgTemplate::CSize size;
-	if(text.empty()) return size;
+	if(text.empty())
+		return size;
 
 	std::vector<std::string> parts;
 	boost::split(parts, text, boost::is_any_of("+"));
@@ -250,7 +250,7 @@ CRmgTemplate::CSize CRmgTemplateStorage::parseMapTemplateSize(const std::string 
 	auto it = mapSizeMapping.find(parts[0]);
 	if(it == mapSizeMapping.end())
 	{
-		// Map size is given as a number representation
+		//Map size is given as a number representation
 		const std::string numericalRep = parts[0];
 		parts.clear();
 		boost::split(parts, numericalRep, boost::is_any_of("x"));
@@ -278,7 +278,8 @@ ETemplateZoneType::ETemplateZoneType CRmgTemplateStorage::parseZoneType(const st
 		{"junction", ETemplateZoneType::JUNCTION},
 	};
 	auto it = zoneTypeMapping.find(type);
-	if(it == zoneTypeMapping.end()) throw std::runtime_error("Zone type unknown.");
+	if(it == zoneTypeMapping.end())
+		throw std::runtime_error("Zone type unknown.");
 	return it->second;
 }
 
@@ -298,7 +299,8 @@ std::set<TFaction> CRmgTemplateStorage::parseTownTypes(const JsonVector & townTy
 	for(const auto & townTypeNode : townTypesVector)
 	{
 		auto townTypeStr = townTypeNode.String();
-		if(townTypeStr == "all") return defaultTownTypes;
+		if(townTypeStr == "all")
+			return defaultTownTypes;
 
 		bool foundFaction = false;
 		for(auto factionPtr : VLC->townh->factions)
@@ -309,7 +311,8 @@ std::set<TFaction> CRmgTemplateStorage::parseTownTypes(const JsonVector & townTy
 				foundFaction = true;
 			}
 		}
-		if(!foundFaction) throw std::runtime_error("Given faction is invalid.");
+		if(!foundFaction)
+			throw std::runtime_error("Given faction is invalid.");
 	}
 	return townTypes;
 }
@@ -317,15 +320,16 @@ std::set<TFaction> CRmgTemplateStorage::parseTownTypes(const JsonVector & townTy
 std::set<ETerrainType> CRmgTemplateStorage::parseTerrainTypes(const JsonVector & terTypeStrings, const std::set<ETerrainType> & defaultTerrainTypes) const
 {
 	std::set<ETerrainType> terTypes;
-	if (terTypeStrings.empty()) //nothing was specified
+	if(terTypeStrings.empty()) //nothing was specified
 		return defaultTerrainTypes;
 
 	for(const auto & node : terTypeStrings)
 	{
 		const auto & terTypeStr = node.String();
-		if(terTypeStr == "all") return defaultTerrainTypes;
+		if(terTypeStr == "all")
+			return defaultTerrainTypes;
 		auto pos = vstd::find_pos(GameConstants::TERRAIN_NAMES, terTypeStr);
-		if (pos != -1)
+		if(pos != -1)
 		{
 			terTypes.insert(ETerrainType(pos));
 		}
@@ -373,7 +377,8 @@ CRmgTemplateStorage::CRmgTemplateStorage()
 
 CRmgTemplateStorage::~CRmgTemplateStorage()
 {
-	for (auto & pair : templates) delete pair.second;
+	for(auto & pair : templates)
+		delete pair.second;
 }
 
 std::vector<bool> CRmgTemplateStorage::getDefaultAllowed() const

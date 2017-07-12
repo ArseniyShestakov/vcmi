@@ -10,7 +10,7 @@ IShowActivatable::IShowActivatable()
 	type = 0;
 }
 
-CIntObject::CIntObject(int used_, Point pos_):
+CIntObject::CIntObject(int used_, Point pos_) :
 	parent_m(nullptr),
 	active_m(0),
 	parent(parent_m),
@@ -33,7 +33,7 @@ CIntObject::CIntObject(int used_, Point pos_):
 
 void CIntObject::setTimer(int msToTrigger)
 {
-	if (!(active & TIME))
+	if(!(active & TIME))
 		activate(TIME);
 	toNextTick = timerDelay = msToTrigger;
 	used |= TIME;
@@ -42,7 +42,7 @@ void CIntObject::setTimer(int msToTrigger)
 void CIntObject::onTimer(int timePassed)
 {
 	toNextTick -= timePassed;
-	if (toNextTick < 0)
+	if(toNextTick < 0)
 	{
 		toNextTick += timerDelay;
 		tick();
@@ -64,15 +64,14 @@ void CIntObject::showAll(SDL_Surface * to)
 		for(auto & elem : children)
 			if(elem->recActions & SHOWALL)
 				elem->showAll(to);
-
 	}
 }
 
 void CIntObject::activate()
 {
-	if (active_m)
+	if(active_m)
 	{
-		if ((used | GENERAL) == active_m)
+		if((used | GENERAL) == active_m)
 			return;
 		else
 		{
@@ -97,10 +96,10 @@ void CIntObject::activate(ui16 what)
 
 void CIntObject::deactivate()
 {
-	if (!active_m)
+	if(!active_m)
 		return;
 
-	active_m &= ~ GENERAL;
+	active_m &= ~GENERAL;
 	deactivate(active_m);
 
 	assert(!active_m);
@@ -118,12 +117,12 @@ void CIntObject::deactivate(ui16 what)
 
 CIntObject::~CIntObject()
 {
-	if (active_m)
+	if(active_m)
 		deactivate();
 
 	if(defActions & DISPOSE)
 	{
-		while (!children.empty())
+		while(!children.empty())
 			if(children.front()->recActions & DISPOSE)
 				delete children.front();
 			else
@@ -151,56 +150,56 @@ void CIntObject::click(EIntObjMouseBtnType btn, tribool down, bool previousState
 	}
 }
 
-void CIntObject::printAtLoc( const std::string & text, int x, int y, EFonts font, SDL_Color kolor/*=Colors::WHITE*/, SDL_Surface * dst/*=screen*/ )
+void CIntObject::printAtLoc(const std::string & text, int x, int y, EFonts font, SDL_Color kolor /*=Colors::WHITE*/, SDL_Surface * dst /*=screen*/)
 {
 	graphics->fonts[font]->renderTextLeft(dst, text, kolor, Point(pos.x + x, pos.y + y));
 }
 
-void CIntObject::printAtRightLoc( const std::string & text, int x, int y, EFonts font, SDL_Color kolor/*=Colors::WHITE*/, SDL_Surface * dst/*=screen*/ )
+void CIntObject::printAtRightLoc(const std::string & text, int x, int y, EFonts font, SDL_Color kolor /*=Colors::WHITE*/, SDL_Surface * dst /*=screen*/)
 {
 	graphics->fonts[font]->renderTextRight(dst, text, kolor, Point(pos.x + x, pos.y + y));
 }
 
-void CIntObject::printAtMiddleLoc( const std::string & text, int x, int y, EFonts font, SDL_Color kolor/*=Colors::WHITE*/, SDL_Surface * dst/*=screen*/ )
+void CIntObject::printAtMiddleLoc(const std::string & text, int x, int y, EFonts font, SDL_Color kolor /*=Colors::WHITE*/, SDL_Surface * dst /*=screen*/)
 {
-	printAtMiddleLoc(text, Point(x,y), font, kolor, dst);
+	printAtMiddleLoc(text, Point(x, y), font, kolor, dst);
 }
 
-void CIntObject::printAtMiddleLoc(const std::string & text, const Point &p, EFonts font, SDL_Color kolor, SDL_Surface * dst)
+void CIntObject::printAtMiddleLoc(const std::string & text, const Point & p, EFonts font, SDL_Color kolor, SDL_Surface * dst)
 {
 	graphics->fonts[font]->renderTextCenter(dst, text, kolor, pos.topLeft() + p);
 }
 
-void CIntObject::blitAtLoc( SDL_Surface * src, int x, int y, SDL_Surface * dst )
+void CIntObject::blitAtLoc(SDL_Surface * src, int x, int y, SDL_Surface * dst)
 {
 	blitAt(src, pos.x + x, pos.y + y, dst);
 }
 
-void CIntObject::blitAtLoc(SDL_Surface * src, const Point &p, SDL_Surface * dst)
+void CIntObject::blitAtLoc(SDL_Surface * src, const Point & p, SDL_Surface * dst)
 {
 	blitAtLoc(src, p.x, p.y, dst);
 }
 
-void CIntObject::printAtMiddleWBLoc( const std::string & text, int x, int y, EFonts font, int charpr, SDL_Color kolor, SDL_Surface * dst)
+void CIntObject::printAtMiddleWBLoc(const std::string & text, int x, int y, EFonts font, int charpr, SDL_Color kolor, SDL_Surface * dst)
 {
 	graphics->fonts[font]->renderTextLinesCenter(dst, CMessage::breakText(text, charpr, font), kolor, Point(pos.x + x, pos.y + y));
 }
 
-void CIntObject::printToLoc( const std::string & text, int x, int y, EFonts font, SDL_Color kolor, SDL_Surface * dst )
+void CIntObject::printToLoc(const std::string & text, int x, int y, EFonts font, SDL_Color kolor, SDL_Surface * dst)
 {
 	graphics->fonts[font]->renderTextRight(dst, text, kolor, Point(pos.x + x, pos.y + y));
 }
 
 void CIntObject::addUsedEvents(ui16 newActions)
 {
-	if (active_m)
+	if(active_m)
 		activate(~used & newActions);
 	used |= newActions;
 }
 
 void CIntObject::removeUsedEvents(ui16 newActions)
 {
-	if (active_m)
+	if(active_m)
 		deactivate(used & newActions);
 	used &= ~newActions;
 }
@@ -221,12 +220,12 @@ void CIntObject::enable()
 	recActions = 255;
 }
 
-bool CIntObject::isItInLoc( const SDL_Rect &rect, int x, int y )
+bool CIntObject::isItInLoc(const SDL_Rect & rect, int x, int y)
 {
 	return isItIn(&rect, x - pos.x, y - pos.y);
 }
 
-bool CIntObject::isItInLoc( const SDL_Rect &rect, const Point &p )
+bool CIntObject::isItInLoc(const SDL_Rect & rect, const Point & p)
 {
 	return isItIn(&rect, p.x - pos.x, p.y - pos.y);
 }
@@ -238,11 +237,11 @@ void CIntObject::fitToScreen(int borderWidth, bool propagate)
 	vstd::amax(newPos.y, borderWidth);
 	vstd::amin(newPos.x, screen->w - borderWidth - pos.w);
 	vstd::amin(newPos.y, screen->h - borderWidth - pos.h);
-	if (newPos != pos.topLeft())
+	if(newPos != pos.topLeft())
 		moveTo(newPos, propagate);
 }
 
-void CIntObject::moveBy( const Point &p, bool propagate /*= true*/ )
+void CIntObject::moveBy(const Point & p, bool propagate /*= true*/)
 {
 	pos.x += p.x;
 	pos.y += p.y;
@@ -251,18 +250,18 @@ void CIntObject::moveBy( const Point &p, bool propagate /*= true*/ )
 			elem->moveBy(p, propagate);
 }
 
-void CIntObject::moveTo( const Point &p, bool propagate /*= true*/ )
+void CIntObject::moveTo(const Point & p, bool propagate /*= true*/)
 {
 	moveBy(Point(p.x - pos.x, p.y - pos.y), propagate);
 }
 
-void CIntObject::addChild(CIntObject *child, bool adjustPosition /*= false*/)
+void CIntObject::addChild(CIntObject * child, bool adjustPosition /*= false*/)
 {
-	if (vstd::contains(children, child))
+	if(vstd::contains(children, child))
 	{
 		return;
 	}
-	if (child->parent_m)
+	if(child->parent_m)
 	{
 		child->parent_m->removeChild(child, adjustPosition);
 	}
@@ -271,15 +270,15 @@ void CIntObject::addChild(CIntObject *child, bool adjustPosition /*= false*/)
 	if(adjustPosition)
 		child->pos += pos;
 
-	if (!active && child->active)
+	if(!active && child->active)
 		child->deactivate();
-	if (active && !child->active)
+	if(active && !child->active)
 		child->activate();
 }
 
-void CIntObject::removeChild(CIntObject *child, bool adjustPosition /*= false*/)
+void CIntObject::removeChild(CIntObject * child, bool adjustPosition /*= false*/)
 {
-	if (!child)
+	if(!child)
 		return;
 
 	assert(vstd::contains(children, child));
@@ -290,7 +289,7 @@ void CIntObject::removeChild(CIntObject *child, bool adjustPosition /*= false*/)
 		child->pos -= pos;
 }
 
-void CIntObject::drawBorderLoc(SDL_Surface * sur, const Rect &r, const int3 &color)
+void CIntObject::drawBorderLoc(SDL_Surface * sur, const Rect & r, const int3 & color)
 {
 	CSDL_Ext::drawBorder(sur, r + pos, color);
 }
@@ -299,9 +298,9 @@ void CIntObject::redraw()
 {
 	//currently most of calls come from active objects so this check won't affect them
 	//it should fix glitches when called by inactive elements located below active window
-	if (active)
+	if(active)
 	{
-		if (parent_m && (type & REDRAW_PARENT))
+		if(parent_m && (type & REDRAW_PARENT))
 		{
 			parent_m->redraw();
 		}
@@ -314,23 +313,23 @@ void CIntObject::redraw()
 	}
 }
 
-const Rect & CIntObject::center( const Rect &r, bool propagate )
+const Rect & CIntObject::center(const Rect & r, bool propagate)
 {
 	pos.w = r.w;
 	pos.h = r.h;
-	return center(Point(screen->w/2, screen->h/2), propagate);
+	return center(Point(screen->w / 2, screen->h / 2), propagate);
 }
 
-const Rect & CIntObject::center( bool propagate )
+const Rect & CIntObject::center(bool propagate)
 {
 	return center(pos, propagate);
 }
 
-const Rect & CIntObject::center(const Point &p, bool propagate /*= true*/)
+const Rect & CIntObject::center(const Point & p, bool propagate /*= true*/)
 {
-	moveBy(Point(p.x - pos.w/2 - pos.x,
-		p.y - pos.h/2 - pos.y),
-		propagate);
+	moveBy(Point(p.x - pos.w / 2 - pos.x,
+		     p.y - pos.h / 2 - pos.y),
+	       propagate);
 	return pos;
 }
 
@@ -340,26 +339,26 @@ bool CIntObject::captureThisEvent(const SDL_KeyboardEvent & key)
 }
 
 CKeyShortcut::CKeyShortcut()
-{}
+{
+}
 
 CKeyShortcut::CKeyShortcut(int key)
 {
-	if (key != SDLK_UNKNOWN)
+	if(key != SDLK_UNKNOWN)
 		assignedKeys.insert(key);
 }
 
-CKeyShortcut::CKeyShortcut(std::set<int> Keys)
-	:assignedKeys(Keys)
-{}
+CKeyShortcut::CKeyShortcut(std::set<int> Keys) :
+	assignedKeys(Keys)
+{
+}
 
 void CKeyShortcut::keyPressed(const SDL_KeyboardEvent & key)
 {
-	if(vstd::contains(assignedKeys,key.keysym.sym)
-	 || vstd::contains(assignedKeys, CGuiHandler::numToDigit(key.keysym.sym)))
+	if(vstd::contains(assignedKeys, key.keysym.sym) || vstd::contains(assignedKeys, CGuiHandler::numToDigit(key.keysym.sym)))
 	{
-		bool prev = mouseState(EIntObjMouseBtnType::LEFT);		
+		bool prev = mouseState(EIntObjMouseBtnType::LEFT);
 		updateMouseState(EIntObjMouseBtnType::LEFT, key.state == SDL_PRESSED);
 		clickLeft(key.state == SDL_PRESSED, prev);
-		
 	}
 }

@@ -34,12 +34,12 @@ template<typename rett>
 std::shared_ptr<rett> createAny(const boost::filesystem::path & libpath, const std::string & methodName)
 {
 #ifdef VCMI_ANDROID
-	// android currently doesn't support loading libs dynamically, so the access to the known libraries
-	// is possible only via specializations of this template
+	//android currently doesn't support loading libs dynamically, so the access to the known libraries
+	//is possible only via specializations of this template
 	throw std::runtime_error("Could not resolve ai library " + libpath.generic_string());
 #else
-	typedef void(* TGetAIFun)(std::shared_ptr<rett> &);
-	typedef void(* TGetNameFun)(char *);
+	typedef void (* TGetAIFun)(std::shared_ptr<rett> &);
+	typedef void (* TGetNameFun)(char *);
 
 	char temp[150];
 
@@ -48,25 +48,25 @@ std::shared_ptr<rett> createAny(const boost::filesystem::path & libpath, const s
 
 #ifdef VCMI_WINDOWS
 	HMODULE dll = LoadLibraryW(libpath.c_str());
-	if (dll)
+	if(dll)
 	{
 		getName = (TGetNameFun)GetProcAddress(dll, "GetAiName");
 		getAI = (TGetAIFun)GetProcAddress(dll, methodName.c_str());
 	}
-#else // !VCMI_WINDOWS
-	void *dll = dlopen(libpath.string().c_str(), RTLD_LOCAL | RTLD_LAZY);
-	if (dll)
+#else //!VCMI_WINDOWS
+	void * dll = dlopen(libpath.string().c_str(), RTLD_LOCAL | RTLD_LAZY);
+	if(dll)
 	{
 		getName = (TGetNameFun)dlsym(dll, "GetAiName");
 		getAI = (TGetAIFun)dlsym(dll, methodName.c_str());
 	}
 	else
 		logGlobal->errorStream() << "Error: " << dlerror();
-#endif // VCMI_WINDOWS
+#endif //VCMI_WINDOWS
 
-	if (!dll)
+	if(!dll)
 	{
-		logGlobal->errorStream() << "Cannot open dynamic library ("<<libpath<<"). Throwing...";
+		logGlobal->errorStream() << "Cannot open dynamic library (" << libpath << "). Throwing...";
 		throw std::runtime_error("Cannot open dynamic library");
 	}
 	else if(!getName || !getAI)
@@ -157,8 +157,7 @@ void CAdventureAI::battleCatapultAttacked(const CatapultAttack & ca)
 	battleAI->battleCatapultAttacked(ca);
 }
 
-void CAdventureAI::battleStart(const CCreatureSet * army1, const CCreatureSet * army2, int3 tile,
-							   const CGHeroInstance * hero1, const CGHeroInstance * hero2, bool side)
+void CAdventureAI::battleStart(const CCreatureSet * army1, const CCreatureSet * army2, int3 tile, const CGHeroInstance * hero1, const CGHeroInstance * hero2, bool side)
 {
 	assert(!battleAI);
 	assert(cbc);
@@ -228,8 +227,7 @@ void CAdventureAI::battleEnd(const BattleResult * br)
 	battleAI.reset();
 }
 
-void CAdventureAI::battleStacksHealedRes(const std::vector<std::pair<ui32, ui32> > & healedStacks, bool lifeDrain,
-										 bool tentHeal, si32 lifeDrainFrom)
+void CAdventureAI::battleStacksHealedRes(const std::vector<std::pair<ui32, ui32>> & healedStacks, bool lifeDrain, bool tentHeal, si32 lifeDrainFrom)
 {
 	battleAI->battleStacksHealedRes(healedStacks, lifeDrain, tentHeal, lifeDrainFrom);
 }

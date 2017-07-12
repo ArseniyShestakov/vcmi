@@ -33,7 +33,7 @@ public:
 	 *
 	 * @param config Specifies filesystem configuration
 	 */
-	explicit CMappedFileLoader(const std::string &mountPoint, const JsonNode & config);
+	explicit CMappedFileLoader(const std::string & mountPoint, const JsonNode & config);
 
 	/// Interface implementation
 	/// @see ISimpleResourceLoader
@@ -41,7 +41,9 @@ public:
 	bool existsResource(const ResourceID & resourceName) const override;
 	std::string getMountPoint() const override;
 	boost::optional<boost::filesystem::path> getResourceName(const ResourceID & resourceName) const override;
-	void updateFilteredFiles(std::function<bool(const std::string &)> filter) const override {}
+	void updateFilteredFiles(std::function<bool(const std::string &)> filter) const override
+	{
+	}
 	std::unordered_set<ResourceID> getFilteredFiles(std::function<bool(const ResourceID &)> filter) const override;
 
 private:
@@ -54,13 +56,13 @@ private:
 
 class DLL_LINKAGE CFilesystemList : public ISimpleResourceLoader
 {
-	std::vector<std::unique_ptr<ISimpleResourceLoader> > loaders;
+	std::vector<std::unique_ptr<ISimpleResourceLoader>> loaders;
 
 	std::set<ISimpleResourceLoader *> writeableLoaders;
 
 	//FIXME: this is only compile fix, should be removed in the end
 	CFilesystemList(CFilesystemList &) = delete;
-	CFilesystemList &operator=(CFilesystemList &) = delete;
+	CFilesystemList & operator=(CFilesystemList &) = delete;
 
 public:
 	CFilesystemList();

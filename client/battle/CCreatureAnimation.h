@@ -50,14 +50,14 @@ namespace AnimationControls
 class CCreatureAnimation : public CIntObject
 {
 public:
-	typedef std::function<float(CCreatureAnimation *, size_t)> TSpeedController;
+	typedef std::function<float (CCreatureAnimation *, size_t)> TSpeedController;
 
 private:
 	std::string defName;
 
 	int fullWidth, fullHeight;
 
-	// palette, as read from def file
+	//palette, as read from def file
 	std::array<SDL_Color, 256> palette;
 
 	//key = id of group (note that some groups may be missing)
@@ -69,22 +69,22 @@ private:
 	std::unique_ptr<ui8[]> pixelData;
 	size_t pixelDataSize;
 
-	// speed of animation, measure in frames per second
+	//speed of animation, measure in frames per second
 	float speed;
 
-	// currently displayed frame. Float to allow H3-style animations where frames
-	// don't display for integer number of frames
+	//currently displayed frame. Float to allow H3-style animations where frames
+	//don't display for integer number of frames
 	float currentFrame;
-	// cumulative, real-time duration of animation. Used for effects like selection border
+	//cumulative, real-time duration of animation. Used for effects like selection border
 	float elapsedTime;
 	CCreatureAnim::EAnimType type; //type of animation being displayed
 
-	// border color, disabled if alpha = 0
+	//border color, disabled if alpha = 0
 	SDL_Color border;
 
 	TSpeedController speedController;
 
-	bool once; // animation will be played once and the reset to idling
+	bool once; //animation will be played once and the reset to idling
 
 	ui8 * getPixelAddr(SDL_Surface * dest, int ftcpX, int ftcpY) const;
 
@@ -92,7 +92,7 @@ private:
 	void putPixelAt(SDL_Surface * dest, int X, int Y, size_t index, const std::array<SDL_Color, 8> & special) const;
 
 	template<int bpp>
-	void putPixel( ui8 * dest, const SDL_Color & color, size_t index, const std::array<SDL_Color, 8> & special) const;
+	void putPixel(ui8 * dest, const SDL_Color & color, size_t index, const std::array<SDL_Color, 8> & special) const;
 
 	template<int bpp>
 	void nextFrameT(SDL_Surface * dest, bool rotate);
@@ -101,10 +101,11 @@ private:
 
 	/// creates 8 special colors for current frame
 	std::array<SDL_Color, 8> genSpecialPalette();
+
 public:
 
-	// function(s) that will be called when animation ends, after reset to 1st frame
-	// NOTE that these function will be fired only once
+	//function(s) that will be called when animation ends, after reset to 1st frame
+	//NOTE that these function will be fired only once
 	CFunctionList<void()> onAnimationReset;
 
 	int getWidth() const;
@@ -121,11 +122,11 @@ public:
 
 	void nextFrame(SDL_Surface * dest, bool rotate);
 
-	// should be called every frame, return true when animation was reset to beginning
+	//should be called every frame, return true when animation was reset to beginning
 	bool incrementFrame(float timePassed);
 	void setBorderColor(SDL_Color palette);
 
-	float getCurrentFrame() const; // Gets the current frame ID relative to frame group.
+	float getCurrentFrame() const; //Gets the current frame ID relative to frame group.
 
 	void playOnce(CCreatureAnim::EAnimType type); //plays once given stage of animation, then resets to 2
 

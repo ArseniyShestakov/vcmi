@@ -18,8 +18,10 @@ public:
 
 	//std::function<AttackPossibility(bool,BattleHex)>  GenerateAttackInfo; //args: shooting, destHex
 
-	PotentialTargets(){};
-	PotentialTargets(const CStack *attacker, const HypotheticChangesToBattleState &state = HypotheticChangesToBattleState());
+	PotentialTargets()
+	{
+	};
+	PotentialTargets(const CStack * attacker, const HypotheticChangesToBattleState & state = HypotheticChangesToBattleState());
 
 	AttackPossibility bestAction() const;
 	int bestActionValue() const;

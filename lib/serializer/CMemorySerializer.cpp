@@ -31,7 +31,8 @@ int CMemorySerializer::write(const void * data, unsigned size)
 	return size;
 }
 
-CMemorySerializer::CMemorySerializer(): iser(this), oser(this)
+CMemorySerializer::CMemorySerializer() :
+	iser(this), oser(this)
 {
 	readPos = 0;
 	registerTypes(iser);

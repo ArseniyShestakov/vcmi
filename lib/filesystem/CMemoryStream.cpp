@@ -4,7 +4,6 @@
 CMemoryStream::CMemoryStream(const ui8 * data, si64 size) :
 	data(data), size(size), position(0)
 {
-
 }
 
 si64 CMemoryStream::read(ui8 * data, si64 size)

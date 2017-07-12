@@ -16,7 +16,9 @@ public:
 	/**
 	 * D-tor.
 	 */
-	virtual ~CStream() {}
+	virtual ~CStream()
+	{
+	}
 
 	/**
 	 * Seeks to the specified position.
@@ -46,5 +48,5 @@ public:
 	 *
 	 * @return the length in bytes
 	 */
-	virtual si64 getSize() = 0;	
+	virtual si64 getSize() = 0;
 };

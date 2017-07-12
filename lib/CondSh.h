@@ -11,36 +11,39 @@
  */
 
 /// Used for multithreading, wraps boost functions
-template <typename T> struct CondSh
+template<typename T> struct CondSh
 {
 	T data;
 	boost::condition_variable cond;
 	boost::mutex mx;
 
-	CondSh(T t) : data(t) {}
+	CondSh(T t) :
+		data(t)
+	{
+	}
 
-	// set data
+	//set data
 	void set(T t)
 	{
 		boost::unique_lock<boost::mutex> lock(mx);
 		data = t;
 	}
 
-	// set data and notify
+	//set data and notify
 	void setn(T t)
 	{
 		set(t);
 		cond.notify_all();
 	};
 
-	// get stored value
+	//get stored value
 	T get()
 	{
 		boost::unique_lock<boost::mutex> lock(mx);
 		return data;
 	}
 
-	// waits until data is set to false
+	//waits until data is set to false
 	void waitWhileTrue()
 	{
 		boost::unique_lock<boost::mutex> un(mx);
@@ -48,7 +51,7 @@ template <typename T> struct CondSh
 			cond.wait(un);
 	}
 
-	// waits while data is set to arg
+	//waits while data is set to arg
 	void waitWhile(const T & t)
 	{
 		boost::unique_lock<boost::mutex> un(mx);
@@ -56,7 +59,7 @@ template <typename T> struct CondSh
 			cond.wait(un);
 	}
 
-	// waits until data is set to arg
+	//waits until data is set to arg
 	void waitUntil(const T & t)
 	{
 		boost::unique_lock<boost::mutex> un(mx);

@@ -16,26 +16,27 @@ class JsonWriter
 {
 	//prefix for each line (tabulation)
 	std::string prefix;
-	std::ostream &out;
+	std::ostream & out;
+
 public:
 	template<typename Iterator>
 	void writeContainer(Iterator begin, Iterator end);
 	void writeEntry(JsonMap::const_iterator entry);
 	void writeEntry(JsonVector::const_iterator entry);
-	void writeString(const std::string &string);
-	void writeNode(const JsonNode &node);
-	JsonWriter(std::ostream &output, const JsonNode &node);
+	void writeString(const std::string & string);
+	void writeNode(const JsonNode & node);
+	JsonWriter(std::ostream & output, const JsonNode & node);
 };
 
 //Tiny string class that uses const char* as data for speed, members are private
 //for ease of debugging and some compatibility with std::string
 class constString
 {
-	const char *data;
+	const char * data;
 	const size_t datasize;
 
 public:
-	constString(const char * inputString, size_t stringSize):
+	constString(const char * inputString, size_t stringSize) :
 		data(inputString),
 		datasize(stringSize)
 	{
@@ -46,9 +47,9 @@ public:
 		return datasize;
 	};
 
-	inline const char& operator[] (size_t position)
+	inline const char & operator[](size_t position)
 	{
-		assert (position < datasize);
+		assert(position < datasize);
 		return data[position];
 	}
 };
@@ -56,32 +57,32 @@ public:
 //Internal class for string -> JsonNode conversion
 class JsonParser
 {
-	std::string errors;     // Contains description of all encountered errors
-	constString input;      // Input data
-	ui32 lineCount; // Currently parsed line, starting from 1
-	size_t lineStart;       // Position of current line start
-	size_t pos;             // Current position of parser
+	std::string errors; //Contains description of all encountered errors
+	constString input; //Input data
+	ui32 lineCount; //Currently parsed line, starting from 1
+	size_t lineStart; //Position of current line start
+	size_t pos; //Current position of parser
 
 	//Helpers
-	bool extractEscaping(std::string &str);
-	bool extractLiteral(const std::string &literal);
-	bool extractString(std::string &string);
+	bool extractEscaping(std::string & str);
+	bool extractLiteral(const std::string & literal);
+	bool extractString(std::string & string);
 	bool extractWhitespace(bool verbose = true);
 	bool extractSeparator();
-	bool extractElement(JsonNode &node, char terminator);
+	bool extractElement(JsonNode & node, char terminator);
 
 	//Methods for extracting JSON data
-	bool extractArray(JsonNode &node);
-	bool extractFalse(JsonNode &node);
-	bool extractFloat(JsonNode &node);
-	bool extractNull(JsonNode &node);
-	bool extractString(JsonNode &node);
-	bool extractStruct(JsonNode &node);
-	bool extractTrue(JsonNode &node);
-	bool extractValue(JsonNode &node);
+	bool extractArray(JsonNode & node);
+	bool extractFalse(JsonNode & node);
+	bool extractFloat(JsonNode & node);
+	bool extractNull(JsonNode & node);
+	bool extractString(JsonNode & node);
+	bool extractStruct(JsonNode & node);
+	bool extractTrue(JsonNode & node);
+	bool extractValue(JsonNode & node);
 
 	//Add error\warning message to list
-	bool error(const std::string &message, bool warning=false);
+	bool error(const std::string & message, bool warning = false);
 
 public:
 	JsonParser(const char * inputString, size_t stringSize);
@@ -108,7 +109,7 @@ namespace Validation
 		std::vector<std::string> usedSchemas;
 
 		/// generates error message
-		std::string makeErrorMessage(const std::string &message);
+		std::string makeErrorMessage(const std::string & message);
 	};
 
 	typedef std::function<std::string(const JsonNode &)> TFormatValidator;

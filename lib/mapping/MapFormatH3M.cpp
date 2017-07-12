@@ -28,7 +28,8 @@
 
 const bool CMapLoaderH3M::IS_PROFILING_ENABLED = false;
 
-CMapLoaderH3M::CMapLoaderH3M(CInputStream * stream) : map(nullptr), reader(stream),inputStream(stream)
+CMapLoaderH3M::CMapLoaderH3M(CInputStream * stream) :
+	map(nullptr), reader(stream), inputStream(stream)
 {
 }
 
@@ -38,17 +39,18 @@ CMapLoaderH3M::~CMapLoaderH3M()
 
 std::unique_ptr<CMap> CMapLoaderH3M::loadMap()
 {
-	// Init map object by parsing the input buffer
+	//Init map object by parsing the input buffer
 	map = new CMap();
 	mapHeader = std::unique_ptr<CMapHeader>(dynamic_cast<CMapHeader *>(map));
 	init();
 
-	return std::unique_ptr<CMap>(dynamic_cast<CMap *>(mapHeader.release()));;
+	return std::unique_ptr<CMap>(dynamic_cast<CMap *>(mapHeader.release()));
+	;
 }
 
 std::unique_ptr<CMapHeader> CMapLoaderH3M::loadMapHeader()
 {
-	// Read header
+	//Read header
 	mapHeader = make_unique<CMapHeader>();
 	readHeader();
 
@@ -61,15 +63,15 @@ void CMapLoaderH3M::init()
 	si64 temp_size = inputStream->getSize();
 	inputStream->seek(0);
 
-	auto  temp_buffer = new ui8[temp_size];
-	inputStream->read(temp_buffer,temp_size);
+	auto temp_buffer = new ui8[temp_size];
+	inputStream->read(temp_buffer, temp_size);
 
-	// Compute checksum
-	boost::crc_32_type  result;
+	//Compute checksum
+	boost::crc_32_type result;
 	result.process_bytes(temp_buffer, temp_size);
 	map->checksum = result.checksum();
 
-	delete [] temp_buffer;
+	delete[] temp_buffer;
 	inputStream->seek(0);
 
 	CStopWatch sw;
@@ -79,10 +81,10 @@ void CMapLoaderH3M::init()
 		std::string name;
 		si64 time;
 
-		MapLoadingTime(std::string name, si64 time) : name(name),
+		MapLoadingTime(std::string name, si64 time) :
+			name(name),
 			time(time)
 		{
-
 		}
 	};
 	std::vector<MapLoadingTime> times;
@@ -121,7 +123,7 @@ void CMapLoaderH3M::init()
 
 	times.push_back(MapLoadingTime("blocked/visitable tiles", sw.getDiff()));
 
-	// Print profiling times
+	//Print profiling times
 	if(IS_PROFILING_ENABLED)
 	{
 		for(MapLoadingTime & mlt : times)
@@ -135,22 +137,21 @@ void CMapLoaderH3M::init()
 
 void CMapLoaderH3M::readHeader()
 {
-	// Check map for validity
-	// Note: disabled, causes decompression of the entire file ( = SLOW)
+	//Check map for validity
+	//Note: disabled, causes decompression of the entire file ( = SLOW)
 	//if(inputStream->getSize() < 50)
 	//{
-	//	throw std::runtime_error("Corrupted map file.");
+	//throw std::runtime_error("Corrupted map file.");
 	//}
 
-	// Map version
+	//Map version
 	mapHeader->version = (EMapFormat::EMapFormat)(reader.readUInt32());
-	if(mapHeader->version != EMapFormat::ROE && mapHeader->version != EMapFormat::AB && mapHeader->version != EMapFormat::SOD
-			&& mapHeader->version != EMapFormat::WOG)
+	if(mapHeader->version != EMapFormat::ROE && mapHeader->version != EMapFormat::AB && mapHeader->version != EMapFormat::SOD && mapHeader->version != EMapFormat::WOG)
 	{
 		throw std::runtime_error("Invalid map format!");
 	}
 
-	// Read map name, description, dimensions,...
+	//Read map name, description, dimensions,...
 	mapHeader->areAnyPlayers = reader.readBool();
 	mapHeader->height = mapHeader->width = reader.readUInt32();
 	mapHeader->twoLevel = reader.readBool();
@@ -179,7 +180,7 @@ void CMapLoaderH3M::readPlayerInfo()
 		mapHeader->players[i].canHumanPlay = reader.readBool();
 		mapHeader->players[i].canComputerPlay = reader.readBool();
 
-		// If nobody can play with this player
+		//If nobody can play with this player
 		if((!(mapHeader->players[i].canHumanPlay || mapHeader->players[i].canComputerPlay)))
 		{
 			switch(mapHeader->version)
@@ -209,9 +210,9 @@ void CMapLoaderH3M::readPlayerInfo()
 			mapHeader->players[i].p7 = -1;
 		}
 
-		// Factions this player can choose
+		//Factions this player can choose
 		ui16 allowedFactions = reader.readUInt8();
-		// How many factions will be read from map
+		//How many factions will be read from map
 		ui16 totalFactions = GameConstants::F_NUMBER;
 
 		if(mapHeader->version != EMapFormat::ROE)
@@ -251,7 +252,7 @@ void CMapLoaderH3M::readPlayerInfo()
 		if(mapHeader->players[i].mainCustomHeroId != 0xff)
 		{
 			mapHeader->players[i].mainCustomHeroPortrait = reader.readUInt8();
-			if (mapHeader->players[i].mainCustomHeroPortrait == 0xff)
+			if(mapHeader->players[i].mainCustomHeroPortrait == 0xff)
 				mapHeader->players[i].mainCustomHeroPortrait = -1; //correct 1-byte -1 (0xff) into 4-byte -1
 
 			mapHeader->players[i].mainCustomHeroName = reader.readString();
@@ -278,13 +279,32 @@ void CMapLoaderH3M::readPlayerInfo()
 
 namespace EVictoryConditionType
 {
-	enum EVictoryConditionType { ARTIFACT, GATHERTROOP, GATHERRESOURCE, BUILDCITY, BUILDGRAIL, BEATHERO,
-		CAPTURECITY, BEATMONSTER, TAKEDWELLINGS, TAKEMINES, TRANSPORTITEM, WINSTANDARD = 255 };
+	enum EVictoryConditionType
+	{
+		ARTIFACT,
+		GATHERTROOP,
+		GATHERRESOURCE,
+		BUILDCITY,
+		BUILDGRAIL,
+		BEATHERO,
+		CAPTURECITY,
+		BEATMONSTER,
+		TAKEDWELLINGS,
+		TAKEMINES,
+		TRANSPORTITEM,
+		WINSTANDARD = 255
+	};
 }
 
 namespace ELossConditionType
 {
-	enum ELossConditionType { LOSSCASTLE, LOSSHERO, TIMEEXPIRES, LOSSSTANDARD = 255 };
+	enum ELossConditionType
+	{
+		LOSSCASTLE,
+		LOSSHERO,
+		TIMEEXPIRES,
+		LOSSSTANDARD = 255
+	};
 }
 
 void CMapLoaderH3M::readVictoryLossConditions()
@@ -301,7 +321,7 @@ void CMapLoaderH3M::readVictoryLossConditions()
 	standardVictory.effect.type = EventEffect::VICTORY;
 	standardVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[5];
 	standardVictory.identifier = "standardVictory";
-	standardVictory.description = ""; // TODO: display in quest window
+	standardVictory.description = ""; //TODO: display in quest window
 	standardVictory.onFulfill = VLC->generaltexth->allTexts[659];
 	standardVictory.trigger = EventExpression(victoryCondition);
 
@@ -309,14 +329,14 @@ void CMapLoaderH3M::readVictoryLossConditions()
 	standardDefeat.effect.type = EventEffect::DEFEAT;
 	standardDefeat.effect.toOtherMessage = VLC->generaltexth->allTexts[8];
 	standardDefeat.identifier = "standardDefeat";
-	standardDefeat.description = ""; // TODO: display in quest window
+	standardDefeat.description = ""; //TODO: display in quest window
 	standardDefeat.onFulfill = VLC->generaltexth->allTexts[7];
 	standardDefeat.trigger = EventExpression(defeatCondition);
 
-	// Specific victory conditions
+	//Specific victory conditions
 	if(vicCondition == EVictoryConditionType::WINSTANDARD)
 	{
-		// create normal condition
+		//create normal condition
 		mapHeader->triggeredEvents.push_back(standardVictory);
 		mapHeader->victoryIconIndex = 11;
 		mapHeader->victoryMessage = VLC->generaltexth->victoryConditions[0];
@@ -326,7 +346,7 @@ void CMapLoaderH3M::readVictoryLossConditions()
 		TriggeredEvent specialVictory;
 		specialVictory.effect.type = EventEffect::VICTORY;
 		specialVictory.identifier = "specialVictory";
-		specialVictory.description = ""; // TODO: display in quest window
+		specialVictory.description = ""; //TODO: display in quest window
 
 		mapHeader->victoryIconIndex = ui16(vicCondition);
 		mapHeader->victoryMessage = VLC->generaltexth->victoryConditions[size_t(vicCondition) + 1];
@@ -334,154 +354,157 @@ void CMapLoaderH3M::readVictoryLossConditions()
 		bool allowNormalVictory = reader.readBool();
 		bool appliesToAI = reader.readBool();
 
-		if (allowNormalVictory)
+		if(allowNormalVictory)
 		{
-			size_t playersOnMap = boost::range::count_if(mapHeader->players,[](const PlayerInfo & info) { return info.canAnyonePlay();});
+			size_t playersOnMap = boost::range::count_if(mapHeader->players, [](const PlayerInfo & info)
+			{
+				return info.canAnyonePlay();
+			});
 
-			if (playersOnMap == 1)
+			if(playersOnMap == 1)
 			{
 				logGlobal->warnStream() << "Map " << mapHeader->name << " has only one player but allows normal victory?";
-				allowNormalVictory = false; // makes sense? Not much. Works as H3? Yes!
+				allowNormalVictory = false; //makes sense? Not much. Works as H3? Yes!
 			}
 		}
 
 		switch(vicCondition)
 		{
 		case EVictoryConditionType::ARTIFACT:
-			{
-				EventCondition cond(EventCondition::HAVE_ARTIFACT);
-				cond.objectType = reader.readUInt8();
-				if (mapHeader->version != EMapFormat::ROE)
-					reader.skip(1);
+		{
+			EventCondition cond(EventCondition::HAVE_ARTIFACT);
+			cond.objectType = reader.readUInt8();
+			if(mapHeader->version != EMapFormat::ROE)
+				reader.skip(1);
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[281];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[280];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[281];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[280];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::GATHERTROOP:
-			{
-				EventCondition cond(EventCondition::HAVE_CREATURES);
-				cond.objectType = reader.readUInt8();
-				if (mapHeader->version != EMapFormat::ROE)
-					reader.skip(1);
-				cond.value = reader.readUInt32();
+		{
+			EventCondition cond(EventCondition::HAVE_CREATURES);
+			cond.objectType = reader.readUInt8();
+			if(mapHeader->version != EMapFormat::ROE)
+				reader.skip(1);
+			cond.value = reader.readUInt32();
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[277];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[276];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[277];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[276];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::GATHERRESOURCE:
-			{
-				EventCondition cond(EventCondition::HAVE_RESOURCES);
-				cond.objectType = reader.readUInt8();
-				cond.value = reader.readUInt32();
+		{
+			EventCondition cond(EventCondition::HAVE_RESOURCES);
+			cond.objectType = reader.readUInt8();
+			cond.value = reader.readUInt32();
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[279];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[278];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[279];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[278];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::BUILDCITY:
-			{
-				EventExpression::OperatorAll oper;
-				EventCondition cond(EventCondition::HAVE_BUILDING);
-				cond.position = readInt3();
-				cond.objectType = BuildingID::VILLAGE_HALL + reader.readUInt8();
-				oper.expressions.push_back(cond);
-				cond.objectType = BuildingID::FORT + reader.readUInt8();
-				oper.expressions.push_back(cond);
+		{
+			EventExpression::OperatorAll oper;
+			EventCondition cond(EventCondition::HAVE_BUILDING);
+			cond.position = readInt3();
+			cond.objectType = BuildingID::VILLAGE_HALL + reader.readUInt8();
+			oper.expressions.push_back(cond);
+			cond.objectType = BuildingID::FORT + reader.readUInt8();
+			oper.expressions.push_back(cond);
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[283];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[282];
-				specialVictory.trigger = EventExpression(oper);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[283];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[282];
+			specialVictory.trigger = EventExpression(oper);
+			break;
+		}
 		case EVictoryConditionType::BUILDGRAIL:
-			{
-				EventCondition cond(EventCondition::HAVE_BUILDING);
-				cond.objectType = BuildingID::GRAIL;
-				cond.position = readInt3();
-				if(cond.position.z > 2)
-					cond.position = int3(-1,-1,-1);
+		{
+			EventCondition cond(EventCondition::HAVE_BUILDING);
+			cond.objectType = BuildingID::GRAIL;
+			cond.position = readInt3();
+			if(cond.position.z > 2)
+				cond.position = int3(-1, -1, -1);
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[285];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[284];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[285];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[284];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::BEATHERO:
-			{
-				EventCondition cond(EventCondition::DESTROY);
-				cond.objectType = Obj::HERO;
-				cond.position = readInt3();
+		{
+			EventCondition cond(EventCondition::DESTROY);
+			cond.objectType = Obj::HERO;
+			cond.position = readInt3();
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[253];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[252];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[253];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[252];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::CAPTURECITY:
-			{
-				EventCondition cond(EventCondition::CONTROL);
-				cond.objectType = Obj::TOWN;
-				cond.position = readInt3();
+		{
+			EventCondition cond(EventCondition::CONTROL);
+			cond.objectType = Obj::TOWN;
+			cond.position = readInt3();
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[250];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[249];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[250];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[249];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::BEATMONSTER:
-			{
-				EventCondition cond(EventCondition::DESTROY);
-				cond.objectType = Obj::MONSTER;
-				cond.position = readInt3();
+		{
+			EventCondition cond(EventCondition::DESTROY);
+			cond.objectType = Obj::MONSTER;
+			cond.position = readInt3();
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[287];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[286];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[287];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[286];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::TAKEDWELLINGS:
-			{
-				EventExpression::OperatorAll oper;
-				oper.expressions.push_back(EventCondition(EventCondition::CONTROL, 0, Obj::CREATURE_GENERATOR1));
-				oper.expressions.push_back(EventCondition(EventCondition::CONTROL, 0, Obj::CREATURE_GENERATOR4));
+		{
+			EventExpression::OperatorAll oper;
+			oper.expressions.push_back(EventCondition(EventCondition::CONTROL, 0, Obj::CREATURE_GENERATOR1));
+			oper.expressions.push_back(EventCondition(EventCondition::CONTROL, 0, Obj::CREATURE_GENERATOR4));
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[289];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[288];
-				specialVictory.trigger = EventExpression(oper);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[289];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[288];
+			specialVictory.trigger = EventExpression(oper);
+			break;
+		}
 		case EVictoryConditionType::TAKEMINES:
-			{
-				EventCondition cond(EventCondition::CONTROL);
-				cond.objectType = Obj::MINE;
+		{
+			EventCondition cond(EventCondition::CONTROL);
+			cond.objectType = Obj::MINE;
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[291];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[290];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[291];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[290];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		case EVictoryConditionType::TRANSPORTITEM:
-			{
-				EventCondition cond(EventCondition::TRANSPORT);
-				cond.objectType = reader.readUInt8();
-				cond.position = readInt3();
+		{
+			EventCondition cond(EventCondition::TRANSPORT);
+			cond.objectType = reader.readUInt8();
+			cond.position = readInt3();
 
-				specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[293];
-				specialVictory.onFulfill = VLC->generaltexth->allTexts[292];
-				specialVictory.trigger = EventExpression(cond);
-				break;
-			}
+			specialVictory.effect.toOtherMessage = VLC->generaltexth->allTexts[293];
+			specialVictory.onFulfill = VLC->generaltexth->allTexts[292];
+			specialVictory.trigger = EventExpression(cond);
+			break;
+		}
 		default:
 			assert(0);
 		}
 
-		// if condition is human-only turn it into following construction: AllOf(human, condition)
-		if (!appliesToAI)
+		//if condition is human-only turn it into following construction: AllOf(human, condition)
+		if(!appliesToAI)
 		{
 			EventExpression::OperatorAll oper;
 			EventCondition notAI(EventCondition::IS_HUMAN);
@@ -491,8 +514,8 @@ void CMapLoaderH3M::readVictoryLossConditions()
 			specialVictory.trigger = EventExpression(oper);
 		}
 
-		// if normal victory allowed - add one more quest
-		if (allowNormalVictory)
+		//if normal victory allowed - add one more quest
+		if(allowNormalVictory)
 		{
 			mapHeader->victoryMessage += " / ";
 			mapHeader->victoryMessage += VLC->generaltexth->victoryConditions[0];
@@ -501,9 +524,9 @@ void CMapLoaderH3M::readVictoryLossConditions()
 		mapHeader->triggeredEvents.push_back(specialVictory);
 	}
 
-	// Read loss conditions
+	//Read loss conditions
 	auto lossCond = (ELossConditionType::ELossConditionType)reader.readUInt8();
-	if (lossCond == ELossConditionType::LOSSSTANDARD)
+	if(lossCond == ELossConditionType::LOSSSTANDARD)
 	{
 		mapHeader->defeatIconIndex = 3;
 		mapHeader->defeatMessage = VLC->generaltexth->lossCondtions[0];
@@ -514,7 +537,7 @@ void CMapLoaderH3M::readVictoryLossConditions()
 		specialDefeat.effect.type = EventEffect::DEFEAT;
 		specialDefeat.effect.toOtherMessage = VLC->generaltexth->allTexts[5];
 		specialDefeat.identifier = "specialDefeat";
-		specialDefeat.description = ""; // TODO: display in quest window
+		specialDefeat.description = ""; //TODO: display in quest window
 
 		mapHeader->defeatIconIndex = ui16(lossCond);
 		mapHeader->defeatMessage = VLC->generaltexth->lossCondtions[size_t(lossCond) + 1];
@@ -522,45 +545,45 @@ void CMapLoaderH3M::readVictoryLossConditions()
 		switch(lossCond)
 		{
 		case ELossConditionType::LOSSCASTLE:
-			{
-				EventExpression::OperatorNone noneOf;
-				EventCondition cond(EventCondition::CONTROL);
-				cond.objectType = Obj::TOWN;
-				cond.position = readInt3();
+		{
+			EventExpression::OperatorNone noneOf;
+			EventCondition cond(EventCondition::CONTROL);
+			cond.objectType = Obj::TOWN;
+			cond.position = readInt3();
 
-				noneOf.expressions.push_back(cond);
-				specialDefeat.onFulfill = VLC->generaltexth->allTexts[251];
-				specialDefeat.trigger = EventExpression(noneOf);
-				break;
-			}
-		case ELossConditionType::LOSSHERO:
-			{
-				EventExpression::OperatorNone noneOf;
-				EventCondition cond(EventCondition::CONTROL);
-				cond.objectType = Obj::HERO;
-				cond.position = readInt3();
-
-				noneOf.expressions.push_back(cond);
-				specialDefeat.onFulfill = VLC->generaltexth->allTexts[253];
-				specialDefeat.trigger = EventExpression(noneOf);
-				break;
-			}
-		case ELossConditionType::TIMEEXPIRES:
-			{
-				EventCondition cond(EventCondition::DAYS_PASSED);
-				cond.value = reader.readUInt16();
-
-				specialDefeat.onFulfill = VLC->generaltexth->allTexts[254];
-				specialDefeat.trigger = EventExpression(cond);
-				break;
-			}
+			noneOf.expressions.push_back(cond);
+			specialDefeat.onFulfill = VLC->generaltexth->allTexts[251];
+			specialDefeat.trigger = EventExpression(noneOf);
+			break;
 		}
-		// turn simple loss condition into complete one that can be evaluated later:
-		// - any of :
-		//   - days without town: 7
-		//   - all of:
-		//     - is human
-		//     - (expression)
+		case ELossConditionType::LOSSHERO:
+		{
+			EventExpression::OperatorNone noneOf;
+			EventCondition cond(EventCondition::CONTROL);
+			cond.objectType = Obj::HERO;
+			cond.position = readInt3();
+
+			noneOf.expressions.push_back(cond);
+			specialDefeat.onFulfill = VLC->generaltexth->allTexts[253];
+			specialDefeat.trigger = EventExpression(noneOf);
+			break;
+		}
+		case ELossConditionType::TIMEEXPIRES:
+		{
+			EventCondition cond(EventCondition::DAYS_PASSED);
+			cond.value = reader.readUInt16();
+
+			specialDefeat.onFulfill = VLC->generaltexth->allTexts[254];
+			specialDefeat.trigger = EventExpression(cond);
+			break;
+		}
+		}
+		//turn simple loss condition into complete one that can be evaluated later:
+		//- any of :
+		//- days without town: 7
+		//- all of:
+		//- is human
+		//- (expression)
 
 		EventExpression::OperatorAll allOf;
 		EventCondition isHuman(EventCondition::IS_HUMAN);
@@ -580,7 +603,7 @@ void CMapLoaderH3M::readTeamInfo()
 	mapHeader->howManyTeams = reader.readUInt8();
 	if(mapHeader->howManyTeams > 0)
 	{
-		// Teams
+		//Teams
 		for(int i = 0; i < PlayerColor::PLAYER_LIMIT_I; ++i)
 		{
 			mapHeader->players[i].team = TeamID(reader.readUInt8());
@@ -588,7 +611,7 @@ void CMapLoaderH3M::readTeamInfo()
 	}
 	else
 	{
-		// No alliances
+		//No alliances
 		for(int i = 0; i < PlayerColor::PLAYER_LIMIT_I; i++)
 		{
 			if(mapHeader->players[i].canComputerPlay || mapHeader->players[i].canHumanPlay)
@@ -605,27 +628,27 @@ void CMapLoaderH3M::readAllowedHeroes()
 
 	const int bytes = mapHeader->version == EMapFormat::ROE ? 16 : 20;
 
-	readBitmask(mapHeader->allowedHeroes,bytes,GameConstants::HEROES_QUANTITY, false);
+	readBitmask(mapHeader->allowedHeroes, bytes, GameConstants::HEROES_QUANTITY, false);
 
-	// Probably reserved for further heroes
+	//Probably reserved for further heroes
 	if(mapHeader->version > EMapFormat::ROE)
 	{
 		int placeholdersQty = reader.readUInt32();
 
 		reader.skip(placeholdersQty * 1);
 
-//		std::vector<ui16> placeholdedHeroes;
+//std::vector<ui16> placeholdedHeroes;
 //
-//		for(int p = 0; p < placeholdersQty; ++p)
-//		{
-//			placeholdedHeroes.push_back(reader.readUInt8());
-//		}
+//for(int p = 0; p < placeholdersQty; ++p)
+//{
+//placeholdedHeroes.push_back(reader.readUInt8());
+//}
 	}
 }
 
 void CMapLoaderH3M::readDisposedHeroes()
 {
-	// Reading disposed heroes (20 bytes)
+	//Reading disposed heroes (20 bytes)
 	if(map->version >= EMapFormat::SOD)
 	{
 		ui8 disp = reader.readUInt8();
@@ -645,46 +668,44 @@ void CMapLoaderH3M::readDisposedHeroes()
 
 void CMapLoaderH3M::readAllowedArtifacts()
 {
-	map->allowedArtifact.resize (VLC->arth->artifacts.size(),true); //handle new artifacts, make them allowed by default
+	map->allowedArtifact.resize(VLC->arth->artifacts.size(), true); //handle new artifacts, make them allowed by default
 
-	// Reading allowed artifacts:  17 or 18 bytes
+	//Reading allowed artifacts:  17 or 18 bytes
 	if(map->version != EMapFormat::ROE)
 	{
 		const int bytes = map->version == EMapFormat::AB ? 17 : 18;
 
-		readBitmask(map->allowedArtifact,bytes,GameConstants::ARTIFACTS_QUANTITY);
-
+		readBitmask(map->allowedArtifact, bytes, GameConstants::ARTIFACTS_QUANTITY);
 	}
 
-	// ban combo artifacts
-	if (map->version == EMapFormat::ROE || map->version == EMapFormat::AB)
+	//ban combo artifacts
+	if(map->version == EMapFormat::ROE || map->version == EMapFormat::AB)
 	{
 		for(CArtifact * artifact : VLC->arth->artifacts)
 		{
-			// combo
-			if (artifact->constituents)
+			//combo
+			if(artifact->constituents)
 			{
 				map->allowedArtifact[artifact->id] = false;
 			}
 		}
-		if (map->version == EMapFormat::ROE)
+		if(map->version == EMapFormat::ROE)
 		{
 			map->allowedArtifact[ArtifactID::ARMAGEDDONS_BLADE] = false;
 		}
 	}
 
-	// Messy, but needed
-	for (TriggeredEvent & event : map->triggeredEvents)
+	//Messy, but needed
+	for(TriggeredEvent & event : map->triggeredEvents)
 	{
 		auto patcher = [&](EventCondition cond) -> EventExpression::Variant
-		{
-			if (cond.condition == EventCondition::HAVE_ARTIFACT ||
-				cond.condition == EventCondition::TRANSPORT)
 			{
-				map->allowedArtifact[cond.objectType] = false;
-			}
-			return cond;
-		};
+				if(cond.condition == EventCondition::HAVE_ARTIFACT || cond.condition == EventCondition::TRANSPORT)
+				{
+					map->allowedArtifact[cond.objectType] = false;
+				}
+				return cond;
+			};
 
 		event.trigger = event.trigger.morph(patcher);
 	}
@@ -692,26 +713,26 @@ void CMapLoaderH3M::readAllowedArtifacts()
 
 void CMapLoaderH3M::readAllowedSpellsAbilities()
 {
-	// Read allowed spells, including new ones
+	//Read allowed spells, including new ones
 	map->allowedSpell.resize(VLC->spellh->objects.size(), true);
 
-	// Read allowed abilities
+	//Read allowed abilities
 	map->allowedAbilities.resize(GameConstants::SKILL_QUANTITY, true);
 
 	if(map->version >= EMapFormat::SOD)
 	{
-		// Reading allowed spells (9 bytes)
+		//Reading allowed spells (9 bytes)
 		const int spell_bytes = 9;
 		readBitmask(map->allowedSpell, spell_bytes, GameConstants::SPELLS_QUANTITY);
 
-		// Allowed hero's abilities (4 bytes)
+		//Allowed hero's abilities (4 bytes)
 		const int abil_bytes = 4;
 		readBitmask(map->allowedAbilities, abil_bytes, GameConstants::SKILL_QUANTITY);
 	}
 
 	//do not generate special abilities and spells
-	for (auto spell : VLC->spellh->objects)
-		if (spell->isSpecialSpell() || spell->isCreatureAbility())
+	for(auto spell : VLC->spellh->objects)
+		if(spell->isSpecialSpell() || spell->isCreatureAbility())
 			map->allowedSpell[spell->id] = false;
 }
 
@@ -734,68 +755,69 @@ void CMapLoaderH3M::readPredefinedHeroes()
 	{
 	case EMapFormat::WOG:
 	case EMapFormat::SOD:
+	{
+		//Disposed heroes
+		for(int z = 0; z < GameConstants::HEROES_QUANTITY; z++)
 		{
-			// Disposed heroes
-			for(int z = 0; z < GameConstants::HEROES_QUANTITY; z++)
+			int custom = reader.readUInt8();
+			if(!custom)
+				continue;
+
+			auto hero = new CGHeroInstance();
+			hero->ID = Obj::HERO;
+			hero->subID = z;
+
+			bool hasExp = reader.readBool();
+			if(hasExp)
 			{
-				int custom =  reader.readUInt8();
-				if(!custom) continue;
-
-				auto  hero = new CGHeroInstance();
-				hero->ID = Obj::HERO;
-				hero->subID = z;
-
-				bool hasExp = reader.readBool();
-				if(hasExp)
-				{
-					hero->exp = reader.readUInt32();
-				}
-				else
-				{
-					hero->exp = 0;
-				}
-
-				bool hasSecSkills = reader.readBool();
-				if(hasSecSkills)
-				{
-					int howMany = reader.readUInt32();
-					hero->secSkills.resize(howMany);
-					for(int yy = 0; yy < howMany; ++yy)
-					{
-						hero->secSkills[yy].first = SecondarySkill(reader.readUInt8());
-						hero->secSkills[yy].second = reader.readUInt8();
-					}
-				}
-
-				loadArtifactsOfHero(hero);
-
-				bool hasCustomBio = reader.readBool();
-				if(hasCustomBio)
-				{
-					hero->biography = reader.readString();
-				}
-
-				// 0xFF is default, 00 male, 01 female
-				hero->sex = reader.readUInt8();
-
-				bool hasCustomSpells = reader.readBool();
-				if(hasCustomSpells)
-				{
-					readSpells(hero->spells);
-				}
-
-				bool hasCustomPrimSkills = reader.readBool();
-				if(hasCustomPrimSkills)
-				{
-					for(int xx = 0; xx < GameConstants::PRIMARY_SKILLS; xx++)
-					{
-						hero->pushPrimSkill(static_cast<PrimarySkill::PrimarySkill>(xx), reader.readUInt8());
-					}
-				}
-				map->predefinedHeroes.push_back(hero);
+				hero->exp = reader.readUInt32();
 			}
-			break;
+			else
+			{
+				hero->exp = 0;
+			}
+
+			bool hasSecSkills = reader.readBool();
+			if(hasSecSkills)
+			{
+				int howMany = reader.readUInt32();
+				hero->secSkills.resize(howMany);
+				for(int yy = 0; yy < howMany; ++yy)
+				{
+					hero->secSkills[yy].first = SecondarySkill(reader.readUInt8());
+					hero->secSkills[yy].second = reader.readUInt8();
+				}
+			}
+
+			loadArtifactsOfHero(hero);
+
+			bool hasCustomBio = reader.readBool();
+			if(hasCustomBio)
+			{
+				hero->biography = reader.readString();
+			}
+
+			//0xFF is default, 00 male, 01 female
+			hero->sex = reader.readUInt8();
+
+			bool hasCustomSpells = reader.readBool();
+			if(hasCustomSpells)
+			{
+				readSpells(hero->spells);
+			}
+
+			bool hasCustomPrimSkills = reader.readBool();
+			if(hasCustomPrimSkills)
+			{
+				for(int xx = 0; xx < GameConstants::PRIMARY_SKILLS; xx++)
+				{
+					hero->pushPrimSkill(static_cast<PrimarySkill::PrimarySkill>(xx), reader.readUInt8());
+				}
+			}
+			map->predefinedHeroes.push_back(hero);
 		}
+		break;
+	}
 	case EMapFormat::ROE:
 		break;
 	}
@@ -805,10 +827,10 @@ void CMapLoaderH3M::loadArtifactsOfHero(CGHeroInstance * hero)
 {
 	bool artSet = reader.readBool();
 
-	// True if artifact set is not default (hero has some artifacts)
+	//True if artifact set is not default (hero has some artifacts)
 	if(artSet)
 	{
-		if(hero->artifactsWorn.size() ||  hero->artifactsInBackpack.size())
+		if(hero->artifactsWorn.size() || hero->artifactsInBackpack.size())
 		{
 			logGlobal->warnStream() << boost::format("Hero %s at %s has set artifacts twice (in map properties and on adventure map instance). Using the latter set...") % hero->name % hero->pos;
 			hero->artifactsInBackpack.clear();
@@ -821,13 +843,13 @@ void CMapLoaderH3M::loadArtifactsOfHero(CGHeroInstance * hero)
 			loadArtifactToSlot(hero, pom);
 		}
 
-		// misc5 art //17
+		//misc5 art //17
 		if(map->version >= EMapFormat::SOD)
 		{
 			assert(!hero->getArt(ArtifactPosition::MACH4));
 			if(!loadArtifactToSlot(hero, ArtifactPosition::MACH4))
 			{
-				// catapult by default
+				//catapult by default
 				assert(!hero->getArt(ArtifactPosition::MACH4));
 				hero->putArtifact(ArtifactPosition::MACH4, CArtifactInstance::createArtifact(map, ArtifactID::CATAPULT));
 			}
@@ -835,7 +857,7 @@ void CMapLoaderH3M::loadArtifactsOfHero(CGHeroInstance * hero)
 
 		loadArtifactToSlot(hero, ArtifactPosition::SPELLBOOK);
 
-		// 19 //???what is that? gap in file or what? - it's probably fifth slot..
+		//19 //???what is that? gap in file or what? - it's probably fifth slot..
 		if(map->version > EMapFormat::ROE)
 		{
 			loadArtifactToSlot(hero, ArtifactPosition::MISC5);
@@ -845,8 +867,8 @@ void CMapLoaderH3M::loadArtifactsOfHero(CGHeroInstance * hero)
 			reader.skip(1);
 		}
 
-		// bag artifacts //20
-		// number of artifacts in hero's bag
+		//bag artifacts //20
+		//number of artifacts in hero's bag
 		int amount = reader.readUInt16();
 		for(int ss = 0; ss < amount; ++ss)
 		{
@@ -869,7 +891,7 @@ bool CMapLoaderH3M::loadArtifactToSlot(CGHeroInstance * hero, int slot)
 		aid = reader.readUInt16();
 	}
 
-	bool isArt  =  aid != artmask;
+	bool isArt = aid != artmask;
 	if(isArt)
 	{
 		const CArtifact * art = ArtifactID(aid).toArtifact();
@@ -889,14 +911,14 @@ bool CMapLoaderH3M::loadArtifactToSlot(CGHeroInstance * hero, int slot)
 		{
 			//TODO: check how H3 handles it -> art 0 in slot 18 in AB map
 			logGlobal->warnStream() << "Spellbook to MISC5 slot? Putting it spellbook place. AB format peculiarity ? (format "
-				<< static_cast<int>(map->version) << ")";
+			<< static_cast<int>(map->version) << ")";
 			slot = ArtifactPosition::SPELLBOOK;
 		}
 
-		// this is needed, because some H3M maps (last scenario of ROE map) contain invalid data like misplaced artifacts
-		auto artifact =  CArtifactInstance::createArtifact(map, aid);
+		//this is needed, because some H3M maps (last scenario of ROE map) contain invalid data like misplaced artifacts
+		auto artifact = CArtifactInstance::createArtifact(map, aid);
 		auto artifactPos = ArtifactPosition(slot);
-		if (artifact->canBePutAt(ArtifactLocation(hero, artifactPos)))
+		if(artifact->canBePutAt(ArtifactLocation(hero, artifactPos)))
 		{
 			hero->putArtifact(artifactPos, artifact);
 		}
@@ -913,7 +935,7 @@ void CMapLoaderH3M::readTerrain()
 {
 	map->initTerrain();
 
-	// Read terrain
+	//Read terrain
 	for(int a = 0; a < 2; ++a)
 	{
 		if(a == 1 && !map->twoLevel)
@@ -933,7 +955,7 @@ void CMapLoaderH3M::readTerrain()
 				tile.roadType = static_cast<ERoadType::ERoadType>(reader.readUInt8());
 				tile.roadDir = reader.readUInt8();
 				tile.extTileFlags = reader.readUInt8();
-				tile.blocked = ((tile.terType == ETerrainType::ROCK || tile.terType == ETerrainType::BORDER ) ? true : false); //underground tiles are always blocked
+				tile.blocked = ((tile.terType == ETerrainType::ROCK || tile.terType == ETerrainType::BORDER) ? true : false); //underground tiles are always blocked
 				tile.visitable = 0;
 			}
 		}
@@ -946,7 +968,7 @@ void CMapLoaderH3M::readDefInfo()
 
 	templates.reserve(defAmount);
 
-	// Read custom defs
+	//Read custom defs
 	for(int idd = 0; idd < defAmount; ++idd)
 	{
 		ObjectTemplate tmpl;
@@ -974,71 +996,71 @@ void CMapLoaderH3M::readObjects()
 		switch(objTempl.id)
 		{
 		case Obj::EVENT:
+		{
+			auto evnt = new CGEvent();
+			nobj = evnt;
+
+			readMessageAndGuards(evnt->message, evnt);
+
+			evnt->gainedExp = reader.readUInt32();
+			evnt->manaDiff = reader.readUInt32();
+			evnt->moraleDiff = reader.readInt8();
+			evnt->luckDiff = reader.readInt8();
+
+			readResourses(evnt->resources);
+
+			evnt->primskills.resize(GameConstants::PRIMARY_SKILLS);
+			for(int x = 0; x < 4; ++x)
 			{
-				auto  evnt = new CGEvent();
-				nobj = evnt;
-
-				readMessageAndGuards(evnt->message, evnt);
-
-				evnt->gainedExp = reader.readUInt32();
-				evnt->manaDiff = reader.readUInt32();
-				evnt->moraleDiff = reader.readInt8();
-				evnt->luckDiff = reader.readInt8();
-
-				readResourses(evnt->resources);
-
-				evnt->primskills.resize(GameConstants::PRIMARY_SKILLS);
-				for(int x = 0; x < 4; ++x)
-				{
-					evnt->primskills[x] = static_cast<PrimarySkill::PrimarySkill>(reader.readUInt8());
-				}
-
-				int gabn = reader.readUInt8(); // Number of gained abilities
-				for(int oo = 0; oo < gabn; ++oo)
-				{
-					evnt->abilities.push_back(SecondarySkill(reader.readUInt8()));
-					evnt->abilityLevels.push_back(reader.readUInt8());
-				}
-
-				int gart = reader.readUInt8(); // Number of gained artifacts
-				for(int oo = 0; oo < gart; ++oo)
-				{
-					if(map->version == EMapFormat::ROE)
-					{
-						evnt->artifacts.push_back(ArtifactID(reader.readUInt8()));
-					}
-					else
-					{
-						evnt->artifacts.push_back(ArtifactID(reader.readUInt16()));
-					}
-				}
-
-				int gspel = reader.readUInt8(); // Number of gained spells
-				for(int oo = 0; oo < gspel; ++oo)
-				{
-					evnt->spells.push_back(SpellID(reader.readUInt8()));
-				}
-
-				int gcre = reader.readUInt8(); //number of gained creatures
-				readCreatureSet(&evnt->creatures, gcre);
-
-				reader.skip(8);
-				evnt->availableFor = reader.readUInt8();
-				evnt->computerActivate = reader.readUInt8();
-				evnt->removeAfterVisit = reader.readUInt8();
-				evnt->humanActivate = true;
-
-				reader.skip(4);
-				break;
+				evnt->primskills[x] = static_cast<PrimarySkill::PrimarySkill>(reader.readUInt8());
 			}
+
+			int gabn = reader.readUInt8(); //Number of gained abilities
+			for(int oo = 0; oo < gabn; ++oo)
+			{
+				evnt->abilities.push_back(SecondarySkill(reader.readUInt8()));
+				evnt->abilityLevels.push_back(reader.readUInt8());
+			}
+
+			int gart = reader.readUInt8(); //Number of gained artifacts
+			for(int oo = 0; oo < gart; ++oo)
+			{
+				if(map->version == EMapFormat::ROE)
+				{
+					evnt->artifacts.push_back(ArtifactID(reader.readUInt8()));
+				}
+				else
+				{
+					evnt->artifacts.push_back(ArtifactID(reader.readUInt16()));
+				}
+			}
+
+			int gspel = reader.readUInt8(); //Number of gained spells
+			for(int oo = 0; oo < gspel; ++oo)
+			{
+				evnt->spells.push_back(SpellID(reader.readUInt8()));
+			}
+
+			int gcre = reader.readUInt8(); //number of gained creatures
+			readCreatureSet(&evnt->creatures, gcre);
+
+			reader.skip(8);
+			evnt->availableFor = reader.readUInt8();
+			evnt->computerActivate = reader.readUInt8();
+			evnt->removeAfterVisit = reader.readUInt8();
+			evnt->humanActivate = true;
+
+			reader.skip(4);
+			break;
+		}
 		case Obj::HERO:
 		case Obj::RANDOM_HERO:
 		case Obj::PRISON:
-			{
-				nobj = readHero(idToBeGiven, objPos);
-				break;
-			}
-		case Obj::MONSTER:  //Monster
+		{
+			nobj = readHero(idToBeGiven, objPos);
+			break;
+		}
+		case Obj::MONSTER: //Monster
 		case Obj::RANDOM_MONSTER:
 		case Obj::RANDOM_MONSTER_L1:
 		case Obj::RANDOM_MONSTER_L2:
@@ -1047,143 +1069,143 @@ void CMapLoaderH3M::readObjects()
 		case Obj::RANDOM_MONSTER_L5:
 		case Obj::RANDOM_MONSTER_L6:
 		case Obj::RANDOM_MONSTER_L7:
+		{
+			auto cre = new CGCreature();
+			nobj = cre;
+
+			if(map->version > EMapFormat::ROE)
 			{
-				auto  cre = new CGCreature();
-				nobj = cre;
-
-				if(map->version > EMapFormat::ROE)
-				{
-					cre->identifier = reader.readUInt32();
-					map->questIdentifierToId[cre->identifier] = idToBeGiven;
-				}
-
-				auto  hlp = new CStackInstance();
-				hlp->count = reader.readUInt16();
-
-				//type will be set during initialization
-				cre->putStack(SlotID(0), hlp);
-
-				cre->character = reader.readUInt8();
-
-				bool hasMessage = reader.readBool();
-				if(hasMessage)
-				{
-					cre->message = reader.readString();
-					readResourses(cre->resources);
-
-					int artID;
-					if (map->version == EMapFormat::ROE)
-					{
-						artID = reader.readUInt8();
-					}
-					else
-					{
-						artID = reader.readUInt16();
-					}
-
-					if(map->version == EMapFormat::ROE)
-					{
-						if(artID != 0xff)
-						{
-							cre->gainedArtifact = ArtifactID(artID);
-						}
-						else
-						{
-							cre->gainedArtifact = ArtifactID::NONE;
-						}
-					}
-					else
-					{
-						if(artID != 0xffff)
-						{
-							cre->gainedArtifact = ArtifactID(artID);
-						}
-						else
-						{
-							cre->gainedArtifact = ArtifactID::NONE;
-						}
-					}
-				}
-				cre->neverFlees = reader.readUInt8();
-				cre->notGrowingTeam =reader.readUInt8();
-				reader.skip(2);
-				break;
+				cre->identifier = reader.readUInt32();
+				map->questIdentifierToId[cre->identifier] = idToBeGiven;
 			}
+
+			auto hlp = new CStackInstance();
+			hlp->count = reader.readUInt16();
+
+			//type will be set during initialization
+			cre->putStack(SlotID(0), hlp);
+
+			cre->character = reader.readUInt8();
+
+			bool hasMessage = reader.readBool();
+			if(hasMessage)
+			{
+				cre->message = reader.readString();
+				readResourses(cre->resources);
+
+				int artID;
+				if(map->version == EMapFormat::ROE)
+				{
+					artID = reader.readUInt8();
+				}
+				else
+				{
+					artID = reader.readUInt16();
+				}
+
+				if(map->version == EMapFormat::ROE)
+				{
+					if(artID != 0xff)
+					{
+						cre->gainedArtifact = ArtifactID(artID);
+					}
+					else
+					{
+						cre->gainedArtifact = ArtifactID::NONE;
+					}
+				}
+				else
+				{
+					if(artID != 0xffff)
+					{
+						cre->gainedArtifact = ArtifactID(artID);
+					}
+					else
+					{
+						cre->gainedArtifact = ArtifactID::NONE;
+					}
+				}
+			}
+			cre->neverFlees = reader.readUInt8();
+			cre->notGrowingTeam = reader.readUInt8();
+			reader.skip(2);
+			break;
+		}
 		case Obj::OCEAN_BOTTLE:
 		case Obj::SIGN:
-			{
-				auto  sb = new CGSignBottle();
-				nobj = sb;
-				sb->message = reader.readString();
-				reader.skip(4);
-				break;
-			}
+		{
+			auto sb = new CGSignBottle();
+			nobj = sb;
+			sb->message = reader.readString();
+			reader.skip(4);
+			break;
+		}
 		case Obj::SEER_HUT:
-			{
-				nobj = readSeerHut();
-				break;
-			}
+		{
+			nobj = readSeerHut();
+			break;
+		}
 		case Obj::WITCH_HUT:
-			{
-				auto  wh = new CGWitchHut();
-				nobj = wh;
+		{
+			auto wh = new CGWitchHut();
+			nobj = wh;
 
-				// in RoE we cannot specify it - all are allowed (I hope)
-				if(map->version > EMapFormat::ROE)
+			//in RoE we cannot specify it - all are allowed (I hope)
+			if(map->version > EMapFormat::ROE)
+			{
+				for(int i = 0; i < 4; ++i)
 				{
-					for(int i = 0 ; i < 4; ++i)
+					ui8 c = reader.readUInt8();
+					for(int yy = 0; yy < 8; ++yy)
 					{
-						ui8 c = reader.readUInt8();
-						for(int yy = 0; yy < 8; ++yy)
+						if(i * 8 + yy < GameConstants::SKILL_QUANTITY)
 						{
-							if(i * 8 + yy < GameConstants::SKILL_QUANTITY)
+							if(c == (c | static_cast<ui8>(std::pow(2., yy))))
 							{
-								if(c == (c | static_cast<ui8>(std::pow(2., yy))))
-								{
-									wh->allowedAbilities.push_back(i * 8 + yy);
-								}
+								wh->allowedAbilities.push_back(i * 8 + yy);
 							}
 						}
 					}
 				}
-				else
-				{
-					// RoE map
-					for(int gg = 0; gg < GameConstants::SKILL_QUANTITY; ++gg)
-					{
-						wh->allowedAbilities.push_back(gg);
-					}
-				}
-				break;
 			}
-		case Obj::SCHOLAR:
+			else
 			{
-				auto  sch = new CGScholar();
-				nobj = sch;
-				sch->bonusType = static_cast<CGScholar::EBonusType>(reader.readUInt8());
-				sch->bonusID = reader.readUInt8();
-				reader.skip(6);
-				break;
+				//RoE map
+				for(int gg = 0; gg < GameConstants::SKILL_QUANTITY; ++gg)
+				{
+					wh->allowedAbilities.push_back(gg);
+				}
 			}
+			break;
+		}
+		case Obj::SCHOLAR:
+		{
+			auto sch = new CGScholar();
+			nobj = sch;
+			sch->bonusType = static_cast<CGScholar::EBonusType>(reader.readUInt8());
+			sch->bonusID = reader.readUInt8();
+			reader.skip(6);
+			break;
+		}
 		case Obj::GARRISON:
 		case Obj::GARRISON2:
+		{
+			auto gar = new CGGarrison();
+			nobj = gar;
+			nobj->setOwner(PlayerColor(reader.readUInt8()));
+			reader.skip(3);
+			readCreatureSet(gar, 7);
+			if(map->version > EMapFormat::ROE)
 			{
-				auto  gar = new CGGarrison();
-				nobj = gar;
-				nobj->setOwner(PlayerColor(reader.readUInt8()));
-				reader.skip(3);
-				readCreatureSet(gar, 7);
-				if(map->version > EMapFormat::ROE)
-				{
-					gar->removableUnits = reader.readBool();
-				}
-				else
-				{
-					gar->removableUnits = true;
-				}
-				reader.skip(8);
-				break;
+				gar->removableUnits = reader.readBool();
 			}
+			else
+			{
+				gar->removableUnits = true;
+			}
+			reader.skip(8);
+			break;
+		}
 		case Obj::ARTIFACT:
 		case Obj::RANDOM_ART:
 		case Obj::RANDOM_TREASURE_ART:
@@ -1191,284 +1213,285 @@ void CMapLoaderH3M::readObjects()
 		case Obj::RANDOM_MAJOR_ART:
 		case Obj::RANDOM_RELIC_ART:
 		case Obj::SPELL_SCROLL:
+		{
+			int artID = ArtifactID::NONE; //random, set later
+			int spellID = -1;
+			auto art = new CGArtifact();
+			nobj = art;
+
+			readMessageAndGuards(art->message, art);
+
+			if(objTempl.id == Obj::SPELL_SCROLL)
 			{
-				int artID = ArtifactID::NONE; //random, set later
-				int spellID = -1;
-				auto  art = new CGArtifact();
-				nobj = art;
-
-				readMessageAndGuards(art->message, art);
-
-				if(objTempl.id == Obj::SPELL_SCROLL)
-				{
-					spellID = reader.readUInt32();
-					artID = ArtifactID::SPELL_SCROLL;
-				}
-				else if(objTempl.id == Obj::ARTIFACT)
-				{
-					//specific artifact
-					artID = objTempl.subid;
-				}
-
-				art->storedArtifact = CArtifactInstance::createArtifact(map, artID, spellID);
-				break;
+				spellID = reader.readUInt32();
+				artID = ArtifactID::SPELL_SCROLL;
 			}
+			else if(objTempl.id == Obj::ARTIFACT)
+			{
+				//specific artifact
+				artID = objTempl.subid;
+			}
+
+			art->storedArtifact = CArtifactInstance::createArtifact(map, artID, spellID);
+			break;
+		}
 		case Obj::RANDOM_RESOURCE:
 		case Obj::RESOURCE:
+		{
+			auto res = new CGResource();
+			nobj = res;
+
+			readMessageAndGuards(res->message, res);
+
+			res->amount = reader.readUInt32();
+			if(objTempl.subid == Res::GOLD)
 			{
-				auto  res = new CGResource();
-				nobj = res;
-
-				readMessageAndGuards(res->message, res);
-
-				res->amount = reader.readUInt32();
-				if(objTempl.subid == Res::GOLD)
-				{
-					// Gold is multiplied by 100.
-					res->amount *= 100;
-				}
-				reader.skip(4);
-				break;
+				//Gold is multiplied by 100.
+				res->amount *= 100;
 			}
+			reader.skip(4);
+			break;
+		}
 		case Obj::RANDOM_TOWN:
 		case Obj::TOWN:
-			{
-				nobj = readTown(objTempl.subid);
-				break;
-			}
+		{
+			nobj = readTown(objTempl.subid);
+			break;
+		}
 		case Obj::MINE:
 		case Obj::ABANDONED_MINE:
-			{
-				nobj = new CGMine();
-				nobj->setOwner(PlayerColor(reader.readUInt8()));
-				reader.skip(3);
-				break;
-			}
+		{
+			nobj = new CGMine();
+			nobj->setOwner(PlayerColor(reader.readUInt8()));
+			reader.skip(3);
+			break;
+		}
 		case Obj::CREATURE_GENERATOR1:
 		case Obj::CREATURE_GENERATOR2:
 		case Obj::CREATURE_GENERATOR3:
 		case Obj::CREATURE_GENERATOR4:
-			{
-				nobj = new CGDwelling();
-				nobj->setOwner(PlayerColor(reader.readUInt8()));
-				reader.skip(3);
-				break;
-			}
+		{
+			nobj = new CGDwelling();
+			nobj->setOwner(PlayerColor(reader.readUInt8()));
+			reader.skip(3);
+			break;
+		}
 		case Obj::SHRINE_OF_MAGIC_INCANTATION:
 		case Obj::SHRINE_OF_MAGIC_GESTURE:
 		case Obj::SHRINE_OF_MAGIC_THOUGHT:
-			{
-				auto  shr = new CGShrine();
-				nobj = shr;
-				ui8 raw_id = reader.readUInt8();
+		{
+			auto shr = new CGShrine();
+			nobj = shr;
+			ui8 raw_id = reader.readUInt8();
 
-				if (255 == raw_id)
+			if(255 == raw_id)
+			{
+				shr->spell = SpellID(SpellID::NONE);
+			}
+			else
+			{
+				shr->spell = SpellID(raw_id);
+			}
+
+			reader.skip(3);
+			break;
+		}
+		case Obj::PANDORAS_BOX:
+		{
+			auto box = new CGPandoraBox();
+			nobj = box;
+			readMessageAndGuards(box->message, box);
+
+			box->gainedExp = reader.readUInt32();
+			box->manaDiff = reader.readUInt32();
+			box->moraleDiff = reader.readInt8();
+			box->luckDiff = reader.readInt8();
+
+			readResourses(box->resources);
+
+			box->primskills.resize(GameConstants::PRIMARY_SKILLS);
+			for(int x = 0; x < 4; ++x)
+			{
+				box->primskills[x] = static_cast<PrimarySkill::PrimarySkill>(reader.readUInt8());
+			}
+
+			int gabn = reader.readUInt8(); //number of gained abilities
+			for(int oo = 0; oo < gabn; ++oo)
+			{
+				box->abilities.push_back(SecondarySkill(reader.readUInt8()));
+				box->abilityLevels.push_back(reader.readUInt8());
+			}
+			int gart = reader.readUInt8(); //number of gained artifacts
+			for(int oo = 0; oo < gart; ++oo)
+			{
+				if(map->version > EMapFormat::ROE)
 				{
-					shr->spell = SpellID(SpellID::NONE);
+					box->artifacts.push_back(ArtifactID(reader.readUInt16()));
 				}
 				else
 				{
-					shr->spell = SpellID(raw_id);
+					box->artifacts.push_back(ArtifactID(reader.readUInt8()));
 				}
-
-				reader.skip(3);
-				break;
 			}
-		case Obj::PANDORAS_BOX:
+			int gspel = reader.readUInt8(); //number of gained spells
+			for(int oo = 0; oo < gspel; ++oo)
 			{
-				auto  box = new CGPandoraBox();
-				nobj = box;
-				readMessageAndGuards(box->message, box);
-
-				box->gainedExp = reader.readUInt32();
-				box->manaDiff = reader.readUInt32();
-				box->moraleDiff = reader.readInt8();
-				box->luckDiff = reader.readInt8();
-
-				readResourses(box->resources);
-
-				box->primskills.resize(GameConstants::PRIMARY_SKILLS);
-				for(int x = 0; x < 4; ++x)
-				{
-					box->primskills[x] = static_cast<PrimarySkill::PrimarySkill>(reader.readUInt8());
-				}
-
-				int gabn = reader.readUInt8();//number of gained abilities
-				for(int oo = 0; oo < gabn; ++oo)
-				{
-					box->abilities.push_back(SecondarySkill(reader.readUInt8()));
-					box->abilityLevels.push_back(reader.readUInt8());
-				}
-				int gart = reader.readUInt8(); //number of gained artifacts
-				for(int oo = 0; oo < gart; ++oo)
-				{
-					if(map->version > EMapFormat::ROE)
-					{
-						box->artifacts.push_back(ArtifactID(reader.readUInt16()));
-					}
-					else
-					{
-						box->artifacts.push_back(ArtifactID(reader.readUInt8()));
-					}
-				}
-				int gspel = reader.readUInt8(); //number of gained spells
-				for(int oo = 0; oo < gspel; ++oo)
-				{
-					box->spells.push_back(SpellID(reader.readUInt8()));
-				}
-				int gcre = reader.readUInt8(); //number of gained creatures
-				readCreatureSet(&box->creatures, gcre);
-				reader.skip(8);
-				break;
+				box->spells.push_back(SpellID(reader.readUInt8()));
 			}
+			int gcre = reader.readUInt8(); //number of gained creatures
+			readCreatureSet(&box->creatures, gcre);
+			reader.skip(8);
+			break;
+		}
 		case Obj::GRAIL:
-			{
-				map->grailPos = objPos;
-				map->grailRadius = reader.readUInt32();
-				continue;
-			}
+		{
+			map->grailPos = objPos;
+			map->grailRadius = reader.readUInt32();
+			continue;
+		}
 		case Obj::RANDOM_DWELLING: //same as castle + level range
 		case Obj::RANDOM_DWELLING_LVL: //same as castle, fixed level
 		case Obj::RANDOM_DWELLING_FACTION: //level range, fixed faction
+		{
+			auto dwelling = new CGDwelling();
+			nobj = dwelling;
+			CSpecObjInfo * spec = nullptr;
+			switch(objTempl.id)
 			{
-				auto dwelling = new CGDwelling();
-				nobj = dwelling;
-				CSpecObjInfo * spec = nullptr;
-				switch(objTempl.id)
-				{
-				case Obj::RANDOM_DWELLING:
-					spec = new CCreGenLeveledCastleInfo();
-					break;
-				case Obj::RANDOM_DWELLING_LVL:
-					spec = new CCreGenAsCastleInfo();
-					break;
-				case Obj::RANDOM_DWELLING_FACTION:
-					spec = new CCreGenLeveledInfo();
-					break;
-				default:
-					throw std::runtime_error("Invalid random dwelling format");
-				}
-				spec->owner = dwelling;
-
-				nobj->setOwner(PlayerColor(reader.readUInt32()));
-
-				//216 and 217
-				if (auto castleSpec = dynamic_cast<CCreGenAsCastleInfo *>(spec))
-				{
-					castleSpec->instanceId = "";
-					castleSpec->identifier = reader.readUInt32();
-					if(!castleSpec->identifier)
-					{
-						castleSpec->asCastle = false;
-						const int MASK_SIZE = 8;
-						ui8 mask[2];
-						mask[0] = reader.readUInt8();
-						mask[1] = reader.readUInt8();
-
-						castleSpec->allowedFactions.clear();
-						castleSpec->allowedFactions.resize(VLC->townh->factions.size(), false);
-
-						for(int i = 0; i < MASK_SIZE; i++)
-							castleSpec->allowedFactions[i] = ((mask[0] & (1 << i))>0);
-
-						for(int i = 0; i < (GameConstants::F_NUMBER-MASK_SIZE); i++)
-							castleSpec->allowedFactions[i+MASK_SIZE] = ((mask[1] & (1 << i))>0);
-					}
-					else
-					{
-						castleSpec->asCastle = true;
-					}
-				}
-
-				//216 and 218
-				if (auto lvlSpec = dynamic_cast<CCreGenLeveledInfo *>(spec))
-				{
-					lvlSpec->minLevel = std::max(reader.readUInt8(), ui8(1));
-					lvlSpec->maxLevel = std::min(reader.readUInt8(), ui8(7));
-				}
-				dwelling->info = spec;
+			case Obj::RANDOM_DWELLING:
+				spec = new CCreGenLeveledCastleInfo();
 				break;
+			case Obj::RANDOM_DWELLING_LVL:
+				spec = new CCreGenAsCastleInfo();
+				break;
+			case Obj::RANDOM_DWELLING_FACTION:
+				spec = new CCreGenLeveledInfo();
+				break;
+			default:
+				throw std::runtime_error("Invalid random dwelling format");
 			}
+			spec->owner = dwelling;
+
+			nobj->setOwner(PlayerColor(reader.readUInt32()));
+
+			//216 and 217
+			if(auto castleSpec = dynamic_cast<CCreGenAsCastleInfo *>(spec))
+			{
+				castleSpec->instanceId = "";
+				castleSpec->identifier = reader.readUInt32();
+				if(!castleSpec->identifier)
+				{
+					castleSpec->asCastle = false;
+					const int MASK_SIZE = 8;
+					ui8 mask[2];
+					mask[0] = reader.readUInt8();
+					mask[1] = reader.readUInt8();
+
+					castleSpec->allowedFactions.clear();
+					castleSpec->allowedFactions.resize(VLC->townh->factions.size(), false);
+
+					for(int i = 0; i < MASK_SIZE; i++)
+						castleSpec->allowedFactions[i] = ((mask[0] & (1 << i)) > 0);
+
+					for(int i = 0; i < (GameConstants::F_NUMBER - MASK_SIZE); i++)
+						castleSpec->allowedFactions[i + MASK_SIZE] = ((mask[1] & (1 << i)) > 0);
+				}
+				else
+				{
+					castleSpec->asCastle = true;
+				}
+			}
+
+			//216 and 218
+			if(auto lvlSpec = dynamic_cast<CCreGenLeveledInfo *>(spec))
+			{
+				lvlSpec->minLevel = std::max(reader.readUInt8(), ui8(1));
+				lvlSpec->maxLevel = std::min(reader.readUInt8(), ui8(7));
+			}
+			dwelling->info = spec;
+			break;
+		}
 		case Obj::QUEST_GUARD:
-			{
-				auto  guard = new CGQuestGuard();
-				readQuest(guard);
-				nobj = guard;
-				break;
-			}
+		{
+			auto guard = new CGQuestGuard();
+			readQuest(guard);
+			nobj = guard;
+			break;
+		}
 		case Obj::SHIPYARD:
-			{
-				nobj = new CGShipyard();
-				nobj->setOwner(PlayerColor(reader.readUInt32()));
-				break;
-			}
+		{
+			nobj = new CGShipyard();
+			nobj->setOwner(PlayerColor(reader.readUInt32()));
+			break;
+		}
 		case Obj::HERO_PLACEHOLDER: //hero placeholder
+		{
+			auto hp = new CGHeroPlaceholder();
+			nobj = hp;
+
+			hp->setOwner(PlayerColor(reader.readUInt8()));
+
+			int htid = reader.readUInt8();
+			; //hero type id
+			nobj->subID = htid;
+
+			if(htid == 0xff)
 			{
-				auto  hp = new CGHeroPlaceholder();
-				nobj = hp;
-
-				hp->setOwner(PlayerColor(reader.readUInt8()));
-
-				int htid = reader.readUInt8();; //hero type id
-				nobj->subID = htid;
-
-				if(htid == 0xff)
-				{
-					hp->power = reader.readUInt8();
-					logGlobal->infoStream() << "Hero placeholder: by power at " << objPos;
-				}
-				else
-				{
-					logGlobal->infoStream() << "Hero placeholder: " << VLC->heroh->heroes[htid]->name << " at " << objPos;
-					hp->power = 0;
-				}
-
-				break;
+				hp->power = reader.readUInt8();
+				logGlobal->infoStream() << "Hero placeholder: by power at " << objPos;
 			}
+			else
+			{
+				logGlobal->infoStream() << "Hero placeholder: " << VLC->heroh->heroes[htid]->name << " at " << objPos;
+				hp->power = 0;
+			}
+
+			break;
+		}
 		case Obj::BORDERGUARD:
-			{
-				nobj = new CGBorderGuard();
-				break;
-			}
+		{
+			nobj = new CGBorderGuard();
+			break;
+		}
 		case Obj::BORDER_GATE:
-			{
-				nobj = new CGBorderGate();
-				break;
-			}
+		{
+			nobj = new CGBorderGate();
+			break;
+		}
 		case Obj::PYRAMID: //Pyramid of WoG object
+		{
+			if(objTempl.subid == 0)
 			{
-				if(objTempl.subid == 0)
-				{
-					nobj = new CBank();
-				}
-				else
-				{
-					//WoG object
-					//TODO: possible special handling
-					nobj = new CGObjectInstance();
-				}
-				break;
+				nobj = new CBank();
 			}
+			else
+			{
+				//WoG object
+				//TODO: possible special handling
+				nobj = new CGObjectInstance();
+			}
+			break;
+		}
 		case Obj::LIGHTHOUSE: //Lighthouse
-			{
-				nobj = new CGLighthouse();
-				nobj->tempOwner = PlayerColor(reader.readUInt32());
-				break;
-			}
+		{
+			nobj = new CGLighthouse();
+			nobj->tempOwner = PlayerColor(reader.readUInt32());
+			break;
+		}
 		default: //any other object
+		{
+			if(VLC->objtypeh->knownSubObjects(objTempl.id).count(objTempl.subid))
 			{
-				if (VLC->objtypeh->knownSubObjects(objTempl.id).count(objTempl.subid))
-				{
-					nobj = VLC->objtypeh->getHandlerFor(objTempl.id, objTempl.subid)->create(objTempl);
-				}
-				else
-				{
-					logGlobal->warnStream() << "Unrecognized object: " << objTempl.id << ":" << objTempl.subid << " at " << objPos
-											<< " on map " << map->name;
-					nobj = new CGObjectInstance();
-				}
-				break;
+				nobj = VLC->objtypeh->getHandlerFor(objTempl.id, objTempl.subid)->create(objTempl);
 			}
+			else
+			{
+				logGlobal->warnStream() << "Unrecognized object: " << objTempl.id << ":" << objTempl.subid << " at " << objPos
+				<< " on map " << map->name;
+				nobj = new CGObjectInstance();
+			}
+			break;
+		}
 		}
 
 		nobj->pos = objPos;
@@ -1508,7 +1531,7 @@ void CMapLoaderH3M::readCreatureSet(CCreatureSet * out, int number)
 		CreatureID creID;
 		int count;
 
-		if (version)
+		if(version)
 		{
 			creID = CreatureID(reader.readUInt16());
 		}
@@ -1518,11 +1541,11 @@ void CMapLoaderH3M::readCreatureSet(CCreatureSet * out, int number)
 		}
 		count = reader.readUInt16();
 
-		// Empty slot
+		//Empty slot
 		if(creID == maxID)
 			continue;
 
-		auto  hlp = new CStackInstance();
+		auto hlp = new CStackInstance();
 		hlp->count = count;
 
 		if(creID > maxID - 0xf)
@@ -1662,8 +1685,8 @@ CGObjectInstance * CMapLoaderH3M::readHero(ObjectInstanceID idToBeGiven, const i
 		}
 		nhi->sex = reader.readUInt8();
 
-		// Remove trash
-		if (nhi->sex != 0xFF)
+		//Remove trash
+		if(nhi->sex != 0xFF)
 		{
 			nhi->sex &= 1;
 		}
@@ -1673,7 +1696,7 @@ CGObjectInstance * CMapLoaderH3M::readHero(ObjectInstanceID idToBeGiven, const i
 		nhi->sex = 0xFF;
 	}
 
-	// Spells
+	//Spells
 	if(map->version > EMapFormat::AB)
 	{
 		bool hasCustomSpells = reader.readBool();
@@ -1710,7 +1733,7 @@ CGObjectInstance * CMapLoaderH3M::readHero(ObjectInstanceID idToBeGiven, const i
 		if(hasCustomPrimSkills)
 		{
 			auto ps = nhi->getAllBonuses(Selector::type(Bonus::PRIMARY_SKILL)
-								.And(Selector::sourceType(Bonus::HERO_BASE_SKILL)), nullptr);
+						     .And(Selector::sourceType(Bonus::HERO_BASE_SKILL)), nullptr);
 			if(ps->size())
 			{
 				logGlobal->warnStream() << boost::format("Hero %s subID=%d has set primary skills twice (in map properties and on adventure map instance). Using the latter set...") % nhi->name % nhi->subID;
@@ -1731,7 +1754,7 @@ CGObjectInstance * CMapLoaderH3M::readHero(ObjectInstanceID idToBeGiven, const i
 
 CGSeerHut * CMapLoaderH3M::readSeerHut()
 {
-	auto  hut = new CGSeerHut();
+	auto hut = new CGSeerHut();
 
 	if(map->version > EMapFormat::ROE)
 	{
@@ -1741,10 +1764,10 @@ CGSeerHut * CMapLoaderH3M::readSeerHut()
 	{
 		//RoE
 		int artID = reader.readUInt8();
-		if (artID != 255)
+		if(artID != 255)
 		{
 			//not none quest
-			hut->quest->m5arts.push_back (artID);
+			hut->quest->m5arts.push_back(artID);
 			hut->quest->missionType = CQuest::MISSION_ART;
 		}
 		else
@@ -1755,88 +1778,88 @@ CGSeerHut * CMapLoaderH3M::readSeerHut()
 		hut->quest->isCustomFirst = hut->quest->isCustomNext = hut->quest->isCustomComplete = false;
 	}
 
-	if (hut->quest->missionType)
+	if(hut->quest->missionType)
 	{
 		auto rewardType = static_cast<CGSeerHut::ERewardType>(reader.readUInt8());
 		hut->rewardType = rewardType;
 		switch(rewardType)
 		{
 		case CGSeerHut::EXPERIENCE:
-			{
-				hut->rVal = reader.readUInt32();
-				break;
-			}
+		{
+			hut->rVal = reader.readUInt32();
+			break;
+		}
 		case CGSeerHut::MANA_POINTS:
-			{
-				hut->rVal = reader.readUInt32();
-				break;
-			}
+		{
+			hut->rVal = reader.readUInt32();
+			break;
+		}
 		case CGSeerHut::MORALE_BONUS:
-			{
-				hut->rVal = reader.readUInt8();
-				break;
-			}
+		{
+			hut->rVal = reader.readUInt8();
+			break;
+		}
 		case CGSeerHut::LUCK_BONUS:
-			{
-				hut->rVal = reader.readUInt8();
-				break;
-			}
+		{
+			hut->rVal = reader.readUInt8();
+			break;
+		}
 		case CGSeerHut::RESOURCES:
-			{
-				hut->rID = reader.readUInt8();
-				// Only the first 3 bytes are used. Skip the 4th.
-				hut->rVal = reader.readUInt32() & 0x00ffffff;
-				break;
-			}
+		{
+			hut->rID = reader.readUInt8();
+			//Only the first 3 bytes are used. Skip the 4th.
+			hut->rVal = reader.readUInt32() & 0x00ffffff;
+			break;
+		}
 		case CGSeerHut::PRIMARY_SKILL:
-			{
-				hut->rID = reader.readUInt8();
-				hut->rVal = reader.readUInt8();
-				break;
-			}
+		{
+			hut->rID = reader.readUInt8();
+			hut->rVal = reader.readUInt8();
+			break;
+		}
 		case CGSeerHut::SECONDARY_SKILL:
-			{
-				hut->rID = reader.readUInt8();
-				hut->rVal = reader.readUInt8();
-				break;
-			}
+		{
+			hut->rID = reader.readUInt8();
+			hut->rVal = reader.readUInt8();
+			break;
+		}
 		case CGSeerHut::ARTIFACT:
-			{
-				if (map->version == EMapFormat::ROE)
-				{
-					hut->rID = reader.readUInt8();
-				}
-				else
-				{
-					hut->rID = reader.readUInt16();
-				}
-				break;
-			}
-		case CGSeerHut::SPELL:
+		{
+			if(map->version == EMapFormat::ROE)
 			{
 				hut->rID = reader.readUInt8();
-				break;
 			}
-		case CGSeerHut::CREATURE:
+			else
 			{
-				if(map->version > EMapFormat::ROE)
-				{
-					hut->rID = reader.readUInt16();
-					hut->rVal = reader.readUInt16();
-				}
-				else
-				{
-					hut->rID = reader.readUInt8();
-					hut->rVal = reader.readUInt16();
-				}
-				break;
+				hut->rID = reader.readUInt16();
 			}
+			break;
+		}
+		case CGSeerHut::SPELL:
+		{
+			hut->rID = reader.readUInt8();
+			break;
+		}
+		case CGSeerHut::CREATURE:
+		{
+			if(map->version > EMapFormat::ROE)
+			{
+				hut->rID = reader.readUInt16();
+				hut->rVal = reader.readUInt16();
+			}
+			else
+			{
+				hut->rID = reader.readUInt8();
+				hut->rVal = reader.readUInt16();
+			}
+			break;
+		}
 		}
 		reader.skip(2);
 	}
 	else
 	{
-		// missionType==255
+		//missionType==255
 		reader.skip(3);
 	}
 
@@ -1852,58 +1875,58 @@ void CMapLoaderH3M::readQuest(IQuestObject * guard)
 	case CQuest::MISSION_NONE:
 		return;
 	case CQuest::MISSION_PRIMARY_STAT:
+	{
+		guard->quest->m2stats.resize(4);
+		for(int x = 0; x < 4; ++x)
 		{
-			guard->quest->m2stats.resize(4);
-			for(int x = 0; x < 4; ++x)
-			{
-				guard->quest->m2stats[x] = reader.readUInt8();
-			}
+			guard->quest->m2stats[x] = reader.readUInt8();
 		}
-		break;
+	}
+	break;
 	case CQuest::MISSION_LEVEL:
 	case CQuest::MISSION_KILL_HERO:
 	case CQuest::MISSION_KILL_CREATURE:
-		{
-			guard->quest->m13489val = reader.readUInt32();
-			break;
-		}
+	{
+		guard->quest->m13489val = reader.readUInt32();
+		break;
+	}
 	case CQuest::MISSION_ART:
+	{
+		int artNumber = reader.readUInt8();
+		for(int yy = 0; yy < artNumber; ++yy)
 		{
-			int artNumber = reader.readUInt8();
-			for(int yy = 0; yy < artNumber; ++yy)
-			{
-				int artid = reader.readUInt16();
-				guard->quest->m5arts.push_back(artid);
-				map->allowedArtifact[artid] = false; //these are unavailable for random generation
-			}
-			break;
+			int artid = reader.readUInt16();
+			guard->quest->m5arts.push_back(artid);
+			map->allowedArtifact[artid] = false; //these are unavailable for random generation
 		}
+		break;
+	}
 	case CQuest::MISSION_ARMY:
+	{
+		int typeNumber = reader.readUInt8();
+		guard->quest->m6creatures.resize(typeNumber);
+		for(int hh = 0; hh < typeNumber; ++hh)
 		{
-			int typeNumber = reader.readUInt8();
-			guard->quest->m6creatures.resize(typeNumber);
-			for(int hh = 0; hh < typeNumber; ++hh)
-			{
-				guard->quest->m6creatures[hh].type = VLC->creh->creatures[reader.readUInt16()];
-				guard->quest->m6creatures[hh].count = reader.readUInt16();
-			}
-			break;
+			guard->quest->m6creatures[hh].type = VLC->creh->creatures[reader.readUInt16()];
+			guard->quest->m6creatures[hh].count = reader.readUInt16();
 		}
+		break;
+	}
 	case CQuest::MISSION_RESOURCES:
+	{
+		guard->quest->m7resources.resize(7);
+		for(int x = 0; x < 7; ++x)
 		{
-			guard->quest->m7resources.resize(7);
-			for(int x = 0; x < 7; ++x)
-			{
-				guard->quest->m7resources[x] = reader.readUInt32();
-			}
-			break;
+			guard->quest->m7resources[x] = reader.readUInt32();
 		}
+		break;
+	}
 	case CQuest::MISSION_HERO:
 	case CQuest::MISSION_PLAYER:
-		{
-			guard->quest->m13489val = reader.readUInt8();
-			break;
-		}
+	{
+		guard->quest->m13489val = reader.readUInt8();
+		break;
+	}
 	}
 
 	int limit = reader.readUInt32();
@@ -1925,7 +1948,7 @@ void CMapLoaderH3M::readQuest(IQuestObject * guard)
 
 CGTownInstance * CMapLoaderH3M::readTown(int castleID)
 {
-	auto  nt = new CGTownInstance();
+	auto nt = new CGTownInstance();
 	if(map->version > EMapFormat::ROE)
 	{
 		nt->identifier = reader.readUInt32();
@@ -1947,14 +1970,14 @@ CGTownInstance * CMapLoaderH3M::readTown(int castleID)
 	bool hasCustomBuildings = reader.readBool();
 	if(hasCustomBuildings)
 	{
-		readBitmask(nt->builtBuildings,6,48,false);
+		readBitmask(nt->builtBuildings, 6, 48, false);
 
-		readBitmask(nt->forbiddenBuildings,6,48,false);
+		readBitmask(nt->forbiddenBuildings, 6, 48, false);
 
 		nt->builtBuildings = convertBuildings(nt->builtBuildings, castleID);
 		nt->forbiddenBuildings = convertBuildings(nt->forbiddenBuildings, castleID);
 	}
-	// Standard buildings
+	//Standard buildings
 	else
 	{
 		bool hasFort = reader.readBool();
@@ -2002,12 +2025,12 @@ CGTownInstance * CMapLoaderH3M::readTown(int castleID)
 	}
 	//add all spells from mods
 	//TODO: allow customize new spells in towns
-	for (int i = SpellID::AFTER_LAST; i < VLC->spellh->objects.size(); ++i)
+	for(int i = SpellID::AFTER_LAST; i < VLC->spellh->objects.size(); ++i)
 	{
 		nt->possibleSpells.push_back(SpellID(i));
 	}
 
-	// Read castle events
+	//Read castle events
 	int numberOfEvent = reader.readUInt32();
 
 	for(int gh = 0; gh < numberOfEvent; ++gh)
@@ -2031,13 +2054,13 @@ CGTownInstance * CMapLoaderH3M::readTown(int castleID)
 
 		nce.computerAffected = reader.readUInt8();
 		nce.firstOccurence = reader.readUInt16();
-		nce.nextOccurence =  reader.readUInt8();
+		nce.nextOccurence = reader.readUInt8();
 
 		reader.skip(17);
 
-		// New buildings
+		//New buildings
 
-		readBitmask(nce.buildings,6,48,false);
+		readBitmask(nce.buildings, 6, 48, false);
 
 		nce.buildings = convertBuildings(nce.buildings, castleID, false);
 
@@ -2064,14 +2087,14 @@ std::set<BuildingID> CMapLoaderH3M::convertBuildings(const std::set<BuildingID> 
 	std::map<int, BuildingID> mapa;
 	std::set<BuildingID> ret;
 
-	// Note: this file is parsed many times.
+	//Note: this file is parsed many times.
 	const JsonNode config(ResourceID("config/buildings5.json"));
 
 	for(const JsonNode & entry : config["table"].Vector())
 	{
 		int town = entry["town"].Float();
 
-		if (town == castleID || town == -1)
+		if(town == castleID || town == -1)
 		{
 			mapa[entry["h3"].Float()] = BuildingID((si32)entry["vcmi"].Float());
 		}
@@ -2083,7 +2106,7 @@ std::set<BuildingID> CMapLoaderH3M::convertBuildings(const std::set<BuildingID> 
 		{
 			ret.insert(mapa[elem]);
 		}
-		// horde buildings
+		//horde buildings
 		else if(mapa[elem] >= (-GameConstants::CREATURES_PER_TOWN))
 		{
 			int level = (mapa[elem]);
@@ -2094,7 +2117,7 @@ std::set<BuildingID> CMapLoaderH3M::convertBuildings(const std::set<BuildingID> 
 		else
 		{
 			logGlobal->warnStream() << "Conversion warning: unknown building " << elem << " in castle "
-				<< castleID;
+			<< castleID;
 		}
 	}
 
@@ -2149,7 +2172,7 @@ void CMapLoaderH3M::readEvents()
 	}
 }
 
-void CMapLoaderH3M::readMessageAndGuards(std::string& message, CCreatureSet* guards)
+void CMapLoaderH3M::readMessageAndGuards(std::string & message, CCreatureSet * guards)
 {
 	bool hasMessage = reader.readBool();
 	if(hasMessage)
@@ -2164,12 +2187,12 @@ void CMapLoaderH3M::readMessageAndGuards(std::string& message, CCreatureSet* gua
 	}
 }
 
-void CMapLoaderH3M::readSpells(std::set<SpellID>& dest)
+void CMapLoaderH3M::readSpells(std::set<SpellID> & dest)
 {
-	readBitmask(dest,9,GameConstants::SPELLS_QUANTITY,false);
+	readBitmask(dest, 9, GameConstants::SPELLS_QUANTITY, false);
 }
 
-void CMapLoaderH3M::readResourses(TResources& resources)
+void CMapLoaderH3M::readResourses(TResources & resources)
 {
 	resources.resize(GameConstants::RESOURCE_QUANTITY); //needed?
 	for(int x = 0; x < 7; ++x)
@@ -2178,14 +2201,14 @@ void CMapLoaderH3M::readResourses(TResources& resources)
 	}
 }
 
-template <class Indentifier>
-void CMapLoaderH3M::readBitmask(std::set<Indentifier>& dest, const int byteCount, const int limit, bool negate)
+template<class Indentifier>
+void CMapLoaderH3M::readBitmask(std::set<Indentifier> & dest, const int byteCount, const int limit, bool negate)
 {
 	std::vector<bool> temp;
-	temp.resize(limit,true);
+	temp.resize(limit, true);
 	readBitmask(temp, byteCount, limit, negate);
 
-	for(int i = 0; i< std::min(temp.size(), static_cast<size_t>(limit)); i++)
+	for(int i = 0; i < std::min(temp.size(), static_cast<size_t>(limit)); i++)
 	{
 		if(temp[i])
 		{
@@ -2194,7 +2217,7 @@ void CMapLoaderH3M::readBitmask(std::set<Indentifier>& dest, const int byteCount
 	}
 }
 
-void CMapLoaderH3M::readBitmask(std::vector<bool>& dest, const int byteCount, const int limit, bool negate)
+void CMapLoaderH3M::readBitmask(std::vector<bool> & dest, const int byteCount, const int limit, bool negate)
 {
 	for(int byte = 0; byte < byteCount; ++byte)
 	{
@@ -2226,9 +2249,9 @@ ui8 CMapLoaderH3M::reverse(ui8 arg)
 
 void CMapLoaderH3M::afterRead()
 {
-    //convert main town positions for all players to actual object position, in H3M it is position of active tile
+	//convert main town positions for all players to actual object position, in H3M it is position of active tile
 
-    for(auto & p : map->players)
+	for(auto & p : map->players)
 	{
 		int3 posOfMainTown = p.posOfMainTown;
 		if(posOfMainTown.valid() && map->isInTheMap(posOfMainTown))

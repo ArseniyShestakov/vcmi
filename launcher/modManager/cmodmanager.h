@@ -8,7 +8,7 @@ class CModManager
 
 	QString settingsPath();
 
-	// check-free version of public method
+	//check-free version of public method
 	bool doEnableMod(QString mod, bool on);
 	bool doInstallMod(QString mod, QString archivePath);
 	bool doUninstallMod(QString mod);
@@ -19,6 +19,7 @@ class CModManager
 	QStringList recentErrors;
 	bool addError(QString modname, QString message);
 	bool removeModDir(QString mod);
+
 public:
 	CModManager(CModList * modList);
 

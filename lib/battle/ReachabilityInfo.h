@@ -14,14 +14,17 @@
 
 class CStack;
 
-// Reachability info is result of BFS calculation. It's dependent on stack (it's owner, whether it's flying),
-// startPosition and perpective.
+//Reachability info is result of BFS calculation. It's dependent on stack (it's owner, whether it's flying),
+//startPosition and perpective.
 struct DLL_LINKAGE ReachabilityInfo
 {
 	typedef std::array<int, GameConstants::BFIELD_SIZE> TDistances;
 	typedef std::array<BattleHex, GameConstants::BFIELD_SIZE> TPredecessors;
 
-	enum { INFINITE_DIST = 1000000 };
+	enum
+	{
+		INFINITE_DIST = 1000000
+	};
 
 	struct DLL_LINKAGE Parameters
 	{

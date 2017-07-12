@@ -28,13 +28,13 @@ void CAndroidVMHelper::cacheVM(JavaVM * vm)
 
 CAndroidVMHelper::CAndroidVMHelper()
 {
-	auto res = vmCache->GetEnv((void **) &envPtr, JNI_VERSION_1_1);
+	auto res = vmCache->GetEnv((void * *)&envPtr, JNI_VERSION_1_1);
 	if(res == JNI_EDETACHED)
 	{
 		auto attachRes = vmCache->AttachCurrentThread(&envPtr, nullptr);
 		if(attachRes == JNI_OK)
 		{
-			detachInDestructor = true; // only detach if we actually attached env
+			detachInDestructor = true; //only detach if we actually attached env
 		}
 	}
 	else
@@ -61,11 +61,11 @@ jclass CAndroidVMHelper::findClassloadedClass(const std::string & name)
 {
 	auto env = get();
 	return static_cast<jclass>(env->CallObjectMethod(vcmiClassLoader, vcmiFindClassMethod,
-		env->NewStringUTF(name.c_str())));;
+							 env->NewStringUTF(name.c_str())));
+	;
 }
 
-void CAndroidVMHelper::callStaticVoidMethod(const std::string & cls, const std::string & method,
-											bool classloaded /*=false*/)
+void CAndroidVMHelper::callStaticVoidMethod(const std::string & cls, const std::string & method, bool classloaded /*=false*/)
 {
 	auto env = get();
 	auto javaHelper = findClass(cls, classloaded);
@@ -73,8 +73,7 @@ void CAndroidVMHelper::callStaticVoidMethod(const std::string & cls, const std::
 	env->CallStaticVoidMethod(javaHelper, methodId);
 }
 
-std::string CAndroidVMHelper::callStaticStringMethod(const std::string & cls, const std::string & method,
-													 bool classloaded /*=false*/)
+std::string CAndroidVMHelper::callStaticStringMethod(const std::string & cls, const std::string & method, bool classloaded /*=false*/)
 {
 	auto env = get();
 	auto javaHelper = findClass(cls, classloaded);
@@ -101,7 +100,7 @@ extern "C" JNIEXPORT void JNICALL Java_eu_vcmi_vcmi_NativeMethods_initClassloade
 	jclass classClass = env->GetObjectClass(anyVCMIClass);
 	auto classLoaderClass = env->FindClass("java/lang/ClassLoader");
 	auto getClassLoaderMethod = env->GetMethodID(classClass, "getClassLoader", "()Ljava/lang/ClassLoader;");
-	vcmiClassLoader = (jclass) env->NewGlobalRef(env->CallObjectMethod(anyVCMIClass, getClassLoaderMethod));
+	vcmiClassLoader = (jclass)env->NewGlobalRef(env->CallObjectMethod(anyVCMIClass, getClassLoaderMethod));
 	vcmiFindClassMethod = env->GetMethodID(classLoaderClass, "findClass", "(Ljava/lang/String;)Ljava/lang/Class;");
 }
 #endif

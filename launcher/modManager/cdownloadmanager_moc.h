@@ -5,7 +5,7 @@
 
 class QFile;
 
-class CDownloadManager: public QObject
+class CDownloadManager : public QObject
 {
 	Q_OBJECT
 
@@ -32,25 +32,26 @@ class CDownloadManager: public QObject
 	QList<FileEntry> currentDownloads;
 
 	FileEntry & getEntry(QNetworkReply * reply);
+
 public:
 	CDownloadManager();
 
-	// returns true if download with such URL is in progress/queued
-	// FIXME: not sure what's right place for "mod download in progress" check
-	bool downloadInProgress(const QUrl &url);
+	//returns true if download with such URL is in progress/queued
+	//FIXME: not sure what's right place for "mod download in progress" check
+	bool downloadInProgress(const QUrl & url);
 
-	// returns network reply so caller can connect to required signals
-	void downloadFile(const QUrl &url, const QString &file);
+	//returns network reply so caller can connect to required signals
+	void downloadFile(const QUrl & url, const QString & file);
 
 public slots:
-	void downloadFinished(QNetworkReply *reply);
+	void downloadFinished(QNetworkReply * reply);
 	void downloadProgressChanged(qint64 bytesReceived, qint64 bytesTotal);
 
 signals:
-	// for status bar updates. Merges all queued downloads into one
+	//for status bar updates. Merges all queued downloads into one
 	void downloadProgress(qint64 currentAmount, qint64 maxAmount);
 
-	// called when all files were downloaded and manager goes to idle state
-	// Lists contains files that were successfully downloaded / failed to download
+	//called when all files were downloaded and manager goes to idle state
+	//Lists contains files that were successfully downloaded / failed to download
 	void finished(QStringList savedFiles, QStringList failedFiles, QStringList errors);
 };

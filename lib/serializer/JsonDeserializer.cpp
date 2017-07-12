@@ -14,10 +14,9 @@
 
 #include "../JsonNode.h"
 
-JsonDeserializer::JsonDeserializer(const IInstanceResolver * instanceResolver_, JsonNode & root_):
+JsonDeserializer::JsonDeserializer(const IInstanceResolver * instanceResolver_, JsonNode & root_) :
 	JsonSerializeFormat(instanceResolver_, root_, false)
 {
-
 }
 
 void JsonDeserializer::serializeInternal(const std::string & fieldName, boost::logic::tribool & value)
@@ -65,7 +64,7 @@ void JsonDeserializer::serializeInternal(const std::string & fieldName, double &
 	const JsonNode & data = current->operator[](fieldName);
 
 	if(!data.isNumber())
-		value = defaultValue ? defaultValue.get() : 0;//todo: report error on not null?
+		value = defaultValue ? defaultValue.get() : 0; //todo: report error on not null?
 	else
 		value = data.Float();
 }
@@ -75,7 +74,7 @@ void JsonDeserializer::serializeInternal(const std::string & fieldName, si64 & v
 	const JsonNode & data = current->operator[](fieldName);
 
 	if(!data.isNumber())
-		value = defaultValue ? defaultValue.get() : 0;//todo: report error on not null?
+		value = defaultValue ? defaultValue.get() : 0; //todo: report error on not null?
 	else
 		value = data.Integer();
 }
@@ -195,10 +194,10 @@ void JsonDeserializer::serializeLIC(const std::string & fieldName, LICSet & valu
 	readLICPart(noneOf, value.decoder, value.none);
 
 	//remove any banned from allowed and required
-	auto isBanned = [&value](const si32 item)->bool
-	{
-		return vstd::contains(value.none, item);
-	};
+	auto isBanned = [&value](const si32 item) -> bool
+		{
+			return vstd::contains(value.none, item);
+		};
 	vstd::erase_if(value.all, isBanned);
 	vstd::erase_if(value.any, isBanned);
 

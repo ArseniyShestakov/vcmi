@@ -31,31 +31,31 @@ namespace GameConstants
 	const int CREATURES_PER_TOWN = 7; //without upgrades
 	const int SPELL_LEVELS = 5;
 	const int SPELL_SCHOOL_LEVELS = 4;
-	const int CRE_LEVELS = 10; // number of creature experience levels
+	const int CRE_LEVELS = 10; //number of creature experience levels
 
 	const int HERO_GOLD_COST = 2500;
 	const int SPELLBOOK_GOLD_COST = 500;
 	const int SKILL_GOLD_COST = 2000;
 	const int BATTLE_PENALTY_DISTANCE = 10; //if the distance is > than this, then shooting stack has distance penalty
 	const int ARMY_SIZE = 7;
-	const int SKILL_PER_HERO=8;
+	const int SKILL_PER_HERO = 8;
 
-	const int SKILL_QUANTITY=28;
-	const int PRIMARY_SKILLS=4;
-	const int TERRAIN_TYPES=10;
-	const int RESOURCE_QUANTITY=8;
-	const int HEROES_PER_TYPE=8; //amount of heroes of each type
+	const int SKILL_QUANTITY = 28;
+	const int PRIMARY_SKILLS = 4;
+	const int TERRAIN_TYPES = 10;
+	const int RESOURCE_QUANTITY = 8;
+	const int HEROES_PER_TYPE = 8; //amount of heroes of each type
 
-	// amounts of OH3 objects. Can be changed by mods, should be used only during H3 loading phase
+	//amounts of OH3 objects. Can be changed by mods, should be used only during H3 loading phase
 	const int F_NUMBER = 9;
-	const int ARTIFACTS_QUANTITY=171;
-	const int HEROES_QUANTITY=156;
-	const int SPELLS_QUANTITY=70;
+	const int ARTIFACTS_QUANTITY = 171;
+	const int HEROES_QUANTITY = 156;
+	const int SPELLS_QUANTITY = 70;
 	const int CREATURES_COUNT = 197;
 
 	const ui32 BASE_MOVEMENT_COST = 100; //default cost for non-diagonal movement
 
-	const int HERO_PORTRAIT_SHIFT = 30;// 2 special frames + some extra portraits
+	const int HERO_PORTRAIT_SHIFT = 30; //2 special frames + some extra portraits
 }
 
 class CArtifact;
@@ -66,104 +66,102 @@ class CSpell;
 class CGameInfoCallback;
 class CNonConstInfoCallback;
 
-#define ID_LIKE_CLASS_COMMON(CLASS_NAME, ENUM_NAME)	\
-CLASS_NAME(const CLASS_NAME & other)				\
-{													\
-	num = other.num;								\
-}													\
-CLASS_NAME & operator=(const CLASS_NAME & other)	\
-{													\
-	num = other.num;								\
-	return *this;									\
-}													\
-explicit CLASS_NAME(si32 id)						\
-	: num(static_cast<ENUM_NAME>(id))				\
-{}													\
-operator ENUM_NAME() const							\
-{													\
-	return num;										\
-}													\
-ENUM_NAME toEnum() const							\
-{													\
-	return num;										\
-}													\
-template <typename Handler> void serialize(Handler &h, const int version)	\
-{													\
-	h & num;										\
-}													\
-CLASS_NAME & advance(int i)							\
-{													\
-	num = (ENUM_NAME)((int)num + i);				\
-	return *this;									\
-}
+#define ID_LIKE_CLASS_COMMON(CLASS_NAME, ENUM_NAME)     \
+	CLASS_NAME(const CLASS_NAME &other)                            \
+	{                                                                                                       \
+		num = other.num;                                                                \
+	}                                                                                                       \
+	CLASS_NAME & operator=(const CLASS_NAME &other)        \
+	{                                                                                                       \
+		num = other.num;                                                                \
+		return *this;                                                                   \
+	}                                                                                                       \
+	explicit CLASS_NAME(si32 id) : num(static_cast<ENUM_NAME>(id))                               \
+	{}                                                                                                      \
+	operator ENUM_NAME() const                                                      \
+	{                                                                                                       \
+		return num;                                                                             \
+	}                                                                                                       \
+	ENUM_NAME toEnum() const                                                        \
+	{                                                                                                       \
+		return num;                                                                             \
+	}                                                                                                       \
+	template<typename Handler> void serialize(Handler & h, const int version)       \
+	{                                                                                                       \
+		h & num;                                                                                \
+	}                                                                                                       \
+	CLASS_NAME & advance(int i)                                                     \
+	{                                                                                                       \
+		num = (ENUM_NAME)((int)num + i);                                \
+		return *this;                                                                   \
+	}
 
 
-// Operators are performance-critical and to be inlined they must be in header
-#define ID_LIKE_OPERATORS_INTERNAL(A, B, AN, BN)	\
-STRONG_INLINE bool operator==(const A & a, const B & b)			\
-{													\
-	return AN == BN ;								\
-}													\
-STRONG_INLINE bool operator!=(const A & a, const B & b)			\
-{													\
-	return AN != BN ;								\
-}													\
-STRONG_INLINE bool operator<(const A & a, const B & b)			\
-{													\
-	return AN < BN ;								\
-}													\
-STRONG_INLINE bool operator<=(const A & a, const B & b)			\
-{													\
-	return AN <= BN ;								\
-}													\
-STRONG_INLINE bool operator>(const A & a, const B & b)			\
-{													\
-	return AN > BN ;								\
-}													\
-STRONG_INLINE bool operator>=(const A & a, const B & b)			\
-{													\
-	return AN >= BN ;								\
-}
+//Operators are performance-critical and to be inlined they must be in header
+#define ID_LIKE_OPERATORS_INTERNAL(A, B, AN, BN)        \
+	STRONG_INLINE bool operator==(const A &a, const B &b)                 \
+	{                                                                                                       \
+		return AN == BN;                                                               \
+	}                                                                                                       \
+	STRONG_INLINE bool operator!=(const A &a, const B &b)                 \
+	{                                                                                                       \
+		return AN != BN;                                                               \
+	}                                                                                                       \
+	STRONG_INLINE bool operator<(const A &a, const B &b)                  \
+	{                                                                                                       \
+		return AN < BN;                                                                \
+	}                                                                                                       \
+	STRONG_INLINE bool operator<=(const A &a, const B &b)                 \
+	{                                                                                                       \
+		return AN <= BN;                                                               \
+	}                                                                                                       \
+	STRONG_INLINE bool operator>(const A &a, const B &b)                  \
+	{                                                                                                       \
+		return AN > BN;                                                                \
+	}                                                                                                       \
+	STRONG_INLINE bool operator>=(const A &a, const B &b)                 \
+	{                                                                                                       \
+		return AN >= BN;                                                               \
+	}
 
-#define ID_LIKE_OPERATORS(CLASS_NAME, ENUM_NAME)	\
-	ID_LIKE_OPERATORS_INTERNAL(CLASS_NAME, CLASS_NAME, a.num, b.num)	\
-	ID_LIKE_OPERATORS_INTERNAL(CLASS_NAME, ENUM_NAME, a.num, b)	\
+#define ID_LIKE_OPERATORS(CLASS_NAME, ENUM_NAME)        \
+	ID_LIKE_OPERATORS_INTERNAL(CLASS_NAME, CLASS_NAME, a.num, b.num)        \
+	ID_LIKE_OPERATORS_INTERNAL(CLASS_NAME, ENUM_NAME, a.num, b)     \
 	ID_LIKE_OPERATORS_INTERNAL(ENUM_NAME, CLASS_NAME, a, b.num)
 
 
-#define OP_DECL_INT(CLASS_NAME, OP)					\
-bool operator OP (const CLASS_NAME & b) const		\
-{													\
-	return num OP b.num;							\
-}
+#define OP_DECL_INT(CLASS_NAME, OP)                                     \
+	bool operator OP(const CLASS_NAME &b) const           \
+	{                                                                                                       \
+		return num OP b.num;                                                    \
+	}
 
-#define INSTID_LIKE_CLASS_COMMON(CLASS_NAME, NUMERIC_NAME)	\
-public:														\
-CLASS_NAME() : BaseForID<CLASS_NAME, NUMERIC_NAME>(-1) {}	\
-CLASS_NAME(const CLASS_NAME & other):						\
-	BaseForID<CLASS_NAME, NUMERIC_NAME>(other)				\
-{															\
-}															\
-CLASS_NAME & operator=(const CLASS_NAME & other)			\
-{															\
-	num = other.num;										\
-	return *this;											\
-}															\
-explicit CLASS_NAME(si32 id)								\
-	: BaseForID<CLASS_NAME, NUMERIC_NAME>(id)				\
-{}
+#define INSTID_LIKE_CLASS_COMMON(CLASS_NAME, NUMERIC_NAME)      \
+public:                                                                                                         \
+	CLASS_NAME() : BaseForID<CLASS_NAME, NUMERIC_NAME>(-1) {}       \
+	CLASS_NAME(const CLASS_NAME &other) : BaseForID<CLASS_NAME, NUMERIC_NAME>(other)                              \
+	{                                                                                                                       \
+	}                                                                                                                       \
+	CLASS_NAME & operator=(const CLASS_NAME &other)                        \
+	{                                                                                                                       \
+		num = other.num;                                                                                \
+		return *this;                                                                                   \
+	}                                                                                                                       \
+	explicit CLASS_NAME(si32 id) : BaseForID<CLASS_NAME, NUMERIC_NAME>(id)                               \
+	{}
 
-template < typename Derived, typename NumericType>
+template<typename Derived, typename NumericType>
 class BaseForID
 {
 protected:
 	NumericType num;
+
 public:
 	NumericType getNum() const
 	{
 		return num;
 	}
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & num;
 	}
@@ -188,10 +186,10 @@ public:
 };
 
 template<typename Der, typename Num>
-std::ostream & operator << (std::ostream & os, BaseForID<Der, Num> id);
+std::ostream & operator<<(std::ostream & os, BaseForID<Der, Num> id);
 
 template<typename Der, typename Num>
-std::ostream & operator << (std::ostream & os, BaseForID<Der, Num> id)
+std::ostream & operator<<(std::ostream & os, BaseForID<Der, Num> id)
 {
 	//We use common type with short to force char and unsigned char to be promoted and formatted as numbers.
 	typedef typename std::common_type<short, Num>::type Number;
@@ -206,7 +204,7 @@ class ArtifactInstanceID : public BaseForID<ArtifactInstanceID, si32>
 	friend class CNonConstInfoCallback;
 };
 
-class QueryID : public BaseForID<QueryID, si32>
+class QueryID :	public BaseForID<QueryID, si32>
 {
 	INSTID_LIKE_CLASS_COMMON(QueryID, si32)
 
@@ -244,7 +242,7 @@ class SlotID : public BaseForID<SlotID, si32>
 
 	bool validSlot() const
 	{
-		return getNum() >= 0  &&  getNum() < GameConstants::ARMY_SIZE;
+		return getNum() >= 0 && getNum() < GameConstants::ARMY_SIZE;
 	}
 };
 
@@ -291,16 +289,22 @@ class TeleportChannelID : public BaseForID<TeleportChannelID, si32>
 	friend class CNonConstInfoCallback;
 };
 
-// #ifndef INSTANTIATE_BASE_FOR_ID_HERE
-// extern template std::ostream & operator << <ArtifactInstanceID>(std::ostream & os, BaseForID<ArtifactInstanceID> id);
-// extern template std::ostream & operator << <ObjectInstanceID>(std::ostream & os, BaseForID<ObjectInstanceID> id);
-// #endif
+//#ifndef INSTANTIATE_BASE_FOR_ID_HERE
+//extern template std::ostream & operator << <ArtifactInstanceID>(std::ostream & os, BaseForID<ArtifactInstanceID> id);
+//extern template std::ostream & operator << <ObjectInstanceID>(std::ostream & os, BaseForID<ObjectInstanceID> id);
+//#endif
 
-// Enum declarations
+//Enum declarations
 namespace PrimarySkill
 {
-	enum PrimarySkill { ATTACK, DEFENSE, SPELL_POWER, KNOWLEDGE,
-				EXPERIENCE = 4}; //for some reason changePrimSkill uses it
+	enum PrimarySkill
+	{
+		ATTACK,
+		DEFENSE,
+		SPELL_POWER,
+		KNOWLEDGE,
+		EXPERIENCE = 4
+	}; //for some reason changePrimSkill uses it
 }
 
 class SecondarySkill
@@ -310,16 +314,43 @@ public:
 	{
 		WRONG = -2,
 		DEFAULT = -1,
-		PATHFINDING = 0, ARCHERY, LOGISTICS, SCOUTING, DIPLOMACY, NAVIGATION, LEADERSHIP, WISDOM, MYSTICISM,
-		LUCK, BALLISTICS, EAGLE_EYE, NECROMANCY, ESTATES, FIRE_MAGIC, AIR_MAGIC, WATER_MAGIC, EARTH_MAGIC,
-		SCHOLAR, TACTICS, ARTILLERY, LEARNING, OFFENCE, ARMORER, INTELLIGENCE, SORCERY, RESISTANCE,
-		FIRST_AID, SKILL_SIZE
+		PATHFINDING = 0,
+		ARCHERY,
+		LOGISTICS,
+		SCOUTING,
+		DIPLOMACY,
+		NAVIGATION,
+		LEADERSHIP,
+		WISDOM,
+		MYSTICISM,
+		LUCK,
+		BALLISTICS,
+		EAGLE_EYE,
+		NECROMANCY,
+		ESTATES,
+		FIRE_MAGIC,
+		AIR_MAGIC,
+		WATER_MAGIC,
+		EARTH_MAGIC,
+		SCHOLAR,
+		TACTICS,
+		ARTILLERY,
+		LEARNING,
+		OFFENCE,
+		ARMORER,
+		INTELLIGENCE,
+		SORCERY,
+		RESISTANCE,
+		FIRST_AID,
+		SKILL_SIZE
 	};
 
 	static_assert(GameConstants::SKILL_QUANTITY == SKILL_SIZE, "Incorrect number of skills");
 
-	SecondarySkill(ESecondarySkill _num = WRONG) : num(_num)
-	{}
+	SecondarySkill(ESecondarySkill _num = WRONG) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(SecondarySkill, ESecondarySkill)
 
@@ -330,7 +361,12 @@ ID_LIKE_OPERATORS(SecondarySkill, SecondarySkill::ESecondarySkill)
 
 namespace EAlignment
 {
-	enum EAlignment { GOOD, EVIL, NEUTRAL };
+	enum EAlignment
+	{
+		GOOD,
+		EVIL,
+		NEUTRAL
+	};
 }
 
 namespace ETownType
@@ -338,7 +374,16 @@ namespace ETownType
 	enum ETownType
 	{
 		ANY = -1,
-		CASTLE, RAMPART, TOWER, INFERNO, NECROPOLIS, DUNGEON, STRONGHOLD, FORTRESS, CONFLUX, NEUTRAL
+		CASTLE,
+		RAMPART,
+		TOWER,
+		INFERNO,
+		NECROPOLIS,
+		DUNGEON,
+		STRONGHOLD,
+		FORTRESS,
+		CONFLUX,
+		NEUTRAL
 	};
 }
 
@@ -346,68 +391,104 @@ class BuildingID
 {
 public:
 	//Quite useful as long as most of building mechanics hardcoded
-	// NOTE: all building with completely configurable mechanics will be removed from list
+	//NOTE: all building with completely configurable mechanics will be removed from list
 	enum EBuildingID
 	{
 		DEFAULT = -50,
 		NONE = -1,
-		MAGES_GUILD_1 = 0,  MAGES_GUILD_2, MAGES_GUILD_3,     MAGES_GUILD_4,   MAGES_GUILD_5,
-		TAVERN,         SHIPYARD,      FORT,              CITADEL,         CASTLE,
-		VILLAGE_HALL,   TOWN_HALL,     CITY_HALL,         CAPITOL,         MARKETPLACE,
-		RESOURCE_SILO,  BLACKSMITH,    SPECIAL_1,         HORDE_1,         HORDE_1_UPGR,
-		SHIP,           SPECIAL_2,     SPECIAL_3,         SPECIAL_4,       HORDE_2,
-		HORDE_2_UPGR,   GRAIL,         EXTRA_TOWN_HALL,   EXTRA_CITY_HALL, EXTRA_CAPITOL,
-		DWELL_FIRST=30, DWELL_LVL_2, DWELL_LVL_3, DWELL_LVL_4, DWELL_LVL_5, DWELL_LVL_6, DWELL_LAST=36,
-		DWELL_UP_FIRST=37,  DWELL_LVL_2_UP, DWELL_LVL_3_UP, DWELL_LVL_4_UP, DWELL_LVL_5_UP,
-		DWELL_LVL_6_UP, DWELL_UP_LAST=43,
-
+		MAGES_GUILD_1 = 0,
+		MAGES_GUILD_2,
+		MAGES_GUILD_3,
+		MAGES_GUILD_4,
+		MAGES_GUILD_5,
+		TAVERN,
+		SHIPYARD,
+		FORT,
+		CITADEL,
+		CASTLE,
+		VILLAGE_HALL,
+		TOWN_HALL,
+		CITY_HALL,
+		CAPITOL,
+		MARKETPLACE,
+		RESOURCE_SILO,
+		BLACKSMITH,
+		SPECIAL_1,
+		HORDE_1,
+		HORDE_1_UPGR,
+		SHIP,
+		SPECIAL_2,
+		SPECIAL_3,
+		SPECIAL_4,
+		HORDE_2,
+		HORDE_2_UPGR,
+		GRAIL,
+		EXTRA_TOWN_HALL,
+		EXTRA_CITY_HALL,
+		EXTRA_CAPITOL,
+		DWELL_FIRST=30,
+		DWELL_LVL_2,
+		DWELL_LVL_3,
+		DWELL_LVL_4,
+		DWELL_LVL_5,
+		DWELL_LVL_6,
+		DWELL_LAST=36,
+		DWELL_UP_FIRST=37,
+		DWELL_LVL_2_UP,
+		DWELL_LVL_3_UP,
+		DWELL_LVL_4_UP,
+		DWELL_LVL_5_UP,
+		DWELL_LVL_6_UP,
+		DWELL_UP_LAST=43,
 		DWELL_LVL_1 = DWELL_FIRST,
 		DWELL_LVL_7 = DWELL_LAST,
 		DWELL_LVL_1_UP = DWELL_UP_FIRST,
 		DWELL_LVL_7_UP = DWELL_UP_LAST,
-
 		//Special buildings for towns.
 		LIGHTHOUSE  = SPECIAL_1,
-		STABLES     = SPECIAL_2, //Castle
+		STABLES     = SPECIAL_2,
+		//Castle
 		BROTHERHOOD = SPECIAL_3,
-
 		MYSTIC_POND         = SPECIAL_1,
-		FOUNTAIN_OF_FORTUNE = SPECIAL_2, //Rampart
+		FOUNTAIN_OF_FORTUNE = SPECIAL_2,
+		//Rampart
 		TREASURY            = SPECIAL_3,
-
 		ARTIFACT_MERCHANT = SPECIAL_1,
-		LOOKOUT_TOWER     = SPECIAL_2, //Tower
+		LOOKOUT_TOWER     = SPECIAL_2,
+		//Tower
 		LIBRARY           = SPECIAL_3,
 		WALL_OF_KNOWLEDGE = SPECIAL_4,
-
 		STORMCLOUDS   = SPECIAL_2,
-		CASTLE_GATE   = SPECIAL_3, //Inferno
+		CASTLE_GATE   = SPECIAL_3,
+		//Inferno
 		ORDER_OF_FIRE = SPECIAL_4,
-
 		COVER_OF_DARKNESS    = SPECIAL_1,
-		NECROMANCY_AMPLIFIER = SPECIAL_2, //Necropolis
+		NECROMANCY_AMPLIFIER = SPECIAL_2,
+		//Necropolis
 		SKELETON_TRANSFORMER = SPECIAL_3,
-
 		//ARTIFACT_MERCHANT - same ID as in tower
 		MANA_VORTEX      = SPECIAL_2,
-		PORTAL_OF_SUMMON = SPECIAL_3, //Dungeon
+		PORTAL_OF_SUMMON = SPECIAL_3,
+		//Dungeon
 		BATTLE_ACADEMY   = SPECIAL_4,
-
 		ESCAPE_TUNNEL     = SPECIAL_1,
-		FREELANCERS_GUILD = SPECIAL_2, //Stronghold
+		FREELANCERS_GUILD = SPECIAL_2,
+		//Stronghold
 		BALLISTA_YARD     = SPECIAL_3,
 		HALL_OF_VALHALLA  = SPECIAL_4,
-
 		CAGE_OF_WARLORDS = SPECIAL_1,
-		GLYPHS_OF_FEAR   = SPECIAL_2, // Fortress
+		GLYPHS_OF_FEAR   = SPECIAL_2,
+		//Fortress
 		BLOOD_OBELISK    = SPECIAL_3,
-
 		//ARTIFACT_MERCHANT - same ID as in tower
-		MAGIC_UNIVERSITY = SPECIAL_2, // Conflux
+		MAGIC_UNIVERSITY = SPECIAL_2,
+		//Conflux
 	};
 
-	BuildingID(EBuildingID _num = NONE) : num(_num)
-	{}
+	BuildingID(EBuildingID _num = NONE) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(BuildingID, EBuildingID)
 
@@ -418,22 +499,32 @@ ID_LIKE_OPERATORS(BuildingID, BuildingID::EBuildingID)
 
 namespace EAiTactic
 {
-enum EAiTactic
-{
-	NONE = -1,
-	RANDOM,
-	WARRIOR,
-	BUILDER,
-	EXPLORER
-};
+	enum EAiTactic
+	{
+		NONE = -1,
+		RANDOM,
+		WARRIOR,
+		BUILDER,
+		EXPLORER
+	};
 }
 
 namespace EBuildingState
 {
 	enum EBuildingState
 	{
-		HAVE_CAPITAL, NO_WATER, FORBIDDEN, ADD_MAGES_GUILD, ALREADY_PRESENT, CANT_BUILD_TODAY,
-		NO_RESOURCES, ALLOWED, PREREQUIRES, MISSING_BASE, BUILDING_ERROR, TOWN_NOT_OWNED
+		HAVE_CAPITAL,
+		NO_WATER,
+		FORBIDDEN,
+		ADD_MAGES_GUILD,
+		ALREADY_PRESENT,
+		CANT_BUILD_TODAY,
+		NO_RESOURCES,
+		ALLOWED,
+		PREREQUIRES,
+		MISSING_BASE,
+		BUILDING_ERROR,
+		TOWN_NOT_OWNED
 	};
 }
 
@@ -441,11 +532,23 @@ namespace ESpellCastProblem
 {
 	enum ESpellCastProblem
 	{
-		OK, NO_HERO_TO_CAST_SPELL, ALREADY_CASTED_THIS_TURN, NO_SPELLBOOK, ANOTHER_ELEMENTAL_SUMMONED,
-		HERO_DOESNT_KNOW_SPELL, NOT_ENOUGH_MANA, ADVMAP_SPELL_INSTEAD_OF_BATTLE_SPELL,
-		SECOND_HEROS_SPELL_IMMUNITY, SPELL_LEVEL_LIMIT_EXCEEDED, NO_SPELLS_TO_DISPEL,
-		NO_APPROPRIATE_TARGET, STACK_IMMUNE_TO_SPELL, WRONG_SPELL_TARGET, ONGOING_TACTIC_PHASE,
-		MAGIC_IS_BLOCKED, //For Orb of Inhibition and similar - no casting at all
+		OK,
+		NO_HERO_TO_CAST_SPELL,
+		ALREADY_CASTED_THIS_TURN,
+		NO_SPELLBOOK,
+		ANOTHER_ELEMENTAL_SUMMONED,
+		HERO_DOESNT_KNOW_SPELL,
+		NOT_ENOUGH_MANA,
+		ADVMAP_SPELL_INSTEAD_OF_BATTLE_SPELL,
+		SECOND_HEROS_SPELL_IMMUNITY,
+		SPELL_LEVEL_LIMIT_EXCEEDED,
+		NO_SPELLS_TO_DISPEL,
+		NO_APPROPRIATE_TARGET,
+		STACK_IMMUNE_TO_SPELL,
+		WRONG_SPELL_TARGET,
+		ONGOING_TACTIC_PHASE,
+		MAGIC_IS_BLOCKED,
+		//For Orb of Inhibition and similar - no casting at all
 		NOT_DECIDED,
 		INVALID
 	};
@@ -455,10 +558,14 @@ namespace ECastingMode
 {
 	enum ECastingMode
 	{
-		HERO_CASTING, AFTER_ATTACK_CASTING, //also includes cast before attack
-		MAGIC_MIRROR, CREATURE_ACTIVE_CASTING, ENCHANTER_CASTING,
+		HERO_CASTING,
+		AFTER_ATTACK_CASTING,
+		//also includes cast before attack
+		MAGIC_MIRROR,
+		CREATURE_ACTIVE_CASTING,
+		ENCHANTER_CASTING,
 		SPELL_LIKE_ATTACK,
-		PASSIVE_CASTING//f.e. opening battle spells
+		PASSIVE_CASTING //f.e. opening battle spells
 	};
 }
 
@@ -466,8 +573,15 @@ namespace EMarketMode
 {
 	enum EMarketMode
 	{
-		RESOURCE_RESOURCE, RESOURCE_PLAYER, CREATURE_RESOURCE, RESOURCE_ARTIFACT,
-		ARTIFACT_RESOURCE, ARTIFACT_EXP, CREATURE_EXP, CREATURE_UNDEAD, RESOURCE_SKILL,
+		RESOURCE_RESOURCE,
+		RESOURCE_PLAYER,
+		CREATURE_RESOURCE,
+		RESOURCE_ARTIFACT,
+		ARTIFACT_RESOURCE,
+		ARTIFACT_EXP,
+		CREATURE_EXP,
+		CREATURE_UNDEAD,
+		RESOURCE_SKILL,
 		MARTKET_AFTER_LAST_PLACEHOLDER
 	};
 }
@@ -477,8 +591,10 @@ namespace EBattleStackState
 	enum EBattleStackState
 	{
 		ALIVE = 180,
-		SUMMONED, CLONED,
-		GHOST, //stack was removed from battlefield
+		SUMMONED,
+		CLONED,
+		GHOST,
+		//stack was removed from battlefield
 		HAD_MORALE,
 		WAITING,
 		MOVED,
@@ -488,13 +604,23 @@ namespace EBattleStackState
 		DRAINED_MANA,
 		//only for defending animation
 		DEFENDING_ANIM,
-		GHOST_PENDING// stack will become GHOST in next battle state update
+		GHOST_PENDING //stack will become GHOST in next battle state update
 	};
 }
 
 namespace ECommander
 {
-	enum SecondarySkills {ATTACK, DEFENSE, HEALTH, DAMAGE, SPEED, SPELL_POWER, CASTS, RESISTANCE};
+	enum SecondarySkills
+	{
+		ATTACK,
+		DEFENSE,
+		HEALTH,
+		DAMAGE,
+		SPEED,
+		SPELL_POWER,
+		CASTS,
+		RESISTANCE
+	};
 	const int MAX_SKILL_LEVEL = 5;
 }
 
@@ -502,8 +628,17 @@ namespace EWallPart
 {
 	enum EWallPart
 	{
-		INDESTRUCTIBLE_PART_OF_GATE = -3, INDESTRUCTIBLE_PART = -2, INVALID = -1,
-		KEEP = 0, BOTTOM_TOWER, BOTTOM_WALL, BELOW_GATE, OVER_GATE, UPPER_WALL, UPPER_TOWER, GATE,
+		INDESTRUCTIBLE_PART_OF_GATE = -3,
+		INDESTRUCTIBLE_PART = -2,
+		INVALID = -1,
+		KEEP = 0,
+		BOTTOM_TOWER,
+		BOTTOM_WALL,
+		BELOW_GATE,
+		OVER_GATE,
+		UPPER_WALL,
+		UPPER_TOWER,
+		GATE,
 		PARTS_COUNT /* This constant SHOULD always stay as the last item in the enum. */
 	};
 }
@@ -512,12 +647,11 @@ namespace EWallState
 {
 	enum EWallState
 	{
-		NONE = -1, //no wall
+		NONE = -1,
+		//no wall
 		DESTROYED,
 		DAMAGED,
 		INTACT
-
-
 	};
 }
 
@@ -525,7 +659,8 @@ enum class EGateState : ui8
 {
 	NONE,
 	CLOSED,
-	BLOCKED, //dead or alive stack blocking from outside
+	BLOCKED,
+	//dead or alive stack blocking from outside
 	OPENED,
 	DESTROYED
 };
@@ -568,7 +703,11 @@ namespace ERiverType
 {
 	enum ERiverType
 	{
-		NO_RIVER, CLEAR_RIVER, ICY_RIVER, MUDDY_RIVER, LAVA_RIVER
+		NO_RIVER,
+		CLEAR_RIVER,
+		ICY_RIVER,
+		MUDDY_RIVER,
+		LAVA_RIVER
 	};
 }
 
@@ -576,7 +715,10 @@ namespace ERoadType
 {
 	enum ERoadType
 	{
-		NO_ROAD, DIRT_ROAD, GRAVEL_ROAD, COBBLESTONE_ROAD
+		NO_ROAD,
+		DIRT_ROAD,
+		GRAVEL_ROAD,
+		COBBLESTONE_ROAD
 	};
 }
 
@@ -645,8 +787,10 @@ public:
 		PILLAR_OF_FIRE = 60,
 		STAR_AXIS = 61,
 		PRISON = 62,
-		PYRAMID = 63,//subtype 0
-		WOG_OBJECT = 63,//subtype > 0
+		PYRAMID = 63,
+		//subtype 0
+		WOG_OBJECT = 63,
+		//subtype > 0
 		RALLY_FLAG = 64,
 		RANDOM_ART = 65,
 		RANDOM_TREASURE_ART = 66,
@@ -706,8 +850,10 @@ public:
 		HERO_PLACEHOLDER = 214,
 		QUEST_GUARD = 215,
 		RANDOM_DWELLING = 216,
-		RANDOM_DWELLING_LVL = 217, //subtype = creature level
-		RANDOM_DWELLING_FACTION = 218, //subtype = faction
+		RANDOM_DWELLING_LVL = 217,
+		//subtype = creature level
+		RANDOM_DWELLING_FACTION = 218,
+		//subtype = faction
 		GARRISON2 = 219,
 		ABANDONED_MINE = 220,
 		TRADING_POST_SNOW = 221,
@@ -722,8 +868,10 @@ public:
 		MAGIC_PLAINS2 = 230,
 		ROCKLANDS = 231,
 	};
-	Obj(EObj _num = NO_OBJ) : num(_num)
-	{}
+	Obj(EObj _num = NO_OBJ) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(Obj, EObj)
 
@@ -785,7 +933,8 @@ namespace Battle
 		INVALID = -1,
 		NO_ACTION = 0,
 		HERO_SPELL,
-		WALK, DEFEND,
+		WALK,
+		DEFEND,
 		RETREAT,
 		SURRENDER,
 		WALK_AND_ATTACK,
@@ -806,12 +955,24 @@ class DLL_LINKAGE ETerrainType
 public:
 	enum EETerrainType
 	{
-		WRONG = -2, BORDER = -1, DIRT, SAND, GRASS, SNOW, SWAMP,
-		ROUGH, SUBTERRANEAN, LAVA, WATER, ROCK
+		WRONG = -2,
+		BORDER = -1,
+		DIRT,
+		SAND,
+		GRASS,
+		SNOW,
+		SWAMP,
+		ROUGH,
+		SUBTERRANEAN,
+		LAVA,
+		WATER,
+		ROCK
 	};
 
-	ETerrainType(EETerrainType _num = WRONG) : num(_num)
-	{}
+	ETerrainType(EETerrainType _num = WRONG) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(ETerrainType, EETerrainType)
 
@@ -836,8 +997,10 @@ public:
 		TILE_OCCUPIED
 	};
 
-	EDiggingStatus(EEDiggingStatus _num = UNKNOWN) : num(_num)
-	{}
+	EDiggingStatus(EEDiggingStatus _num = UNKNOWN) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(EDiggingStatus, EEDiggingStatus)
 
@@ -851,11 +1014,19 @@ class DLL_LINKAGE EPathfindingLayer
 public:
 	enum EEPathfindingLayer : ui8
 	{
-		LAND = 0, SAIL = 1, WATER, AIR, NUM_LAYERS, WRONG, AUTO
+		LAND = 0,
+		SAIL = 1,
+		WATER,
+		AIR,
+		NUM_LAYERS,
+		WRONG,
+		AUTO
 	};
 
-	EPathfindingLayer(EEPathfindingLayer _num = WRONG) : num(_num)
-	{}
+	EPathfindingLayer(EEPathfindingLayer _num = WRONG) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(EPathfindingLayer, EEPathfindingLayer)
 
@@ -869,18 +1040,45 @@ ID_LIKE_OPERATORS(EPathfindingLayer, EPathfindingLayer::EEPathfindingLayer)
 class BFieldType
 {
 public:
-	//   1. sand/shore   2. sand/mesas   3. dirt/birches   4. dirt/hills   5. dirt/pines   6. grass/hills   7. grass/pines
+	//1. sand/shore   2. sand/mesas   3. dirt/birches   4. dirt/hills   5. dirt/pines   6. grass/hills   7. grass/pines
 	//8. lava   9. magic plains   10. snow/mountains   11. snow/trees   12. subterranean   13. swamp/trees   14. fiery fields
 	//15. rock lands   16. magic clouds   17. lucid pools   18. holy ground   19. clover field   20. evil fog
 	//21. "favorable winds" text on magic plains background   22. cursed ground   23. rough   24. ship to ship   25. ship
-	enum EBFieldType {NONE = -1, NONE2, SAND_SHORE, SAND_MESAS, DIRT_BIRCHES, DIRT_HILLS, DIRT_PINES, GRASS_HILLS,
-		GRASS_PINES, LAVA, MAGIC_PLAINS, SNOW_MOUNTAINS, SNOW_TREES, SUBTERRANEAN, SWAMP_TREES, FIERY_FIELDS,
-		ROCKLANDS, MAGIC_CLOUDS, LUCID_POOLS, HOLY_GROUND, CLOVER_FIELD, EVIL_FOG, FAVORABLE_WINDS, CURSED_GROUND,
-		ROUGH, SHIP_TO_SHIP, SHIP
+	enum EBFieldType
+	{
+		NONE = -1,
+		NONE2,
+		SAND_SHORE,
+		SAND_MESAS,
+		DIRT_BIRCHES,
+		DIRT_HILLS,
+		DIRT_PINES,
+		GRASS_HILLS,
+		GRASS_PINES,
+		LAVA,
+		MAGIC_PLAINS,
+		SNOW_MOUNTAINS,
+		SNOW_TREES,
+		SUBTERRANEAN,
+		SWAMP_TREES,
+		FIERY_FIELDS,
+		ROCKLANDS,
+		MAGIC_CLOUDS,
+		LUCID_POOLS,
+		HOLY_GROUND,
+		CLOVER_FIELD,
+		EVIL_FOG,
+		FAVORABLE_WINDS,
+		CURSED_GROUND,
+		ROUGH,
+		SHIP_TO_SHIP,
+		SHIP
 	};
 
-	BFieldType(EBFieldType _num = NONE) : num(_num)
-	{}
+	BFieldType(EBFieldType _num = NONE) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(BFieldType, EBFieldType)
 
@@ -891,12 +1089,23 @@ ID_LIKE_OPERATORS(BFieldType, BFieldType::EBFieldType)
 
 namespace EPlayerStatus
 {
-	enum EStatus {WRONG = -1, INGAME, LOSER, WINNER};
+	enum EStatus
+	{
+		WRONG = -1,
+		INGAME,
+		LOSER,
+		WINNER
+	};
 }
 
 namespace PlayerRelations
 {
-	enum PlayerRelations {ENEMIES, ALLIES, SAME_PLAYER};
+	enum PlayerRelations
+	{
+		ENEMIES,
+		ALLIES,
+		SAME_PLAYER
+	};
 }
 
 class ArtifactPosition
@@ -905,22 +1114,50 @@ public:
 	enum EArtifactPosition
 	{
 		FIRST_AVAILABLE = -2,
-		PRE_FIRST = -1, //sometimes used as error, sometimes as first free in backpack
-		HEAD, SHOULDERS, NECK, RIGHT_HAND, LEFT_HAND, TORSO, //5
-		RIGHT_RING, LEFT_RING, FEET, //8
-		MISC1, MISC2, MISC3, MISC4, //12
-		MACH1, MACH2, MACH3, MACH4, //16
-		SPELLBOOK, MISC5, //18
+		PRE_FIRST = -1,
+		//sometimes used as error, sometimes as first free in backpack
+		HEAD,
+		SHOULDERS,
+		NECK,
+		RIGHT_HAND,
+		LEFT_HAND,
+		TORSO,
+		//5
+		RIGHT_RING,
+		LEFT_RING,
+		FEET,
+		//8
+		MISC1,
+		MISC2,
+		MISC3,
+		MISC4,
+		//12
+		MACH1,
+		MACH2,
+		MACH3,
+		MACH4,
+		//16
+		SPELLBOOK,
+		MISC5,
+		//18
 		AFTER_LAST,
 		//cres
 		CREATURE_SLOT = 0,
-		COMMANDER1 = 0, COMMANDER2, COMMANDER3, COMMANDER4, COMMANDER5, COMMANDER6, COMMANDER_AFTER_LAST
+		COMMANDER1 = 0,
+		COMMANDER2,
+		COMMANDER3,
+		COMMANDER4,
+		COMMANDER5,
+		COMMANDER6,
+		COMMANDER_AFTER_LAST
 	};
 
-	static_assert (AFTER_LAST == 19, "incorrect number of artifact slots");
+	static_assert(AFTER_LAST == 19, "incorrect number of artifact slots");
 
-	ArtifactPosition(EArtifactPosition _num = PRE_FIRST) : num(_num)
-	{}
+	ArtifactPosition(EArtifactPosition _num = PRE_FIRST) :
+		num(_num)
+	{
+	}
 
 	ID_LIKE_CLASS_COMMON(ArtifactPosition, EArtifactPosition)
 
@@ -949,7 +1186,8 @@ public:
 		//CORNUCOPIA = 140,
 		//FIXME: the following is only true if WoG is enabled. Otherwise other mod artifacts will take these slots.
 		ART_SELECTION = 144,
-		ART_LOCK = 145, // FIXME: We must get rid of this one since it's conflict with artifact from mods. See issue 2455
+		ART_LOCK = 145,
+		//FIXME: We must get rid of this one since it's conflict with artifact from mods. See issue 2455
 		AXE_OF_SMASHING = 146,
 		MITHRIL_MAIL = 147,
 		SWORD_OF_SHARPNESS = 148,
@@ -958,12 +1196,14 @@ public:
 		BOOTS_OF_HASTE = 151,
 		BOW_OF_SEEKING = 152,
 		DRAGON_EYE_RING = 153
-		//HARDENED_SHIELD = 154,
-		//SLAVAS_RING_OF_POWER = 155
+			//HARDENED_SHIELD = 154,
+			//SLAVAS_RING_OF_POWER = 155
 	};
 
-	ArtifactID(EArtifactID _num = NONE) : num(_num)
-	{}
+	ArtifactID(EArtifactID _num = NONE) :
+		num(_num)
+	{
+	}
 
 	DLL_LINKAGE const CArtifact * toArtifact() const;
 
@@ -1007,8 +1247,10 @@ public:
 		ARROW_TOWERS = 149
 	};
 
-	CreatureID(ECreatureID _num = NONE) : num(_num)
-	{}
+	CreatureID(ECreatureID _num = NONE) :
+		num(_num)
+	{
+	}
 
 	DLL_LINKAGE const CCreature * toCreature() const;
 
@@ -1026,32 +1268,96 @@ public:
 	{
 		PRESET = -2,
 		NONE = -1,
-		SUMMON_BOAT=0, SCUTTLE_BOAT=1, VISIONS=2, VIEW_EARTH=3, DISGUISE=4, VIEW_AIR=5,
-		FLY=6, WATER_WALK=7, DIMENSION_DOOR=8, TOWN_PORTAL=9,
-
-		QUICKSAND=10, LAND_MINE=11, FORCE_FIELD=12, FIRE_WALL=13, EARTHQUAKE=14,
-		MAGIC_ARROW=15, ICE_BOLT=16, LIGHTNING_BOLT=17, IMPLOSION=18,
-		CHAIN_LIGHTNING=19, FROST_RING=20, FIREBALL=21, INFERNO=22,
-		METEOR_SHOWER=23, DEATH_RIPPLE=24, DESTROY_UNDEAD=25, ARMAGEDDON=26,
-		SHIELD=27, AIR_SHIELD=28, FIRE_SHIELD=29, PROTECTION_FROM_AIR=30,
-		PROTECTION_FROM_FIRE=31, PROTECTION_FROM_WATER=32,
-		PROTECTION_FROM_EARTH=33, ANTI_MAGIC=34, DISPEL=35, MAGIC_MIRROR=36,
-		CURE=37, RESURRECTION=38, ANIMATE_DEAD=39, SACRIFICE=40, BLESS=41,
-		CURSE=42, BLOODLUST=43, PRECISION=44, WEAKNESS=45, STONE_SKIN=46,
-		DISRUPTING_RAY=47, PRAYER=48, MIRTH=49, SORROW=50, FORTUNE=51,
-		MISFORTUNE=52, HASTE=53, SLOW=54, SLAYER=55, FRENZY=56,
-		TITANS_LIGHTNING_BOLT=57, COUNTERSTRIKE=58, BERSERK=59, HYPNOTIZE=60,
-		FORGETFULNESS=61, BLIND=62, TELEPORT=63, REMOVE_OBSTACLE=64, CLONE=65,
-		SUMMON_FIRE_ELEMENTAL=66, SUMMON_EARTH_ELEMENTAL=67, SUMMON_WATER_ELEMENTAL=68, SUMMON_AIR_ELEMENTAL=69,
-
-		STONE_GAZE=70, POISON=71, BIND=72, DISEASE=73, PARALYZE=74, AGE=75, DEATH_CLOUD=76, THUNDERBOLT=77,
-		DISPEL_HELPFUL_SPELLS=78, DEATH_STARE=79, ACID_BREATH_DEFENSE=80, ACID_BREATH_DAMAGE=81,
-
-		FIRST_NON_SPELL = 70, AFTER_LAST = 82
+		SUMMON_BOAT=0,
+		SCUTTLE_BOAT=1,
+		VISIONS=2,
+		VIEW_EARTH=3,
+		DISGUISE=4,
+		VIEW_AIR=5,
+		FLY=6,
+		WATER_WALK=7,
+		DIMENSION_DOOR=8,
+		TOWN_PORTAL=9,
+		QUICKSAND=10,
+		LAND_MINE=11,
+		FORCE_FIELD=12,
+		FIRE_WALL=13,
+		EARTHQUAKE=14,
+		MAGIC_ARROW=15,
+		ICE_BOLT=16,
+		LIGHTNING_BOLT=17,
+		IMPLOSION=18,
+		CHAIN_LIGHTNING=19,
+		FROST_RING=20,
+		FIREBALL=21,
+		INFERNO=22,
+		METEOR_SHOWER=23,
+		DEATH_RIPPLE=24,
+		DESTROY_UNDEAD=25,
+		ARMAGEDDON=26,
+		SHIELD=27,
+		AIR_SHIELD=28,
+		FIRE_SHIELD=29,
+		PROTECTION_FROM_AIR=30,
+		PROTECTION_FROM_FIRE=31,
+		PROTECTION_FROM_WATER=32,
+		PROTECTION_FROM_EARTH=33,
+		ANTI_MAGIC=34,
+		DISPEL=35,
+		MAGIC_MIRROR=36,
+		CURE=37,
+		RESURRECTION=38,
+		ANIMATE_DEAD=39,
+		SACRIFICE=40,
+		BLESS=41,
+		CURSE=42,
+		BLOODLUST=43,
+		PRECISION=44,
+		WEAKNESS=45,
+		STONE_SKIN=46,
+		DISRUPTING_RAY=47,
+		PRAYER=48,
+		MIRTH=49,
+		SORROW=50,
+		FORTUNE=51,
+		MISFORTUNE=52,
+		HASTE=53,
+		SLOW=54,
+		SLAYER=55,
+		FRENZY=56,
+		TITANS_LIGHTNING_BOLT=57,
+		COUNTERSTRIKE=58,
+		BERSERK=59,
+		HYPNOTIZE=60,
+		FORGETFULNESS=61,
+		BLIND=62,
+		TELEPORT=63,
+		REMOVE_OBSTACLE=64,
+		CLONE=65,
+		SUMMON_FIRE_ELEMENTAL=66,
+		SUMMON_EARTH_ELEMENTAL=67,
+		SUMMON_WATER_ELEMENTAL=68,
+		SUMMON_AIR_ELEMENTAL=69,
+		STONE_GAZE=70,
+		POISON=71,
+		BIND=72,
+		DISEASE=73,
+		PARALYZE=74,
+		AGE=75,
+		DEATH_CLOUD=76,
+		THUNDERBOLT=77,
+		DISPEL_HELPFUL_SPELLS=78,
+		DEATH_STARE=79,
+		ACID_BREATH_DEFENSE=80,
+		ACID_BREATH_DAMAGE=81,
+		FIRST_NON_SPELL = 70,
+		AFTER_LAST = 82
 	};
 
-	SpellID(ESpellID _num = NONE) : num(_num)
-	{}
+	SpellID(ESpellID _num = NONE) :
+		num(_num)
+	{
+	}
 
 	DLL_LINKAGE const CSpell * toSpell() const;
 
@@ -1062,15 +1368,15 @@ public:
 
 ID_LIKE_OPERATORS(SpellID, SpellID::ESpellID)
 
-enum class ESpellSchool: ui8
+enum class ESpellSchool : ui8
 {
-	AIR 	= 0,
-	FIRE 	= 1,
-	WATER 	= 2,
-	EARTH 	= 3
+	AIR	= 0,
+	FIRE	= 1,
+	WATER	= 2,
+	EARTH	= 3
 };
 
-enum class EMetaclass: ui8
+enum class EMetaclass : ui8
 {
 	INVALID = 0,
 	ARTIFACT,
@@ -1090,7 +1396,7 @@ enum class EMetaclass: ui8
 	RESOURCE
 };
 
-// Typedef declarations
+//Typedef declarations
 typedef ui8 TFaction;
 typedef si64 TExpType;
 typedef std::pair<ui32, ui32> TDmgRange;

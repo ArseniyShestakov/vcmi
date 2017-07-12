@@ -2,24 +2,24 @@
 #include "ResourceID.h"
 #include "FileInfo.h"
 
-// trivial to_upper that completely ignores localization and only work with ASCII
-// Technically not a problem since
-// 1) Right now VCMI does not supports unicode in filenames on Win
-// 2) Filesystem case-sensivity is only problem for H3 data which uses ASCII-only symbols
-// for me (Ivan) this define gives notable decrease in loading times
-// #define ENABLE_TRIVIAL_TOUPPER
+//trivial to_upper that completely ignores localization and only work with ASCII
+//Technically not a problem since
+//1) Right now VCMI does not supports unicode in filenames on Win
+//2) Filesystem case-sensivity is only problem for H3 data which uses ASCII-only symbols
+//for me (Ivan) this define gives notable decrease in loading times
+//#define ENABLE_TRIVIAL_TOUPPER
 
 #ifdef ENABLE_TRIVIAL_TOUPPER
 static inline void toUpper(char & symbol)
 {
 	static const int diff = 'a' - 'A';
-	if (symbol >= 'a' && symbol <= 'z')
+	if(symbol >= 'a' && symbol <= 'z')
 		symbol -= diff;
 }
 
 static inline void toUpper(std::string & string)
 {
-	for (char & symbol : string)
+	for(char & symbol : string)
 		toUpper(symbol);
 }
 #else
@@ -29,7 +29,7 @@ static inline void toUpper(std::string & string)
 }
 #endif
 
-static inline EResType::Type readType(const std::string& name)
+static inline EResType::Type readType(const std::string & name)
 {
 	return EResTypeHelper::getTypeFromExtension(FileInfo::GetExtension(name).to_string());
 }
@@ -56,21 +56,23 @@ static inline std::string readName(std::string name)
 }
 
 #if 0
-ResourceID::ResourceID()
-	:type(EResType::OTHER)
+ResourceID::ResourceID() :
+	type(EResType::OTHER)
 {
 }
 #endif
 
-ResourceID::ResourceID(std::string name_):
+ResourceID::ResourceID(std::string name_) :
 	type{readType(name_)},
 	name{readName(std::move(name_))}
-{}
+{
+}
 
-ResourceID::ResourceID(std::string name_, EResType::Type type_):
+ResourceID::ResourceID(std::string name_, EResType::Type type_) :
 	type{type_},
 	name{readName(std::move(name_))}
-{}
+{
+}
 #if 0
 std::string ResourceID::getName() const
 {
@@ -84,15 +86,14 @@ EResType::Type ResourceID::getType() const
 
 void ResourceID::setName(std::string name)
 {
-	// setName shouldn't be used if type is UNDEFINED
+	//setName shouldn't be used if type is UNDEFINED
 	assert(type != EResType::UNDEFINED);
 
 	this->name = std::move(name);
 
 	size_t dotPos = this->name.find_last_of("/.");
 
-	if(dotPos != std::string::npos && this->name[dotPos] == '.'
-		&& this->type == EResTypeHelper::getTypeFromExtension(this->name.substr(dotPos)))
+	if(dotPos != std::string::npos && this->name[dotPos] == '.' && this->type == EResTypeHelper::getTypeFromExtension(this->name.substr(dotPos)))
 	{
 		this->name.erase(dotPos);
 	}
@@ -111,46 +112,46 @@ EResType::Type EResTypeHelper::getTypeFromExtension(std::string extension)
 
 	static const std::map<std::string, EResType::Type> stringToRes =
 	{
-		{".TXT",   EResType::TEXT},
-		{".JSON",  EResType::TEXT},
-		{".DEF",   EResType::ANIMATION},
-		{".MSK",   EResType::MASK},
-		{".MSG",   EResType::MASK},
-		{".H3C",   EResType::CAMPAIGN},
-		{".H3M",   EResType::MAP},
-		{".FNT",   EResType::BMP_FONT},
-		{".TTF",   EResType::TTF_FONT},
-		{".BMP",   EResType::IMAGE},
-		{".JPG",   EResType::IMAGE},
-		{".PCX",   EResType::IMAGE},
-		{".PNG",   EResType::IMAGE},
-		{".TGA",   EResType::IMAGE},
-		{".WAV",   EResType::SOUND},
-		{".82M",   EResType::SOUND},
-		{".SMK",   EResType::VIDEO},
-		{".BIK",   EResType::VIDEO},
-		{".MJPG",  EResType::VIDEO},
-		{".MPG",   EResType::VIDEO},
-		{".AVI",   EResType::VIDEO},
-		{".MP3",   EResType::MUSIC},
-		{".OGG",   EResType::MUSIC},
-		{".FLAC",  EResType::MUSIC},
-		{".ZIP",   EResType::ARCHIVE_ZIP},
-		{".LOD",   EResType::ARCHIVE_LOD},
-		{".PAC",   EResType::ARCHIVE_LOD},
-		{".VID",   EResType::ARCHIVE_VID},
-		{".SND",   EResType::ARCHIVE_SND},
-		{".PAL",   EResType::PALETTE},
+		{".TXT", EResType::TEXT},
+		{".JSON", EResType::TEXT},
+		{".DEF", EResType::ANIMATION},
+		{".MSK", EResType::MASK},
+		{".MSG", EResType::MASK},
+		{".H3C", EResType::CAMPAIGN},
+		{".H3M", EResType::MAP},
+		{".FNT", EResType::BMP_FONT},
+		{".TTF", EResType::TTF_FONT},
+		{".BMP", EResType::IMAGE},
+		{".JPG", EResType::IMAGE},
+		{".PCX", EResType::IMAGE},
+		{".PNG", EResType::IMAGE},
+		{".TGA", EResType::IMAGE},
+		{".WAV", EResType::SOUND},
+		{".82M", EResType::SOUND},
+		{".SMK", EResType::VIDEO},
+		{".BIK", EResType::VIDEO},
+		{".MJPG", EResType::VIDEO},
+		{".MPG", EResType::VIDEO},
+		{".AVI", EResType::VIDEO},
+		{".MP3", EResType::MUSIC},
+		{".OGG", EResType::MUSIC},
+		{".FLAC", EResType::MUSIC},
+		{".ZIP", EResType::ARCHIVE_ZIP},
+		{".LOD", EResType::ARCHIVE_LOD},
+		{".PAC", EResType::ARCHIVE_LOD},
+		{".VID", EResType::ARCHIVE_VID},
+		{".SND", EResType::ARCHIVE_SND},
+		{".PAL", EResType::PALETTE},
 		{".VCGM1", EResType::CLIENT_SAVEGAME},
 		{".VSGM1", EResType::SERVER_SAVEGAME},
-		{".ERM",   EResType::ERM},
-		{".ERT",   EResType::ERT},
-		{".ERS",   EResType::ERS},
-		{".VMAP",  EResType::MAP}
+		{".ERM", EResType::ERM},
+		{".ERT", EResType::ERT},
+		{".ERS", EResType::ERS},
+		{".VMAP", EResType::MAP}
 	};
 
 	auto iter = stringToRes.find(extension);
-	if (iter == stringToRes.end())
+	if(iter == stringToRes.end())
 		return EResType::OTHER;
 	return iter->second;
 }

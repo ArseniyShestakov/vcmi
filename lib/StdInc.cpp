@@ -1,2 +1,2 @@
-// Creates the precompiled header
+//Creates the precompiled header
 #include "StdInc.h"

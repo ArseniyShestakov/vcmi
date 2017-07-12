@@ -26,15 +26,18 @@ public:
 	std::function<double(const CStack *)> stackEvaluator;
 	Priorities()
 	{
-		//        range::copy(VLC->objh->resVals, std::back_inserter(resourceTypeBaseValues));
-		stackEvaluator = [](const CStack*){ return 1.0; };
+		//range::copy(VLC->objh->resVals, std::back_inserter(resourceTypeBaseValues));
+		stackEvaluator = [](const CStack *)
+			{
+				return 1.0;
+			};
 	}
 };
 
 class AttackPossibility
 {
 public:
-	const CStack *enemy; //redundant (to attack.defender) but looks nice
+	const CStack * enemy; //redundant (to attack.defender) but looks nice
 	BattleHex tile; //tile from which we attack
 	BattleAttackInfo attack;
 
@@ -45,6 +48,6 @@ public:
 	int damageDiff() const;
 	int attackValue() const;
 
-	static AttackPossibility evaluate(const BattleAttackInfo &AttackInfo, const HypotheticChangesToBattleState &state, BattleHex hex);
+	static AttackPossibility evaluate(const BattleAttackInfo & AttackInfo, const HypotheticChangesToBattleState & state, BattleHex hex);
 	static Priorities * priorities;
 };

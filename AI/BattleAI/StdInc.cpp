@@ -7,5 +7,5 @@
  * Full text of license available in license.txt file, in main folder
  *
  */
-// Creates the precompiled header
+//Creates the precompiled header
 #include "StdInc.h"

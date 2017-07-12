@@ -7,7 +7,7 @@
  * Full text of license available in license.txt file, in main folder
  *
  */
- 
+
 #pragma once
 
 namespace vstd
@@ -17,12 +17,12 @@ namespace vstd
 		template<typename Mutex>
 		class unlock_policy
 		{
-		protected:
-			void unlock(Mutex &m)
+protected:
+			void unlock(Mutex & m)
 			{
 				m.unlock();
 			}
-			void lock(Mutex &m)
+			void lock(Mutex & m)
 			{
 				m.lock();
 			}
@@ -31,12 +31,12 @@ namespace vstd
 		template<typename Mutex>
 		class unlock_shared_policy
 		{
-		protected:
-			void unlock(Mutex &m)
+protected:
+			void unlock(Mutex & m)
 			{
 				m.unlock_shared();
 			}
-			void lock(Mutex &m)
+			void lock(Mutex & m)
 			{
 				m.lock_shared();
 			}
@@ -45,17 +45,18 @@ namespace vstd
 
 
 	//similar to boost::lock_guard but UNlocks for the scope + assertions
-	template<typename Mutex, typename LockingPolicy = detail::unlock_policy<Mutex> >
+	template<typename Mutex, typename LockingPolicy = detail::unlock_policy<Mutex>>
 	class unlock_guard : LockingPolicy
 	{
-	private:
-		Mutex* m;
+private:
+		Mutex * m;
 
-		explicit unlock_guard(unlock_guard&);
-		unlock_guard& operator=(unlock_guard&);
-	public:
-		explicit unlock_guard(Mutex& m_):
-		m(&m_)
+		explicit unlock_guard(unlock_guard &);
+		unlock_guard & operator=(unlock_guard &);
+
+public:
+		explicit unlock_guard(Mutex & m_) :
+			m(&m_)
 		{
 			this->unlock(*m);
 		}
@@ -65,8 +66,8 @@ namespace vstd
 			m = nullptr;
 		}
 
-		unlock_guard(unlock_guard &&other)
-			: m(other.m)
+		unlock_guard(unlock_guard && other) :
+			m(other.m)
 		{
 			other.m = nullptr;
 		}
@@ -84,34 +85,30 @@ namespace vstd
 	};
 
 	template<typename Mutex>
-	unlock_guard<Mutex, detail::unlock_policy<Mutex> > makeUnlockGuard(Mutex &m_)
+	unlock_guard<Mutex, detail::unlock_policy<Mutex>> makeUnlockGuard(Mutex & m_)
 	{
-		return unlock_guard<Mutex, detail::unlock_policy<Mutex> >(m_);
+		return unlock_guard<Mutex, detail::unlock_policy<Mutex>>(m_);
 	}
 	template<typename Mutex>
-	unlock_guard<Mutex, detail::unlock_policy<Mutex> > makeEmptyGuard(Mutex &)
+	unlock_guard<Mutex, detail::unlock_policy<Mutex>> makeEmptyGuard(Mutex &)
 	{
-		return unlock_guard<Mutex, detail::unlock_policy<Mutex> >();
+		return unlock_guard<Mutex, detail::unlock_policy<Mutex>>();
 	}
 	template<typename Mutex>
-	unlock_guard<Mutex, detail::unlock_policy<Mutex> > makeUnlockGuardIf(Mutex &m_, bool shallUnlock)
+	unlock_guard<Mutex, detail::unlock_policy<Mutex>> makeUnlockGuardIf(Mutex & m_, bool shallUnlock)
 	{
-		return shallUnlock 
-			? makeUnlockGuard(m_)
-			: unlock_guard<Mutex, detail::unlock_policy<Mutex> >();
+		return shallUnlock ? makeUnlockGuard(m_) : unlock_guard<Mutex, detail::unlock_policy<Mutex>>();
 	}
 	template<typename Mutex>
-	unlock_guard<Mutex, detail::unlock_shared_policy<Mutex> > makeUnlockSharedGuard(Mutex &m_)
+	unlock_guard<Mutex, detail::unlock_shared_policy<Mutex>> makeUnlockSharedGuard(Mutex & m_)
 	{
-		return unlock_guard<Mutex, detail::unlock_shared_policy<Mutex> >(m_);
+		return unlock_guard<Mutex, detail::unlock_shared_policy<Mutex>>(m_);
 	}
 	template<typename Mutex>
-	unlock_guard<Mutex, detail::unlock_shared_policy<Mutex> > makeUnlockSharedGuardIf(Mutex &m_, bool shallUnlock)
+	unlock_guard<Mutex, detail::unlock_shared_policy<Mutex>> makeUnlockSharedGuardIf(Mutex & m_, bool shallUnlock)
 	{
-		return shallUnlock 
-			? makeUnlockSharedGuard(m_)
-			: unlock_guard<Mutex, detail::unlock_shared_policy<Mutex> >();
+		return shallUnlock ? makeUnlockSharedGuard(m_) : unlock_guard<Mutex, detail::unlock_shared_policy<Mutex>>();
 	}
 
-	typedef unlock_guard<boost::shared_mutex, detail::unlock_shared_policy<boost::shared_mutex> > unlock_shared_guard;
+	typedef unlock_guard<boost::shared_mutex, detail::unlock_shared_policy<boost::shared_mutex>> unlock_shared_guard;
 }

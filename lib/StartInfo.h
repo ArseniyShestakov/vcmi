@@ -18,9 +18,13 @@ class CCampaignState;
 /// Struct which describes the name, the color, the starting bonus of a player
 struct PlayerSettings
 {
-	enum { PLAYER_AI = 0 }; // for use in playerID
+	enum
+	{
+		PLAYER_AI = 0
+	}; //for use in playerID
 
-	enum Ebonus {
+	enum Ebonus
+	{
 		NONE     = -2,
 		RANDOM   = -1,
 		ARTIFACT =  0,
@@ -31,19 +35,24 @@ struct PlayerSettings
 	Ebonus bonus;
 	si16 castle;
 	si32 hero,
-		 heroPortrait; //-1 if default, else ID
+	     heroPortrait; //-1 if default, else ID
 
 	std::string heroName;
-	PlayerColor color; //from 0 - 
-	enum EHandicap {NO_HANDICAP, MILD, SEVERE};
-	EHandicap handicap;//0-no, 1-mild, 2-severe
+	PlayerColor color; //from 0 -
+	enum EHandicap
+	{
+		NO_HANDICAP,
+		MILD,
+		SEVERE
+	};
+	EHandicap handicap; //0-no, 1-mild, 2-severe
 	TeamID team;
 
 	std::string name;
 	ui8 playerID; //0 - AI, non-0 serves as player id
 	bool compOnly; //true if this player is a computer only player; required for RMG
-	template <typename Handler>
-	void serialize(Handler &h, const int version)
+	template<typename Handler>
+	void serialize(Handler & h, const int version)
 	{
 		h & castle;
 		h & hero;
@@ -58,17 +67,23 @@ struct PlayerSettings
 		h & compOnly;
 	}
 
-	PlayerSettings() : bonus(RANDOM), castle(NONE), hero(RANDOM), heroPortrait(RANDOM),
+	PlayerSettings() :
+		bonus(RANDOM), castle(NONE), hero(RANDOM), heroPortrait(RANDOM),
 		color(0), handicap(NO_HANDICAP), team(0), playerID(PLAYER_AI), compOnly(false)
 	{
-		
 	}
 };
 
 /// Struct which describes the difficulty, the turn time,.. of a heroes match.
 struct StartInfo
 {
-	enum EMode {NEW_GAME, LOAD_GAME, CAMPAIGN, INVALID = 255};
+	enum EMode
+	{
+		NEW_GAME,
+		LOAD_GAME,
+		CAMPAIGN,
+		INVALID = 255
+	};
 
 	EMode mode;
 	ui8 difficulty; //0=easy; 4=impossible
@@ -80,8 +95,11 @@ struct StartInfo
 	ui32 seedPostInit; //so we know that game is correctly synced at the start; 0 if not known yet
 	ui32 mapfileChecksum; //0 if not relevant
 	ui8 turnTime; //in minutes, 0=unlimited
-	std::string mapname; // empty for random map, otherwise name of the map or savegame
-	bool createRandomMap() const { return mapGenOptions.get() != nullptr; }
+	std::string mapname; //empty for random map, otherwise name of the map or savegame
+	bool createRandomMap() const
+	{
+		return mapGenOptions.get() != nullptr;
+	}
 	std::shared_ptr<CMapGenOptions> mapGenOptions;
 
 	std::shared_ptr<CCampaignState> campState;
@@ -90,25 +108,25 @@ struct StartInfo
 	{
 		if(playerInfos.find(no) != playerInfos.end())
 			return playerInfos[no];
-		logGlobal->errorStream() << "Cannot find info about player " << no <<". Throwing...";
+		logGlobal->errorStream() << "Cannot find info about player " << no << ". Throwing...";
 		throw std::runtime_error("Cannot find info about player");
 	}
 	const PlayerSettings & getIthPlayersSettings(PlayerColor no) const
 	{
-		return const_cast<StartInfo&>(*this).getIthPlayersSettings(no);
+		return const_cast<StartInfo &>(*this).getIthPlayersSettings(no);
 	}
 
-	PlayerSettings *getPlayersSettings(const ui8 nameID)
+	PlayerSettings * getPlayersSettings(const ui8 nameID)
 	{
-		for(auto it=playerInfos.begin(); it != playerInfos.end(); ++it)
+		for(auto it = playerInfos.begin(); it != playerInfos.end(); ++it)
 			if(it->second.playerID == nameID)
 				return &it->second;
 
 		return nullptr;
 	}
 
-	template <typename Handler>
-	void serialize(Handler &h, const int version)
+	template<typename Handler>
+	void serialize(Handler & h, const int version)
 	{
 		h & mode;
 		h & difficulty;
@@ -121,9 +139,9 @@ struct StartInfo
 		h & campState;
 	}
 
-	StartInfo() : mode(INVALID), difficulty(0), seedToBeUsed(0), seedPostInit(0),
+	StartInfo() :
+		mode(INVALID), difficulty(0), seedToBeUsed(0), seedPostInit(0),
 		mapfileChecksum(0), turnTime(0)
 	{
-
 	}
 };

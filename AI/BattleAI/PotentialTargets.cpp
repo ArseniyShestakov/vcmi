@@ -10,31 +10,31 @@
 #include "StdInc.h"
 #include "PotentialTargets.h"
 
-PotentialTargets::PotentialTargets(const CStack *attacker, const HypotheticChangesToBattleState &state /*= HypotheticChangesToBattleState()*/)
+PotentialTargets::PotentialTargets(const CStack * attacker, const HypotheticChangesToBattleState & state /*= HypotheticChangesToBattleState()*/)
 {
 	auto dists = getCbc()->battleGetDistances(attacker);
 	auto avHexes = getCbc()->battleGetAvailableHexes(attacker, false);
 
-	for(const CStack *enemy : getCbc()->battleGetStacks())
+	for(const CStack * enemy : getCbc()->battleGetStacks())
 	{
 		//Consider only stacks of different owner
 		if(enemy->side == attacker->side)
 			continue;
 
 		auto GenerateAttackInfo = [&](bool shooting, BattleHex hex) -> AttackPossibility
-		{
-			auto bai = BattleAttackInfo(attacker, enemy, shooting);
-			bai.attackerBonuses = getValOr(state.bonusesOfStacks, bai.attacker, bai.attacker);
-			bai.defenderBonuses = getValOr(state.bonusesOfStacks, bai.defender, bai.defender);
-
-			if(hex.isValid())
 			{
-				assert(dists[hex] <= attacker->Speed());
-				bai.chargedFields = dists[hex];
-			}
+				auto bai = BattleAttackInfo(attacker, enemy, shooting);
+				bai.attackerBonuses = getValOr(state.bonusesOfStacks, bai.attacker, bai.attacker);
+				bai.defenderBonuses = getValOr(state.bonusesOfStacks, bai.defender, bai.defender);
 
-			return AttackPossibility::evaluate(bai, state, hex);
-		};
+				if(hex.isValid())
+				{
+					assert(dists[hex] <= attacker->Speed());
+					bai.chargedFields = dists[hex];
+				}
+
+				return AttackPossibility::evaluate(bai, state, hex);
+			};
 
 		if(getCbc()->battleCanShoot(attacker, enemy->position))
 		{
@@ -46,7 +46,10 @@ PotentialTargets::PotentialTargets(const CStack *attacker, const HypotheticChang
 				if(CStack::isMeleeAttackPossible(attacker, enemy, hex))
 					possibleAttacks.push_back(GenerateAttackInfo(false, hex));
 
-			if(!vstd::contains_if(possibleAttacks, [=](const AttackPossibility &pa) { return pa.enemy == enemy; }))
+			if(!vstd::contains_if(possibleAttacks, [=](const AttackPossibility & pa)
+			{
+				return pa.enemy == enemy;
+			}))
 				unreachableEnemies.push_back(enemy);
 		}
 	}
@@ -67,5 +70,8 @@ AttackPossibility PotentialTargets::bestAction() const
 	if(possibleAttacks.empty())
 		throw std::runtime_error("No best action, since we don't have any actions");
 
-	return *vstd::maxElementByFun(possibleAttacks, [](const AttackPossibility &ap) { return ap.attackValue(); } );
+	return *vstd::maxElementByFun(possibleAttacks, [](const AttackPossibility & ap)
+	{
+		return ap.attackValue();
+	});
 }

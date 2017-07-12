@@ -25,32 +25,33 @@ class DLL_LINKAGE SettingsStorage
 		std::vector<std::string> path;
 
 		NodeAccessor(SettingsStorage & _parent, std::vector<std::string> _path);
-		NodeAccessor<Accessor> operator [] (std::string nextNode) const;
-		NodeAccessor<Accessor> operator () (std::vector<std::string> _path);
+		NodeAccessor<Accessor> operator[](std::string nextNode) const;
+		NodeAccessor<Accessor> operator()(std::vector<std::string> _path);
 		operator Accessor() const;
 	};
 
-	std::set<SettingsListener*> listeners;
+	std::set<SettingsListener *> listeners;
 	JsonNode config;
 	JsonNode & getNode(std::vector<std::string> path);
 
-	// Calls all required listeners
-	void invalidateNode(const std::vector<std::string> &changedPath);
+	//Calls all required listeners
+	void invalidateNode(const std::vector<std::string> & changedPath);
 
 	Settings get(std::vector<std::string> path);
+
 public:
-	// Initialize config structure
+	//Initialize config structure
 	SettingsStorage();
 	void init();
-	
-	// Get write access to config node at path
+
+	//Get write access to config node at path
 	const NodeAccessor<Settings> write;
 
-	// Get access to listener at path
+	//Get access to listener at path
 	const NodeAccessor<SettingsListener> listen;
 
 	//Read access, see JsonNode::operator[]
-	const JsonNode& operator [](std::string value);
+	const JsonNode & operator[](std::string value);
 
 	friend class SettingsListener;
 	friend class Settings;
@@ -59,23 +60,23 @@ public:
 /// Class for listening changes in specific part of configuration (e.g. change of music volume)
 class DLL_LINKAGE SettingsListener
 {
-	SettingsStorage &parent;
-	// Path to this node
+	SettingsStorage & parent;
+	//Path to this node
 	std::vector<std::string> path;
-	// Callback
-	std::function<void(const JsonNode&)> callback;
+	//Callback
+	std::function<void(const JsonNode &)> callback;
 
-	SettingsListener(SettingsStorage &_parent, const std::vector<std::string> &_path);
+	SettingsListener(SettingsStorage & _parent, const std::vector<std::string> & _path);
 
-	// Executes callback if changedpath begins with path
+	//Executes callback if changedpath begins with path
 	void nodeInvalidated(const std::vector<std::string> & changedPath);
 
 public:
-	SettingsListener(const SettingsListener &sl);
+	SettingsListener(const SettingsListener & sl);
 	~SettingsListener();
 
-	// assign callback function
-	void operator()(std::function<void(const JsonNode&)> _callback);
+	//assign callback function
+	void operator()(std::function<void(const JsonNode &)> _callback);
 
 	friend class SettingsStorage;
 };
@@ -83,26 +84,26 @@ public:
 /// System options, provides write access to config tree with auto-saving on change
 class DLL_LINKAGE Settings
 {
-	SettingsStorage &parent;
+	SettingsStorage & parent;
 	//path to this node
 	std::vector<std::string> path;
-	JsonNode &node;
+	JsonNode & node;
 	JsonNode copy;
-	
+
 	//Get access to node pointed by path
-	Settings(SettingsStorage &_parent, const std::vector<std::string> &_path);
+	Settings(SettingsStorage & _parent, const std::vector<std::string> & _path);
 
 public:
 	//Saves config if it was modified
 	~Settings();
 
 	//Returns node selected during construction
-	JsonNode* operator ->();
-	const JsonNode* operator ->() const;
+	JsonNode * operator->();
+	const JsonNode * operator->() const;
 
 	//Helper, replaces JsonNode::operator[]
-	JsonNode& operator [](std::string value);
-	const JsonNode& operator [](std::string value) const;
+	JsonNode & operator[](std::string value);
+	const JsonNode & operator[](std::string value) const;
 
 	friend class SettingsStorage;
 };
@@ -140,7 +141,7 @@ namespace config
 		std::string worldViewGraphic;
 		//buttons
 		ButtonInfo kingOverview, underground, questlog,	sleepWake, moveHero, spellbook,	advOptions,
-			sysOptions,	nextHero, endTurn;
+			   sysOptions, nextHero, endTurn;
 		//hero list
 		int hlistX, hlistY, hlistSize;
 		std::string hlistMB, hlistMN, hlistAU, hlistAD;
@@ -163,20 +164,23 @@ namespace config
 	/// Handles adventure map screen settings
 	class DLL_LINKAGE CConfigHandler
 	{
-		GUIOptions *current; // pointer to current gui options
+		GUIOptions * current; //pointer to current gui options
 
-	public:
-		typedef std::map<std::pair<int,int>, GUIOptions > GuiOptionsMap;
+public:
+		typedef std::map<std::pair<int, int>, GUIOptions> GuiOptionsMap;
 		GuiOptionsMap guiOptions;
 		void init();
 		CConfigHandler(void); //c-tor
 		~CConfigHandler(void); //d-tor
 
-		GUIOptions *go() { return current; };
+		GUIOptions * go()
+		{
+			return current;
+		};
 		void SetResolution(int x, int y)
 		{
-			std::pair<int,int> index(x, y);
-			if (guiOptions.count(index) == 0)
+			std::pair<int, int> index(x, y);
+			if(guiOptions.count(index) == 0)
 				current = nullptr;
 			else
 				current = &guiOptions.at(index);

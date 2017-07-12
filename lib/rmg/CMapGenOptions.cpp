@@ -1,4 +1,3 @@
-
 /*
  * CMapGenOptions.cpp, part of VCMI engine
  *
@@ -18,7 +17,8 @@
 #include "../VCMI_Lib.h"
 #include "../CTownHandler.h"
 
-CMapGenOptions::CMapGenOptions() : width(CMapHeader::MAP_SIZE_MIDDLE), height(CMapHeader::MAP_SIZE_MIDDLE), hasTwoLevels(false),
+CMapGenOptions::CMapGenOptions() :
+	width(CMapHeader::MAP_SIZE_MIDDLE), height(CMapHeader::MAP_SIZE_MIDDLE), hasTwoLevels(false),
 	playerCount(RANDOM_SIZE), teamCount(RANDOM_SIZE), compOnlyPlayerCount(RANDOM_SIZE), compOnlyTeamCount(RANDOM_SIZE), humanPlayersCount(0),
 	waterContent(EWaterContent::RANDOM), monsterStrength(EMonsterStrength::RANDOM), mapTemplate(nullptr)
 {
@@ -68,10 +68,10 @@ void CMapGenOptions::setPlayerCount(si8 value)
 	playerCount = value;
 
 	auto possibleCompPlayersCount = value;
-	if (compOnlyPlayerCount > possibleCompPlayersCount)
+	if(compOnlyPlayerCount > possibleCompPlayersCount)
 		setCompOnlyPlayerCount(possibleCompPlayersCount);
 
-	if (getPlayerCount() != RANDOM_SIZE && getCompOnlyPlayerCount() != RANDOM_SIZE)
+	if(getPlayerCount() != RANDOM_SIZE && getCompOnlyPlayerCount() != RANDOM_SIZE)
 		humanPlayersCount = getPlayerCount() - getCompOnlyPlayerCount();
 
 	resetPlayersMap();
@@ -103,7 +103,7 @@ void CMapGenOptions::setCompOnlyPlayerCount(si8 value)
 	assert(value == RANDOM_SIZE || (getPlayerCount() == RANDOM_SIZE || (value >= 0 && value <= getPlayerCount())));
 	compOnlyPlayerCount = value;
 
-	if (getPlayerCount() != RANDOM_SIZE && getCompOnlyPlayerCount() != RANDOM_SIZE)
+	if(getPlayerCount() != RANDOM_SIZE && getCompOnlyPlayerCount() != RANDOM_SIZE)
 		humanPlayersCount = getPlayerCount() - getCompOnlyPlayerCount();
 
 	resetPlayersMap();
@@ -142,13 +142,12 @@ void CMapGenOptions::setMonsterStrength(EMonsterStrength::EMonsterStrength value
 
 void CMapGenOptions::resetPlayersMap()
 {
-
 	std::map<PlayerColor, TFaction> rememberTownTypes;
 
-	for (auto p : players)
+	for(auto p : players)
 	{
 		auto town = p.second.getStartingTown();
-		if (town != RANDOM_SIZE)
+		if(town != RANDOM_SIZE)
 			rememberTownTypes[p.first] = town;
 	}
 
@@ -157,7 +156,7 @@ void CMapGenOptions::resetPlayersMap()
 	int realPlayersCnt = humanPlayersCount;
 	int realCompOnlyPlayersCnt = (compOnlyPlayerCount == RANDOM_SIZE) ? (PlayerColor::PLAYER_LIMIT_I - realPlayersCnt) : compOnlyPlayerCount;
 	int totalPlayersLimit = realPlayersCnt + realCompOnlyPlayersCnt;
-	if (getPlayerCount() == RANDOM_SIZE || compOnlyPlayerCount == RANDOM_SIZE)
+	if(getPlayerCount() == RANDOM_SIZE || compOnlyPlayerCount == RANDOM_SIZE)
 		totalPlayersLimit = static_cast<int>(PlayerColor::PLAYER_LIMIT_I);
 
 	//FIXME: what happens with human players here?
@@ -167,15 +166,14 @@ void CMapGenOptions::resetPlayersMap()
 		auto pc = PlayerColor(color);
 		player.setColor(pc);
 		auto playerType = EPlayerType::AI;
-		if ((getPlayerCount() != RANDOM_SIZE && color >= realPlayersCnt)
-		   || (compOnlyPlayerCount != RANDOM_SIZE && color >= (PlayerColor::PLAYER_LIMIT_I-compOnlyPlayerCount)))
+		if((getPlayerCount() != RANDOM_SIZE && color >= realPlayersCnt) || (compOnlyPlayerCount != RANDOM_SIZE && color >= (PlayerColor::PLAYER_LIMIT_I - compOnlyPlayerCount)))
 		{
 			playerType = EPlayerType::COMP_ONLY;
 		}
 		player.setPlayerType(playerType);
 		players[pc] = player;
 
-		if (vstd::contains(rememberTownTypes, pc))
+		if(vstd::contains(rememberTownTypes, pc))
 			players[pc].setStartingTown(rememberTownTypes[pc]);
 	}
 }
@@ -188,7 +186,8 @@ const std::map<PlayerColor, CMapGenOptions::CPlayerSettings> & CMapGenOptions::g
 void CMapGenOptions::setStartingTownForPlayer(PlayerColor color, si32 town)
 {
 	auto it = players.find(color);
-	if(it == players.end()) assert(0);
+	if(it == players.end())
+		assert(0);
 	it->second.setStartingTown(town);
 }
 
@@ -196,7 +195,8 @@ void CMapGenOptions::setPlayerTypeForStandardPlayer(PlayerColor color, EPlayerTy
 {
 	assert(playerType != EPlayerType::COMP_ONLY);
 	auto it = players.find(color);
-	if(it == players.end()) assert(0);
+	if(it == players.end())
+		assert(0);
 	it->second.setPlayerType(playerType);
 }
 
@@ -219,8 +219,8 @@ const std::map<std::string, CRmgTemplate *> & CMapGenOptions::getAvailableTempla
 
 void CMapGenOptions::finalize(CRandomGenerator & rand)
 {
-	logGlobal->infoStream() << boost::format ("RMG settings: players %d, teams %d, computer players %d, computer teams %d, water %d, monsters %d")
-											% (int)getPlayerCount() % (int)getTeamCount() % (int)getCompOnlyPlayerCount() % (int)getCompOnlyTeamCount() % (int)getWaterContent() % (int)getMonsterStrength();
+	logGlobal->infoStream() << boost::format("RMG settings: players %d, teams %d, computer players %d, computer teams %d, water %d, monsters %d")
+	% (int)getPlayerCount() % (int)getTeamCount() % (int)getCompOnlyPlayerCount() % (int)getCompOnlyTeamCount() % (int)getWaterContent() % (int)getMonsterStrength();
 
 	if(!mapTemplate)
 	{
@@ -228,19 +228,19 @@ void CMapGenOptions::finalize(CRandomGenerator & rand)
 	}
 	assert(mapTemplate);
 
-	if (getPlayerCount() == RANDOM_SIZE)
+	if(getPlayerCount() == RANDOM_SIZE)
 	{
 		auto possiblePlayers = mapTemplate->getPlayers().getNumbers();
 		//ignore all non-randomized players, make sure these players will not be missing after roll
 		possiblePlayers.erase(possiblePlayers.begin(), possiblePlayers.lower_bound(countHumanPlayers() + countCompOnlyPlayers()));
 		assert(!possiblePlayers.empty());
-		setPlayerCount (*RandomGeneratorUtil::nextItem(possiblePlayers, rand));
+		setPlayerCount(*RandomGeneratorUtil::nextItem(possiblePlayers, rand));
 		updatePlayers();
 	}
 	if(teamCount == RANDOM_SIZE)
 	{
 		teamCount = rand.nextInt(getPlayerCount() - 1);
-		if (teamCount == 1)
+		if(teamCount == 1)
 			teamCount = 0;
 	}
 	if(compOnlyPlayerCount == RANDOM_SIZE)
@@ -263,8 +263,8 @@ void CMapGenOptions::finalize(CRandomGenerator & rand)
 		monsterStrength = static_cast<EMonsterStrength::EMonsterStrength>(rand.nextInt(EMonsterStrength::GLOBAL_WEAK, EMonsterStrength::GLOBAL_STRONG));
 	}
 
-	assert (vstd::iswithin(waterContent, EWaterContent::NONE, EWaterContent::ISLANDS));
-	assert (vstd::iswithin(monsterStrength, EMonsterStrength::GLOBAL_WEAK, EMonsterStrength::GLOBAL_STRONG));
+	assert(vstd::iswithin(waterContent, EWaterContent::NONE, EWaterContent::ISLANDS));
+	assert(vstd::iswithin(monsterStrength, EMonsterStrength::GLOBAL_WEAK, EMonsterStrength::GLOBAL_STRONG));
 
 
 	//rectangular maps are the future of gaming
@@ -273,10 +273,10 @@ void CMapGenOptions::finalize(CRandomGenerator & rand)
 
 	logGlobal->traceStream() << "Player config:";
 	int humanPlayers = 0, cpuOnlyPlayers = 0, AIplayers = 0;
-	for (auto player : players)
+	for(auto player : players)
 	{
 		std::string playerType;
-		switch (player.second.getPlayerType())
+		switch(player.second.getPlayerType())
 		{
 		case EPlayerType::AI:
 			playerType = "AI";
@@ -290,8 +290,8 @@ void CMapGenOptions::finalize(CRandomGenerator & rand)
 			playerType = "human only";
 			humanPlayers++;
 			break;
-			default:
-				assert(false);
+		default:
+			assert(false);
 		}
 		logGlobal->traceStream() << boost::format("Player %d: %s") % player.second.getColor() % playerType;
 	}
@@ -301,12 +301,13 @@ void CMapGenOptions::finalize(CRandomGenerator & rand)
 
 void CMapGenOptions::updatePlayers()
 {
-	// Remove AI players only from the end of the players map if necessary
-	for(auto itrev = players.end(); itrev != players.begin();)
+	//Remove AI players only from the end of the players map if necessary
+	for(auto itrev = players.end(); itrev != players.begin(); )
 	{
 		auto it = itrev;
 		--it;
-		if (players.size() == getPlayerCount()) break;
+		if(players.size() == getPlayerCount())
+			break;
 		if(it->second.getPlayerType() == EPlayerType::AI)
 		{
 			players.erase(it);
@@ -320,12 +321,13 @@ void CMapGenOptions::updatePlayers()
 
 void CMapGenOptions::updateCompOnlyPlayers()
 {
-	// Remove comp only players only from the end of the players map if necessary
-	for(auto itrev = players.end(); itrev != players.begin();)
+	//Remove comp only players only from the end of the players map if necessary
+	for(auto itrev = players.end(); itrev != players.begin(); )
 	{
 		auto it = itrev;
 		--it;
-		if (players.size() <= getPlayerCount()) break;
+		if(players.size() <= getPlayerCount())
+			break;
 		if(it->second.getPlayerType() == EPlayerType::COMP_ONLY)
 		{
 			players.erase(it);
@@ -336,13 +338,13 @@ void CMapGenOptions::updateCompOnlyPlayers()
 		}
 	}
 
-	// Add some comp only players if necessary
+	//Add some comp only players if necessary
 	int compOnlyPlayersToAdd = getPlayerCount() - players.size();
 
-	if (compOnlyPlayersToAdd < 0)
+	if(compOnlyPlayersToAdd < 0)
 	{
 		logGlobal->errorStream() << boost::format("Incorrect number of players to add. Requested players %d, current players %d") % playerCount % players.size();
-		assert (compOnlyPlayersToAdd < 0);
+		assert(compOnlyPlayersToAdd < 0);
 	}
 	for(int i = 0; i < compOnlyPlayersToAdd; ++i)
 	{
@@ -400,7 +402,7 @@ bool CMapGenOptions::checkOptions() const
 
 const CRmgTemplate * CMapGenOptions::getPossibleTemplate(CRandomGenerator & rand) const
 {
-	// Find potential templates
+	//Find potential templates
 	const auto & tpls = getAvailableTemplates();
 	std::list<const CRmgTemplate *> potentialTpls;
 	for(const auto & tplPair : tpls)
@@ -410,14 +412,14 @@ const CRmgTemplate * CMapGenOptions::getPossibleTemplate(CRandomGenerator & rand
 		if(tplSize >= tpl->getMinSize() && tplSize <= tpl->getMaxSize())
 		{
 			bool isPlayerCountValid = false;
-			if (getPlayerCount() != RANDOM_SIZE)
+			if(getPlayerCount() != RANDOM_SIZE)
 			{
-				if (tpl->getPlayers().isInRange(getPlayerCount()))
+				if(tpl->getPlayers().isInRange(getPlayerCount()))
 					isPlayerCountValid = true;
 			}
 			else
 			{
-				// Human players shouldn't be banned when playing with random player count
+				//Human players shouldn't be banned when playing with random player count
 				auto playerNumbers = tpl->getPlayers().getNumbers();
 				if(countHumanPlayers() <= *boost::min_element(playerNumbers))
 				{
@@ -425,12 +427,12 @@ const CRmgTemplate * CMapGenOptions::getPossibleTemplate(CRandomGenerator & rand
 				}
 			}
 
-			if (isPlayerCountValid)
+			if(isPlayerCountValid)
 			{
 				bool isCpuPlayerCountValid = false;
 				if(compOnlyPlayerCount != RANDOM_SIZE)
 				{
-					if (tpl->getCpuPlayers().isInRange(compOnlyPlayerCount))
+					if(tpl->getCpuPlayers().isInRange(compOnlyPlayerCount))
 						isCpuPlayerCountValid = true;
 				}
 				else
@@ -444,7 +446,7 @@ const CRmgTemplate * CMapGenOptions::getPossibleTemplate(CRandomGenerator & rand
 		}
 	}
 
-	// Select tpl
+	//Select tpl
 	if(potentialTpls.empty())
 	{
 		return nullptr;
@@ -455,9 +457,9 @@ const CRmgTemplate * CMapGenOptions::getPossibleTemplate(CRandomGenerator & rand
 	}
 }
 
-CMapGenOptions::CPlayerSettings::CPlayerSettings() : color(0), startingTown(RANDOM_TOWN), playerType(EPlayerType::AI)
+CMapGenOptions::CPlayerSettings::CPlayerSettings() :
+	color(0), startingTown(RANDOM_TOWN), playerType(EPlayerType::AI)
 {
-
 }
 
 PlayerColor CMapGenOptions::CPlayerSettings::getColor() const

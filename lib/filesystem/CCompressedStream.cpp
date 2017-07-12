@@ -5,9 +5,9 @@
 
 static const int inflateBlockSize = 10000;
 
-CBufferedStream::CBufferedStream():
-    position(0),
-    endOfFileReached(false)
+CBufferedStream::CBufferedStream() :
+	position(0),
+	endOfFileReached(false)
 {
 }
 
@@ -51,16 +51,16 @@ si64 CBufferedStream::getSize()
 
 void CBufferedStream::ensureSize(si64 size)
 {
-	while (buffer.size() < size && !endOfFileReached)
+	while(buffer.size() < size && !endOfFileReached)
 	{
 		si64 initialSize = buffer.size();
 		si64 currentStep = std::min<si64>(size, buffer.size());
-		vstd::amax(currentStep, 1024); // to avoid large number of calls at start
+		vstd::amax(currentStep, 1024); //to avoid large number of calls at start
 
 		buffer.resize(initialSize + currentStep);
 
 		si64 readSize = readMore(buffer.data() + initialSize, currentStep);
-		if (readSize != currentStep)
+		if(readSize != currentStep)
 		{
 			endOfFileReached = true;
 			buffer.resize(initialSize + readSize);
@@ -77,13 +77,13 @@ void CBufferedStream::reset()
 	endOfFileReached = false;
 }
 
-CCompressedStream::CCompressedStream(std::unique_ptr<CInputStream> stream, bool gzip, size_t decompressedSize):
+CCompressedStream::CCompressedStream(std::unique_ptr<CInputStream> stream, bool gzip, size_t decompressedSize) :
 	gzipStream(std::move(stream)),
 	compressedBuffer(inflateBlockSize)
 {
 	assert(gzipStream);
 
-	// Allocate inflate state
+	//Allocate inflate state
 	inflateState = new z_stream;
 	inflateState->zalloc = Z_NULL;
 	inflateState->zfree = Z_NULL;
@@ -92,11 +92,11 @@ CCompressedStream::CCompressedStream(std::unique_ptr<CInputStream> stream, bool 
 	inflateState->next_in = Z_NULL;
 
 	int wbits = 15;
-	if (gzip)
+	if(gzip)
 		wbits += 16;
 
 	int ret = inflateInit2(inflateState, wbits);
-	if (ret != Z_OK)
+	if(ret != Z_OK)
 		throw std::runtime_error("Failed to initialize inflate!\n");
 }
 
@@ -106,9 +106,9 @@ CCompressedStream::~CCompressedStream()
 	vstd::clear_pointer(inflateState);
 }
 
-si64 CCompressedStream::readMore(ui8 *data, si64 size)
+si64 CCompressedStream::readMore(ui8 * data, si64 size)
 {
-	if (inflateState == nullptr)
+	if(inflateState == nullptr)
 		return 0; //file already decompressed
 
 	bool fileEnded = false; //end of file reached
@@ -118,50 +118,49 @@ si64 CCompressedStream::readMore(ui8 *data, si64 size)
 
 	inflateState->avail_out = size;
 	inflateState->next_out = data;
-
 	do
 	{
-		if (inflateState->avail_in == 0)
+		if(inflateState->avail_in == 0)
 		{
 			//inflate ran out of available data or was not initialized yet
-			// get new input data and update state accordingly
+			//get new input data and update state accordingly
 			si64 availSize = gzipStream->read(compressedBuffer.data(), compressedBuffer.size());
-			if (availSize != compressedBuffer.size())
+			if(availSize != compressedBuffer.size())
 				gzipStream.reset();
 
 			inflateState->avail_in = availSize;
-			inflateState->next_in  = compressedBuffer.data();
+			inflateState->next_in = compressedBuffer.data();
 		}
 
 		int ret = inflate(inflateState, Z_NO_FLUSH);
 
-		if (inflateState->avail_in == 0 && gzipStream == nullptr)
+		if(inflateState->avail_in == 0 && gzipStream == nullptr)
 			fileEnded = true;
 
-		switch (ret)
+		switch(ret)
 		{
 		case Z_OK: //input data ended/ output buffer full
 			endLoop = false;
 			break;
-		case Z_STREAM_END: // stream ended. Note that campaign files consist from multiple such streams
+		case Z_STREAM_END: //stream ended. Note that campaign files consist from multiple such streams
 			endLoop = true;
 			break;
-		case Z_BUF_ERROR: // output buffer full. Can be triggered?
+		case Z_BUF_ERROR: //output buffer full. Can be triggered?
 			endLoop = true;
 			break;
 		default:
-			if (inflateState->msg == nullptr)
+			if(inflateState->msg == nullptr)
 				throw std::runtime_error("Decompression error. Return code was " + boost::lexical_cast<std::string>(ret));
 			else
 				throw std::runtime_error(std::string("Decompression error: ") + inflateState->msg);
 		}
 	}
-	while (endLoop == false && inflateState->avail_out != 0 );
+	while(endLoop == false && inflateState->avail_out != 0);
 
 	decompressed = inflateState->total_out - decompressed;
 
-	// Clean up and return
-	if (fileEnded)
+	//Clean up and return
+	if(fileEnded)
 	{
 		inflateEnd(inflateState);
 		vstd::clear_pointer(inflateState);
@@ -171,10 +170,10 @@ si64 CCompressedStream::readMore(ui8 *data, si64 size)
 
 bool CCompressedStream::getNextBlock()
 {
-	if (!inflateState)
+	if(!inflateState)
 		return false;
 
-	if (inflateReset(inflateState) < 0)
+	if(inflateReset(inflateState) < 0)
 		return false;
 
 	reset();

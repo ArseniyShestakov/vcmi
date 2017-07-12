@@ -33,7 +33,8 @@ namespace phoenix = boost::phoenix;
 //actually these macros help in dealing with boost::variant
 
 
-CERMPreprocessor::CERMPreprocessor(const std::string &Fname) : fname(Fname), file(Fname.c_str()), lineNo(0), version(INVALID)
+CERMPreprocessor::CERMPreprocessor(const std::string & Fname) :
+	fname(Fname), file(Fname.c_str()), lineNo(0), version(INVALID)
 {
 	if(!file.is_open())
 	{
@@ -58,7 +59,6 @@ CERMPreprocessor::CERMPreprocessor(const std::string &Fname) : fname(Fname), fil
 
 class ParseErrorException : public std::exception
 {
-
 };
 
 std::string CERMPreprocessor::retreiveCommandLine()
@@ -73,8 +73,7 @@ std::string CERMPreprocessor::retreiveCommandLine()
 
 	while(file.good())
 	{
-
-		std::string line ;
+		std::string line;
 		getline(line); //reading line
 
 
@@ -85,7 +84,7 @@ std::string CERMPreprocessor::retreiveCommandLine()
 		{
 			if(line.size() < 2)
 				continue;
-			if(line[0] != '!' ) //command lines must begin with ! -> otherwise treat as comment
+			if(line[0] != '!') //command lines must begin with ! -> otherwise treat as comment
 				continue;
 			verm = line[1] == '[';
 		}
@@ -96,7 +95,7 @@ std::string CERMPreprocessor::retreiveCommandLine()
 			if(dash != std::string::npos)
 			{
 				wholeCommand += line.substr(0, dash);
-				line.erase(0,dash);
+				line.erase(0, dash);
 			}
 			else //no closing marker -> the whole line is further part of string
 			{
@@ -124,9 +123,9 @@ std::string CERMPreprocessor::retreiveCommandLine()
 				}
 				else if(c == '^')
 					openedString = true;
-				else if(c == ';') // a ';' that is in command line (and not in string) ends the command -> throw away rest
+				else if(c == ';') //a ';' that is in command line (and not in string) ends the command -> throw away rest
 				{
-					line.erase(i+!verm, line.length() - i - !verm); //leave ';' at the end only at ERM commands
+					line.erase(i + !verm, line.length() - i - !verm); //leave ';' at the end only at ERM commands
 					break;
 				}
 			}
@@ -154,16 +153,17 @@ std::string CERMPreprocessor::retreiveCommandLine()
 	return "";
 }
 
-void CERMPreprocessor::getline(std::string &ret)
+void CERMPreprocessor::getline(std::string & ret)
 {
 	lineNo++;
 	std::getline(file, ret);
 	boost::trim(ret); //get rid of wspace
 }
 
-ERMParser::ERMParser(std::string file)
-	:srcFile(file)
-{}
+ERMParser::ERMParser(std::string file) :
+	srcFile(file)
+{
+}
 
 std::vector<LineInfo> ERMParser::parseFile()
 {
@@ -184,7 +184,7 @@ std::vector<LineInfo> ERMParser::parseFile()
 			ret.push_back(li);
 		}
 	}
-	catch (ParseErrorException & e)
+	catch(ParseErrorException & e)
 	{
 		logGlobal->error("Stopped parsing file.");
 	}
@@ -201,10 +201,10 @@ BOOST_FUSION_ADAPT_STRUCT(
 	(std::string, macro)
 	)
 
-// BOOST_FUSION_ADAPT_STRUCT(
-// 	ERM::TQMacroUsage,
-// 	(std::string, qmacro)
-// 	)
+//BOOST_FUSION_ADAPT_STRUCT(
+//ERM::TQMacroUsage,
+//(std::string, qmacro)
+//)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TMacroDef,
@@ -214,15 +214,15 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TVarExpNotMacro,
 	(boost::optional<char>, questionMark)
-	(std::string, varsym)
-	(ERM::TVarExpNotMacro::Tval, val)
+		(std::string, varsym)
+		(ERM::TVarExpNotMacro::Tval, val)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TArithmeticOp,
 	(ERM::TIexp, lhs)
-	(char, opcode)
-	(ERM::TIexp, rhs)
+		(char, opcode)
+		(ERM::TIexp, rhs)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
@@ -233,99 +233,99 @@ BOOST_FUSION_ADAPT_STRUCT(
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TVRLogic,
 	(char, opcode)
-	(ERM::TIexp, var)
+		(ERM::TIexp, var)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TVRArithmetic,
 	(char, opcode)
-	(ERM::TIexp, rhs)
+		(ERM::TIexp, rhs)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TNormalBodyOption,
 	(char, optionCode)
-	(ERM::TNormalBodyOptionList, params)
+		(ERM::TNormalBodyOptionList, params)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::Ttrigger,
 	(ERM::TCmdName, name)
-	(boost::optional<ERM::Tidentifier>, identifier)
-	(boost::optional<ERM::Tcondition>, condition)
+		(boost::optional<ERM::Tidentifier>, identifier)
+		(boost::optional<ERM::Tcondition>, condition)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TComparison,
 	(ERM::TIexp, lhs)
-	(std::string, compSign)
-	(ERM::TIexp, rhs)
+		(std::string, compSign)
+		(ERM::TIexp, rhs)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TSemiCompare,
 	(std::string, compSign)
-	(ERM::TIexp, rhs)
+		(ERM::TIexp, rhs)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TCurriedString,
 	(ERM::TIexp, iexp)
-	(ERM::TStringConstant, string)
+		(ERM::TStringConstant, string)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TVarConcatString,
 	(ERM::TVarExp, var)
-	(ERM::TStringConstant, string)
+		(ERM::TStringConstant, string)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::Tcondition,
 	(char, ctype)
-	(ERM::Tcondition::Tcond, cond)
-	(ERM::TconditionNode, rhs)
+		(ERM::Tcondition::Tcond, cond)
+		(ERM::TconditionNode, rhs)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::Tinstruction,
 	(ERM::TCmdName, name)
-	(boost::optional<ERM::Tidentifier>, identifier)
-	(boost::optional<ERM::Tcondition>, condition)
-	(ERM::Tbody, body)
+		(boost::optional<ERM::Tidentifier>, identifier)
+		(boost::optional<ERM::Tcondition>, condition)
+		(ERM::Tbody, body)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::Treceiver,
 	(ERM::TCmdName, name)
-	(boost::optional<ERM::Tidentifier>, identifier)
-	(boost::optional<ERM::Tcondition>, condition)
-	(boost::optional<ERM::Tbody>, body)
+		(boost::optional<ERM::Tidentifier>, identifier)
+		(boost::optional<ERM::Tcondition>, condition)
+		(boost::optional<ERM::Tbody>, body)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TPostTrigger,
 	(ERM::TCmdName, name)
-	(boost::optional<ERM::Tidentifier>, identifier)
-	(boost::optional<ERM::Tcondition>, condition)
+		(boost::optional<ERM::Tidentifier>, identifier)
+		(boost::optional<ERM::Tcondition>, condition)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::Tcommand,
 	(ERM::Tcommand::Tcmd, cmd)
-	(std::string, comment)
+		(std::string, comment)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TVExp,
 	(std::vector<ERM::TVModifier>, modifier)
-	(std::vector<ERM::TVOption>, children)
+		(std::vector<ERM::TVOption>, children)
 	)
 
 BOOST_FUSION_ADAPT_STRUCT(
 	ERM::TSymbol,
 	(std::vector<ERM::TVModifier>, symModifier)
-	(std::string, sym)
+		(std::string, sym)
 	)
 
 namespace ERM
@@ -333,7 +333,8 @@ namespace ERM
 	template<typename Iterator>
 	struct ERM_grammar : qi::grammar<Iterator, TLine(), ascii::space_type>
 	{
-		ERM_grammar() : ERM_grammar::base_type(vline, "VERM script line")
+		ERM_grammar() :
+			ERM_grammar::base_type(vline, "VERM script line")
 		{
 			//do not build too complicated expressions, e.g. (a >> b) | c, qi has problems with them
 			ERMmacroUsage %= qi::lexeme[qi::lit('$') >> *(qi::char_ - '$') >> qi::lit('$')];
@@ -344,9 +345,9 @@ namespace ERM
 			varExp %= varExpNotMacro | ERMmacroUsage;
 			iexp %= varExp | qi::int_;
 			varp %= qi::lit("?") >> varExp;
- 			comment %= *qi::char_;
-			commentLine %= (~qi::char_("!") >> comment | (qi::char_('!') >> (~qi::char_("?!$#[")) >> comment ));
- 			cmdName %= qi::lexeme[qi::repeat(2)[qi::char_]];
+			comment %= *qi::char_;
+			commentLine %= (~qi::char_("!") >> comment | (qi::char_('!') >> (~qi::char_("?!$#[")) >> comment));
+			cmdName %= qi::lexeme[qi::repeat(2)[qi::char_]];
 			arithmeticOp %= iexp >> qi::char_ >> iexp;
 			//identifier is usually a vector of i-expressions but VR receiver performs arithmetic operations on it
 			identifier %= (iexp | arithmeticOp) % qi::lit('/');
@@ -372,13 +373,13 @@ namespace ERM
 			postTrigger %= cmdName >> -identifier >> -condition > qi::lit(";");
 
 			command %= (qi::lit("!") >>
-					(
-						(qi::lit("?") >> trigger) |
-						(qi::lit("!") >> receiver) |
-						(qi::lit("#") >> instruction) |
-						(qi::lit("$") >> postTrigger)
-					) >> comment
-				);
+				    (
+					    (qi::lit("?") >> trigger) |
+					    (qi::lit("!") >> receiver) |
+					    (qi::lit("#") >> instruction) |
+					    (qi::lit("$") >> postTrigger)
+				    ) >> comment
+				    );
 
 			rline %=
 				(
@@ -388,11 +389,11 @@ namespace ERM
 			vmod %= qi::string("`") | qi::string(",!") | qi::string(",") | qi::string("#'") | qi::string("'");
 			vsym %= *vmod >> qi::lexeme[+qi::char_("+*/$%&_=<>~a-zA-Z0-9-")];
 
-			qi::real_parser<double, qi::strict_real_policies<double> > strict_double;
+			qi::real_parser<double, qi::strict_real_policies<double>> strict_double;
 			vopt %= qi::lexeme[(qi::lit("!") >> qi::char_ >> qi::lit("!"))] | qi::lexeme[strict_double] | qi::lexeme[qi::int_] | command | vexp | string | vsym;
 			vexp %= *vmod >> qi::lit("[") >> *(vopt) >> qi::lit("]");
 
-			vline %= (( qi::lit("!") >>vexp) | rline ) > spirit::eoi;
+			vline %= ((qi::lit("!") >> vexp) | rline) > spirit::eoi;
 
 			//error handling
 
@@ -421,16 +422,15 @@ namespace ERM
 			vline.name("VERM line");
 
 			qi::on_error<qi::fail>
-				(
+			(
 				vline
 				, std::cout //or phoenix::ref(std::count), is there any difference?
 				<< phoenix::val("Error! Expecting ")
-				<< qi::_4                               // what failed?
+				<< qi::_4 //what failed?
 				<< phoenix::val(" here: \"")
-				<< phoenix::construct<std::string>(qi::_3, qi::_2)   // iterators to error-pos, end
+				<< phoenix::construct<std::string>(qi::_3, qi::_2) //iterators to error-pos, end
 				<< phoenix::val("\"")
-				);
-
+			);
 		}
 
 		qi::rule<Iterator, TStringConstant(), ascii::space_type> string;
@@ -473,7 +473,7 @@ namespace ERM
 	};
 };
 
-ERM::TLine ERMParser::parseLine( const std::string & line, int realLineNo )
+ERM::TLine ERMParser::parseLine(const std::string & line, int realLineNo)
 {
 	try
 	{
@@ -489,7 +489,7 @@ ERM::TLine ERMParser::parseLine( const std::string & line, int realLineNo )
 ERM::TLine ERMParser::parseLine(const std::string & line)
 {
 	std::string::const_iterator beg = line.begin(),
-		end = line.end();
+				    end = line.end();
 
 	ERM::ERM_grammar<std::string::const_iterator> ERMgrammar;
 	ERM::TLine AST;
@@ -503,12 +503,12 @@ ERM::TLine ERMParser::parseLine(const std::string & line)
 	return AST;
 }
 
-int ERMParser::countHatsBeforeSemicolon( const std::string & line ) const
+int ERMParser::countHatsBeforeSemicolon(const std::string & line) const
 {
 	//CHECK: omit macros? or anything else?
 	int numOfHats = 0; //num of '^' before ';'
 	//check for unmatched ^
-	for (char c : line)
+	for(char c : line)
 	{
 		if(c == ';')
 			break;
@@ -518,16 +518,16 @@ int ERMParser::countHatsBeforeSemicolon( const std::string & line ) const
 	return numOfHats;
 }
 
-void ERMParser::repairEncoding( std::string & str ) const
+void ERMParser::repairEncoding(std::string & str) const
 {
-	for(int g=0; g<str.size(); ++g)
+	for(int g = 0; g < str.size(); ++g)
 		if(str[g] & 0x80)
 			str[g] = '|';
 }
 
-void ERMParser::repairEncoding( char * str, int len ) const
+void ERMParser::repairEncoding(char * str, int len) const
 {
-	for(int g=0; g<len; ++g)
+	for(int g = 0; g < len; ++g)
 		if(str[g] & 0x80)
 			str[g] = '|';
 }

@@ -56,8 +56,8 @@ public:
 
 	bool isVisitable() const;
 
-	// Checks object used tiles
-	// Position is relative to bottom-right corner of the object, can not be negative
+	//Checks object used tiles
+	//Position is relative to bottom-right corner of the object, can not be negative
 	bool isWithin(si32 X, si32 Y) const;
 	bool isVisitableAt(si32 X, si32 Y) const;
 	bool isVisibleAt(si32 X, si32 Y) const;
@@ -65,19 +65,19 @@ public:
 	std::set<int3> getBlockedOffsets() const;
 	int3 getBlockMapOffset() const; //bottom-right corner when firts blocked tile is
 
-	// Checks if object is visitable from certain direction. X and Y must be between -1..+1
+	//Checks if object is visitable from certain direction. X and Y must be between -1..+1
 	bool isVisitableFrom(si8 X, si8 Y) const;
 	int3 getVisitableOffset() const;
 	bool isVisitableFromTop() const;
 
-	// Checks if object can be placed on specific terrain
+	//Checks if object can be placed on specific terrain
 	bool canBePlacedAt(ETerrainType terrain) const;
 
 	ObjectTemplate();
 	//custom copy constructor is required
 	ObjectTemplate(const ObjectTemplate & other);
 
-	ObjectTemplate& operator=(const ObjectTemplate & rhs);
+	ObjectTemplate & operator=(const ObjectTemplate & rhs);
 
 	void readTxt(CLegacyConfigParser & parser);
 	void readMsk();
@@ -85,9 +85,12 @@ public:
 	void readJson(const JsonNode & node, const bool withTerrain = true);
 	void writeJson(JsonNode & node, const bool withTerrain = true) const;
 
-	bool operator==(const ObjectTemplate& ot) const { return (id == ot.id && subid == ot.subid); }
+	bool operator==(const ObjectTemplate & ot) const
+	{
+		return (id == ot.id && subid == ot.subid);
+	}
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & usedTiles & allowedTerrains & animationFile & stringID;
 		h & id & subid & printPriority & visitDir;

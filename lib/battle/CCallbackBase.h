@@ -26,7 +26,7 @@ class DLL_LINKAGE CCallbackBase
 
 protected:
 	CGameState * gs;
-	boost::optional<PlayerColor> player; // not set gives access to all information, otherwise callback provides only information "visible" for player
+	boost::optional<PlayerColor> player; //not set gives access to all information, otherwise callback provides only information "visible" for player
 
 	CCallbackBase(CGameState * GS, boost::optional<PlayerColor> Player);
 	CCallbackBase();

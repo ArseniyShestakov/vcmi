@@ -21,7 +21,9 @@ public:
 	/**
 	 * D-tor.
 	 */
-	virtual ~CInputStream() {}
+	virtual ~CInputStream()
+	{
+	}
 
 	/**
 	 * Reads n bytes from the stream into the data buffer.

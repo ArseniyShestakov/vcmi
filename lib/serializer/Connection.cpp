@@ -20,11 +20,7 @@
 using namespace boost;
 using namespace boost::asio::ip;
 
-#if defined(__hppa__) || \
-	defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || \
-	(defined(__MIPS__) && defined(__MISPEB__)) || \
-	defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || \
-	defined(__sparc__)
+#if defined(__hppa__) || defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || (defined(__MIPS__) && defined(__MISPEB__)) || defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || defined(__sparc__)
 #define BIG_ENDIAN
 #else
 #define LIL_ENDIAN
@@ -50,7 +46,7 @@ void CConnection::init()
 	//we got connection
 	oser & std::string("Aiya!\n") & name & myEndianess; //identify ourselves
 	iser & pom & pom & contactEndianess;
-	logNetwork->infoStream() << "Established connection with "<<pom;
+	logNetwork->infoStream() << "Established connection with " << pom;
 	wmx = new boost::mutex;
 	rmx = new boost::mutex;
 
@@ -61,14 +57,14 @@ void CConnection::init()
 	iser.fileVersion = SERIALIZATION_VERSION;
 }
 
-CConnection::CConnection(std::string host, ui16 port, std::string Name)
-:iser(this), oser(this), io_service(new asio::io_service), name(Name)
+CConnection::CConnection(std::string host, ui16 port, std::string Name) :
+	iser(this), oser(this), io_service(new asio::io_service), name(Name)
 {
 	int i;
 	boost::system::error_code error = asio::error::host_not_found;
 	socket = new tcp::socket(*io_service);
 	tcp::resolver resolver(*io_service);
-	tcp::resolver::iterator end, pom, endpoint_iterator = resolver.resolve(tcp::resolver::query(host, std::to_string(port)),error);
+	tcp::resolver::iterator end, pom, endpoint_iterator = resolver.resolve(tcp::resolver::query(host, std::to_string(port)), error);
 	if(error)
 	{
 		logNetwork->errorStream() << "Problem with resolving: \n" << error;
@@ -76,22 +72,22 @@ CConnection::CConnection(std::string host, ui16 port, std::string Name)
 	}
 	pom = endpoint_iterator;
 	if(pom != end)
-		logNetwork->infoStream()<<"Found endpoints:";
+		logNetwork->infoStream() << "Found endpoints:";
 	else
 	{
 		logNetwork->errorStream() << "Critical problem: No endpoints found!";
 		goto connerror1;
 	}
-	i=0;
+	i = 0;
 	while(pom != end)
 	{
-		logNetwork->infoStream() << "\t" << i << ": " << (boost::asio::ip::tcp::endpoint&)*pom;
+		logNetwork->infoStream() << "\t" << i << ": " << (boost::asio::ip::tcp::endpoint &)*pom;
 		pom++;
 	}
-	i=0;
+	i = 0;
 	while(endpoint_iterator != end)
 	{
-		logNetwork->infoStream() << "Trying connection to " << (boost::asio::ip::tcp::endpoint&)*endpoint_iterator << "  (" << i++ << ")";
+		logNetwork->infoStream() << "Trying connection to " << (boost::asio::ip::tcp::endpoint &)*endpoint_iterator << "  (" << i++ << ")";
 		socket->connect(*endpoint_iterator, error);
 		if(!error)
 		{
@@ -100,7 +96,7 @@ CConnection::CConnection(std::string host, ui16 port, std::string Name)
 		}
 		else
 		{
-			logNetwork->errorStream() << "Problem with connecting: " <<  error;
+			logNetwork->errorStream() << "Problem with connecting: " << error;
 		}
 		endpoint_iterator++;
 	}
@@ -116,18 +112,18 @@ connerror1:
 	//delete socket;
 	throw std::runtime_error("Can't establish connection :(");
 }
-CConnection::CConnection(TSocket * Socket, std::string Name )
-	:iser(this), oser(this), socket(Socket),io_service(&Socket->get_io_service()), name(Name)//, send(this), rec(this)
+CConnection::CConnection(TSocket * Socket, std::string Name) :
+	iser(this), oser(this), socket(Socket), io_service(&Socket->get_io_service()), name(Name) //, send(this), rec(this)
 {
 	init();
 }
-CConnection::CConnection(TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name)
-: iser(this), oser(this), name(Name)//, send(this), rec(this)
+CConnection::CConnection(TAcceptor * acceptor, boost::asio::io_service * Io_service, std::string Name) :
+	iser(this), oser(this), name(Name) //, send(this), rec(this)
 {
 	boost::system::error_code error = asio::error::host_not_found;
 	socket = new tcp::socket(*io_service);
-	acceptor->accept(*socket,error);
-	if (error)
+	acceptor->accept(*socket, error);
+	if(error)
 	{
 		logNetwork->errorStream() << "Error on accepting: " << error;
 		delete socket;
@@ -140,7 +136,7 @@ int CConnection::write(const void * data, unsigned size)
 	try
 	{
 		int ret;
-		ret = asio::write(*socket,asio::const_buffers_1(asio::const_buffer(data,size)));
+		ret = asio::write(*socket, asio::const_buffers_1(asio::const_buffer(data, size)));
 		return ret;
 	}
 	catch(...)
@@ -154,7 +150,7 @@ int CConnection::read(void * data, unsigned size)
 {
 	try
 	{
-		int ret = asio::read(*socket,asio::mutable_buffers_1(asio::mutable_buffer(data,size)));
+		int ret = asio::read(*socket, asio::mutable_buffers_1(asio::mutable_buffer(data, size)));
 		return ret;
 	}
 	catch(...)
@@ -178,11 +174,12 @@ CConnection::~CConnection(void)
 }
 
 template<class T>
-CConnection & CConnection::operator&(const T &t) {
-//	throw std::exception();
+CConnection & CConnection::operator&(const T & t)
+{
+//throw std::exception();
 //XXX this is temporaly ? solution to fix gcc (4.3.3, other?) compilation
-//    problem for more details contact t0@czlug.icis.pcz.pl or impono@gmail.com
-//    do not remove this exception it shoudnt be called
+//problem for more details contact t0@czlug.icis.pcz.pl or impono@gmail.com
+//do not remove this exception it shoudnt be called
 	return *this;
 }
 
@@ -211,25 +208,25 @@ void CConnection::reportState(CLogger * out)
 	if(socket && socket->is_open())
 	{
 		out->debugStream() << "\tWe have an open and valid socket";
-		out->debugStream() << "\t" << socket->available() <<" bytes awaiting";
+		out->debugStream() << "\t" << socket->available() << " bytes awaiting";
 	}
 }
 
 CPack * CConnection::retreivePack()
 {
-	CPack *ret = nullptr;
+	CPack * ret = nullptr;
 	boost::unique_lock<boost::mutex> lock(*rmx);
 	logNetwork->traceStream() << "Listening... ";
 	iser & ret;
-	logNetwork->traceStream() << "\treceived server message of type " << (ret? typeid(*ret).name() : "nullptr") << ", data: " << ret;
+	logNetwork->traceStream() << "\treceived server message of type " << (ret ? typeid(*ret).name() : "nullptr") << ", data: " << ret;
 	return ret;
 }
 
-void CConnection::sendPackToServer(const CPack &pack, PlayerColor player, ui32 requestID)
+void CConnection::sendPackToServer(const CPack & pack, PlayerColor player, ui32 requestID)
 {
 	boost::unique_lock<boost::mutex> lock(*wmx);
 	logNetwork->traceStream() << "Sending to server a pack of type " << typeid(pack).name();
-	oser & player & requestID & &pack; //packs has to be sent as polymorphic pointers!
+	oser & player & requestID & & pack; //packs has to be sent as polymorphic pointers!
 }
 
 void CConnection::disableStackSendingByID()
@@ -279,7 +276,7 @@ void CConnection::enableSmartVectorMemberSerializatoin()
 	CSerializer::smartVectorMembersSerialization = true;
 }
 
-std::ostream & operator<<(std::ostream &str, const CConnection &cpc)
- {
+std::ostream & operator<<(std::ostream & str, const CConnection & cpc)
+{
 	return str << "Connection with " << cpc.name << " (ID: " << cpc.connectionID << /*", " << (cpc.host ? "host" : "guest") <<*/ ")";
- }
+}

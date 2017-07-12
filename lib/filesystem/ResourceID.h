@@ -98,8 +98,14 @@ public:
 		return name == other.name && type == other.type;
 	}
 
-	std::string		getName() const {return name;}
-	EResType::Type	getType() const {return type;}
+	std::string getName() const
+	{
+		return name;
+	}
+	EResType::Type getType() const
+	{
+		return type;
+	}
 	//void setName(std::string name);
 	//void setType(EResType::Type type);
 
@@ -116,7 +122,7 @@ private:
 
 namespace std
 {
-	template <> struct hash<ResourceID>
+	template<> struct hash<ResourceID>
 	{
 		size_t operator()(const ResourceID & resourceIdent) const
 		{

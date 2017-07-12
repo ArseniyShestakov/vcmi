@@ -55,9 +55,9 @@ struct SharedMemory
 	boost::interprocess::shared_memory_object smo;
 	boost::interprocess::mapped_region * mr;
 	ServerReady * sr;
-	
-	SharedMemory(std::string Name, bool initialize = false)
-		: name(Name.c_str())
+
+	SharedMemory(std::string Name, bool initialize = false) :
+		name(Name.c_str())
 	{
 		if(initialize)
 		{
@@ -66,11 +66,11 @@ struct SharedMemory
 		}
 		smo = boost::interprocess::shared_memory_object(boost::interprocess::open_or_create, name, boost::interprocess::read_write);
 		smo.truncate(sizeof(ServerReady));
-		mr = new boost::interprocess::mapped_region(smo,boost::interprocess::read_write);
+		mr = new boost::interprocess::mapped_region(smo, boost::interprocess::read_write);
 		if(initialize)
 			sr = new(mr->get_address())ServerReady();
 		else
-			sr = reinterpret_cast<ServerReady*>(mr->get_address());
+			sr = reinterpret_cast<ServerReady *>(mr->get_address());
 	};
 
 	~SharedMemory()

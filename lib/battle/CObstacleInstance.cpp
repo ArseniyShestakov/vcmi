@@ -24,7 +24,6 @@ CObstacleInstance::CObstacleInstance()
 
 CObstacleInstance::~CObstacleInstance()
 {
-
 }
 
 const CObstacleInfo & CObstacleInstance::getInfo() const
@@ -67,13 +66,13 @@ std::vector<BattleHex> CObstacleInstance::getAffectedTiles() const
 	}
 }
 
-// bool CObstacleInstance::spellGenerated() const
-// {
-// 	if(obstacleType == USUAL || obstacleType == ABSOLUTE_OBSTACLE)
-// 		return false;
+//bool CObstacleInstance::spellGenerated() const
+//{
+//if(obstacleType == USUAL || obstacleType == ABSOLUTE_OBSTACLE)
+//return false;
 //
-// 	return true;
-// }
+//return true;
+//}
 
 bool CObstacleInstance::visibleForSide(ui8 side, bool hasNativeStack) const
 {

@@ -10,20 +10,20 @@
 #pragma once
 #include "battle/BattleHex.h"
 #include "CCreatureHandler.h"
-#include "mapObjects/CGHeroInstance.h" // for commander serialization
+#include "mapObjects/CGHeroInstance.h" //for commander serialization
 
 struct BattleStackAttacked;
 
 class DLL_LINKAGE CStack : public CBonusSystemNode, public CStackBasicDescriptor, public ISpellCaster
 {
 public:
-	const CStackInstance *base; //garrison slot from which stack originates (nullptr for war machines, summoned cres, etc)
+	const CStackInstance * base; //garrison slot from which stack originates (nullptr for war machines, summoned cres, etc)
 
 	ui32 ID; //unique ID of stack
 	ui32 baseAmount;
 	ui32 firstHPleft; //HP of first creature in stack
 	PlayerColor owner; //owner - player colour (255 for neutrals)
-	SlotID slot;  //slot - position in garrison (may be 255 for neutrals/called creatures)
+	SlotID slot; //slot - position in garrison (may be 255 for neutrals/called creatures)
 	ui8 side;
 	BattleHex position; //position on battlefield; -2 - keep, -3 - lower tower, -4 - upper tower
 	///how many times this stack has been counterattacked this round
@@ -32,15 +32,18 @@ public:
 	mutable ui8 counterAttacksTotalCache;
 	si16 shots; //how many shots left
 	ui8 casts; //how many casts left
-	TQuantity resurrected; // these units will be taken back after battle is over
+	TQuantity resurrected; //these units will be taken back after battle is over
 	///id of alive clone of this stack clone if any
 	si32 cloneID;
 	std::set<EBattleStackState::EBattleStackState> state;
 	//overrides
-	const CCreature* getCreature() const {return type;}
+	const CCreature * getCreature() const
+	{
+		return type;
+	}
 
-	CStack(const CStackInstance *base, PlayerColor O, int I, ui8 Side, SlotID S); //c-tor
-	CStack(const CStackBasicDescriptor *stack, PlayerColor O, int I, ui8 Side, SlotID S = SlotID(255)); //c-tor
+	CStack(const CStackInstance * base, PlayerColor O, int I, ui8 Side, SlotID S); //c-tor
+	CStack(const CStackBasicDescriptor * stack, PlayerColor O, int I, ui8 Side, SlotID S = SlotID(255)); //c-tor
 	CStack(); //c-tor
 	~CStack();
 	std::string nodeName() const override;
@@ -63,8 +66,8 @@ public:
 	ui32 level() const;
 	si32 magicResistance() const override; //include aura of resistance
 	std::vector<si32> activeSpells() const; //returns vector of active spell IDs sorted by time of cast
-	const CGHeroInstance *getMyHero() const; //if stack belongs to hero (directly or was by him summoned) returns hero, nullptr otherwise
-	ui32 totalHealth() const; // total health for all creatures in stack;
+	const CGHeroInstance * getMyHero() const; //if stack belongs to hero (directly or was by him summoned) returns hero, nullptr otherwise
+	ui32 totalHealth() const; //total health for all creatures in stack;
 
 	static bool isMeleeAttackPossible(const CStack * attacker, const CStack * defender, BattleHex attackerPos = BattleHex::INVALID, BattleHex defenderPos = BattleHex::INVALID);
 
@@ -75,15 +78,15 @@ public:
 	std::vector<BattleHex> getHexes(BattleHex assumedPos) const; //up to two occupied hexes, starting from front
 	static std::vector<BattleHex> getHexes(BattleHex assumedPos, bool twoHex, ui8 side); //up to two occupied hexes, starting from front
 	bool coversPos(BattleHex position) const; //checks also if unit is double-wide
-	std::vector<BattleHex> getSurroundingHexes(BattleHex attackerPos = BattleHex::INVALID) const; // get six or 8 surrounding hexes depending on creature size
+	std::vector<BattleHex> getSurroundingHexes(BattleHex attackerPos = BattleHex::INVALID) const; //get six or 8 surrounding hexes depending on creature size
 
 	BattleHex::EDir destShiftDir() const;
 
-	std::pair<int,int> countKilledByAttack(int damageReceived) const; //returns pair<killed count, new left HP>
-	void prepareAttacked(BattleStackAttacked &bsa, CRandomGenerator & rand, boost::optional<int> customCount = boost::none) const; //requires bsa.damageAmout filled
+	std::pair<int, int> countKilledByAttack(int damageReceived) const; //returns pair<killed count, new left HP>
+	void prepareAttacked(BattleStackAttacked & bsa, CRandomGenerator & rand, boost::optional<int> customCount = boost::none) const; //requires bsa.damageAmout filled
 
 	///ISpellCaster
-	ui8 getSpellSchoolLevel(const CSpell * spell, int *outSelectedSchool = nullptr) const override;
+	ui8 getSpellSchoolLevel(const CSpell * spell, int * outSelectedSchool = nullptr) const override;
 	ui32 getSpellBonus(const CSpell * spell, ui32 base, const CStack * affectedStack) const override;
 
 	///default spell school level for effect calculation
@@ -107,15 +110,15 @@ public:
 	///stack will be ghost in next battle state update
 	void makeGhost();
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		assert(isIndependentNode());
-		h & static_cast<CBonusSystemNode&>(*this);
-		h & static_cast<CStackBasicDescriptor&>(*this);
+		h & static_cast<CBonusSystemNode &>(*this);
+		h & static_cast<CStackBasicDescriptor &>(*this);
 		h & ID & baseAmount & firstHPleft & owner & slot & side & position & state & counterAttacksPerformed
-			& shots & casts & count & resurrected;
+		& shots & casts & count & resurrected;
 
-		const CArmedInstance *army = (base ? base->armyObj : nullptr);
+		const CArmedInstance * army = (base ? base->armyObj : nullptr);
 		SlotID extSlot = (base ? base->armyObj->findStack(base) : SlotID());
 
 		if(h.saving)
@@ -128,7 +131,7 @@ public:
 			if(extSlot == SlotID::COMMANDER_SLOT_PLACEHOLDER)
 			{
 				auto hero = dynamic_cast<const CGHeroInstance *>(army);
-				assert (hero);
+				assert(hero);
 				base = hero->commander;
 			}
 			else if(slot == SlotID::SUMMONED_SLOT_PLACEHOLDER || slot == SlotID::ARROW_TOWERS_SLOT || slot == SlotID::WAR_MACHINES_SLOT)
@@ -146,7 +149,6 @@ public:
 				base = &army->getStack(extSlot);
 			}
 		}
-
 	}
 	bool alive() const;
 

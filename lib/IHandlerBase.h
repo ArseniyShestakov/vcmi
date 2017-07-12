@@ -11,17 +11,18 @@
  */
  #include "../lib/ConstTransitivePtr.h"
  #include "VCMI_Lib.h"
- //#include "CModHandler.h"
+//#include "CModHandler.h"
 
 class JsonNode;
 
 /// base class for all handlers that can be accessed from mod system
 class DLL_LINKAGE IHandlerBase
 {
-	// there also should be private member with such signature:
-	// Object * loadFromJson(const JsonNode & json);
-	// where Object is type of data loaded by handler
-	// primary used in loadObject methods
+	//there also should be private member with such signature:
+	//Object * loadFromJson(const JsonNode & json);
+	//where Object is type of data loaded by handler
+	//primary used in loadObject methods
+
 protected:
 	/// Calls modhandler. Mostly needed to avoid large number of includes in headers
 	void registerObject(std::string scope, std::string type_name, std::string name, si32 index);
@@ -37,13 +38,19 @@ public:
 	virtual void loadObject(std::string scope, std::string name, const JsonNode & data, size_t index) = 0;
 
 	/// allows handlers to alter object configuration before validation and actual load
-	virtual void beforeValidate(JsonNode & object){};
+	virtual void beforeValidate(JsonNode & object)
+	{
+	};
 
 	/// allows handler to load some custom internal data before identifier finalization
-	virtual void loadCustom(){};
+	virtual void loadCustom()
+	{
+	};
 
 	/// allows handler to do post-loading step for validation or integration of loaded data
-	virtual void afterLoadFinalization(){};
+	virtual void afterLoadFinalization()
+	{
+	};
 
 	/**
 	 * Gets a list of objects that are allowed by default on maps
@@ -52,10 +59,12 @@ public:
 	 */
 	virtual std::vector<bool> getDefaultAllowed() const = 0;
 
-	virtual ~IHandlerBase(){}
+	virtual ~IHandlerBase()
+	{
+	}
 };
 
-template <class _ObjectID, class _Object> class CHandlerBase: public IHandlerBase
+template<class _ObjectID, class _Object> class CHandlerBase : public IHandlerBase
 {
 public:
 	virtual ~CHandlerBase()
@@ -64,7 +73,6 @@ public:
 		{
 			o.dellNull();
 		}
-
 	}
 	void loadObject(std::string scope, std::string name, const JsonNode & data) override
 	{
@@ -83,28 +91,29 @@ public:
 		object->id = _ObjectID(index);
 
 
-		assert(objects[index] == nullptr); // ensure that this id was not loaded before
+		assert(objects[index] == nullptr); //ensure that this id was not loaded before
 		objects[index] = object;
 
-		registerObject(scope,type_name, name, object->id);
-
+		registerObject(scope, type_name, name, object->id);
 	}
 
-	ConstTransitivePtr<_Object> operator[] (const _ObjectID id) const
+	ConstTransitivePtr<_Object> operator[](const _ObjectID id) const
 	{
 		const auto raw_id = id.toEnum();
 
-		if (raw_id < 0 || raw_id >= objects.size())
+		if(raw_id < 0 || raw_id >= objects.size())
 		{
 			logGlobal->errorStream() << getTypeName() << " id " << static_cast<si64>(raw_id) << "is invalid";
-			throw std::runtime_error ("internal error");
+			throw std::runtime_error("internal error");
 		}
 
 		return objects[raw_id];
 	}
+
 protected:
 	virtual _Object * loadFromJson(const JsonNode & json, const std::string & identifier) = 0;
 	virtual const std::string getTypeName() const = 0;
+
 public: //todo: make private
 	std::vector<ConstTransitivePtr<_Object>> objects;
 };

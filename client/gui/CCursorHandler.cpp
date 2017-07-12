@@ -26,9 +26,9 @@ void CCursorHandler::initCursor()
 	dndObject = nullptr;
 	currentCursor = nullptr;
 
-	help = CSDL_Ext::newSurface(40,40);
+	help = CSDL_Ext::newSurface(40, 40);
 	//No blending. Ensure, that we are copying pixels during "screen restore draw"
-	SDL_SetSurfaceBlendMode(help,SDL_BLENDMODE_NONE);	
+	SDL_SetSurfaceBlendMode(help, SDL_BLENDMODE_NONE);
 	SDL_ShowCursor(SDL_DISABLE);
 
 	changeGraphic(ECursor::ADVENTURE, 0);
@@ -36,11 +36,14 @@ void CCursorHandler::initCursor()
 
 void CCursorHandler::changeGraphic(ECursor::ECursorTypes type, int index)
 {
-	std::string cursorDefs[4] = { "CRADVNTR.DEF", "CRCOMBAT.DEF", "CRDEFLT.DEF", "CRSPELL.DEF" };
-
-	if (type != this->type)
+	std::string cursorDefs[4] =
 	{
-		BLOCK_CAPTURING; // not used here
+		"CRADVNTR.DEF", "CRCOMBAT.DEF", "CRDEFLT.DEF", "CRSPELL.DEF"
+	};
+
+	if(type != this->type)
+	{
+		BLOCK_CAPTURING; //not used here
 
 		this->type = type;
 		this->frame = index;
@@ -49,7 +52,7 @@ void CCursorHandler::changeGraphic(ECursor::ECursorTypes type, int index)
 		currentCursor = new CAnimImage(cursorDefs[int(type)], index);
 	}
 
-	if (frame != index)
+	if(frame != index)
 	{
 		frame = index;
 		currentCursor->setFrame(index);
@@ -58,7 +61,7 @@ void CCursorHandler::changeGraphic(ECursor::ECursorTypes type, int index)
 
 void CCursorHandler::dragAndDropCursor(CAnimImage * object)
 {
-	if (dndObject)
+	if(dndObject)
 		delete dndObject;
 
 	dndObject = object;
@@ -72,22 +75,23 @@ void CCursorHandler::cursorMove(const int & x, const int & y)
 
 void CCursorHandler::drawWithScreenRestore()
 {
-	if(!showing) return;
+	if(!showing)
+		return;
 	int x = xpos, y = ypos;
 	shiftPos(x, y);
 
-	SDL_Rect temp_rect1 = genRect(40,40,x,y);
-	SDL_Rect temp_rect2 = genRect(40,40,0,0);
+	SDL_Rect temp_rect1 = genRect(40, 40, x, y);
+	SDL_Rect temp_rect2 = genRect(40, 40, 0, 0);
 	SDL_BlitSurface(screen, &temp_rect1, help, &temp_rect2);
 
-	if (dndObject)
+	if(dndObject)
 	{
-		dndObject->moveTo(Point(x - dndObject->pos.w/2, y - dndObject->pos.h/2));
+		dndObject->moveTo(Point(x - dndObject->pos.w / 2, y - dndObject->pos.h / 2));
 		dndObject->showAll(screen);
 	}
 	else
 	{
-		currentCursor->moveTo(Point(x,y));
+		currentCursor->moveTo(Point(x, y));
 		currentCursor->showAll(screen);
 	}
 }
@@ -105,53 +109,53 @@ void CCursorHandler::drawRestored()
 	//blitAt(help,x,y);
 }
 
-void CCursorHandler::draw(SDL_Surface *to)
+void CCursorHandler::draw(SDL_Surface * to)
 {
 	currentCursor->moveTo(Point(xpos, ypos));
 	currentCursor->showAll(screen);
 }
 
-void CCursorHandler::shiftPos( int &x, int &y )
+void CCursorHandler::shiftPos(int & x, int & y)
 {
-	if(( type == ECursor::COMBAT && frame != ECursor::COMBAT_POINTER) || type == ECursor::SPELLBOOK)
+	if((type == ECursor::COMBAT && frame != ECursor::COMBAT_POINTER) || type == ECursor::SPELLBOOK)
 	{
-		x-=16;
-		y-=16;
+		x -= 16;
+		y -= 16;
 
-		// Properly align the melee attack cursors.
-		if (type == ECursor::COMBAT)
+		//Properly align the melee attack cursors.
+		if(type == ECursor::COMBAT)
 		{
-			switch (frame)
+			switch(frame)
 			{
-			case 7: // Bottom left
+			case 7: //Bottom left
 				x -= 6;
 				y += 16;
 				break;
-			case 8: // Left
+			case 8: //Left
 				x -= 16;
 				y += 10;
 				break;
-			case 9: // Top left
+			case 9: //Top left
 				x -= 6;
 				y -= 6;
 				break;
-			case 10: // Top right
+			case 10: //Top right
 				x += 16;
 				y -= 6;
 				break;
-			case 11: // Right
+			case 11: //Right
 				x += 16;
 				y += 11;
 				break;
-			case 12: // Bottom right
+			case 12: //Bottom right
 				x += 16;
 				y += 16;
 				break;
-			case 13: // Below
+			case 13: //Below
 				x += 9;
 				y += 16;
 				break;
-			case 14: // Above
+			case 14: //Above
 				x += 9;
 				y -= 15;
 				break;
@@ -160,7 +164,8 @@ void CCursorHandler::shiftPos( int &x, int &y )
 	}
 	else if(type == ECursor::ADVENTURE)
 	{
-		if (frame == 0); //to exclude
+		if(frame == 0)
+			; //to exclude
 		else if(frame == 2)
 		{
 			x -= 12;
@@ -173,7 +178,7 @@ void CCursorHandler::shiftPos( int &x, int &y )
 		}
 		else if(frame < 27)
 		{
-			int hlpNum = (frame - 4)%6;
+			int hlpNum = (frame - 4) % 6;
 			if(hlpNum == 0)
 			{
 				x -= 15;

@@ -4,7 +4,9 @@
 #include "../CConfigHandler.h"
 
 CBasicLogConfigurator::CBasicLogConfigurator(boost::filesystem::path filePath, CConsoleHandler * const console) :
-	filePath(std::move(filePath)), console(console), appendToLogFile(false) {}
+	filePath(std::move(filePath)), console(console), appendToLogFile(false)
+{
+}
 
 void CBasicLogConfigurator::configureDefault()
 {
@@ -21,17 +23,17 @@ void CBasicLogConfigurator::configure()
 		if(loggingNode.isNull())
 			throw std::runtime_error("Settings haven't been loaded.");
 
-		// Configure loggers
+		//Configure loggers
 		const JsonNode & loggers = loggingNode["loggers"];
 		if(!loggers.isNull())
 		{
 			for(auto & loggerNode : loggers.Vector())
 			{
-				// Get logger
+				//Get logger
 				std::string name = loggerNode["domain"].String();
 				CLogger * logger = CLogger::getLogger(CLoggerDomain(name));
 
-				// Set log level
+				//Set log level
 				std::string level = loggerNode["level"].String();
 				logger->setLevel(getLogLevel(level));
 				logGlobal->debug("Set log level %s => %d", name, level);
@@ -39,15 +41,17 @@ void CBasicLogConfigurator::configure()
 		}
 		CLogger::getGlobalLogger()->clearTargets();
 
-		// Add console target
+		//Add console target
 		auto consoleTarget = make_unique<CLogConsoleTarget>(console);
 		const JsonNode & consoleNode = loggingNode["console"];
 		if(!consoleNode.isNull())
 		{
 			const JsonNode & consoleFormatNode = consoleNode["format"];
-			if(!consoleFormatNode.isNull()) consoleTarget->setFormatter(CLogFormatter(consoleFormatNode.String()));
+			if(!consoleFormatNode.isNull())
+				consoleTarget->setFormatter(CLogFormatter(consoleFormatNode.String()));
 			const JsonNode & consoleThresholdNode = consoleNode["threshold"];
-			if(!consoleThresholdNode.isNull()) consoleTarget->setThreshold(getLogLevel(consoleThresholdNode.String()));
+			if(!consoleThresholdNode.isNull())
+				consoleTarget->setThreshold(getLogLevel(consoleThresholdNode.String()));
 			const JsonNode & coloredConsoleEnabledNode = consoleNode["coloredOutputEnabled"];
 			consoleTarget->setColoredOutputEnabled(coloredConsoleEnabledNode.Bool());
 
@@ -67,13 +71,14 @@ void CBasicLogConfigurator::configure()
 		}
 		CLogger::getGlobalLogger()->addTarget(std::move(consoleTarget));
 
-		// Add file target
+		//Add file target
 		auto fileTarget = make_unique<CLogFileTarget>(filePath, appendToLogFile);
 		const JsonNode & fileNode = loggingNode["file"];
 		if(!fileNode.isNull())
 		{
 			const JsonNode & fileFormatNode = fileNode["format"];
-			if(!fileFormatNode.isNull()) fileTarget->setFormatter(CLogFormatter(fileFormatNode.String()));
+			if(!fileFormatNode.isNull())
+				fileTarget->setFormatter(CLogFormatter(fileFormatNode.String()));
 		}
 		CLogger::getGlobalLogger()->addTarget(std::move(fileTarget));
 		appendToLogFile = true;
@@ -81,14 +86,14 @@ void CBasicLogConfigurator::configure()
 	catch(const std::exception & e)
 	{
 		logGlobal->error("Could not initialize the logging system due to configuration error/s."
-								     "The logging system can be in a corrupted state. %s", e.what());
+				 "The logging system can be in a corrupted state. %s", e.what());
 	}
 
 	logGlobal->info("Initialized logging system based on settings successfully.");
-	for (auto& domain : CLogManager::get().getRegisteredDomains())
+	for(auto & domain : CLogManager::get().getRegisteredDomains())
 	{
 		logGlobal->info("[log level] %s => %s", domain,
-                    ELogLevel::to_string(CLogger::getLogger(CLoggerDomain(domain))->getLevel()));
+				ELogLevel::to_string(CLogger::getLogger(CLoggerDomain(domain))->getLevel()));
 	}
 }
 
@@ -102,7 +107,7 @@ ELogLevel::ELogLevel CBasicLogConfigurator::getLogLevel(const std::string & leve
 		{"warn", ELogLevel::WARN},
 		{"error", ELogLevel::ERROR},
 	};
-	
+
 	const auto & levelPair = levelMap.find(level);
 	if(levelPair != levelMap.end())
 		return levelPair->second;

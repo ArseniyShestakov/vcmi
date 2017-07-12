@@ -19,16 +19,15 @@ bool AccessibilityInfo::accessible(BattleHex tile, const CStack * stack) const
 
 bool AccessibilityInfo::accessible(BattleHex tile, bool doubleWide, ui8 side) const
 {
-	// All hexes that stack would cover if standing on tile have to be accessible.
+	//All hexes that stack would cover if standing on tile have to be accessible.
 	for(auto hex : CStack::getHexes(tile, doubleWide, side))
 	{
-		// If the hex is out of range then the tile isn't accessible
+		//If the hex is out of range then the tile isn't accessible
 		if(!hex.isValid())
 			return false;
-		// If we're no defender which step on gate and the hex isn't accessible, then the tile
-		// isn't accessible
-		else if(at(hex) != EAccessibility::ACCESSIBLE &&
-				!(at(hex) == EAccessibility::GATE && side == BattleSide::DEFENDER))
+		//If we're no defender which step on gate and the hex isn't accessible, then the tile
+		//isn't accessible
+		else if(at(hex) != EAccessibility::ACCESSIBLE && !(at(hex) == EAccessibility::GATE && side == BattleSide::DEFENDER))
 		{
 			return false;
 		}

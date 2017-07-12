@@ -7,7 +7,7 @@
  * Full text of license available in license.txt file, in main folder
  *
  */
- 
+
 #pragma once
 
 class IBonusBearer;
@@ -18,8 +18,10 @@ struct Bonus;
 class IBonusTypeHandler
 {
 public:
-	virtual ~IBonusTypeHandler(){};
+	virtual ~IBonusTypeHandler()
+	{
+	};
 
-	virtual std::string bonusToString(const std::shared_ptr<Bonus>& bonus, const IBonusBearer *bearer, bool description) const = 0;
-	virtual std::string bonusToGraphics(const std::shared_ptr<Bonus>& bonus) const = 0;
+	virtual std::string bonusToString(const std::shared_ptr<Bonus> & bonus, const IBonusBearer * bearer, bool description) const = 0;
+	virtual std::string bonusToGraphics(const std::shared_ptr<Bonus> & bonus) const = 0;
 };

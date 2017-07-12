@@ -25,11 +25,11 @@ class CStopWatch
 	si64 start, last, mem;
 
 public:
-	CStopWatch()
-		: start(clock())
+	CStopWatch() :
+		start(clock())
 	{
-		last=clock();
-		mem=0;
+		last = clock();
+		mem = 0;
 	}
 
 	si64 getDiff() //get diff in milliseconds
@@ -40,19 +40,19 @@ public:
 	}
 	void update()
 	{
-		last=clock();
+		last = clock();
 	}
 	void remember()
 	{
-		mem=clock();
+		mem = clock();
 	}
 	si64 memDif()
 	{
-		return (clock()-mem) / TO_MS_DIVISOR;
+		return (clock() - mem) / TO_MS_DIVISOR;
 	}
 
 private:
-	si64 clock() 
+	si64 clock()
 	{
 	#ifdef __FreeBSD__
 		struct rusage usage;

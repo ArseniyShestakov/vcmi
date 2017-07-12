@@ -23,11 +23,12 @@ class JsonNode;
 class CRandomGenerator;
 
 struct SSpecialtyInfo
-{	si32 type;
+{
+	si32 type;
 	si32 val;
 	si32 subtype;
 	si32 additionalinfo;
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & type & val & subtype & additionalinfo;
 	}
@@ -38,7 +39,7 @@ struct SSpecialtyBonus
 {
 	ui8 growsWithLevel;
 	BonusList bonuses;
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & growsWithLevel & bonuses;
 	}
@@ -53,7 +54,7 @@ public:
 		ui32 maxAmount;
 		CreatureID creature;
 
-		template <typename Handler> void serialize(Handler &h, const int version)
+		template<typename Handler> void serialize(Handler & h, const int version)
 		{
 			h & minAmount & maxAmount & creature;
 		}
@@ -65,13 +66,13 @@ public:
 	std::vector<InitialArmyStack> initialArmy;
 
 	CHeroClass * heroClass;
-	std::vector<std::pair<SecondarySkill, ui8> > secSkillsInit; //initial secondary skills; first - ID of skill, second - level of skill (1 - basic, 2 - adv., 3 - expert)
+	std::vector<std::pair<SecondarySkill, ui8>> secSkillsInit; //initial secondary skills; first - ID of skill, second - level of skill (1 - basic, 2 - adv., 3 - expert)
 	std::vector<SSpecialtyInfo> spec;
 	std::vector<SSpecialtyBonus> specialty;
 	std::set<SpellID> spells;
 	bool haveSpellBook;
-	bool special; // hero is special and won't be placed in game (unless preset on map), e.g. campaign heroes
-	ui8 sex; // default sex: 0=male, 1=female
+	bool special; //hero is special and won't be placed in game (unless preset on map), e.g. campaign heroes
+	ui8 sex; //default sex: 0=male, 1=female
 
 	/// Localized texts
 	std::string name; //name of hero
@@ -86,12 +87,12 @@ public:
 	std::string portraitSmall;
 	std::string portraitLarge;
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & ID & imageIndex & initialArmy & heroClass & secSkillsInit & spec & specialty & spells & haveSpellBook & sex & special;
 		h & name & biography & specName & specDescr & specTooltip;
 		h & iconSpecSmall & iconSpecLarge & portraitSmall & portraitLarge;
-		if(version>=759)
+		if(version >= 759)
 		{
 			h & identifier;
 		}
@@ -108,21 +109,21 @@ public:
 	};
 
 	std::string identifier;
-	std::string name; // translatable
+	std::string name; //translatable
 	//double aggression; // not used in vcmi.
 	TFaction faction;
 	ui8 id;
-	ui8 affinity; // affility, using EClassAffinity enum
+	ui8 affinity; //affility, using EClassAffinity enum
 
-	// default chance for hero of specific class to appear in tavern, if field "tavern" was not set
-	// resulting chance = sqrt(town.chance * heroClass.chance)
+	//default chance for hero of specific class to appear in tavern, if field "tavern" was not set
+	//resulting chance = sqrt(town.chance * heroClass.chance)
 	ui32 defaultTavernChance;
 
 	CCreature * commander;
 
-	std::vector<int> primarySkillInitial;  // initial primary skills
-	std::vector<int> primarySkillLowLevel; // probability (%) of getting point of primary skill when getting level
-	std::vector<int> primarySkillHighLevel;// same for high levels (> 10)
+	std::vector<int> primarySkillInitial; //initial primary skills
+	std::vector<int> primarySkillLowLevel; //probability (%) of getting point of primary skill when getting level
+	std::vector<int> primarySkillHighLevel; //same for high levels (> 10)
 
 	std::vector<int> secSkillProbability; //probabilities of gaining secondary skills (out of 112), in id order
 
@@ -138,10 +139,10 @@ public:
 	bool isMagicHero() const;
 	SecondarySkill chooseSecSkill(const std::set<SecondarySkill> & possibles, CRandomGenerator & rand) const; //picks secondary skill out from given possibilities
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & identifier & name & faction & id & defaultTavernChance;// & aggression;
-		h & primarySkillInitial   & primarySkillLowLevel;
+		h & identifier & name & faction & id & defaultTavernChance; //& aggression;
+		h & primarySkillInitial & primarySkillLowLevel;
 		h & primarySkillHighLevel & secSkillProbability;
 		h & selectionProbability & affinity & commander;
 		h & imageBattleMale & imageBattleFemale & imageMapMale & imageMapFemale;
@@ -164,7 +165,7 @@ struct DLL_LINKAGE CObstacleInfo
 
 	bool isAppropriate(ETerrainType terrainType, int specialBattlefield = -1) const;
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & ID & defName & allowedTerrains & allowedSpecialBfields & isAbsoluteObstacle & width & height & blockedTiles;
 	}
@@ -172,9 +173,10 @@ struct DLL_LINKAGE CObstacleInfo
 
 class DLL_LINKAGE CHeroClassHandler : public IHandlerBase
 {
-	CHeroClass *loadFromJson(const JsonNode & node, const std::string & identifier);
+	CHeroClass * loadFromJson(const JsonNode & node, const std::string & identifier);
+
 public:
-	std::vector< ConstTransitivePtr<CHeroClass> > heroClasses;
+	std::vector<ConstTransitivePtr<CHeroClass>> heroClasses;
 
 	std::vector<JsonNode> loadLegacyData(size_t dataSize) override;
 
@@ -187,7 +189,7 @@ public:
 
 	~CHeroClassHandler();
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & heroClasses;
 	}
@@ -215,7 +217,7 @@ class DLL_LINKAGE CHeroHandler : public IHandlerBase
 public:
 	CHeroClassHandler classes;
 
-	std::vector< ConstTransitivePtr<CHero> > heroes;
+	std::vector<ConstTransitivePtr<CHero>> heroes;
 
 	//default costs of going through terrains. -1 means terrain is impassable
 	std::vector<int> terrCosts;
@@ -226,7 +228,7 @@ public:
 		ui8 shots; //how many shots we have
 		ui8 noDmg, oneDmg, twoDmg; //chances for shot dealing certain dmg in percent (eg. 87 is 87%); must sum to 100
 		ui8 sum; //I don't know if it is useful for anything, but it's in config file
-		template <typename Handler> void serialize(Handler &h, const int version)
+		template<typename Handler> void serialize(Handler & h, const int version)
 		{
 			h & keep & tower & gate & wall & shots & noDmg & oneDmg & twoDmg & sum;
 		}
@@ -268,7 +270,7 @@ public:
 	///json serialization helper
 	static std::string encodeSkill(const si32 index);
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & classes & heroes & expPerLevel & ballistics & terrCosts;
 		h & obstacles & absoluteObstacles;

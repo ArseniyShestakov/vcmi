@@ -19,52 +19,58 @@ class JsonSerializeFormat;
 namespace Res
 {
 	class ResourceSet;
-	bool canAfford(const ResourceSet &res, const ResourceSet &price); //can a be used to pay price b
+	bool canAfford(const ResourceSet & res, const ResourceSet & price); //can a be used to pay price b
 
 	enum ERes
 	{
-		WOOD = 0, MERCURY, ORE, SULFUR, CRYSTAL, GEMS, GOLD, MITHRIL,
-
-		WOOD_AND_ORE = 127 // special case for town bonus resource
+		WOOD = 0,
+		MERCURY,
+		ORE,
+		SULFUR,
+		CRYSTAL,
+		GEMS,
+		GOLD,
+		MITHRIL,
+		WOOD_AND_ORE = 127 //special case for town bonus resource
 	};
 
 	//class to be representing a vector of resource
 	class ResourceSet : public std::vector<int>
 	{
-	public:
+public:
 		DLL_LINKAGE ResourceSet();
-		// read resources set from json. Format example: { "gold": 500, "wood":5 }
+		//read resources set from json. Format example: { "gold": 500, "wood":5 }
 		DLL_LINKAGE ResourceSet(const JsonNode & node);
 
 
-#define scalarOperator(OPSIGN)									\
-		ResourceSet operator OPSIGN(const TResource &rhs) const	\
-		{														\
-			ResourceSet ret = *this;							\
-			for(int i = 0; i < (int)size(); i++)						\
-				ret[i] = at(i) OPSIGN rhs;						\
-																\
-			return ret;											\
-		}
+#define scalarOperator(OPSIGN)                                                                  \
+	ResourceSet operator OPSIGN(const TResource &rhs) const \
+	{                                                                                                               \
+		ResourceSet ret = *this;                                                        \
+		for(int i = 0; i < (int)size(); i++)                                            \
+			ret[i] = at(i) OPSIGN rhs;                                              \
+                                                                                                                                \
+		return ret;                                                                                     \
+	}
 
 
 
-#define vectorOperator(OPSIGN)										\
-		ResourceSet operator OPSIGN(const ResourceSet &rhs) const	\
-		{															\
-			ResourceSet ret = *this;								\
-			for(int i = 0; i < (int)size(); i++)							\
-				ret[i] = at(i) OPSIGN rhs[i];						\
-																	\
-			return ret;												\
-		}
+#define vectorOperator(OPSIGN)                                                                          \
+	ResourceSet operator OPSIGN(const ResourceSet &rhs) const       \
+	{                                                                                                                       \
+		ResourceSet ret = *this;                                                                \
+		for(int i = 0; i < (int)size(); i++)                                                    \
+			ret[i] = at(i) OPSIGN rhs[i];                                           \
+                                                                                                                                        \
+		return ret;                                                                                             \
+	}
 
 
-#define opEqOperator(OPSIGN, RHS_TYPE)							\
-		ResourceSet& operator OPSIGN ## =(const RHS_TYPE &rhs)	\
-		{														\
-			return *this = *this OPSIGN rhs;					\
-		}
+#define opEqOperator(OPSIGN, RHS_TYPE)                                                  \
+	ResourceSet & operator OPSIGN ## = (const RHS_TYPE &rhs)  \
+	{                                                                                                               \
+		return *this = *this OPSIGN rhs;                                        \
+	}
 
 		scalarOperator(+)
 		scalarOperator(-)
@@ -83,7 +89,7 @@ namespace Res
 #undef opEqOperator
 
 		//to be used for calculations of type "how many units of sth can I afford?"
-		int operator/(const ResourceSet &rhs)
+		int operator/(const ResourceSet & rhs)
 		{
 			int ret = INT_MAX;
 			for(int i = 0; i < (int)size(); i++)
@@ -93,7 +99,7 @@ namespace Res
 			return ret;
 		}
 
-		ResourceSet & operator=(const TResource &rhs)
+		ResourceSet & operator=(const TResource & rhs)
 		{
 			for(int i = 0; i < (int)size(); i++)
 				at(i) = rhs;
@@ -109,20 +115,20 @@ namespace Res
 			return ret;
 		}
 
-	// WARNING: comparison operators are used for "can afford" relation: a <= b means that foreach i a[i] <= b[i]
-	// that doesn't work the other way: a > b doesn't mean that a cannot be afforded with b, it's still b can afford a
-// 		bool operator<(const ResourceSet &rhs)
-// 		{
-// 			for(int i = 0; i < size(); i++)
-// 				if(at(i) >= rhs[i])
-// 					return false;
+		//WARNING: comparison operators are used for "can afford" relation: a <= b means that foreach i a[i] <= b[i]
+		//that doesn't work the other way: a > b doesn't mean that a cannot be afforded with b, it's still b can afford a
+//bool operator<(const ResourceSet &rhs)
+//{
+//for(int i = 0; i < size(); i++)
+//if(at(i) >= rhs[i])
+//return false;
 //
-// 			return true;
-// 		}
+//return true;
+//}
 
-		template <typename Handler> void serialize(Handler &h, const int version)
+		template<typename Handler> void serialize(Handler & h, const int version)
 		{
-			h & static_cast<std::vector<int>&>(*this);
+			h & static_cast<std::vector<int> &>(*this);
 		}
 
 		DLL_LINKAGE void serializeJson(JsonSerializeFormat & handler, const std::string & fieldName);
@@ -142,17 +148,16 @@ namespace Res
 				Res::ERes resType;
 				TResourceCap resVal;
 			} cur;
-			const ResourceSet &rs;
+			const ResourceSet & rs;
 			void advance();
 
-		public:
-			nziterator(const ResourceSet &RS);
+public:
+			nziterator(const ResourceSet & RS);
 			bool valid();
 			nziterator operator++();
 			nziterator operator++(int);
-			const ResEntry& operator*() const;
-			const ResEntry* operator->() const;
-
+			const ResEntry & operator*() const;
+			const ResEntry * operator->() const;
 		};
 	};
 

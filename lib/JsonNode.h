@@ -11,10 +11,10 @@
 #pragma once
 
 class JsonNode;
-typedef std::map <std::string, JsonNode> JsonMap;
-typedef std::vector <JsonNode> JsonVector;
+typedef std::map<std::string, JsonNode> JsonMap;
+typedef std::vector<JsonNode> JsonVector;
 
-DLL_LINKAGE std::ostream & operator<<(std::ostream &out, const JsonNode &node);
+DLL_LINKAGE std::ostream & operator<<(std::ostream & out, const JsonNode & node);
 
 struct Bonus;
 class ResourceID;
@@ -38,9 +38,9 @@ private:
 	{
 		bool Bool;
 		double Float;
-		std::string* String;
-		JsonVector* Vector;
-		JsonMap* Struct;
+		std::string * String;
+		JsonVector * Vector;
+		JsonMap * Struct;
 		si64 Integer;
 	};
 
@@ -56,19 +56,19 @@ public:
 	//Create tree from Json-formatted input
 	explicit JsonNode(const char * data, size_t datasize);
 	//Create tree from JSON file
- 	explicit JsonNode(ResourceID && fileURI);
- 	explicit JsonNode(const ResourceID & fileURI);
+	explicit JsonNode(ResourceID && fileURI);
+	explicit JsonNode(const ResourceID & fileURI);
 	explicit JsonNode(ResourceID && fileURI, bool & isValidSyntax);
 	//Copy c-tor
-	JsonNode(const JsonNode &copy);
+	JsonNode(const JsonNode & copy);
 
 	~JsonNode();
 
-	void swap(JsonNode &b);
-	JsonNode& operator =(JsonNode node);
+	void swap(JsonNode & b);
+	JsonNode & operator=(JsonNode node);
 
-	bool operator == (const JsonNode &other) const;
-	bool operator != (const JsonNode &other) const;
+	bool operator==(const JsonNode & other) const;
+	bool operator!=(const JsonNode & other) const;
 
 	void setMeta(std::string metadata, bool recursive = true);
 
@@ -113,21 +113,33 @@ public:
 	JsonNode & operator[](std::string child);
 	const JsonNode & operator[](std::string child) const;
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & meta;
 		h & type;
-		switch (type) {
-			break; case DATA_NULL:
-			break; case DATA_BOOL:   h & data.Bool;
-			break; case DATA_FLOAT:  h & data.Float;
-			break; case DATA_STRING: h & data.String;
-			break; case DATA_VECTOR: h & data.Vector;
-			break; case DATA_STRUCT: h & data.Struct;
+		switch(type)
+		{
+			break;
+		case DATA_NULL:
+			break;
+		case DATA_BOOL:
+			h & data.Bool;
+			break;
+		case DATA_FLOAT:
+			h & data.Float;
+			break;
+		case DATA_STRING:
+			h & data.String;
+			break;
+		case DATA_VECTOR:
+			h & data.Vector;
+			break;
+		case DATA_STRUCT:
+			h & data.Struct;
 		}
 		if(version >= 770)
 		{
-            if(type == DATA_INTEGER)
+			if(type == DATA_INTEGER)
 				h & data.Integer;
 		}
 	}
@@ -139,15 +151,15 @@ namespace JsonUtils
 	 * @brief parse short bonus format, excluding type
 	 * @note sets duration to Permament
 	 */
-	DLL_LINKAGE void parseTypedBonusShort(const JsonVector &source, std::shared_ptr<Bonus> dest);
+	DLL_LINKAGE void parseTypedBonusShort(const JsonVector & source, std::shared_ptr<Bonus> dest);
 
 	///
-	DLL_LINKAGE std::shared_ptr<Bonus> parseBonus(const JsonVector &ability_vec);
-	DLL_LINKAGE std::shared_ptr<Bonus> parseBonus(const JsonNode &ability);
-	DLL_LINKAGE bool parseBonus(const JsonNode &ability, Bonus *placement);
-	DLL_LINKAGE void unparseBonus (JsonNode &node, const std::shared_ptr<Bonus>& bonus);
-	DLL_LINKAGE void resolveIdentifier(si32 &var, const JsonNode &node, std::string name);
-	DLL_LINKAGE void resolveIdentifier(const JsonNode &node, si32 &var);
+	DLL_LINKAGE std::shared_ptr<Bonus> parseBonus(const JsonVector & ability_vec);
+	DLL_LINKAGE std::shared_ptr<Bonus> parseBonus(const JsonNode & ability);
+	DLL_LINKAGE bool parseBonus(const JsonNode & ability, Bonus * placement);
+	DLL_LINKAGE void unparseBonus(JsonNode & node, const std::shared_ptr<Bonus> & bonus);
+	DLL_LINKAGE void resolveIdentifier(si32 & var, const JsonNode & node, std::string name);
+	DLL_LINKAGE void resolveIdentifier(const JsonNode & node, si32 & var);
 
 	/**
 	 * @brief recursively merges source into dest, replacing identical fields
@@ -169,11 +181,11 @@ namespace JsonUtils
 	 */
 	DLL_LINKAGE void mergeCopy(JsonNode & dest, JsonNode source);
 
-    /** @brief recursively merges descendant into copy of base node
-     * Result emulates inheritance semantic
-     *
-     *
-     */
+	/** @brief recursively merges descendant into copy of base node
+	 * Result emulates inheritance semantic
+	 *
+	 *
+	 */
 	DLL_LINKAGE void inherit(JsonNode & descendant, const JsonNode & base);
 
 	/**
@@ -212,12 +224,12 @@ namespace JsonUtils
 
 namespace JsonDetail
 {
-	// conversion helpers for JsonNode::convertTo (partial template function instantiation is illegal in c++)
+	//conversion helpers for JsonNode::convertTo (partial template function instantiation is illegal in c++)
 
-	template <typename T, int arithm>
+	template<typename T, int arithm>
 	struct JsonConvImpl;
 
-	template <typename T>
+	template<typename T>
 	struct JsonConvImpl<T, 1>
 	{
 		static T convertImpl(const JsonNode & node)
@@ -226,7 +238,7 @@ namespace JsonDetail
 		}
 	};
 
-	template <typename T>
+	template<typename T>
 	struct JsonConvImpl<T, 0>
 	{
 		static T convertImpl(const JsonNode & node)
@@ -241,19 +253,18 @@ namespace JsonDetail
 		static Type convert(const JsonNode & node)
 		{
 			///this should be triggered only for numeric types and enums
-			static_assert(boost::mpl::or_<std::is_arithmetic<Type>, std::is_enum<Type>, boost::is_class<Type> >::value, "Unsupported type for JsonNode::convertTo()!");
-			return JsonConvImpl<Type, boost::mpl::or_<std::is_enum<Type>, boost::is_class<Type> >::value >::convertImpl(node);
-
+			static_assert(boost::mpl::or_<std::is_arithmetic<Type>, std::is_enum<Type>, boost::is_class<Type>>::value, "Unsupported type for JsonNode::convertTo()!");
+			return JsonConvImpl<Type, boost::mpl::or_<std::is_enum<Type>, boost::is_class<Type>>::value>::convertImpl(node);
 		}
 	};
 
 	template<typename Type>
-	struct JsonConverter<std::map<std::string, Type> >
+	struct JsonConverter<std::map<std::string, Type>>
 	{
 		static std::map<std::string, Type> convert(const JsonNode & node)
 		{
 			std::map<std::string, Type> ret;
-			for (const JsonMap::value_type & entry : node.Struct())
+			for(const JsonMap::value_type & entry : node.Struct())
 			{
 				ret.insert(entry.first, entry.second.convertTo<Type>());
 			}
@@ -262,7 +273,7 @@ namespace JsonDetail
 	};
 
 	template<typename Type>
-	struct JsonConverter<std::set<Type> >
+	struct JsonConverter<std::set<Type>>
 	{
 		static std::set<Type> convert(const JsonNode & node)
 		{
@@ -276,12 +287,12 @@ namespace JsonDetail
 	};
 
 	template<typename Type>
-	struct JsonConverter<std::vector<Type> >
+	struct JsonConverter<std::vector<Type>>
 	{
 		static std::vector<Type> convert(const JsonNode & node)
 		{
 			std::vector<Type> ret;
-			for (const JsonVector::value_type & entry: node.Vector())
+			for(const JsonVector::value_type & entry : node.Vector())
 			{
 				ret.push_back(entry.convertTo<Type>());
 			}
@@ -306,7 +317,7 @@ namespace JsonDetail
 			return node.Bool();
 		}
 	};
-} // namespace JsonDetail
+} //namespace JsonDetail
 
 template<typename Type>
 Type JsonNode::convertTo() const

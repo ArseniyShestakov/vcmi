@@ -19,8 +19,8 @@ class IBonusBearer;
 struct InfoAboutHero;
 class CArmedInstance;
 
-typedef std::vector<const CStack*> TStacks;
-typedef std::function<bool(const CStack *)> TStackFilter;
+typedef std::vector<const CStack *> TStacks;
+typedef std::function<bool (const CStack *)> TStackFilter;
 
 namespace BattlePerspective
 {
@@ -38,17 +38,20 @@ class DLL_LINKAGE CBattleInfoEssentials : public virtual CCallbackBase
 protected:
 	bool battleDoWeKnowAbout(ui8 side) const;
 	const IBonusBearer * getBattleNode() const;
+
 public:
 	enum EStackOwnership
 	{
-		ONLY_MINE, ONLY_ENEMY, MINE_AND_ENEMY
+		ONLY_MINE,
+		ONLY_ENEMY,
+		MINE_AND_ENEMY
 	};
 
 	BattlePerspective::BattlePerspective battleGetMySide() const;
 
 	ETerrainType battleTerrainType() const;
 	BFieldType battleGetBattlefieldType() const;
-	std::vector<std::shared_ptr<const CObstacleInstance> > battleGetAllObstacles(boost::optional<BattlePerspective::BattlePerspective> perspective = boost::none) const; //returns all obstacles on the battlefield
+	std::vector<std::shared_ptr<const CObstacleInstance>> battleGetAllObstacles(boost::optional<BattlePerspective::BattlePerspective> perspective = boost::none) const; //returns all obstacles on the battlefield
 
 	/** @brief Main method for getting battle stacks
 	 *
@@ -61,7 +64,7 @@ public:
 	bool battleHasNativeStack(ui8 side) const;
 	int battleGetMoatDmg() const; //what dmg unit will suffer if ending turn in the moat
 	const CGTownInstance * battleGetDefendedTown() const; //returns defended town if current battle is a siege, nullptr instead
-	const CStack *battleActiveStack() const;
+	const CStack * battleActiveStack() const;
 	si8 battleTacticDist() const; //returns tactic distance in current tactics phase; 0 if not in tactics phase
 	si8 battleGetTacticsSide() const; //returns which side is in tactics phase, undefined if none (?)
 	bool battleCanFlee(PlayerColor player) const;
@@ -76,8 +79,8 @@ public:
 	const CArmedInstance * battleGetArmyObject(ui8 side) const;
 	InfoAboutHero battleGetHeroInfo(ui8 side) const;
 
-	// for determining state of a part of the wall; format: parameter [0] - keep, [1] - bottom tower, [2] - bottom wall,
-	// [3] - below gate, [4] - over gate, [5] - upper wall, [6] - uppert tower, [7] - gate; returned value: 1 - intact, 2 - damaged, 3 - destroyed; 0 - no battle
+	//for determining state of a part of the wall; format: parameter [0] - keep, [1] - bottom tower, [2] - bottom wall,
+	//[3] - below gate, [4] - over gate, [5] - upper wall, [6] - uppert tower, [7] - gate; returned value: 1 - intact, 2 - damaged, 3 - destroyed; 0 - no battle
 	si8 battleGetWallState(int partOfWall) const;
 	EGateState battleGetGateState() const;
 

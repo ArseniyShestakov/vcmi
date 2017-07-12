@@ -10,8 +10,8 @@
  *
  */
 
-// Helper header that includes all map objects, similar to old CObjectHandler.h
-// Possible TODO - remove this header after CObjectHandler.cpp will be fully split into smaller files
+//Helper header that includes all map objects, similar to old CObjectHandler.h
+//Possible TODO - remove this header after CObjectHandler.cpp will be fully split into smaller files
 #include "CObjectHandler.h"
 
 #include "CArmedInstance.h"

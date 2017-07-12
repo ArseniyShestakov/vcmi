@@ -15,19 +15,19 @@
 #include "../serializer/BinarySerializer.h"
 #include "../serializer/CTypeList.h"
 
-// For reference: peak memory usage by gcc during compilation of register type templates
-// registerTypesMapObjects:  1.9 Gb
-// registerTypes2:  2.2 Gb
-//     registerTypesClientPacks1 1.6 Gb
-//     registerTypesClientPacks2 1.6 Gb
-// registerTypesServerPacks:  1.3 Gb
-// registerTypes4:  1.3 Gb
+//For reference: peak memory usage by gcc during compilation of register type templates
+//registerTypesMapObjects:  1.9 Gb
+//registerTypes2:  2.2 Gb
+//registerTypesClientPacks1 1.6 Gb
+//registerTypesClientPacks2 1.6 Gb
+//registerTypesServerPacks:  1.3 Gb
+//registerTypes4:  1.3 Gb
 
 
 #define DEFINE_EXTERNAL_METHOD(METHODNAME) \
-extern template DLL_LINKAGE void METHODNAME<BinaryDeserializer>(BinaryDeserializer & s); \
-extern template DLL_LINKAGE void METHODNAME<BinarySerializer>(BinarySerializer & s); \
-extern template DLL_LINKAGE void METHODNAME<CTypeList>(CTypeList & s); \
+	extern template DLL_LINKAGE void METHODNAME<BinaryDeserializer>(BinaryDeserializer & s); \
+	extern template DLL_LINKAGE void METHODNAME<BinarySerializer>(BinarySerializer & s); \
+	extern template DLL_LINKAGE void METHODNAME<CTypeList>(CTypeList & s); \
 
 //DEFINE_EXTERNAL_METHOD(registerTypesMapObjects)
 DEFINE_EXTERNAL_METHOD(registerTypesMapObjects1)

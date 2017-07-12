@@ -24,7 +24,8 @@ class CButton;
 
 class CCommanderSkillIcon : public LRClickableAreaWText //TODO: maybe bring commander skill button initialization logic inside?
 {
-	CIntObject * object; // passive object that will be used to determine clickable area
+	CIntObject * object; //passive object that will be used to determine clickable area
+
 public:
 	CCommanderSkillIcon(CIntObject * object, std::function<void()> callback);
 
@@ -47,7 +48,7 @@ class CStackWindow : public CWindowObject
 
 	class CWindowSection : public CIntObject
 	{
-		CStackWindow *parent;
+		CStackWindow * parent;
 
 		void createBackground(std::string path);
 		void createBonusItem(size_t index, Point position);
@@ -56,7 +57,8 @@ class CStackWindow : public CWindowObject
 		void printStatRange(int index, std::string name, int min, int max);
 		void printStatBase(int index, std::string name, int base, int current);
 		void printStat(int index, std::string name, int value);
-	public:
+
+public:
 		void createStackInfo(bool showExp, bool showArt);
 		void createActiveSpells();
 		void createCommanderSection();
@@ -72,14 +74,14 @@ class CStackWindow : public CWindowObject
 	std::unique_ptr<CAnimImage> stackArtifactIcon;
 	std::unique_ptr<LRClickableAreaWTextComp> stackArtifactHelp;
 	std::unique_ptr<CButton> stackArtifactButton;
-	CAnimImage *expRankIcon;
-	LRClickableAreaWText *expArea;
-	CLabel *expLabel;
+	CAnimImage * expRankIcon;
+	LRClickableAreaWText * expArea;
+	CLabel * expLabel;
 
 	std::unique_ptr<StackWindowInfo> info;
 	std::vector<BonusInfo> activeBonuses;
 	size_t activeTab;
-	CTabbedInt *commanderTab;
+	CTabbedInt * commanderTab;
 
 	std::map<int, CButton *> switchButtons;
 
@@ -102,19 +104,19 @@ class CStackWindow : public CWindowObject
 	CIntObject * createSkillEntry(int index);
 
 public:
-	// for battles
+	//for battles
 	CStackWindow(const CStack * stack, bool popup);
 
-	// for non-existing stacks, e.g. recruit screen
+	//for non-existing stacks, e.g. recruit screen
 	CStackWindow(const CCreature * creature, bool popup);
 
-	// for normal stacks in armies
+	//for normal stacks in armies
 	CStackWindow(const CStackInstance * stack, bool popup);
 	CStackWindow(const CStackInstance * stack, std::function<void()> dismiss, const UpgradeInfo & info, std::function<void(CreatureID)> callback);
 
-	// for commanders & commander level-up dialog
+	//for commanders & commander level-up dialog
 	CStackWindow(const CCommanderInstance * commander, bool popup);
-	CStackWindow(const CCommanderInstance * commander, std::vector<ui32> &skills, std::function<void(ui32)> callback);
+	CStackWindow(const CCommanderInstance * commander, std::vector<ui32> & skills, std::function<void(ui32)> callback);
 
 	~CStackWindow();
 };

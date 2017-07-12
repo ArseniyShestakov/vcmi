@@ -17,18 +17,20 @@ bool CCallbackBase::duringBattle() const
 	return getBattle() != nullptr;
 }
 
-const BattleInfo *CCallbackBase::getBattle() const
+const BattleInfo * CCallbackBase::getBattle() const
 {
 	return battle;
 }
 
-CCallbackBase::CCallbackBase(CGameState * GS, boost::optional<PlayerColor> Player)
-	: battle(nullptr), gs(GS), player(Player)
-{}
+CCallbackBase::CCallbackBase(CGameState * GS, boost::optional<PlayerColor> Player) :
+	battle(nullptr), gs(GS), player(Player)
+{
+}
 
-CCallbackBase::CCallbackBase()
-	: battle(nullptr), gs(nullptr)
-{}
+CCallbackBase::CCallbackBase() :
+	battle(nullptr), gs(nullptr)
+{
+}
 
 void CCallbackBase::setBattle(const BattleInfo * B)
 {

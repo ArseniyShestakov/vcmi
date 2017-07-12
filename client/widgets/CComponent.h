@@ -21,16 +21,32 @@ class CComponent : public virtual CIntObject
 public:
 	enum Etype
 	{
-		primskill, secskill, resource, creature, artifact, experience, spell, morale, luck, building, hero, flag, typeInvalid
+		primskill,
+		secskill,
+		resource,
+		creature,
+		artifact,
+		experience,
+		spell,
+		morale,
+		luck,
+		building,
+		hero,
+		flag,
+		typeInvalid
 	};
 
 	//NOTE: not all types have exact these sizes or have less than 4 of them. In such cases closest one will be used
 	enum ESize
 	{
-		tiny,  // ~22-24px
-		small, // ~30px
-		medium,// ~42px
-		large,  // ~82px
+		tiny,
+		//~22-24px
+		small,
+		//~30px
+		medium,
+		//~42px
+		large,
+		//~82px
 		sizeInvalid
 	};
 
@@ -43,19 +59,19 @@ private:
 	void init(Etype Type, int Subtype, int Val, ESize imageSize);
 
 public:
-	CAnimImage *image; //our image
+	CAnimImage * image; //our image
 
 	Etype compType; //component type
 	ESize size; //component size.
 	int subtype; //type-dependant subtype. See getSomething methods for details
-	int val; // value \ strength \ amount of component. See getSomething methods for details
-	bool perDay; // add "per day" text to subtitle
+	int val; //value \ strength \ amount of component. See getSomething methods for details
+	bool perDay; //add "per day" text to subtitle
 
 	std::string getDescription();
 	std::string getSubtitle();
 
-	CComponent(Etype Type, int Subtype, int Val = 0, ESize imageSize=large);//c-tor
-	CComponent(const Component &c, ESize imageSize=large); //c-tor
+	CComponent(Etype Type, int Subtype, int Val = 0, ESize imageSize = large); //c-tor
+	CComponent(const Component & c, ESize imageSize = large); //c-tor
 
 	void clickRight(tribool down, bool previousState) override; //call-in
 };
@@ -64,6 +80,7 @@ public:
 class CSelectableComponent : public CComponent, public CKeyShortcut
 {
 	void init();
+
 public:
 	bool selected; //if true, this component is selected
 	std::function<void()> onSelect; //function called on selection change
@@ -72,8 +89,8 @@ public:
 	void select(bool on);
 
 	void clickLeft(tribool down, bool previousState) override; //call-in
-	CSelectableComponent(Etype Type, int Sub, int Val, ESize imageSize=large, std::function<void()> OnSelect = nullptr); //c-tor
-	CSelectableComponent(const Component &c, std::function<void()> OnSelect = nullptr); //c-tor
+	CSelectableComponent(Etype Type, int Sub, int Val, ESize imageSize = large, std::function<void()> OnSelect = nullptr); //c-tor
+	CSelectableComponent(const Component & c, std::function<void()> OnSelect = nullptr); //c-tor
 };
 
 /// box with multiple components (up to 8?)
@@ -89,10 +106,10 @@ class CComponentBox : public CIntObject
 
 	//get position of "or" text between these comps
 	//it will place "or" equidistant to both images
-	Point getOrTextPos(CComponent *left, CComponent * right);
+	Point getOrTextPos(CComponent * left, CComponent * right);
 
 	//get distance between these copmonents
-	int getDistance(CComponent *left, CComponent * right);
+	int getDistance(CComponent * left, CComponent * right);
 	void placeComponents(bool selectable);
 
 public:

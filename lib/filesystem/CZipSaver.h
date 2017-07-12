@@ -16,7 +16,7 @@
 
 class CZipSaver;
 
-class DLL_LINKAGE CZipOutputStream: public COutputStream
+class DLL_LINKAGE CZipOutputStream : public COutputStream
 {
 public:
 	/**
@@ -29,10 +29,23 @@ public:
 
 	si64 write(const ui8 * data, si64 size) override;
 
-	si64 seek(si64 position) override {return -1;};
-	si64 tell() override {return 0;};
-	si64 skip(si64 delta) override {return 0;};
-	si64 getSize() override {return 0;};
+	si64 seek(si64 position) override
+	{
+		return -1;
+	};
+	si64 tell() override
+	{
+		return 0;
+	};
+	si64 skip(si64 delta) override
+	{
+		return 0;
+	};
+	si64 getSize() override
+	{
+		return 0;
+	};
+
 private:
 	zipFile handle;
 	CZipSaver * owner;
@@ -45,6 +58,7 @@ public:
 	virtual ~CZipSaver();
 
 	std::unique_ptr<COutputStream> addFile(const std::string & archiveFilename);
+
 private:
 	std::shared_ptr<CIOApi> ioApi;
 	zlib_filefunc64_def zipApi;

@@ -13,8 +13,8 @@
  *
  */
 
-CLoadIntegrityValidator::CLoadIntegrityValidator(const boost::filesystem::path &primaryFileName, const boost::filesystem::path &controlFileName, int minimalVersion /*= version*/)
-	: serializer(this), foundDesync(false)
+CLoadIntegrityValidator::CLoadIntegrityValidator(const boost::filesystem::path & primaryFileName, const boost::filesystem::path & controlFileName, int minimalVersion /*= version*/) :
+	serializer(this), foundDesync(false)
 {
 	registerTypes(serializer);
 	primaryFile = make_unique<CLoadFile>(primaryFileName, minimalVersion);
@@ -24,7 +24,7 @@ CLoadIntegrityValidator::CLoadIntegrityValidator(const boost::filesystem::path &
 	serializer.fileVersion = primaryFile->serializer.fileVersion;
 }
 
-int CLoadIntegrityValidator::read( void * data, unsigned size )
+int CLoadIntegrityValidator::read(void * data, unsigned size)
 {
 	assert(primaryFile);
 	assert(controlFile);
@@ -55,7 +55,7 @@ std::unique_ptr<CLoadFile> CLoadIntegrityValidator::decay()
 	return std::move(primaryFile);
 }
 
-void CLoadIntegrityValidator::checkMagicBytes( const std::string &text )
+void CLoadIntegrityValidator::checkMagicBytes(const std::string & text)
 {
 	assert(primaryFile);
 	assert(controlFile);

@@ -45,10 +45,14 @@ struct DLL_LINKAGE CGPathNode
 	enum EAccessibility : ui8
 	{
 		NOT_SET = 0,
-		ACCESSIBLE = 1, //tile can be entered and passed
-		VISITABLE, //tile can be entered as the last tile in path
-		BLOCKVIS,  //visitable from neighbouring tile but not passable
-		FLYABLE, //can only be accessed in air layer
+		ACCESSIBLE = 1,
+		//tile can be entered and passed
+		VISITABLE,
+		//tile can be entered as the last tile in path
+		BLOCKVIS,
+		//visitable from neighbouring tile but not passable
+		FLYABLE,
+		//can only be accessed in air layer
 		BLOCKED //tile can't be entered nor visited
 	};
 
@@ -71,7 +75,7 @@ struct DLL_LINKAGE CGPath
 {
 	std::vector<CGPathNode> nodes; //just get node by node
 
-	int3 startPos() const; // start point
+	int3 startPos() const; //start point
 	int3 endPos() const; //destination point
 	void convert(ui8 mode); //mode=0 -> from 'manifest' to 'object'
 };
@@ -113,10 +117,10 @@ private:
 		bool useFlying;
 		bool useWaterWalking;
 		bool useEmbarkAndDisembark;
-		bool useTeleportTwoWay; // Two-way monoliths and Subterranean Gate
-		bool useTeleportOneWay; // One-way monoliths with one known exit only
-		bool useTeleportOneWayRandom; // One-way monoliths with more than one known exit
-		bool useTeleportWhirlpool; // Force enabled if hero protected or unaffected (have one stack of one creature)
+		bool useTeleportTwoWay; //Two-way monoliths and Subterranean Gate
+		bool useTeleportOneWay; //One-way monoliths with one known exit only
+		bool useTeleportOneWayRandom; //One-way monoliths with more than one known exit
+		bool useTeleportWhirlpool; //Force enabled if hero protected or unaffected (have one stack of one creature)
 
 		/// TODO: Find out with client and server code, merge with normal teleporters.
 		/// Likely proper implementation would require some refactoring of CGTeleport.
@@ -161,10 +165,11 @@ private:
 
 	CPathsInfo & out;
 	const CGHeroInstance * hero;
-	const std::vector<std::vector<std::vector<ui8> > > &FoW;
+	const std::vector<std::vector<std::vector<ui8>>> & FoW;
 	std::unique_ptr<CPathfinderHelper> hlp;
 
-	enum EPatrolState {
+	enum EPatrolState
+	{
 		PATROL_NONE = 0,
 		PATROL_LOCKED = 1,
 		PATROL_RADIUS
@@ -183,7 +188,7 @@ private:
 			return true;
 		}
 	};
-	boost::heap::priority_queue<CGPathNode *, boost::heap::compare<NodeComparer> > pq;
+	boost::heap::priority_queue<CGPathNode *, boost::heap::compare<NodeComparer>> pq;
 
 	std::vector<int3> neighbourTiles;
 	std::vector<int3> neighbours;
@@ -227,14 +232,14 @@ private:
 	bool addTeleportOneWay(const CGTeleport * obj) const;
 	bool addTeleportOneWayRandom(const CGTeleport * obj) const;
 	bool addTeleportWhirlpool(const CGWhirlpool * obj) const;
-
 };
 
 struct DLL_LINKAGE TurnInfo
 {
 	/// This is certainly not the best design ever and certainly can be improved
 	/// Unfortunately for pathfinder that do hundreds of thousands calls onus system add too big overhead
-	struct BonusCache {
+	struct BonusCache
+	{
 		std::vector<bool> noTerrainPenalty;
 		bool freeShipBoarding;
 		bool flyingMovement;
@@ -272,7 +277,7 @@ public:
 
 	static void getNeighbours(const CMap * map, const TerrainTile & srct, const int3 & tile, std::vector<int3> & vec, const boost::logic::tribool & onLand, const bool limitCoastSailing);
 
-	static int getMovementCost(const CGHeroInstance * h, const int3 & src, const int3 & dst, const TerrainTile * ct, const TerrainTile * dt, const int remainingMovePoints =- 1, const TurnInfo * ti = nullptr, const bool checkLast = true);
+	static int getMovementCost(const CGHeroInstance * h, const int3 & src, const int3 & dst, const TerrainTile * ct, const TerrainTile * dt, const int remainingMovePoints = -1, const TurnInfo * ti = nullptr, const bool checkLast = true);
 	static int getMovementCost(const CGHeroInstance * h, const int3 & dst);
 
 private:

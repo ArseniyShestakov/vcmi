@@ -47,16 +47,17 @@ public:
 	/// creatures that hero needs to have
 	std::vector<CStackBasicDescriptor> creatures;
 
-	CRewardLimiter():
+	CRewardLimiter() :
 		numOfGrants(0),
 		dayOfWeek(0),
 		minLevel(0),
 		primary(4, 0)
-	{}
+	{
+	}
 
 	bool heroAllowed(const CGHeroInstance * hero) const;
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & numOfGrants & dayOfWeek & minLevel & resources;
 		h & primary & secondary & artifacts & creatures;
@@ -105,8 +106,7 @@ public:
 	bool removeObject;
 
 	/// Generates list of components that describes reward for a specific hero
-	virtual void loadComponents(std::vector<Component> & comps,
-	                            const CGHeroInstance * h) const;
+	virtual void loadComponents(std::vector<Component> & comps, const CGHeroInstance * h) const;
 	Component getDisplayedComponent(const CGHeroInstance * h) const;
 
 	CRewardInfo() :
@@ -118,9 +118,10 @@ public:
 		movePercentage(-1),
 		primary(4, 0),
 		removeObject(false)
-	{}
+	{
+	}
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & resources & extraComponents & removeObject;
 		h & manaPercentage & movePercentage;
@@ -145,12 +146,13 @@ public:
 	/// How many times this reward has been granted since last reset
 	si32 numOfGrants;
 
-	CVisitInfo():
+	CVisitInfo() :
 		selectChance(0),
 		numOfGrants(0)
-	{}
+	{
+	}
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
 		h & limiter & reward & message & selectChance & numOfGrants;
 	}
@@ -170,18 +172,24 @@ protected:
 	/// controls selection of reward granted to player
 	enum ESelectMode
 	{
-		SELECT_FIRST,  // first reward that matches limiters
-		SELECT_PLAYER, // player can select from all allowed rewards
-		SELECT_RANDOM  // reward will be selected from allowed randomly
+		SELECT_FIRST,
+		//first reward that matches limiters
+		SELECT_PLAYER,
+		//player can select from all allowed rewards
+		SELECT_RANDOM //reward will be selected from allowed randomly
 	};
 
 	enum EVisitMode
 	{
-		VISIT_UNLIMITED, // any number of times. Side effect - object hover text won't contain visited/not visited text
-		VISIT_ONCE,      // only once, first to visit get all the rewards
-		VISIT_HERO,      // every hero can visit object once
-		VISIT_BONUS,     // can be visited by any hero that don't have bonus from this object
-		VISIT_PLAYER     // every player can visit object once
+		VISIT_UNLIMITED,
+		//any number of times. Side effect - object hover text won't contain visited/not visited text
+		VISIT_ONCE,
+		//only once, first to visit get all the rewards
+		VISIT_HERO,
+		//every hero can visit object once
+		VISIT_BONUS,
+		//can be visited by any hero that don't have bonus from this object
+		VISIT_PLAYER //every player can visit object once
 	};
 
 	/// filters list of visit info and returns rewards that can be granted to current hero
@@ -189,7 +197,7 @@ protected:
 
 	virtual void grantReward(ui32 rewardID, const CGHeroInstance * hero) const;
 
-	virtual CVisitInfo getVisitInfo(int index, const CGHeroInstance *h) const;
+	virtual CVisitInfo getVisitInfo(int index, const CGHeroInstance * h) const;
 
 	virtual void triggerRewardReset() const;
 
@@ -226,31 +234,31 @@ public:
 	bool wasVisited(const CGHeroInstance * h) const override;
 
 	/// gives reward to player or ask for choice in case of multiple rewards
-	void onHeroVisit(const CGHeroInstance *h) const override;
+	void onHeroVisit(const CGHeroInstance * h) const override;
 
 	///possibly resets object state
 	void newTurn(CRandomGenerator & rand) const override;
 
 	/// gives second part of reward after hero level-ups for proper granting of spells/mana
-	void heroLevelUpDone(const CGHeroInstance *hero) const override;
+	void heroLevelUpDone(const CGHeroInstance * hero) const override;
 
 	/// applies player selection of reward
-	void blockingDialogAnswered(const CGHeroInstance *hero, ui32 answer) const override;
+	void blockingDialogAnswered(const CGHeroInstance * hero, ui32 answer) const override;
 
 	/// function that will be called once reward is fully granted to hero
 	virtual void onRewardGiven(const CGHeroInstance * hero) const;
 
 	CRewardableObject();
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & static_cast<CArmedInstance&>(*this);
+		h & static_cast<CArmedInstance &>(*this);
 		h & info & canRefuse & resetDuration;
 		h & onSelect & onVisited & onEmpty & visitMode;
 		h & soundID & selectMode & selectedReward;
 	}
 
-	// for configuration/object setup
+	//for configuration/object setup
 	friend class CRandomRewardObjectInfo;
 };
 
@@ -261,16 +269,16 @@ public:
 
 	CGPickable();
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & static_cast<CRewardableObject&>(*this);
+		h & static_cast<CRewardableObject &>(*this);
 	}
 };
 
 class DLL_LINKAGE CGBonusingObject : public CRewardableObject //objects giving bonuses to luck/morale/movement
 {
 protected:
-	CVisitInfo getVisitInfo(int index, const CGHeroInstance *h) const override;
+	CVisitInfo getVisitInfo(int index, const CGHeroInstance * h) const override;
 
 	void grantReward(ui32 rewardID, const CGHeroInstance * hero) const override;
 
@@ -279,26 +287,26 @@ public:
 
 	CGBonusingObject();
 
-	void onHeroVisit(const CGHeroInstance *h) const override;
+	void onHeroVisit(const CGHeroInstance * h) const override;
 
 	bool wasVisited(const CGHeroInstance * h) const override;
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & static_cast<CRewardableObject&>(*this);
+		h & static_cast<CRewardableObject &>(*this);
 	}
 };
 
-class DLL_LINKAGE CGOnceVisitable : public CRewardableObject // wagon, corpse, lean to, warriors tomb
+class DLL_LINKAGE CGOnceVisitable : public CRewardableObject //wagon, corpse, lean to, warriors tomb
 {
 public:
 	void initObj(CRandomGenerator & rand) override;
 
 	CGOnceVisitable();
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & static_cast<CRewardableObject&>(*this);
+		h & static_cast<CRewardableObject &>(*this);
 	}
 };
 
@@ -309,9 +317,9 @@ public:
 
 	CGVisitableOPH();
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & static_cast<CRewardableObject&>(*this);
+		h & static_cast<CRewardableObject &>(*this);
 	}
 };
 
@@ -328,9 +336,9 @@ public:
 	void setPropertyDer(ui8 what, ui32 val) override;
 	void setRandomReward(CRandomGenerator & rand);
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & static_cast<CRewardableObject&>(*this);
+		h & static_cast<CRewardableObject &>(*this);
 	}
 };
 
@@ -345,30 +353,30 @@ public:
 	std::vector<int3> getVisitableOffsets() const;
 	int3 getVisitableOffset() const override;
 
-	template <typename Handler> void serialize(Handler &h, const int version)
+	template<typename Handler> void serialize(Handler & h, const int version)
 	{
-		h & static_cast<CGVisitableOPW&>(*this);
+		h & static_cast<CGVisitableOPW &>(*this);
 	}
 };
 
 //TODO:
 
-// MAX
-// class DLL_LINKAGE CGPandoraBox : public CArmedInstance
-// class DLL_LINKAGE CGEvent : public CGPandoraBox  //event objects
-// class DLL_LINKAGE CGSeerHut : public CArmedInstance, public IQuestObject //army is used when giving reward
-// class DLL_LINKAGE CGQuestGuard : public CGSeerHut
-// class DLL_LINKAGE CBank : public CArmedInstance
-// class DLL_LINKAGE CGPyramid : public CBank
+//MAX
+//class DLL_LINKAGE CGPandoraBox : public CArmedInstance
+//class DLL_LINKAGE CGEvent : public CGPandoraBox  //event objects
+//class DLL_LINKAGE CGSeerHut : public CArmedInstance, public IQuestObject //army is used when giving reward
+//class DLL_LINKAGE CGQuestGuard : public CGSeerHut
+//class DLL_LINKAGE CBank : public CArmedInstance
+//class DLL_LINKAGE CGPyramid : public CBank
 
-// EXTRA
-// class DLL_LINKAGE COPWBonus : public CGTownBuilding
-// class DLL_LINKAGE CTownBonus : public CGTownBuilding
-// class DLL_LINKAGE CGKeys : public CGObjectInstance //Base class for Keymaster and guards
-// class DLL_LINKAGE CGKeymasterTent : public CGKeys
-// class DLL_LINKAGE CGBorderGuard : public CGKeys, public IQuestObject
+//EXTRA
+//class DLL_LINKAGE COPWBonus : public CGTownBuilding
+//class DLL_LINKAGE CTownBonus : public CGTownBuilding
+//class DLL_LINKAGE CGKeys : public CGObjectInstance //Base class for Keymaster and guards
+//class DLL_LINKAGE CGKeymasterTent : public CGKeys
+//class DLL_LINKAGE CGBorderGuard : public CGKeys, public IQuestObject
 
-// POSSIBLE
-// class DLL_LINKAGE CGSignBottle : public CGObjectInstance //signs and ocean bottles
-// class DLL_LINKAGE CGWitchHut : public CPlayersVisited
-// class DLL_LINKAGE CGScholar : public CGObjectInstance
+//POSSIBLE
+//class DLL_LINKAGE CGSignBottle : public CGObjectInstance //signs and ocean bottles
+//class DLL_LINKAGE CGWitchHut : public CPlayersVisited
+//class DLL_LINKAGE CGScholar : public CGObjectInstance
