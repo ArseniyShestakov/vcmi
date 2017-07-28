@@ -22,6 +22,7 @@
 #include "battle/CObstacleInstance.h"
 
 #include "spells/ViewSpellInt.h"
+#include "CPathfinder.h"
 
 class CClient;
 class CGameState;
@@ -2003,18 +2004,16 @@ struct DismissHero : public CPackForServer
 
 struct MoveHero : public CPackForServer
 {
-	MoveHero():transit(false){};
-	MoveHero(const int3 &Dest, ObjectInstanceID HID, bool Transit) : dest(Dest), hid(HID), transit(Transit) {};
-	int3 dest;
+	MoveHero(){};
+	MoveHero(ObjectInstanceID HID, CGPath Path) : hid(HID), path(Path) {};
 	ObjectInstanceID hid;
-	bool transit;
+	CGPath path;
 
 	bool applyGh(CGameHandler *gh);
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & dest;
 		h & hid;
-		h & transit;
+		h & path;
 	}
 };
 

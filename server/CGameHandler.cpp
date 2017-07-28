@@ -2211,6 +2211,18 @@ bool CGameHandler::moveHero(ObjectInstanceID hid, int3 dst, ui8 teleporting, boo
 	}
 }
 
+bool CGameHandler::moveHeroNew(ObjectInstanceID hid, CGPath & path)
+{
+	auto pv = new CPathValidator;
+	if(!pv->verifyPath(path))
+		return false;
+	for(auto node : path.nodes)
+	{
+		moveHero(hid, node.coord, 0, false);
+	}
+	return true;
+}
+
 bool CGameHandler::teleportHero(ObjectInstanceID hid, ObjectInstanceID dstid, ui8 source, PlayerColor asker)
 {
 	const CGHeroInstance *h = getHero(hid);

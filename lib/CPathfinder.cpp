@@ -1153,6 +1153,17 @@ bool CGPathNode::reachable() const
 	return turns < 255;
 }
 
+bool CGPathNode::canStop() const
+{
+	if(layer == EPathfindingLayer::LAND || layer == EPathfindingLayer::SAIL)
+		return true;
+
+	if(accessible == CGPathNode::ACCESSIBLE)
+		return true;
+
+	return false;
+}
+
 int3 CGPath::startPos() const
 {
 	return nodes[nodes.size()-1].coord;
@@ -1172,6 +1183,36 @@ void CGPath::convert(ui8 mode)
 			elem.coord = CGHeroInstance::convertPosition(elem.coord,true);
 		}
 	}
+}
+
+bool CGPath::getSubPath(CGPath & out)
+{
+	nodes.pop_back();
+	out.nodes.clear();
+	for(auto node : boost::adaptors::reverse(nodes))
+	{
+		if(node.turns)
+			break;
+
+		out.nodes.push_back(node);
+		if(node.canStop())
+			break;
+
+		nodes.pop_back();
+	}
+
+//	const CGPathNode * curnode = getNode(dst);
+//	if(!curnode->theNodeBefore)
+//		return false;
+
+//	while(curnode)
+//	{
+//		const CGPathNode cpn = * curnode;
+//		curnode = curnode->theNodeBefore;
+//		out.nodes.push_back(cpn);
+//	}
+
+	return nodes.size();
 }
 
 CPathsInfo::CPathsInfo(const int3 & Sizes)
@@ -1236,4 +1277,29 @@ const CGPathNode * CPathsInfo::getNode(const int3 & coord) const
 CGPathNode * CPathsInfo::getNode(const int3 & coord, const ELayer layer)
 {
 	return &nodes[coord.x][coord.y][coord.z][layer];
+}
+
+CPathValidator::CPathValidator()
+{
+//	if (((t.terType == ETerrainType::ROCK  ||  (t.blocked && !t.visitable && !canFly))
+//			&& complain("Cannot move hero, destination tile is blocked!"))
+//		|| ((!h->boat && !canWalkOnSea && !canFly && t.terType == ETerrainType::WATER && (t.visitableObjects.size() < 1 ||  (t.visitableObjects.back()->ID != Obj::BOAT && t.visitableObjects.back()->ID != Obj::HERO)))  //hero is not on boat/water walking and dst water tile doesn't contain boat/hero (objs visitable from land) -> we test back cause boat may be on top of another object (#276)
+//			&& complain("Cannot move hero, destination tile is on water!"))
+//		|| ((h->boat && t.terType != ETerrainType::WATER && t.blocked)
+//			&& complain("Cannot disembark hero, tile is blocked!"))
+//		|| ((distance(h->pos, dst) >= 1.5 && !teleporting)
+//			&& complain("Tiles are not neighboring!"))
+//		|| ((h->inTownGarrison)
+//			&& complain("Can not move garrisoned hero!"))
+//		|| ((h->movement < cost  &&  dst != h->pos  &&  !teleporting)
+//			&& complain("Hero doesn't have any movement points left!"))
+//		|| ((transit && !canFly && !CGTeleport::isTeleport(t.topVisitableObj()))
+//			&& complain("Hero cannot transit over this tile!"))
+//		/*|| (states.checkFlag(h->tempOwner, &PlayerStatus::engagedIntoBattle)
+//			&& complain("Cannot move hero during the battle"))*/)
+//	{
+}
+bool CPathValidator::verifyPath(const CGPath & path)
+{
+	return true;
 }

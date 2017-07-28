@@ -292,9 +292,12 @@ void CPlayerInterface::heroMoved(const TryMoveHero & details)
 			adventureInt->centerOn(hero, true); //actualizing screen pos
 			adventureInt->minimap.redraw();
 			adventureInt->heroList.update(hero);
-			return;	//teleport - no fancy moving animation
-					//TODO: smooth disappear / appear effect
+			return;	//teleport - no fancy moving animat
+			//TODO: smooth disappear / appear effection
 		}
+		//TODO: Try to handle hero movement sound here.
+		auto terType = cb->getTile(hero->visitablePos())->terType;
+		CCS->soundh->playSound(CCS->soundh->horseSounds[terType], 1);
 
 		if (hero->pos != details.end //hero didn't change tile but visit succeeded
 			|| directlyAttackingCreature) // or creature was attacked from endangering tile.
@@ -2785,97 +2788,82 @@ void CPlayerInterface::doMoveHero(const CGHeroInstance * h, CGPath path)
 
 	boost::unique_lock<boost::mutex> un(stillMoveHero.mx);
 	stillMoveHero.data = CONTINUE_MOVE;
-	auto doMovement = [&](int3 dst, bool transit)
-	{
-		stillMoveHero.data = WAITING_MOVE;
-		cb->moveHero(h, dst, transit);
-		while(stillMoveHero.data != STOP_MOVE && stillMoveHero.data != CONTINUE_MOVE)
-			stillMoveHero.cond.wait(un);
-	};
-
 	{
 		path.convert(0);
 		ETerrainType currentTerrain = ETerrainType::BORDER; // not init yet
 		ETerrainType newTerrain;
 		int sh = -1;
 
-		auto canStop = [&](CGPathNode * node) -> bool
+//		for(i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || path.nodes[i].canStop()); i--)
+		CGPath subPath;
+		while(path.getSubPath(subPath) && stillMoveHero.data == CONTINUE_MOVE)
 		{
-			if (node->layer == EPathfindingLayer::LAND || node->layer == EPathfindingLayer::SAIL)
-				return true;
+			stillMoveHero.data = WAITING_MOVE;
+			cb->moveHero(h, subPath);
+			while(stillMoveHero.data != STOP_MOVE && stillMoveHero.data != CONTINUE_MOVE)
+				stillMoveHero.cond.wait(un);
+//			int3 currentCoord = path.nodes[i].coord;
+//			int3 nextCoord = path.nodes[i-1].coord;
 
-			if (node->accessible == CGPathNode::ACCESSIBLE)
-				return true;
+//			auto currentObject = getObj(currentCoord, currentCoord == h->pos);
+//			auto nextObjectTop = getObj(nextCoord, false);
+//			auto nextObject = getObj(nextCoord, true);
+//			auto destTeleportObj = getDestTeleportObj(currentObject, nextObjectTop, nextObject);
+//			if (isTeleportAction(path.nodes[i-1].action) && destTeleportObj != nullptr)
+//			{
+//				CCS->soundh->stopSound(sh);
+//				destinationTeleport = destTeleportObj->id;
+//				destinationTeleportPos = nextCoord;
+//				doMovement(h->pos, false);
+//				if (path.nodes[i-1].action == CGPathNode::TELEPORT_BLOCKING_VISIT)
+//				{
+//					destinationTeleport = ObjectInstanceID();
+//					destinationTeleportPos = int3(-1);
+//				}
+//				sh = CCS->soundh->playSound(CCS->soundh->horseSounds[currentTerrain], -1);
+//				continue;
+//			}
 
-			return false;
-		};
-
-		for (i=path.nodes.size()-1; i>0 && (stillMoveHero.data == CONTINUE_MOVE || !canStop(&path.nodes[i])); i--)
-		{
-			int3 currentCoord = path.nodes[i].coord;
-			int3 nextCoord = path.nodes[i-1].coord;
-
-			auto currentObject = getObj(currentCoord, currentCoord == h->pos);
-			auto nextObjectTop = getObj(nextCoord, false);
-			auto nextObject = getObj(nextCoord, true);
-			auto destTeleportObj = getDestTeleportObj(currentObject, nextObjectTop, nextObject);
-			if (isTeleportAction(path.nodes[i-1].action) && destTeleportObj != nullptr)
-			{
-				CCS->soundh->stopSound(sh);
-				destinationTeleport = destTeleportObj->id;
-				destinationTeleportPos = nextCoord;
-				doMovement(h->pos, false);
-				if (path.nodes[i-1].action == CGPathNode::TELEPORT_BLOCKING_VISIT)
-				{
-					destinationTeleport = ObjectInstanceID();
-					destinationTeleportPos = int3(-1);
-				}
-				sh = CCS->soundh->playSound(CCS->soundh->horseSounds[currentTerrain], -1);
-				continue;
-			}
-
-			if (path.nodes[i-1].turns)
-			{ //stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
-				stillMoveHero.data = STOP_MOVE;
-				break;
-			}
+//			if (path.nodes[i-1].turns)
+//			{ //stop sending move requests if the next node can't be reached at the current turn (hero exhausted his move points)
+//				stillMoveHero.data = STOP_MOVE;
+//				break;
+//			}
 
 			// Start a new sound for the hero movement or let the existing one carry on.
-#if 0
-			// TODO
-			if (hero is flying && sh == -1)
-				sh = CCS->soundh->playSound(soundBase::horseFlying, -1);
-#endif
-			{
-				newTerrain = cb->getTile(CGHeroInstance::convertPosition(currentCoord, false))->terType;
-				if (newTerrain != currentTerrain)
-				{
-					CCS->soundh->stopSound(sh);
-					sh = CCS->soundh->playSound(CCS->soundh->horseSounds[newTerrain], -1);
-					currentTerrain = newTerrain;
-				}
-			}
 
-			assert(h->pos.z == nextCoord.z); // Z should change only if it's movement via teleporter and in this case this code shouldn't be executed at all
-			int3 endpos(nextCoord.x, nextCoord.y, h->pos.z);
-			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
+//			// TODO
+//			if (hero is flying && sh == -1)
+//				sh = CCS->soundh->playSound(soundBase::horseFlying, -1);
+//			{
+//				newTerrain = cb->getTile(CGHeroInstance::convertPosition(currentCoord, false))->terType;
+//				if (newTerrain != currentTerrain)
+//				{
+//					CCS->soundh->stopSound(sh);
+//					sh = CCS->soundh->playSound(CCS->soundh->horseSounds[newTerrain], -1);
+//					currentTerrain = newTerrain;
+//				}
+//			}
 
-			bool useTransit = false;
-			if ((i-2 >= 0) // Check there is node after next one; otherwise transit is pointless
-				&& (CGTeleport::isConnected(nextObjectTop, getObj(path.nodes[i-2].coord, false))
-					|| CGTeleport::isTeleport(nextObjectTop)))
-			{ // Hero should be able to go through object if it's allow transit
-				useTransit = true;
-			}
-			else if (path.nodes[i-1].layer == EPathfindingLayer::AIR)
-				useTransit = true;
+//			assert(h->pos.z == nextCoord.z); // Z should change only if it's movement via teleporter and in this case this code shouldn't be executed at all
+//			int3 endpos(nextCoord.x, nextCoord.y, h->pos.z);
+//			logGlobal->traceStream() << "Requesting hero movement to " << endpos;
 
-			doMovement(endpos, useTransit);
+//			bool useTransit = false;
+//			if ((i-2 >= 0) // Check there is node after next one; otherwise transit is pointless
+//				&& (CGTeleport::isConnected(nextObjectTop, getObj(path.nodes[i-2].coord, false))
+//					|| CGTeleport::isTeleport(nextObjectTop)))
+//			{ // Hero should be able to go through object if it's allow transit
+//				useTransit = true;
+//			}
+//			else if (path.nodes[i-1].layer == EPathfindingLayer::AIR)
+//				useTransit = true;
 
-			logGlobal->traceStream() << "Resuming " << __FUNCTION__;
-			bool guarded = cb->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
-			if ((!useTransit && guarded) || showingDialog->get() == true) // Abort movement if a guard was fought or there is a dialog to display (Mantis #1136)
-				break;
+
+//			logGlobal->traceStream() << "Resuming " << __FUNCTION__;
+//			bool guarded = cb->isInTheMap(cb->getGuardingCreaturePosition(endpos - int3(1, 0, 0)));
+//			if ((!useTransit && guarded) || showingDialog->get() == true) // Abort movement if a guard was fought or there is a dialog to display (Mantis #1136)
+//				break;
 		}
 
 		CCS->soundh->stopSound(sh);

@@ -1914,7 +1914,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 	{
 		//FIXME: this assertion fails also if AI moves onto defeated guarded object
 		assert(cb->getVisitableObjs(dst).size() > 1); //there's no point in revisiting tile where there is no visitable object
-		cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true));
+//		cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true));
 		afterMovementCheck();// TODO: is it feasible to hero get killed there if game work properly?
 							 // not sure if AI can currently reconsider to attack bank while staying on it. Check issue 2084 on mantis for more information.
 		ret = true;
@@ -1965,7 +1965,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 
 		auto doMovement = [&](int3 dst, bool transit)
 		{
-			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true), transit);
+//			cb->moveHero(*h, CGHeroInstance::convertPosition(dst, true), transit);
 		};
 
 		auto doTeleportMovement = [&](ObjectInstanceID exitId, int3 exitPos)
@@ -1973,7 +1973,7 @@ bool VCAI::moveHeroToTile(int3 dst, HeroPtr h)
 			destinationTeleport = exitId;
 			if(exitPos.valid())
 				destinationTeleportPos = CGHeroInstance::convertPosition(exitPos, true);
-			cb->moveHero(*h, h->pos);
+//			cb->moveHero(*h, h->pos);
 			destinationTeleport = ObjectInstanceID();
 			destinationTeleportPos = int3(-1);
 			afterMovementCheck();

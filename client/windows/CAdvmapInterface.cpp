@@ -1241,7 +1241,7 @@ void CAdvMapInt::keyPressed(const SDL_KeyboardEvent & key)
 				//this thread leaves scope and tries to lock pim while holding gs,
 				//network thread tries to lock gs (appluy cl) while holding pim
 				//this thread should first lock pim, however gs locking/unlocking is done inside cb
-				LOCPLINT->cb->moveHero(h,h->pos);
+//				LOCPLINT->cb->moveHero(h,h->pos);
 			}
 		}
 		return;

@@ -64,6 +64,19 @@ struct DLL_LINKAGE CGPathNode
 	void reset();
 	void update(const int3 & Coord, const ELayer Layer, const EAccessibility Accessible);
 	bool reachable() const;
+	bool canStop() const;
+
+	template <typename Handler> void serialize(Handler & h, const int version)
+	{
+		h & theNodeBefore;
+		h & coord;
+		h & moveRemains;
+		h & turns;
+		h & layer;
+		h & accessible;
+		h & action;
+		h & locked;
+	}
 };
 
 struct DLL_LINKAGE CGPath
@@ -73,6 +86,13 @@ struct DLL_LINKAGE CGPath
 	int3 startPos() const; // start point
 	int3 endPos() const; //destination point
 	void convert(ui8 mode); //mode=0 -> from 'manifest' to 'object'
+
+	bool getSubPath(CGPath & out);
+
+	template <typename Handler> void serialize(Handler & h, const int version)
+	{
+		h & nodes;
+	}
 };
 
 struct DLL_LINKAGE CPathsInfo
@@ -279,4 +299,11 @@ private:
 	const CGHeroInstance * hero;
 	std::vector<TurnInfo *> turnsInfo;
 	const CPathfinder::PathfinderOptions & options;
+};
+
+class DLL_LINKAGE CPathValidator
+{
+public:
+	CPathValidator();
+	bool verifyPath(const CGPath & path);
 };
