@@ -62,6 +62,9 @@ public:
 	int playSound(std::string sound, int repeats=0, bool cache=false);
 	int playSoundFromSet(std::vector<soundBase::soundID> &sound_vec);
 	void stopSound(int handler);
+	int channelHorse;
+	std::vector<soundBase::soundID> soundQueue;
+	void addSoundToQueue(soundBase::soundID soundID);
 
 	void setCallback(int channel, std::function<void()> function);
 	void soundFinishedCallback(int channel);

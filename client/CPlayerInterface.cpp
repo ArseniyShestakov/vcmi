@@ -296,8 +296,15 @@ void CPlayerInterface::heroMoved(const TryMoveHero & details)
 			//TODO: smooth disappear / appear effection
 		}
 		//TODO: Try to handle hero movement sound here.
-		auto terType = cb->getTile(hero->visitablePos())->terType;
-		CCS->soundh->playSound(CCS->soundh->horseSounds[terType], 1);
+		auto terTypeOld = cb->getTile(details.start)->terType;
+		auto terTypeNew = cb->getTile(details.end)->terType;
+		if(stillMoveHero.get() == STOP_MOVE || terTypeOld != terTypeNew)
+		{
+			CCS->soundh->soundQueue.clear();
+			CCS->soundh->channelHorse = -1;
+			CCS->soundh->stopSound(CCS->soundh->channelHorse);
+		}
+		CCS->soundh->addSoundToQueue(CCS->soundh->horseSounds[terTypeNew]);
 
 		if (hero->pos != details.end //hero didn't change tile but visit succeeded
 			|| directlyAttackingCreature) // or creature was attacked from endangering tile.

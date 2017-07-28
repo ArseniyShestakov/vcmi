@@ -83,6 +83,7 @@ void CSoundHandler::onVolumeChange(const JsonNode &volumeNode)
 CSoundHandler::CSoundHandler():
 	listener(settings.listen["general"]["sound"])
 {
+	channelHorse = -1;
 	listener(std::bind(&CSoundHandler::onVolumeChange, this, _1));
 
 	// Vectors for helper(s)
@@ -207,6 +208,33 @@ void CSoundHandler::stopSound( int handler )
 {
 	if (initialized && handler != -1)
 		Mix_HaltChannel(handler);
+}
+
+void CSoundHandler::addSoundToQueue(soundBase::soundID soundID)
+{
+	std::function<void()> onSoundFinished;
+	onSoundFinished = [&,&onSoundFinished]()
+	{
+		if(soundQueue.size())
+		{
+			auto id = soundQueue.front();
+			soundQueue.erase(soundQueue.begin());
+			CCS->soundh->playSound(id, 1);
+			CCS->soundh->setCallback(channelHorse, onSoundFinished);
+		}
+		else if(channelHorse != -1)
+			channelHorse = -1;
+	};
+
+	if(channelHorse == -1)
+	{
+		channelHorse = CCS->soundh->playSound(soundID, 1);
+		CCS->soundh->setCallback(channelHorse, onSoundFinished);
+	}
+	else if(soundQueue.empty())
+	{
+		soundQueue.push_back(soundID);
+	}
 }
 
 // Sets the sound volume, from 0 (mute) to 100
