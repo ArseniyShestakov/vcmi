@@ -302,9 +302,9 @@ void CPlayerInterface::heroMoved(const TryMoveHero & details)
 		{
 			CCS->soundh->soundQueue.clear();
 			CCS->soundh->channelHorse = -1;
-			CCS->soundh->stopSound(CCS->soundh->channelHorse);
+			//CCS->soundh->stopSound(CCS->soundh->channelHorse);
 		}
-		CCS->soundh->addSoundToQueue(CCS->soundh->horseSounds[terTypeNew]);
+		//CCS->soundh->addSoundToQueue(CCS->soundh->horseSounds[terTypeNew]);
 
 		if (hero->pos != details.end //hero didn't change tile but visit succeeded
 			|| directlyAttackingCreature) // or creature was attacked from endangering tile.

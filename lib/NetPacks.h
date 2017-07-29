@@ -621,6 +621,11 @@ struct TryMoveHero : public CPackForClient
 	void applyCl(CClient *cl);
 	void applyGs(CGameState *gs);
 
+	enum EMovementState : ui8
+	{
+		STILL_MOVING, UNEXPECTED_STOP, FINISHED_MOVING
+	};
+
 	enum EResult
 	{
 		FAILED, SUCCESS, TELEPORTATION, RESERVED___, BLOCKING_VISIT, EMBARK, DISEMBARK
@@ -629,6 +634,7 @@ struct TryMoveHero : public CPackForClient
 	ObjectInstanceID id;
 	ui32 movePoints;
 	EResult result; //uses EResult
+	EMovementState state;
 	int3 start, end; //h3m format
 	std::unordered_set<int3, ShashInt3> fowRevealed; //revealed tiles
 	boost::optional<int3> attackedFrom; // Set when stepping into endangered tile.
