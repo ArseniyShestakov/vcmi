@@ -1212,7 +1212,7 @@ bool CGPath::getSubPath(CGPath & out)
 //		out.nodes.push_back(cpn);
 //	}
 
-	return nodes.size();
+	return out.nodes.size();
 }
 
 CPathsInfo::CPathsInfo(const int3 & Sizes)
