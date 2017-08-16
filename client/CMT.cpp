@@ -219,7 +219,7 @@ static void SDLLogCallback(void*           userdata,
 	logGlobal->debug("SDL(category %d; priority %d) %s", category, priority, message);
 }
 
-#if defined(VCMI_WINDOWS) && !defined(__GNUC__) && !defined(VCMI_WITH_DEBUG_CONSOLE)
+#if defined(VCMI_WINDOWS) && !defined(__GNUC__) && defined(VCMI_WITH_DEBUG_CONSOLE)
 int wmain(int argc, wchar_t* argv[])
 #elif defined(VCMI_APPLE) || defined(VCMI_ANDROID)
 int SDL_main(int argc, char *argv[])
