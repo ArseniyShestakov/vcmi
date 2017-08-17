@@ -84,6 +84,7 @@ add_executable(vcmilauncher WIN32 ${launcher_SRCS} ${launcher_HEADERS} ${launche
 if(WIN32)
 	set_target_properties(vcmilauncher
 		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
 			OUTPUT_NAME "VCMI_launcher"
 			PROJECT_LABEL "VCMI_launcher"
 	)

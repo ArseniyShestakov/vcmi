@@ -31,6 +31,7 @@ target_link_libraries(vcmiserver vcmi ${Boost_LIBRARIES} ${SYSTEM_LIBS})
 if(WIN32)
 	set_target_properties(vcmiserver
 		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
 			OUTPUT_NAME "VCMI_server"
 			PROJECT_LABEL "VCMI_server"
 	)

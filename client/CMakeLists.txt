@@ -134,6 +134,7 @@ endif(ENABLE_DEBUG_CONSOLE)
 if(WIN32)
 	set_target_properties(vcmiclient
 		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
 			OUTPUT_NAME "VCMI_client"
 			PROJECT_LABEL "VCMI_client"
 	)

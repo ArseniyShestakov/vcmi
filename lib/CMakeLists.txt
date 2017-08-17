@@ -294,6 +294,7 @@ target_link_libraries(vcmi ${MINIZIP_LIBRARIES} ${Boost_LIBRARIES} ${SDL2_LIBRAR
 if(WIN32)
 	set_target_properties(vcmi
 		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
 			OUTPUT_NAME "VCMI_lib"
 			PROJECT_LABEL "VCMI_lib"
 	)

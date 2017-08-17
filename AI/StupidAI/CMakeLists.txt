@@ -17,6 +17,12 @@ assign_source_group(${stupidAI_SRCS} ${stupidAI_HEADERS})
 
 add_library(StupidAI SHARED ${stupidAI_SRCS} ${stupidAI_HEADERS})
 target_link_libraries(StupidAI vcmi)
+if(WIN32)
+	set_target_properties(StupidAI
+		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
+	)
+endif()
 
 vcmi_set_output_dir(StupidAI "AI")
 

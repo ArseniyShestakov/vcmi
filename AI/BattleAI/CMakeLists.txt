@@ -33,6 +33,12 @@ endif()
 
 add_library(BattleAI SHARED ${battleAI_SRCS} ${battleAI_HEADERS})
 target_link_libraries(BattleAI vcmi)
+if(WIN32)
+	set_target_properties(BattleAI
+		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
+	)
+endif()
 
 vcmi_set_output_dir(BattleAI "AI")
 

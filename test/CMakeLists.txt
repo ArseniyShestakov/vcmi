@@ -42,6 +42,13 @@ add_subdirectory_with_folder("3rdparty" googletest EXCLUDE_FROM_ALL)
 
 add_executable(vcmitest ${test_SRCS} ${test_HEADERS} ${mock_HEADERS} ${GTestSrc}/src/gtest-all.cc ${GMockSrc}/src/gmock-all.cc)
 target_link_libraries(vcmitest vcmi ${RT_LIB} ${DL_LIB})
+if(WIN32)
+	set_target_properties(vcmitest
+		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
+	)
+endif()
+
 add_test(vcmitest vcmitest)
 
 vcmi_set_output_dir(vcmitest "")

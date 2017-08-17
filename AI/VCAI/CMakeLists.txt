@@ -36,6 +36,12 @@ if(FL_FOUND)
 else()
 	target_link_libraries(VCAI fl-static vcmi)
 endif()
+if(WIN32)
+	set_target_properties(VCAI
+		PROPERTIES
+			VS_USER_PROPS "${CMAKE_SOURCE_DIR}/${CMAKE_PROJECT_NAME}.user.props"
+	)
+endif()
 
 vcmi_set_output_dir(VCAI "AI")
 
