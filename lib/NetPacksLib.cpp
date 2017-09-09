@@ -1093,8 +1093,8 @@ DLL_LINKAGE void NewTurn::applyGs(CGameState *gs)
 
 	// Update bonuses before doing anything else so hero don't get more MP than needed
 	gs->globalEffects.popBonuses(Bonus::OneDay); //works for children -> all game objs
-	gs->globalEffects.updateBonuses(Bonus::NDays);
-	gs->globalEffects.updateBonuses(Bonus::OneWeek);
+	gs->globalEffects.reduceBonusDurations(Bonus::NDays);
+	gs->globalEffects.reduceBonusDurations(Bonus::OneWeek);
 	//TODO not really a single root hierarchy, what about bonuses placed elsewhere? [not an issue with H3 mechanics but in the future...]
 
 	for(NewTurn::Hero h : heroes) //give mana/movement point
@@ -1250,7 +1250,7 @@ DLL_LINKAGE void BattleNextRound::applyGs(CGameState *gs)
 		s->state -= EBattleStackState::DRAINED_MANA;
 		s->counterAttacks.reset();
 		// new turn effects
-		s->updateBonuses(Bonus::NTurns);
+		s->reduceBonusDurations(Bonus::NTurns);
 
 		if(s->alive() && s->isClone())
 		{
