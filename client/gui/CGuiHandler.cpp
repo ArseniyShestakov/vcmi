@@ -291,13 +291,13 @@ void CGuiHandler::handleEvent(SDL_Event *sEvent)
 			lastClick = sEvent->motion;
 			lastClickTime = SDL_GetTicks();
 
-			handleMouseButtonClick(lclickable, EIntObjMouseBtnType::LEFT, true);
+			handleMouseButtonClick(sEvent, lclickable, EIntObjMouseBtnType::LEFT, true);
 			break;
 		case SDL_BUTTON_RIGHT:
-			handleMouseButtonClick(rclickable, EIntObjMouseBtnType::RIGHT, true);
+			handleMouseButtonClick(sEvent, rclickable, EIntObjMouseBtnType::RIGHT, true);
 			break;
 		case SDL_BUTTON_MIDDLE:
-			handleMouseButtonClick(mclickable, EIntObjMouseBtnType::MIDDLE, true);
+			handleMouseButtonClick(sEvent, mclickable, EIntObjMouseBtnType::MIDDLE, true);
 			break;
 		default:
 			break;
@@ -335,30 +335,30 @@ void CGuiHandler::handleEvent(SDL_Event *sEvent)
 		switch(sEvent->button.button)
 		{
 		case SDL_BUTTON_LEFT:
-			handleMouseButtonClick(lclickable, EIntObjMouseBtnType::LEFT, false);
+			handleMouseButtonClick(sEvent, lclickable, EIntObjMouseBtnType::LEFT, false);
 			break;
 		case SDL_BUTTON_RIGHT:
-			handleMouseButtonClick(rclickable, EIntObjMouseBtnType::RIGHT, false);
+			handleMouseButtonClick(sEvent, rclickable, EIntObjMouseBtnType::RIGHT, false);
 			break;
 		case SDL_BUTTON_MIDDLE:
-			handleMouseButtonClick(mclickable, EIntObjMouseBtnType::MIDDLE, false);
+			handleMouseButtonClick(sEvent, mclickable, EIntObjMouseBtnType::MIDDLE, false);
 			break;
 		}
 	}
 	current = nullptr;
 } //event end
 
-void CGuiHandler::handleMouseButtonClick(CIntObjectList & interestedObjs, EIntObjMouseBtnType btn, bool isPressed)
+void CGuiHandler::handleMouseButtonClick(SDL_Event *sEvent, CIntObjectList & interestedObjs, EIntObjMouseBtnType btn, bool isPressed)
 {
 	auto hlp = interestedObjs;
-	for(auto i = hlp.begin(); i != hlp.end() && current; i++)
+	for(auto i = hlp.begin(); i != hlp.end(); i++)
 	{
 		if(!vstd::contains(interestedObjs, *i)) continue;
 
 		auto prev = (*i)->mouseState(btn);
 		if(!isPressed)
 			(*i)->updateMouseState(btn, isPressed);
-		if(isItIn(&(*i)->pos, current->motion.x, current->motion.y))
+		if(isItIn(&(*i)->pos, sEvent->motion.x, sEvent->motion.y))
 		{
 			if(isPressed)
 				(*i)->updateMouseState(btn, isPressed);
