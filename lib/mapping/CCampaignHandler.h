@@ -14,6 +14,9 @@
 struct StartInfo;
 class CGHeroInstance;
 class CBinaryReader;
+class CMap;
+class CMapHeader;
+class CMapInfo;
 
 namespace CampaignVersion
 {
@@ -192,12 +195,15 @@ public:
 
 	std::map<ui8, ui8> chosenCampaignBonuses;
 
-	//void initNewCampaign(const StartInfo &si);
 	void setCurrentMapAsConquered(const std::vector<CGHeroInstance*> & heroes);
 	boost::optional<CScenarioTravel::STravelBonus> getBonusForCurrentMap() const;
 	const CCampaignScenario & getCurrentScenario() const;
 	CCampaignScenario & getCurrentScenario();
 	ui8 currentBonusID() const;
+
+	CMap * getMap(int scenarioId = -1) const;
+	std::unique_ptr<CMapHeader> getHeader(int scenarioId = -1) const;
+	std::shared_ptr<CMapInfo> getMapInfo(int scenarioId = -1) const;
 
 	CCampaignState();
 	CCampaignState(std::unique_ptr<CCampaign> _camp);

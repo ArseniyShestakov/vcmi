@@ -822,7 +822,7 @@ void CGameState::initNewGame(const IMapService * mapService, bool allowSavingRan
 				playerSettings.compOnly = !playerInfo.canHumanPlay;
 				playerSettings.team = playerInfo.team;
 				playerSettings.castle = playerInfo.defaultCastle();
-				if(playerSettings.playerID == PlayerSettings::PLAYER_AI && playerSettings.name.empty())
+				if(playerSettings.isControlledByAI() && playerSettings.name.empty())
 				{
 					playerSettings.name = VLC->generaltexth->allTexts[468];
 				}
@@ -847,16 +847,7 @@ void CGameState::initNewGame(const IMapService * mapService, bool allowSavingRan
 void CGameState::initCampaign(const IMapService * mapService)
 {
 	logGlobal->info("Open campaign map file: %d", scenarioOps->campState->currentMap.get());
-	auto campaign = scenarioOps->campState;
-	assert(vstd::contains(campaign->camp->mapPieces, *scenarioOps->campState->currentMap));
-
-	std::string scenarioName = scenarioOps->mapname.substr(0, scenarioOps->mapname.find('.'));
-	boost::to_lower(scenarioName);
-	scenarioName += ':' + boost::lexical_cast<std::string>(*campaign->currentMap);
-
-	std::string & mapContent = campaign->camp->mapPieces[*campaign->currentMap];
-	auto buffer = reinterpret_cast<const ui8 *>(mapContent.data());
-	map = mapService->loadMap(buffer, mapContent.size(), scenarioName).release();
+	map = scenarioOps->campState->getMap();
 }
 
 void CGameState::checkMapChecksum()
@@ -971,7 +962,7 @@ void CGameState::initPlayerStates()
 		PlayerState & p = players[elem.first];
 		//std::pair<PlayerColor, PlayerState> ins(elem.first,PlayerState());
 		p.color=elem.first;
-		p.human = elem.second.playerID;
+		p.human = elem.second.isControlledByHuman();
 		p.team = map->players[elem.first.getNum()].team;
 		teams[p.team].id = p.team;//init team
 		teams[p.team].players.insert(elem.first);//add player to team
@@ -1313,7 +1304,7 @@ void CGameState::initStartingResources()
 		for(auto it = scenarioOps->playerInfos.cbegin();
 			it != scenarioOps->playerInfos.cend(); ++it)
 		{
-			if(it->second.playerID != PlayerSettings::PLAYER_AI)
+			if(it->second.isControlledByHuman())
 				ret.push_back(&it->second);
 		}
 
