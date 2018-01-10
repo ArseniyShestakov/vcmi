@@ -233,16 +233,17 @@ void CBonusSelection::show(SDL_Surface * to)
 	int fx = 496 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
 	int ex = 629 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[391]);
 	TeamID myT;
-	myT = ourHeader->players[CGPreGame::playerColor.getNum()].team;
+	/*myT = ourHeader->players[myFirstColor().getNum()].team;
 	for(auto i = startInfo.playerInfos.cbegin(); i != startInfo.playerInfos.cend(); i++)
 	{
-		int * myx = ((i->first == CGPreGame::playerColor || ourHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
+		int * myx = ((i->first == myFirstColor() || ourHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
 
 		IImage * flag = sFlags->getImage(i->first.getNum(), 0);
 		flag->draw(to, pos.x + *myx, pos.y + 405);
 		*myx += flag->width();
 		flag->decreaseRef();
 	}
+	*/
 
 	//difficulty
 	diffPics[startInfo.difficulty]->showAll(to);

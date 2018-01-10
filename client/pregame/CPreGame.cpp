@@ -391,7 +391,6 @@ CPicture * CGPreGame::createPicture(const JsonNode & config)
 	return new CPicture(config["name"].String(), config["x"].Float(), config["y"].Float());
 }
 
-PlayerColor CGPreGame::playerColor = PlayerColor::CANNOT_DETERMINE; //if more than one player - applies to the first
 std::string CGPreGame::saveGameName = "";
 
 
@@ -403,8 +402,6 @@ void CGPreGame::setPlayer(PlayerSettings & pset, ui8 player, const std::map<ui8,
 		pset.name = CGI->generaltexth->allTexts[468]; //Computer
 
 	pset.playerID = player;
-	if(player == playerNames.begin()->first)
-		CGPreGame::playerColor = pset.color;
 }
 
 void CGPreGame::updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader, const std::map<ui8, ClientPlayer> & playerNames)
@@ -416,7 +413,6 @@ void CGPreGame::updateStartInfo(std::string filename, StartInfo & sInfo, const s
 	}
 
 	sInfo.mapname = filename;
-	CGPreGame::playerColor = PlayerColor::NEUTRAL;
 
 	auto namesIt = playerNames.cbegin();
 

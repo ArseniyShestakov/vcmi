@@ -52,11 +52,6 @@ static CMapInfo * mapInfoFromGame()
 	return ret;
 }
 
-static void setPlayersFromGame()
-{
-	CGPreGame::playerColor = LOCPLINT->playerID;
-}
-
 template<typename T> class CApplyOnPG;
 
 class CBaseForPGApply
@@ -92,9 +87,20 @@ public:
 
 static CApplier<CBaseForPGApply> * applier = nullptr;
 
+PlayerColor ISelectionScreenInfo::myFirstColor()
+{
+	for(auto & pair : sInfo.playerInfos)
+	{
+		if(isMyColor(pair.first))
+			return pair.first;
+	}
+
+	return PlayerColor::CANNOT_DETERMINE;
+}
+
 bool ISelectionScreenInfo::isMyColor(PlayerColor color)
 {
-	if(playerNames[sInfo.playerInfos[color].playerID].connection == CSH->c->connectionID)
+	if(CSH->c && playerNames[sInfo.playerInfos[color].playerID].connection == CSH->c->connectionID)
 		return true;
 
 	return false;
@@ -348,7 +354,6 @@ CSelectionScreen::~CSelectionScreen()
 		serverHandlingThread->join();
 		delete serverHandlingThread;
 	}
-	CGPreGame::playerColor = PlayerColor::CANNOT_DETERMINE;
 	playerNames.clear();
 
 	vstd::clear_pointer(applier);
@@ -634,19 +639,6 @@ void CSelectionScreen::processPacks()
 
 void CSelectionScreen::setSInfo(const StartInfo & si)
 {
-	std::map<PlayerColor, PlayerSettings>::const_iterator i;
-	for(i = si.playerInfos.cbegin(); i != si.playerInfos.cend(); i++)
-	{
-		if(isMyId(i->second.playerID))
-		{
-			CGPreGame::playerColor = i->first;
-			break;
-		}
-	}
-
-	if(i == si.playerInfos.cend()) //not found
-		CGPreGame::playerColor = PlayerColor::CANNOT_DETERMINE;
-
 	sInfo = si;
 	if(current)
 		opt->recreate(); //will force to recreate using current sInfo
@@ -677,7 +669,7 @@ void CSelectionScreen::propagateOptions()
 
 void CSelectionScreen::postRequest(ui8 what, ui8 dir, PlayerColor player)
 {
-	if(!isGuest() || !CSH->c)
+	if(!isGuest())
 		return;
 
 	RequestOptionsChange roc(what, dir, sInfo.playerInfos[player].playerID);
@@ -698,7 +690,6 @@ CSavingScreen::CSavingScreen()
 {
 	ourGame = mapInfoFromGame();
 	sInfo = *LOCPLINT->cb->getStartInfo();
-	setPlayersFromGame();
 }
 
 CSavingScreen::~CSavingScreen()
@@ -864,14 +855,14 @@ void InfoCard::showAll(SDL_Surface * to)
 
 			TeamID myT;
 
-			if(CGPreGame::playerColor < PlayerColor::PLAYER_LIMIT)
-				myT = SEL->current->mapHeader->players[CGPreGame::playerColor.getNum()].team;
+			if(SEL->myFirstColor() < PlayerColor::PLAYER_LIMIT)
+				myT = SEL->current->mapHeader->players[SEL->myFirstColor().getNum()].team;
 			else
 				myT = TeamID::NO_TEAM;
 
 			for(auto i = SEL->sInfo.playerInfos.cbegin(); i != SEL->sInfo.playerInfos.cend(); i++)
 			{
-				int * myx = ((i->first == CGPreGame::playerColor || SEL->current->mapHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
+				int * myx = ((i->first == SEL->myFirstColor() || SEL->current->mapHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
 				IImage * flag = sFlags->getImage(i->first.getNum(), 0);
 				flag->draw(to, pos.x + *myx, pos.y + 399);
 				*myx += flag->width();
@@ -1052,15 +1043,6 @@ void CChatBox::addNewMessage(const std::string & text)
 CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * startInfo)
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-
-	for(auto it = startInfo->playerInfos.cbegin(); it != startInfo->playerInfos.cend(); ++it)
-	{
-		if(it->second.playerID)
-		{
-			CGPreGame::playerColor = it->first;
-		}
-	}
-
 	pos.w = 762;
 	pos.h = 584;
 	center(pos);
@@ -1069,7 +1051,6 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 	sInfo = *LOCPLINT->cb->getStartInfo();
 	assert(!SEL->current);
 	current = mapInfoFromGame();
-	setPlayersFromGame();
 
 	screenType = CMenuScreen::scenarioInfo;
 

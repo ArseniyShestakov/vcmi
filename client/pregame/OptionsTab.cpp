@@ -33,11 +33,6 @@ static void swapPlayers(PlayerSettings & a, PlayerSettings & b)
 {
 	std::swap(a.playerID, b.playerID);
 	std::swap(a.name, b.name);
-
-	if(a.playerID == 1)
-		CGPreGame::playerColor = a.color;
-	else if(b.playerID == 1)
-		CGPreGame::playerColor = b.color;
 }
 
 OptionsTab::OptionsTab()
@@ -261,63 +256,51 @@ void OptionsTab::flagPressed(PlayerColor color)
 	PlayerSettings & clicked = SEL->sInfo.playerInfos[color];
 	PlayerSettings * old = nullptr;
 
-/*	if(SEL->playerNames.size() == 1) //single player -> just swap
+	//identify clicked player
+	int clickedNameID = clicked.playerID; //human is a number of player, zero means AI
+	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
 	{
-		if(color == CGPreGame::playerColor) //that color is already selected, no action needed
-			return;
-
-		old = &SEL->sInfo.playerInfos[CGPreGame::playerColor];
-		swapPlayers(*old, clicked);
+		PlayerSettings & restPos = SEL->sInfo.playerInfos[playerToRestore.color];
+		SEL->setPlayer(restPos, playerToRestore.id);
+		playerToRestore.reset();
 	}
-	else*/
+
+	int newPlayer; //which player will take clicked position
+
+	//who will be put here?
+	if(!clickedNameID) //AI player clicked -> if possible replace computer with unallocated player
 	{
-		//identify clicked player
-		int clickedNameID = clicked.playerID; //human is a number of player, zero means AI
+		newPlayer = SEL->getIdOfFirstUnallocatedPlayer();
+		if(!newPlayer) //no "free" player -> get just first one
+			newPlayer = SEL->playerNames.begin()->first;
+	}
+	else //human clicked -> take next
+	{
+		auto i = SEL->playerNames.find(clickedNameID); //clicked one
+		i++; //player AFTER clicked one
 
-		if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
+		if(i != SEL->playerNames.end())
+			newPlayer = i->first;
+		else
+			newPlayer = 0; //AI if we scrolled through all players
+	}
+
+	SEL->setPlayer(clicked, newPlayer); //put player
+
+	//if that player was somewhere else, we need to replace him with computer
+	if(newPlayer) //not AI
+	{
+		for(auto i = SEL->sInfo.playerInfos.begin(); i != SEL->sInfo.playerInfos.end(); i++)
 		{
-			PlayerSettings & restPos = SEL->sInfo.playerInfos[playerToRestore.color];
-			SEL->setPlayer(restPos, playerToRestore.id);
-			playerToRestore.reset();
-		}
-
-		int newPlayer; //which player will take clicked position
-
-		//who will be put here?
-		if(!clickedNameID) //AI player clicked -> if possible replace computer with unallocated player
-		{
-			newPlayer = SEL->getIdOfFirstUnallocatedPlayer();
-			if(!newPlayer) //no "free" player -> get just first one
-				newPlayer = SEL->playerNames.begin()->first;
-		}
-		else //human clicked -> take next
-		{
-			auto i = SEL->playerNames.find(clickedNameID); //clicked one
-			i++; //player AFTER clicked one
-
-			if(i != SEL->playerNames.end())
-				newPlayer = i->first;
-			else
-				newPlayer = 0; //AI if we scrolled through all players
-		}
-
-		SEL->setPlayer(clicked, newPlayer); //put player
-
-		//if that player was somewhere else, we need to replace him with computer
-		if(newPlayer) //not AI
-		{
-			for(auto i = SEL->sInfo.playerInfos.begin(); i != SEL->sInfo.playerInfos.end(); i++)
+			int curNameID = i->second.playerID;
+			if(i->first != color && curNameID == newPlayer)
 			{
-				int curNameID = i->second.playerID;
-				if(i->first != color && curNameID == newPlayer)
-				{
-					assert(i->second.playerID);
-					playerToRestore.color = i->first;
-					playerToRestore.id = newPlayer;
-					SEL->setPlayer(i->second, 0); //set computer
-					old = &i->second;
-					break;
-				}
+				assert(i->second.playerID);
+				playerToRestore.color = i->first;
+				playerToRestore.id = newPlayer;
+				SEL->setPlayer(i->second, 0); //set computer
+				old = &i->second;
+				break;
 			}
 		}
 	}

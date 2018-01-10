@@ -34,6 +34,7 @@ public:
 	StartInfo sInfo;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 
+	PlayerColor myFirstColor();
 	bool isMyColor(PlayerColor color);
 	ui8 myFirstId();
 	bool isMyId(ui8 id);
