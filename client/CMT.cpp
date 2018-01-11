@@ -107,7 +107,7 @@ void dispose();
 void playIntro();
 static void mainLoop();
 //void requestChangingResolution();
-void startGame(StartInfo * options);
+void startGame();
 void endGame();
 
 #ifndef VCMI_WINDOWS
@@ -137,7 +137,7 @@ void startTestMap(const std::string &mapname)
 
 	while(GH.topInt())
 		GH.popIntTotally(GH.topInt());
-	startGame(&si);
+//MPTODO	startGame(&si);
 }
 
 void startGameFromFile(const bfs::path &fname)
@@ -162,7 +162,7 @@ void startGameFromFile(const bfs::path &fname)
 
 	while(GH.topInt())
 		GH.popIntTotally(GH.topInt());
-	startGame(&si);
+//MPTODO	startGame(&si);
 }
 
 void init()
@@ -820,7 +820,7 @@ void processCommand(const std::string &message)
 		if(fname.size() && SEL)
 		{
 			CSaveFile out(fname);
-			out << SEL->sInfo;
+			out << CSH->sInfo;
 		}
 	}
 	else if(cn == "start")
@@ -1260,14 +1260,14 @@ static void handleEvent(SDL_Event & ev)
 				StartInfo si = *client->getStartInfo(true);
 				si.seedToBeUsed = 0; //server gives new random generator seed if 0
 				endGame();
-				startGame(&si);
+//MPTODO				startGame(&si);
 			}
 			break;
 		case PREPARE_RESTART_CAMPAIGN:
 			{
 				auto si = reinterpret_cast<StartInfo *>(ev.user.data1);
 				endGame();
-				startGame(si);
+//MPTODO				startGame(si);
 			}
 			break;
 		case RETURN_TO_MENU_LOAD:
@@ -1331,7 +1331,7 @@ static void mainLoop()
 	}
 }
 
-void startGame(StartInfo * options)
+void startGame()
 {
 	CSH->myPlayers = SEL->getMyIds();
 	if(!settings["session"]["donotstartserver"].Bool())
@@ -1347,7 +1347,7 @@ void startGame(StartInfo * options)
 		int i = 0;
 
 
-		for(auto & elem : options->playerInfos)
+		for(auto & elem : CSH->sInfo.playerInfos)
 		{
 			elem.second.playerID = PlayerSettings::PLAYER_AI;
 			if(i < ais.size())
@@ -1357,16 +1357,16 @@ void startGame(StartInfo * options)
 
     client = new CClient();
 	CPlayerInterface::howManyPeople = 0;
-	switch(options->mode) //new game
+	switch(CSH->sInfo.mode) //new game
 	{
 	case StartInfo::NEW_GAME:
-		client->newGame(options);
+		client->newGame();
 		break;
 	case StartInfo::CAMPAIGN: //MPTODO
-		client->newGame(options);
+		client->newGame();
 		break;
 	case StartInfo::LOAD_GAME:
-		client->loadGame(options);
+		client->loadGame();
 		break;
 	}
 	{

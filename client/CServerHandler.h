@@ -10,11 +10,15 @@
 
 struct SharedMemory;
 class CConnection;
+class PlayerColor;
+struct StartInfo;
 
 struct ServerCapabilities;
 
 #include "../lib/CondSh.h"
 #include "../lib/CStopWatch.h"
+
+#include "../lib/StartInfo.h"
 
 /// structure to handle running server and connecting to it
 class CServerHandler
@@ -33,8 +37,11 @@ public:
 
 	static CondSh<bool> serverAlive;  //used to prevent game start from executing if server is already running
 
+	StartInfo sInfo;
 	std::vector<std::string> myNames;
 	std::vector<ui8> myPlayers;
+	std::set<PlayerColor> getPlayers();
+	std::set<PlayerColor> getHumanColors();
 
 	//functions setting up local server
 	void startServer(); //creates a thread with callServer

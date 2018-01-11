@@ -23,7 +23,7 @@
 #include "RandomMapTab.h"
 #include "SelectionTab.h"
 
-void startGame(StartInfo * options);
+void startGame();
 
 void ChatMessage::apply(CSelectionScreen * selScreen)
 {
@@ -48,7 +48,7 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 		SEL->playerNames.insert(player);
 
 		//put new player in first slot with AI
-		for(auto & elem : SEL->sInfo.playerInfos)
+		for(auto & elem : CSH->sInfo.playerInfos)
 		{
 			if(!elem.second.playerID && !elem.second.compOnly)
 			{
@@ -110,7 +110,7 @@ void RequestOptionsChange::apply(CSelectionScreen * selScreen)
 	if(!selScreen->isHost())
 		return;
 
-	PlayerColor color = selScreen->sInfo.getPlayersSettings(playerID)->color;
+	PlayerColor color = CSH->sInfo.getPlayersSettings(playerID)->color;
 
 	switch(what)
 	{
@@ -138,7 +138,7 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 
 		selScreen->playerNames.erase(pair.first);
 
-		if(PlayerSettings * s = selScreen->sInfo.getPlayersSettings(pair.first)) //it's possible that player was unallocated
+		if(PlayerSettings * s = CSH->sInfo.getPlayersSettings(pair.first)) //it's possible that player was unallocated
 		{
 			selScreen->setPlayer(*s, 0);
 			selScreen->opt->entries[s->color]->selectButtons();
@@ -165,7 +165,7 @@ void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 	vstd::clear_pointer(selScreen->serverHandlingThread); //detach us
 	CGPreGame::saveGameName.clear();
 
-	CGP->showLoadingScreen(std::bind(&startGame, new StartInfo(selScreen->sInfo)));
+	CGP->showLoadingScreen(std::bind(&startGame));
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)
 }
 

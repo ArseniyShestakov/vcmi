@@ -13,6 +13,7 @@
 
 #include "../CBitmapHandler.h"
 #include "../CGameInfo.h"
+#include "../CServerHandler.h"
 #include "../gui/CAnimation.h"
 #include "../gui/CGuiHandler.h"
 #include "../widgets/CComponent.h"
@@ -75,7 +76,7 @@ void OptionsTab::recreate()
 	usedHeroes.clear();
 
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-	for(auto it = SEL->sInfo.playerInfos.begin(); it != SEL->sInfo.playerInfos.end(); ++it)
+	for(auto it = CSH->sInfo.playerInfos.begin(); it != CSH->sInfo.playerInfos.end(); ++it)
 	{
 		entries.insert(std::make_pair(it->first, new PlayerOptionsEntry(this, it->second)));
 		const std::vector<SHeroName> & heroes = SEL->current->mapHeader->players[it->first.getNum()].heroesNames;
@@ -93,7 +94,7 @@ void OptionsTab::nextCastle(PlayerColor player, int dir)
 		return;
 	}
 
-	PlayerSettings & s = SEL->sInfo.playerInfos[player];
+	PlayerSettings & s = CSH->sInfo.playerInfos[player];
 	si16 & cur = s.castle;
 	auto & allowed = SEL->current->mapHeader->players[s.color.getNum()].allowedFactions;
 	const bool allowRandomTown = SEL->current->mapHeader->players[s.color.getNum()].isFactionRandom;
@@ -157,7 +158,7 @@ void OptionsTab::nextHero(PlayerColor player, int dir)
 		return;
 	}
 
-	PlayerSettings & s = SEL->sInfo.playerInfos[player];
+	PlayerSettings & s = CSH->sInfo.playerInfos[player];
 	int old = s.hero;
 	if(s.castle < 0 || s.playerID == PlayerSettings::PLAYER_AI || s.hero == PlayerSettings::NONE)
 		return;
@@ -211,7 +212,7 @@ void OptionsTab::nextBonus(PlayerColor player, int dir)
 		return;
 	}
 
-	PlayerSettings & s = SEL->sInfo.playerInfos[player];
+	PlayerSettings & s = CSH->sInfo.playerInfos[player];
 	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
 
 	if(s.hero == PlayerSettings::NONE &&
@@ -247,20 +248,20 @@ void OptionsTab::setTurnLength(int npos)
 	static const int times[] = {1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 0};
 	vstd::amin(npos, ARRAY_COUNT(times) - 1);
 
-	SEL->sInfo.turnTime = times[npos];
+	CSH->sInfo.turnTime = times[npos];
 	redraw();
 }
 
 void OptionsTab::flagPressed(PlayerColor color)
 {
-	PlayerSettings & clicked = SEL->sInfo.playerInfos[color];
+	PlayerSettings & clicked = CSH->sInfo.playerInfos[color];
 	PlayerSettings * old = nullptr;
 
 	//identify clicked player
 	int clickedNameID = clicked.playerID; //human is a number of player, zero means AI
 	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
 	{
-		PlayerSettings & restPos = SEL->sInfo.playerInfos[playerToRestore.color];
+		PlayerSettings & restPos = CSH->sInfo.playerInfos[playerToRestore.color];
 		SEL->setPlayer(restPos, playerToRestore.id);
 		playerToRestore.reset();
 	}
@@ -290,7 +291,7 @@ void OptionsTab::flagPressed(PlayerColor color)
 	//if that player was somewhere else, we need to replace him with computer
 	if(newPlayer) //not AI
 	{
-		for(auto i = SEL->sInfo.playerInfos.begin(); i != SEL->sInfo.playerInfos.end(); i++)
+		for(auto i = CSH->sInfo.playerInfos.begin(); i != CSH->sInfo.playerInfos.end(); i++)
 		{
 			int curNameID = i->second.playerID;
 			if(i->first != color && curNameID == newPlayer)
@@ -323,7 +324,7 @@ void OptionsTab::flagPressed(PlayerColor color)
 bool OptionsTab::canUseThisHero(PlayerColor player, int ID)
 {
 	return CGI->heroh->heroes.size() > ID
-		&& SEL->sInfo.playerInfos[player].castle == CGI->heroh->heroes[ID]->heroClass->faction
+		&& CSH->sInfo.playerInfos[player].castle == CGI->heroh->heroes[ID]->heroClass->faction
 		&& !vstd::contains(usedHeroes, ID)
 		&& SEL->current->mapHeader->allowedHeroes[ID];
 }

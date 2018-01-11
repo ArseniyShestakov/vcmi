@@ -19,6 +19,7 @@
 #include "../lib/serializer/Connection.h"
 
 #include <SDL.h>
+#include "../lib/StartInfo.h"
 
 #include <boost/uuid/uuid.hpp>
 #include <boost/uuid/uuid_io.hpp>
@@ -210,4 +211,34 @@ bool CServerHandler::isServerLocal()
 		return true;
 
 	return false;
+}
+
+std::set<PlayerColor> CServerHandler::getPlayers()
+{
+	std::set<PlayerColor> players;
+	for(auto & elem : sInfo.playerInfos)
+	{
+		if(CSH->c->isHost() && elem.second.playerID == PlayerSettings::PLAYER_AI || vstd::contains(CSH->myPlayers, elem.second.playerID))
+		{
+			players.insert(elem.first); //add player
+		}
+	}
+	if(CSH->c->isHost())
+		players.insert(PlayerColor::NEUTRAL);
+
+	return players;
+}
+
+std::set<PlayerColor> CServerHandler::getHumanColors()
+{
+	std::set<PlayerColor> players;
+	for(auto & elem : sInfo.playerInfos)
+	{
+		if(vstd::contains(CSH->myPlayers, elem.second.playerID))
+		{
+			players.insert(elem.first); //add player
+		}
+	}
+
+	return players;
 }

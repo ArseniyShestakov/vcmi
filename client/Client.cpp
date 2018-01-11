@@ -108,6 +108,23 @@ public:
 
 static CApplier<CBaseForCLApply> *applier = nullptr;
 
+void CClient::initMapHandler()
+{
+	// Init map handler
+	if(gs->map)
+	{
+		if(!settings["session"]["headless"].Bool())
+		{
+			const_cast<CGameInfo*>(CGI)->mh = new CMapHandler();
+			CGI->mh->map = gs->map;
+//			logNetwork->info("Creating mapHandler: %d ms", tmh.getDiff());
+			CGI->mh->init();
+		}
+		pathInfo = make_unique<CPathsInfo>(getMapSize());
+//		logNetwork->info("Initializing mapHandler (together): %d ms", tmh.getDiff());
+	}
+}
+
 void CClient::init()
 {
 	waitingRequest.clear();
@@ -245,59 +262,11 @@ void CClient::endGame(bool closeConnection)
 	logNetwork->info("Client stopped.");
 }
 
-void CClient::loadGame(StartInfo * si)
+void CClient::loadGame()
 {
-//	void loadNetworkGame()
-//	{
-//		client = new CClient();
-//		CPlayerInterface::howManyPeople = 1;
-//		client->loadGameNetwork();
-//}
-
-	if(false)//fname.empty())
-	{
-
-		logNetwork->info("MP loading procedure started!");
-
-		try
-		{
-			recieveCommonState(*CSH->c);
-			// logNetwork->info("Loaded common part of save %d ms", tmh.getDiff());
-			const_cast<CGameInfo*>(CGI)->mh = new CMapHandler();
-			const_cast<CGameInfo*>(CGI)->mh->map = gs->map;
-			pathInfo = make_unique<CPathsInfo>(getMapSize());
-			CGI->mh->init();
-		}
-		catch(std::exception &e)
-		{
-			throw; //obviously we cannot continue here
-		}
-
-		CSH->c->addStdVecItems(gs); /*why is this here?*/
-
-		//*loader >> *this;
-
-
-		CSH->c->enableStackSendingByID();
-		CSH->c->disableSmartPointerSerialization();
-
-		auto pid = PlayerColor(1);
-		auto nInt = std::make_shared<CPlayerInterface>(pid);
-
-		nInt->dllName = "";
-		nInt->human = true;
-		nInt->playerID = pid;
-
-		installNewPlayerInterface(nInt, pid);
-		return;
-	}
-
-
-
-	PlayerColor player(); //intentional shadowing
+	StartInfo * si = &CSH->sInfo;
 	logNetwork->info("Loading procedure started!");
 
-////	CStopWatch tmh;
 	std::unique_ptr<CLoadFile> loader;
 	try
 	{
@@ -332,58 +301,10 @@ void CClient::loadGame(StartInfo * si)
 		throw; //obviously we cannot continue here
 	}
 
-/*
-	if(!server)
-		 player = PlayerColor(player_);
-*/
+	initMapHandler();
 
-	//*loader >> *this;
-
-/////	if(server)
-////	{
-////		ui8 pom8;
-////		*CSH->c << ui8(3) << ui8(loadNumPlayers); //load game; one client if single-player
-////		*CSH->c << fname;
-		//recieveCommonState(*serv);
-////		logNetwork->info("Loaded common part of save %d ms", tmh.getDiff());
-		const_cast<CGameInfo*>(CGI)->mh = new CMapHandler();
-		const_cast<CGameInfo*>(CGI)->mh->map = gs->map;
-		pathInfo = make_unique<CPathsInfo>(getMapSize());
-		CGI->mh->init();
-////		logNetwork->info("Initing maphandler: %d ms", tmh.getDiff());
-////		*CSH->c >> pom8;
-////		if(pom8)
-////			throw std::runtime_error("Server cannot open the savegame!");
-////		else
-////			logNetwork->info("Server opened savegame properly.");
-////	}
-
-/*
-		std::vector<std::pair<PlayerColor, PlayerSettings>> humanPlayerInfos;
-		auto selector = [](std::pair<PlayerColor, PlayerSettings> x) -> bool { return x.second.playerID > 0;};
-		std::copy_if(options->playerInfos.begin(), options->playerInfos.end(), std::back_inserter(humanPlayerInfos), selector);
-
-		std::vector<int> humanPlayerIndices;
-		for(auto playerInfo : humanPlayerInfos)
-			humanPlayerIndices.push_back(playerInfo.first.getNum());
-*/
-////	if(server)
-////	{
-		std::set<PlayerColor> clientPlayers;
-		for(auto & elem : gs->scenarioOps->playerInfos)
-		{
-////			if(!std::count(humanplayerindices.begin(),humanplayerindices.end(),elem.first.getNum()) || elem.first==player)
-				clientPlayers.insert(elem.first);
-		}
-		clientPlayers.insert(PlayerColor::NEUTRAL);
-////	}
-//	else
-//	{
-//		clientPlayers.insert(player);
-//	}
-
-	serialize(loader->serializer, loader->serializer.fileVersion, clientPlayers);
-	*CSH->c << clientPlayers;
+	serialize(loader->serializer, loader->serializer.fileVersion);
+	*CSH->c << CSH->getPlayers();
 	CSH->c->addStdVecItems(gs); /*why is this here?*/
 
 	//*loader >> *this;
@@ -396,11 +317,8 @@ void CClient::loadGame(StartInfo * si)
 	CSH->c->disableSmartPointerSerialization();
 }
 
-void CClient::newGame(StartInfo *si)
+void CClient::newGame()
 {
-	enum {SINGLE, HOST, GUEST} networkMode = SINGLE;
-
-	networkMode = CSH->c->isHost() ? HOST : GUEST;
 	CStopWatch tmh;
 	logNetwork->info("\tSending/Getting info to/from the server: %d ms", tmh.getDiff());
 	CSH->c->enableStackSendingByID();
@@ -410,12 +328,15 @@ void CClient::newGame(StartInfo *si)
 	gs = new CGameState();
 	logNetwork->info("\tCreating gamestate: %i",tmh.getDiff());
 
+	StartInfo * si;
 	*CSH->c >> si;
 	gs->init(si, settings["general"]["saveRandomMaps"].Bool());
 	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
 
 	// Now after possible random map gen, we know exact player count.
 	// Inform server about how many players client handles
+	enum {SINGLE, HOST, GUEST} networkMode = SINGLE;
+	networkMode = CSH->c->isHost() ? HOST : GUEST;
 	std::set<PlayerColor> myPlayers;
 	for(auto & elem : gs->scenarioOps->playerInfos)
 	{
@@ -423,7 +344,7 @@ void CClient::newGame(StartInfo *si)
 		   || (networkMode == HOST && elem.second.playerID == PlayerSettings::PLAYER_AI))//multi - host has all AI players
 		{
 			myPlayers.insert(elem.first); //add player
-			logGlobal->warn("MY player %d", elem.first);
+			logGlobal->warn("MY player %d", elem.first.getStrCap());
 		}
 	}
 	logGlobal->warn("MY connectionId %d", CSH->c->connectionID);
@@ -432,19 +353,7 @@ void CClient::newGame(StartInfo *si)
 
 	*CSH->c << myPlayers;
 
-	// Init map handler
-	if(gs->map)
-	{
-		if(!settings["session"]["headless"].Bool())
-		{
-			const_cast<CGameInfo*>(CGI)->mh = new CMapHandler();
-			CGI->mh->map = gs->map;
-			logNetwork->info("Creating mapHandler: %d ms", tmh.getDiff());
-			CGI->mh->init();
-		}
-		pathInfo = make_unique<CPathsInfo>(getMapSize());
-		logNetwork->info("Initializing mapHandler (together): %d ms", tmh.getDiff());
-	}
+	initMapHandler();
 
 	int humanPlayers = 0;
 	for(auto & elem : gs->scenarioOps->playerInfos)//initializing interfaces for players
@@ -500,6 +409,10 @@ void CClient::serialize(BinarySerializer & h, const int version)
 
 void CClient::serialize(BinaryDeserializer & h, const int version)
 {
+	for(auto id : CSH->myPlayers)
+	{
+		logGlobal->warn("LOADING: MY PLAYER: %d", static_cast<int>(id));
+	}
 	assert(!h.saving);
 	bool hotSeat = 1;//TODO:COMPATIBILITY
 	h & hotSeat;
@@ -523,82 +436,7 @@ void CClient::serialize(BinaryDeserializer & h, const int version)
 			{
 				if(pid == PlayerColor::NEUTRAL)
 				{
-					installNewBattleInterface(CDynLibHandler::getNewBattleAI(dllname), pid);
-					//TODO? consider serialization
-					continue;
-				}
-				else
-				{
-					assert(!isHuman);
-					nInt = CDynLibHandler::getNewAI(dllname);
-				}
-			}
-			else
-			{
-				assert(isHuman);
-				nInt = std::make_shared<CPlayerInterface>(pid);
-			}
-
-			nInt->dllName = dllname;
-			nInt->human = isHuman;
-			nInt->playerID = pid;
-
-			installNewPlayerInterface(nInt, pid);
-			nInt->loadGame(h, version); //another evil cast, check above
-		}
-
-		if(!vstd::contains(battleints, PlayerColor::NEUTRAL))
-			loadNeutralBattleAI();
-	}
-}
-
-void CClient::serialize(BinarySerializer & h, const int version, const std::set<PlayerColor> & playerIDs)
-{
-	assert(h.saving);
-	bool hotSeat = 1;//TODO:COMPATIBILITY
-	h & hotSeat;
-	{
-		ui8 players = playerint.size();
-		h & players;
-
-		for(auto i = playerint.begin(); i != playerint.end(); i++)
-		{
-			LOG_TRACE_PARAMS(logGlobal, "Saving player %s interface", i->first);
-			assert(i->first == i->second->playerID);
-			h & i->first;
-			h & i->second->dllName;
-			h & i->second->human;
-			i->second->saveGame(h, version);
-		}
-	}
-}
-
-void CClient::serialize(BinaryDeserializer & h, const int version, const std::set<PlayerColor> & playerIDs)
-{
-	assert(!h.saving);
-	bool hotSeat = 1;//TODO:COMPATIBILITY
-	h & hotSeat;
-	{
-		ui8 players = 0; //fix for uninitialized warning
-		h & players;
-
-		for(int i=0; i < players; i++)
-		{
-			std::string dllname;
-			PlayerColor pid;
-			bool isHuman = false;
-
-			h & pid;
-			h & dllname;
-			h & isHuman;
-			LOG_TRACE_PARAMS(logGlobal, "Loading player %s interface", pid);
-
-			std::shared_ptr<CGameInterface> nInt;
-			if(dllname.length())
-			{
-				if(pid == PlayerColor::NEUTRAL)
-				{
-					if(playerIDs.count(pid))
+					if(CSH->getPlayers().count(pid))
 						installNewBattleInterface(CDynLibHandler::getNewBattleAI(dllname), pid);
 					//TODO? consider serialization
 					continue;
@@ -620,6 +458,7 @@ void CClient::serialize(BinaryDeserializer & h, const int version, const std::se
 			nInt->playerID = pid;
 
 			nInt->loadGame(h, version);
+			/* MPTODO
 			if(settings["session"]["onlyai"].Bool() && isHuman)
 			{
 				removeGUI();
@@ -631,12 +470,48 @@ void CClient::serialize(BinaryDeserializer & h, const int version, const std::se
 				nInt->playerID = pid;
 				installNewPlayerInterface(nInt, pid);
 				GH.totalRedraw();
+			}*/
+
+			if(!CSH->c->isHost())
+			{
+				if(!vstd::contains(CSH->getHumanColors(), pid))
+				{
+					logGlobal->warn("LOADING: I'm guest and player %s (%d) not mine. Reset PlayerInt for it!", pid.getStrCap(), pid.getNum());
+					nInt.reset();
+					continue;
+				}
+				else if(!isHuman)
+				{
+					logGlobal->warn("LOADING: I'm guest and player %s (%d) is now my player and not AI!", pid.getStrCap(), pid.getNum());
+					nInt.reset();
+					nInt = std::make_shared<CPlayerInterface>(pid);
+					nInt->playerID = pid; // MPTODO: is it needed? Something else too?
+				}
 			}
 			else
 			{
-				if(playerIDs.count(pid))
+				// It was human players before loading, but now we should make it into AI player
+				if(isHuman && vstd::contains(CSH->getPlayers(), pid) && !vstd::contains(CSH->getHumanColors(), pid))
+				{
+					logGlobal->warn("LOADING: I'm host and player %s (%d) is now AI!", pid.getStrCap(), pid.getNum());
+					nInt.reset();
+					dllname = aiNameForPlayer(false);
+					nInt = CDynLibHandler::getNewAI(dllname);
+					nInt->dllName = dllname;
+					nInt->human = false;
+					nInt->playerID = pid;
 					installNewPlayerInterface(nInt, pid);
+				}
+				else if(!isHuman && vstd::contains(CSH->getHumanColors(), pid))
+				{
+					logGlobal->warn("LOADING: I'm host and player %s (%d) is now my PINT!", pid.getStrCap(), pid.getNum());
+					nInt.reset();
+					nInt = std::make_shared<CPlayerInterface>(pid);
+					nInt->playerID = pid;
+				}
 			}
+			if(CSH->getPlayers().count(pid))
+				installNewPlayerInterface(nInt, pid);
 		}
 		if(settings["session"]["spectate"].Bool())
 		{
@@ -648,7 +523,7 @@ void CClient::serialize(BinaryDeserializer & h, const int version, const std::se
 			GH.totalRedraw();
 		}
 
-		if(playerIDs.count(PlayerColor::NEUTRAL))
+		if(CSH->getPlayers().count(PlayerColor::NEUTRAL))
 			loadNeutralBattleAI();
 	}
 }

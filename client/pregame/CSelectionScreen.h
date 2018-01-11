@@ -31,7 +31,6 @@ public:
 	CMenuScreen::EGameMode gameMode;
 	CMenuScreen::EState screenType; //new/save/load#Game
 	const CMapInfo * current;
-	StartInfo sInfo;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 
 	PlayerColor myFirstColor();

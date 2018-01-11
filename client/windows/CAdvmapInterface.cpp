@@ -928,7 +928,9 @@ void CAdvMapInt::activate()
 		}
 		minimap.activate();
 		terrain.activate();
-		LOCPLINT->cingconsole->activate();
+//MPTODO! BROKEN DURING LOADING FIXING
+// This one is cause crashes because LOCPLING is nullptr after interfaces added /removed during loading
+		//LOCPLINT->cingconsole->activate();
 
 		GH.fakeMouseMove(); //to restore the cursor
 	}

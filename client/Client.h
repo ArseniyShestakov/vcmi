@@ -118,11 +118,11 @@ public:
 
 	static ThreadSafeVector<int> waitingRequest;//FIXME: make this normal field (need to join all threads before client destruction)
 
+	void initMapHandler();
 	CClient();
 	~CClient();
 
 	void init();
-	void newGame(StartInfo *si);
 
 	void loadNeutralBattleAI();
 	void installNewPlayerInterface(std::shared_ptr<CGameInterface> gameInterface, boost::optional<PlayerColor> color, bool battlecb = false);
@@ -133,7 +133,8 @@ public:
 	void endGame(bool closeConnection = true);
 	void stopConnection();
 	void save(const std::string & fname);
-	void loadGame(StartInfo *si);
+	void loadGame();
+	void newGame();
 	void run();
 	void campaignMapFinished( std::shared_ptr<CCampaignState> camp );
 	void finishCampaign( std::shared_ptr<CCampaignState> camp );
@@ -220,9 +221,6 @@ public:
 
 	void serialize(BinarySerializer & h, const int version);
 	void serialize(BinaryDeserializer & h, const int version);
-
-	void serialize(BinarySerializer & h, const int version, const std::set<PlayerColor>& playerIDs);
-	void serialize(BinaryDeserializer & h, const int version, const std::set<PlayerColor>& playerIDs);
 	void battleFinished();
 
 	void startPlayerBattleAction(PlayerColor color);

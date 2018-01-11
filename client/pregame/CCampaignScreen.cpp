@@ -45,7 +45,7 @@
 
 #include "../../lib/mapObjects/CGHeroInstance.h"
 
-void startGame(StartInfo * options); // MPTODO
+void startGame();
 
 CCampaignScreen::CCampaignScreen(const JsonNode & config)
 {
@@ -633,7 +633,7 @@ void CBonusSelection::startMap()
 		auto exitCb = [=]()
 		{
 			logGlobal->info("Starting scenario %d", selectedMap);
-			CGP->showLoadingScreen(std::bind(&startGame, si));
+			CGP->showLoadingScreen(std::bind(&startGame));
 		};
 
 		const CCampaignScenario & scenario = ourCampaign->camp->scenarios[selectedMap];
