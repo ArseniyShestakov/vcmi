@@ -485,7 +485,6 @@ void CClient::serialize(BinaryDeserializer & h, const int version)
 					logGlobal->warn("LOADING: I'm guest and player %s (%d) is now my player and not AI!", pid.getStrCap(), pid.getNum());
 					nInt.reset();
 					nInt = std::make_shared<CPlayerInterface>(pid);
-					nInt->playerID = pid; // MPTODO: is it needed? Something else too?
 				}
 			}
 			else
@@ -507,7 +506,6 @@ void CClient::serialize(BinaryDeserializer & h, const int version)
 					logGlobal->warn("LOADING: I'm host and player %s (%d) is now my PINT!", pid.getStrCap(), pid.getNum());
 					nInt.reset();
 					nInt = std::make_shared<CPlayerInterface>(pid);
-					nInt->playerID = pid;
 				}
 			}
 			if(CSH->getPlayers().count(pid))
