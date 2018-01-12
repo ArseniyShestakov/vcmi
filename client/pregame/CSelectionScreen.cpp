@@ -87,7 +87,7 @@ public:
 
 static CApplier<CBaseForPGApply> * applier = nullptr;
 
-PlayerColor ISelectionScreenInfo::myFirstColor()
+PlayerColor ISelectionScreenInfo::myFirstColor() const
 {
 	for(auto & pair : CSH->sInfo.playerInfos)
 	{
@@ -98,15 +98,18 @@ PlayerColor ISelectionScreenInfo::myFirstColor()
 	return PlayerColor::CANNOT_DETERMINE;
 }
 
-bool ISelectionScreenInfo::isMyColor(PlayerColor color)
+bool ISelectionScreenInfo::isMyColor(PlayerColor color) const
 {
-	if(CSH->c && playerNames[CSH->sInfo.playerInfos[color].playerID].connection == CSH->c->connectionID)
-		return true;
-
+	ui8 id = CSH->sInfo.playerInfos[color].playerID;
+	if(CSH->c && playerNames.find(id) != playerNames.end())
+	{
+		if(playerNames.find(id)->second.connection == CSH->c->connectionID)
+			return true;
+	}
 	return false;
 }
 
-ui8 ISelectionScreenInfo::myFirstId()
+ui8 ISelectionScreenInfo::myFirstId() const
 {
 	for(auto & pair : playerNames)
 	{
@@ -117,7 +120,7 @@ ui8 ISelectionScreenInfo::myFirstId()
 	return 0;
 }
 
-bool ISelectionScreenInfo::isMyId(ui8 id)
+bool ISelectionScreenInfo::isMyId(ui8 id) const
 {
 	for(auto & pair : playerNames)
 	{
@@ -126,7 +129,7 @@ bool ISelectionScreenInfo::isMyId(ui8 id)
 	}
 	return false;
 }
-std::vector<ui8> ISelectionScreenInfo::getMyIds()
+std::vector<ui8> ISelectionScreenInfo::getMyIds() const
 {
 	std::vector<ui8> ids;
 
@@ -172,7 +175,7 @@ void ISelectionScreenInfo::setPlayer(PlayerSettings & pset, ui8 player)
 	CGPreGame::setPlayer(pset, player, playerNames);
 }
 
-ui8 ISelectionScreenInfo::getIdOfFirstUnallocatedPlayer()
+ui8 ISelectionScreenInfo::getIdOfFirstUnallocatedPlayer() const
 {
 	for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
 	{
@@ -653,18 +656,17 @@ void CSelectionScreen::setSInfo(const StartInfo & si)
 	GH.totalRedraw();
 }
 
-void CSelectionScreen::propagateNames()
+void CSelectionScreen::propagateNames() const
 {
 	PlayersNames pn;
 	pn.playerNames = playerNames;
 	*CSH->c << &pn;
 }
 
-void CSelectionScreen::propagateOptions()
+void CSelectionScreen::propagateOptions() const
 {
 	if(isHost() && CSH->c)
 	{
-
 		UpdateStartOptions ups(CSH->sInfo);
 		*CSH->c << &ups;
 	}

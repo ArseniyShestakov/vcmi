@@ -33,22 +33,22 @@ public:
 	const CMapInfo * current;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 
-	PlayerColor myFirstColor();
-	bool isMyColor(PlayerColor color);
-	ui8 myFirstId();
-	bool isMyId(ui8 id);
-	std::vector<ui8> getMyIds();
+	PlayerColor myFirstColor() const;
+	bool isMyColor(PlayerColor color) const;
+	ui8 myFirstId() const;
+	bool isMyId(ui8 id) const;
+	std::vector<ui8> getMyIds() const;
 	ISelectionScreenInfo();
 	virtual ~ISelectionScreenInfo();
 	virtual void update(){};
-	virtual void propagateOptions() {};
+	virtual void propagateOptions() const {};
 	virtual void postRequest(ui8 what, ui8 dir, PlayerColor player) {};
 	virtual void postChatMessage(const std::string & txt){};
 
 	void setPlayer(PlayerSettings & pset, ui8 player);
 	void updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader);
 
-	ui8 getIdOfFirstUnallocatedPlayer(); //returns 0 if none
+	ui8 getIdOfFirstUnallocatedPlayer() const; //returns 0 if none
 	bool isGuest() const;
 	bool isHost() const;
 
@@ -89,8 +89,8 @@ public:
 	void processPacks();
 
 	void setSInfo(const StartInfo & si);
-	void propagateNames();
-	void propagateOptions() override;
+	void propagateNames() const;
+	void propagateOptions() const override;
 	void postRequest(ui8 what, ui8 dir, PlayerColor player) override;
 	void postChatMessage(const std::string & txt) override;
 };
