@@ -198,7 +198,6 @@ public:
 	void showComp(const Component &comp, std::string message) override; //display component in the advmapint infobox
 	void saveGame(BinarySerializer & h, const int version) override; //saving
 	void loadGame(BinaryDeserializer & h, const int version) override; //loading
-	void restoreGame(); //MPTODO
 	void showWorldViewEx(const std::vector<ObjectPosInfo> & objectPositions) override;
 
 	//for battles

@@ -147,9 +147,7 @@ CPlayerInterface::~CPlayerInterface()
 void CPlayerInterface::init(std::shared_ptr<CCallback> CB)
 {
 	cb = CB;
-
-	if (!towns.size() && !wanderingHeroes.size())
-		initializeHeroTownList();
+	initializeHeroTownList();
 
 	// always recreate advmap interface to avoid possible memory-corruption bugs
 	if (adventureInt)
@@ -1408,13 +1406,6 @@ void CPlayerInterface::loadGame( BinaryDeserializer & h, const int version )
 	firstCall = -1;
 }
 
-void CPlayerInterface::restoreGame()
-{
-	EVENT_HANDLER_CALLED_BY_CLIENT;
-	towns = cb->getTownsInfo();
-	wanderingHeroes = cb->getHeroesInfo();
-}
-
 void CPlayerInterface::moveHero( const CGHeroInstance *h, CGPath path )
 {
 	LOG_TRACE(logGlobal);
@@ -1557,45 +1548,20 @@ void CPlayerInterface::objectPropertyChanged(const SetObjectProperty * sop)
 
 void CPlayerInterface::initializeHeroTownList()
 {
-	std::vector<const CGHeroInstance*> allHeroes = cb->getHeroesInfo();
-	/*
-	std::vector <const CGHeroInstance *> newWanderingHeroes;
-
-	//applying current heroes order to new heroes info
-	int j;
-	for (int i = 0; i < wanderingHeroes.size(); i++)
-		if ((j = vstd::find_pos(allHeroes, wanderingHeroes[i])) >= 0)
-			if (!allHeroes[j]->inTownGarrison)
-			{
-				newWanderingHeroes += allHeroes[j];
-				allHeroes -= allHeroes[j];
-			}
-	//all the rest of new heroes go the end of the list
-	wanderingHeroes.clear();
-	wanderingHeroes = newWanderingHeroes;
-	newWanderingHeroes.clear();*/
-
-	for (auto & allHeroe : allHeroes)
-		if (!allHeroe->inTownGarrison)
-			wanderingHeroes.push_back(allHeroe);
-
-	std::vector<const CGTownInstance*> allTowns = cb->getTownsInfo();
-	/*
-	std::vector<const CGTownInstance*> newTowns;
-	for (int i = 0; i < towns.size(); i++)
-		if ((j = vstd::find_pos(allTowns, towns[i])) >= 0)
+	if(!wanderingHeroes.size())
+	{
+		std::vector<const CGHeroInstance*> heroes = cb->getHeroesInfo();
+		for(auto & hero : heroes)
 		{
-			newTowns += allTowns[j];
-			allTowns -= allTowns[j];
+			if(!hero->inTownGarrison)
+				wanderingHeroes.push_back(hero);
 		}
+	}
 
-	towns.clear();
-	towns = newTowns;
-	newTowns.clear();*/
-	for (auto & allTown : allTowns)
-		towns.push_back(allTown);
+	if(!towns.size())
+		towns = cb->getTownsInfo();
 
-	if (adventureInt)
+	if(adventureInt)
 		adventureInt->updateNextHero(nullptr);
 }
 
