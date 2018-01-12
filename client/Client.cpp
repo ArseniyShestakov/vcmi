@@ -335,23 +335,8 @@ void CClient::newGame()
 
 	// Now after possible random map gen, we know exact player count.
 	// Inform server about how many players client handles
-	enum {SINGLE, HOST, GUEST} networkMode = SINGLE;
-	networkMode = CSH->c->isHost() ? HOST : GUEST;
-	std::set<PlayerColor> myPlayers;
-	for(auto & elem : gs->scenarioOps->playerInfos)
-	{
-		if((networkMode != SINGLE && vstd::contains(CSH->myPlayers, elem.second.playerID))      //multi - client has only "its players"
-		   || (networkMode == HOST && elem.second.playerID == PlayerSettings::PLAYER_AI))//multi - host has all AI players
-		{
-			myPlayers.insert(elem.first); //add player
-			logGlobal->warn("MY player %d", elem.first.getStrCap());
-		}
-	}
-	logGlobal->warn("MY connectionId %d", CSH->c->connectionID);
-	if(networkMode != GUEST)
-		myPlayers.insert(PlayerColor::NEUTRAL);
-
-	*CSH->c << myPlayers;
+	CSH->sInfo = *si;
+	*CSH->c << CSH->getPlayers();
 
 	initMapHandler();
 
@@ -360,7 +345,7 @@ void CClient::newGame()
 	{
 		PlayerColor color = elem.first;
 		gs->currentPlayer = color;
-		if(!vstd::contains(myPlayers, color))
+		if(!vstd::contains(CSH->getPlayers(), color))
 			continue;
 
 		logNetwork->trace("Preparing interface for player %s", color.getStr());
