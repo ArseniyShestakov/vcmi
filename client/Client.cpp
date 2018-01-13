@@ -179,6 +179,13 @@ void CClient::waitForMoveAndSend(PlayerColor color)
 void CClient::run()
 {
 	setThreadName("CClient::run");
+
+	*CSH->c << CSH->getPlayers();
+
+	CSH->c->enableStackSendingByID();
+	CSH->c->disableSmartPointerSerialization();
+	CSH->c->addStdVecItems(gs);
+
 	try
 	{
 		while(!terminate)
@@ -304,26 +311,17 @@ void CClient::loadGame()
 	initMapHandler();
 
 	serialize(loader->serializer, loader->serializer.fileVersion);
-	*CSH->c << CSH->getPlayers();
-	CSH->c->addStdVecItems(gs); /*why is this here?*/
 
 	//*loader >> *this;
 ////	logNetwork->info("Loaded client part of save %d ms", tmh.getDiff());
 
 ////	logNetwork->info("Sent info to server: %d ms", tmh.getDiff());
-
-	//*serv << clientPlayers;
-	CSH->c->enableStackSendingByID();
-	CSH->c->disableSmartPointerSerialization();
 }
 
 void CClient::newGame()
 {
 	CStopWatch tmh;
 	logNetwork->info("\tSending/Getting info to/from the server: %d ms", tmh.getDiff());
-	CSH->c->enableStackSendingByID();
-	CSH->c->disableSmartPointerSerialization();
-
 	// Initialize game state
 	gs = new CGameState();
 	logNetwork->info("\tCreating gamestate: %i",tmh.getDiff());
@@ -336,8 +334,6 @@ void CClient::newGame()
 	// Now after possible random map gen, we know exact player count.
 	// Inform server about how many players client handles
 	CSH->sInfo = *si;
-	*CSH->c << CSH->getPlayers();
-
 	initMapHandler();
 
 	int humanPlayers = 0;
@@ -367,8 +363,6 @@ void CClient::newGame()
 		installNewPlayerInterface(std::make_shared<CPlayerInterface>(PlayerColor::SPECTATOR), PlayerColor::SPECTATOR, true);
 	}
 	loadNeutralBattleAI();
-
-	CSH->c->addStdVecItems(gs);
 }
 
 void CClient::serialize(BinarySerializer & h, const int version)
