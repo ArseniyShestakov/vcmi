@@ -133,6 +133,7 @@ public:
 	void endGame(bool closeConnection = true);
 	void stopConnection();
 	void save(const std::string & fname);
+	void initPlayerInterfaces();
 	void loadGame();
 	void newGame();
 	void run();

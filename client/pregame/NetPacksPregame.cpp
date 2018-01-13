@@ -48,7 +48,7 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 		SEL->playerNames.insert(player);
 
 		//put new player in first slot with AI
-		for(auto & elem : CSH->sInfo.playerInfos)
+		for(auto & elem : CSH->si.playerInfos)
 		{
 			if(!elem.second.playerID && !elem.second.compOnly)
 			{
@@ -110,7 +110,7 @@ void RequestOptionsChange::apply(CSelectionScreen * selScreen)
 	if(!selScreen->isHost())
 		return;
 
-	PlayerColor color = CSH->sInfo.getPlayersSettings(playerID)->color;
+	PlayerColor color = CSH->si.getPlayersSettings(playerID)->color;
 
 	switch(what)
 	{
@@ -138,7 +138,7 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 
 		selScreen->playerNames.erase(pair.first);
 
-		if(PlayerSettings * s = CSH->sInfo.getPlayersSettings(pair.first)) //it's possible that player was unallocated
+		if(PlayerSettings * s = CSH->si.getPlayersSettings(pair.first)) //it's possible that player was unallocated
 		{
 			selScreen->setPlayer(*s, 0);
 			selScreen->opt->entries[s->color]->selectButtons();

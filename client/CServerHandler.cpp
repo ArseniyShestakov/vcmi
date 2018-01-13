@@ -25,6 +25,10 @@
 #include <boost/uuid/uuid_io.hpp>
 #include <boost/uuid/uuid_generators.hpp>
 
+// MPTODO: for CServerHandler::getStartInfo
+#include "../lib/rmg/CMapGenOptions.h"
+#include "../lib/mapping/CCampaignHandler.h"
+
 extern std::string NAME;
 
 void CServerHandler::startServer()
@@ -216,7 +220,7 @@ bool CServerHandler::isServerLocal()
 std::set<PlayerColor> CServerHandler::getPlayers()
 {
 	std::set<PlayerColor> players;
-	for(auto & elem : sInfo.playerInfos)
+	for(auto & elem : si.playerInfos)
 	{
 		if(CSH->c->isHost() && elem.second.playerID == PlayerSettings::PLAYER_AI || vstd::contains(CSH->myPlayers, elem.second.playerID))
 		{
@@ -232,7 +236,7 @@ std::set<PlayerColor> CServerHandler::getPlayers()
 std::set<PlayerColor> CServerHandler::getHumanColors()
 {
 	std::set<PlayerColor> players;
-	for(auto & elem : sInfo.playerInfos)
+	for(auto & elem : si.playerInfos)
 	{
 		if(vstd::contains(CSH->myPlayers, elem.second.playerID))
 		{

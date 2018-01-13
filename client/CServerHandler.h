@@ -37,7 +37,7 @@ public:
 
 	static CondSh<bool> serverAlive;  //used to prevent game start from executing if server is already running
 
-	StartInfo sInfo;
+	StartInfo si;
 	std::vector<std::string> myNames;
 	std::vector<ui8> myPlayers;
 	std::set<PlayerColor> getPlayers();

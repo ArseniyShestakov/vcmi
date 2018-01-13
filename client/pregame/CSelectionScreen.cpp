@@ -89,7 +89,7 @@ static CApplier<CBaseForPGApply> * applier = nullptr;
 
 PlayerColor ISelectionScreenInfo::myFirstColor() const
 {
-	for(auto & pair : CSH->sInfo.playerInfos)
+	for(auto & pair : CSH->si.playerInfos)
 	{
 		if(isMyColor(pair.first))
 			return pair.first;
@@ -100,7 +100,7 @@ PlayerColor ISelectionScreenInfo::myFirstColor() const
 
 bool ISelectionScreenInfo::isMyColor(PlayerColor color) const
 {
-	ui8 id = CSH->sInfo.playerInfos[color].playerID;
+	ui8 id = CSH->si.playerInfos[color].playerID;
 	if(CSH->c && playerNames.find(id) != playerNames.end())
 	{
 		if(playerNames.find(id)->second.connection == CSH->c->connectionID)
@@ -137,13 +137,10 @@ std::vector<ui8> ISelectionScreenInfo::getMyIds() const
 	{
 		if(pair.second.connection == CSH->c->connectionID)
 		{
-			for(auto & elem : CSH->sInfo.playerInfos)
+			for(auto & elem : CSH->si.playerInfos)
 			{
 				if(elem.second.playerID == pair.first)
-				{
-					logGlobal->warn("SEL: MY player %d run color %s ", static_cast<int>(elem.second.playerID), elem.first.getStrCap());
 					ids.push_back(elem.second.playerID);
-				}
 			}
 		}
 	}
@@ -179,7 +176,7 @@ ui8 ISelectionScreenInfo::getIdOfFirstUnallocatedPlayer() const
 {
 	for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
 	{
-		if(!CSH->sInfo.getPlayersSettings(i->first))
+		if(!CSH->si.getPlayersSettings(i->first))
 			return i->first;
 	}
 
@@ -237,11 +234,11 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		pos = bg->center();
 	}
 
-	CSH->sInfo.difficulty = 1;
+	CSH->si.difficulty = 1;
 	current = nullptr;
 
-	CSH->sInfo.mode = (Type == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME);
-	CSH->sInfo.turnTime = 0;
+	CSH->si.mode = (Type == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME);
+	CSH->si.turnTime = 0;
 	curTab = nullptr;
 
 	card = new InfoCard(); //right info card
@@ -412,25 +409,25 @@ void CSelectionScreen::changeSelection(const CMapInfo * to)
 	current = to;
 
 	if(to && (screenType == CMenuScreen::loadGame || screenType == CMenuScreen::saveGame))
-		CSH->sInfo.difficulty = to->scenarioOpts->difficulty;
+		CSH->si.difficulty = to->scenarioOpts->difficulty;
 
 	if(screenType != CMenuScreen::campaignList)
 	{
 		std::unique_ptr<CMapHeader> emptyHeader;
 		if(to)
-			updateStartInfo(to->fileURI, CSH->sInfo, to->mapHeader);
+			updateStartInfo(to->fileURI, CSH->si, to->mapHeader);
 		else
-			updateStartInfo("", CSH->sInfo, emptyHeader);
+			updateStartInfo("", CSH->si, emptyHeader);
 
 		if(screenType == CMenuScreen::newGame)
 		{
 			if(to && to->isRandomMap)
 			{
-				CSH->sInfo.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
+				CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
 			}
 			else
 			{
-				CSH->sInfo.mapGenOptions.reset();
+				CSH->si.mapGenOptions.reset();
 			}
 		}
 	}
@@ -445,7 +442,7 @@ void CSelectionScreen::changeSelection(const CMapInfo * to)
 		SelectMap sm(*to);
 		*CSH->c << &sm;
 
-		UpdateStartOptions uso(CSH->sInfo);
+		UpdateStartOptions uso(CSH->si);
 		*CSH->c << &uso;
 	}
 }
@@ -462,11 +459,11 @@ void CSelectionScreen::startScenario()
 	{
 		//there must be at least one human player before game can be started
 		std::map<PlayerColor, PlayerSettings>::const_iterator i;
-		for(i = CSH->sInfo.playerInfos.cbegin(); i != CSH->sInfo.playerInfos.cend(); i++)
+		for(i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
 			if(i->second.playerID != PlayerSettings::PLAYER_AI)
 				break;
 
-		if(i == CSH->sInfo.playerInfos.cend())
+		if(i == CSH->si.playerInfos.cend())
 		{
 			GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[530])); //You must position yourself prior to starting the game.
 			return;
@@ -487,23 +484,23 @@ void CSelectionScreen::startScenario()
 		if(!current)
 			return;
 
-		if(CSH->sInfo.mapGenOptions)
+		if(CSH->si.mapGenOptions)
 		{
 			//copy settings from interface to actual options. TODO: refactor, it used to have no effect at all -.-
-			CSH->sInfo.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
+			CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
 
 			// Update player settings for RMG
-			for(const auto & psetPair : CSH->sInfo.playerInfos)
+			for(const auto & psetPair : CSH->si.playerInfos)
 			{
 				const auto & pset = psetPair.second;
-				CSH->sInfo.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
+				CSH->si.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
 				if(pset.playerID != PlayerSettings::PLAYER_AI)
 				{
-					CSH->sInfo.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
+					CSH->si.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
 				}
 			}
 
-			if(!CSH->sInfo.mapGenOptions->checkOptions())
+			if(!CSH->si.mapGenOptions->checkOptions())
 			{
 				GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[751]));
 				return;
@@ -513,7 +510,7 @@ void CSelectionScreen::startScenario()
 		CGPreGame::saveGameName.clear();
 		if(screenType == CMenuScreen::loadGame)
 		{
-			CGPreGame::saveGameName = CSH->sInfo.mapname;
+			CGPreGame::saveGameName = CSH->si.mapname;
 		}
 		CSH->myPlayers = getMyIds();
 		CGP->removeFromGui();
@@ -545,7 +542,7 @@ void CSelectionScreen::startScenario()
 void CSelectionScreen::difficultyChange(int to)
 {
 	assert(screenType == CMenuScreen::newGame);
-	CSH->sInfo.difficulty = to;
+	CSH->si.difficulty = to;
 	propagateOptions();
 	redraw();
 }
@@ -569,7 +566,7 @@ void CSelectionScreen::handleConnection()
 			SelectMap sm(*current);
 			*CSH->c << &sm;
 
-			UpdateStartOptions uso(CSH->sInfo);
+			UpdateStartOptions uso(CSH->si);
 			*CSH->c << &uso;
 		}
 	}
@@ -631,7 +628,7 @@ void CSelectionScreen::processPacks()
 
 void CSelectionScreen::setSInfo(const StartInfo & si)
 {
-	CSH->sInfo = si;
+	CSH->si = si;
 	if(current)
 		opt->recreate(); //will force to recreate using current sInfo
 
@@ -654,7 +651,7 @@ void CSelectionScreen::propagateOptions() const
 {
 	if(isHost() && CSH->c)
 	{
-		UpdateStartOptions ups(CSH->sInfo);
+		UpdateStartOptions ups(CSH->si);
 		*CSH->c << &ups;
 	}
 }
@@ -664,7 +661,7 @@ void CSelectionScreen::postRequest(ui8 what, ui8 dir, PlayerColor player)
 	if(!isGuest())
 		return;
 
-	RequestOptionsChange roc(what, dir, CSH->sInfo.playerInfos[player].playerID);
+	RequestOptionsChange roc(what, dir, CSH->si.playerInfos[player].playerID);
 	*CSH->c << &roc;
 }
 
@@ -681,7 +678,7 @@ CSavingScreen::CSavingScreen()
 	: CSelectionScreen(CMenuScreen::saveGame, (LOCPLINT->cb->getStartInfo()->mode == StartInfo::CAMPAIGN ? CMenuScreen::SINGLE_CAMPAIGN : CMenuScreen::MULTI_NETWORK_HOST))
 {
 	ourGame = mapInfoFromGame();
-	CSH->sInfo = *LOCPLINT->cb->getStartInfo();
+	CSH->si = *LOCPLINT->cb->getStartInfo();
 }
 
 CSavingScreen::~CSavingScreen()
@@ -777,7 +774,7 @@ void InfoCard::showAll(SDL_Surface * to)
 		{
 			auto playerNames = SEL->playerNames;
 			int playerSoFar = 0;//MPTODO
-			for(auto i = CSH->sInfo.playerInfos.cbegin(); i != CSH->sInfo.playerInfos.cend(); i++)
+			for(auto i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
 			{
 				if(i->second.playerID != PlayerSettings::PLAYER_AI)
 				{
@@ -852,7 +849,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			else
 				myT = TeamID::NO_TEAM;
 
-			for(auto i = CSH->sInfo.playerInfos.cbegin(); i != CSH->sInfo.playerInfos.cend(); i++)
+			for(auto i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
 			{
 				int * myx = ((i->first == SEL->myFirstColor() || SEL->current->mapHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
 				IImage * flag = sFlags->getImage(i->first.getNum(), 0);
@@ -862,7 +859,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			}
 
 			std::string tob;
-			switch(CSH->sInfo.difficulty)
+			switch(CSH->si.difficulty)
 			{
 			case 0:
 				tob = "80%";
@@ -926,7 +923,7 @@ void InfoCard::changeSelection(const CMapInfo * to)
 		if(SEL->screenType != CMenuScreen::newGame && SEL->screenType != CMenuScreen::campaignList)
 		{
 			//difficulty->block(true);
-			difficulty->setSelected(CSH->sInfo.difficulty);
+			difficulty->setSelected(CSH->si.difficulty);
 		}
 	}
 	redraw();
@@ -1040,7 +1037,7 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 	center(pos);
 
 	assert(LOCPLINT);
-	CSH->sInfo = *LOCPLINT->cb->getStartInfo();
+	CSH->si = *LOCPLINT->cb->getStartInfo(); // MPTODO
 	assert(!SEL->current);
 	current = mapInfoFromGame();
 

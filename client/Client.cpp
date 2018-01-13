@@ -269,79 +269,15 @@ void CClient::endGame(bool closeConnection)
 	logNetwork->info("Client stopped.");
 }
 
-void CClient::loadGame()
+void CClient::initPlayerInterfaces()
 {
-	StartInfo * si = &CSH->sInfo;
-	logNetwork->info("Loading procedure started!");
-
-	std::unique_ptr<CLoadFile> loader;
-	try
-	{
-		boost::filesystem::path clientSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(si->mapname, EResType::CLIENT_SAVEGAME));
-		boost::filesystem::path controlServerSaveName;
-
-		if (CResourceHandler::get("local")->existsResource(ResourceID(si->mapname, EResType::SERVER_SAVEGAME)))
-		{
-			controlServerSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(si->mapname, EResType::SERVER_SAVEGAME));
-		}
-		else// create entry for server savegame. Triggered if save was made after launch and not yet present in res handler
-		{
-			controlServerSaveName = boost::filesystem::path(clientSaveName).replace_extension(".vsgm1");
-			CResourceHandler::get("local")->createResource(controlServerSaveName.string(), true);
-		}
-
-		if(clientSaveName.empty())
-			throw std::runtime_error("Cannot open client part of " + si->mapname);
-		if(controlServerSaveName.empty() || !boost::filesystem::exists(controlServerSaveName))
-			throw std::runtime_error("Cannot open server part of " + si->mapname);
-
-		{
-			CLoadIntegrityValidator checkingLoader(clientSaveName, controlServerSaveName, MINIMAL_SERIALIZATION_VERSION);
-			loadCommonState(checkingLoader);
-			loader = checkingLoader.decay();
-		}
-
-	}
-	catch(std::exception &e)
-	{
-		logGlobal->error("Cannot load game %s. Error: %s", si->mapname, e.what());
-		throw; //obviously we cannot continue here
-	}
-
-	initMapHandler();
-
-	serialize(loader->serializer, loader->serializer.fileVersion);
-
-	//*loader >> *this;
-////	logNetwork->info("Loaded client part of save %d ms", tmh.getDiff());
-
-////	logNetwork->info("Sent info to server: %d ms", tmh.getDiff());
-}
-
-void CClient::newGame()
-{
-	CStopWatch tmh;
-	logNetwork->info("\tSending/Getting info to/from the server: %d ms", tmh.getDiff());
-	// Initialize game state
-	gs = new CGameState();
-	logNetwork->info("\tCreating gamestate: %i",tmh.getDiff());
-
-	StartInfo * si;
-	*CSH->c >> si;
-	gs->init(si, settings["general"]["saveRandomMaps"].Bool());
-	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
-
-	// Now after possible random map gen, we know exact player count.
-	// Inform server about how many players client handles
-	CSH->sInfo = *si;
-	initMapHandler();
-
-	int humanPlayers = 0;
-	for(auto & elem : gs->scenarioOps->playerInfos)//initializing interfaces for players
+	for(auto & elem : CSH->si.playerInfos) // MPTODO gs->scenarioOps->playerInfos
 	{
 		PlayerColor color = elem.first;
-		gs->currentPlayer = color;
 		if(!vstd::contains(CSH->getPlayers(), color))
+			continue;
+
+		if(vstd::contains(playerint, color))
 			continue;
 
 		logNetwork->trace("Preparing interface for player %s", color.getStr());
@@ -354,7 +290,6 @@ void CClient::newGame()
 		else
 		{
 			installNewPlayerInterface(std::make_shared<CPlayerInterface>(color), color);
-			humanPlayers++;
 		}
 	}
 
@@ -362,146 +297,148 @@ void CClient::newGame()
 	{
 		installNewPlayerInterface(std::make_shared<CPlayerInterface>(PlayerColor::SPECTATOR), PlayerColor::SPECTATOR, true);
 	}
-	loadNeutralBattleAI();
+
+	if(CSH->getPlayers().count(PlayerColor::NEUTRAL))
+		loadNeutralBattleAI();
+}
+
+void CClient::loadGame()
+{
+	logNetwork->info("Loading procedure started!");
+
+	std::unique_ptr<CLoadFile> loader;
+	try
+	{
+		boost::filesystem::path clientSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(CSH->si.mapname, EResType::CLIENT_SAVEGAME));
+		boost::filesystem::path controlServerSaveName;
+
+		if (CResourceHandler::get("local")->existsResource(ResourceID(CSH->si.mapname, EResType::SERVER_SAVEGAME)))
+		{
+			controlServerSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(CSH->si.mapname, EResType::SERVER_SAVEGAME));
+		}
+		else// create entry for server savegame. Triggered if save was made after launch and not yet present in res handler
+		{
+			controlServerSaveName = boost::filesystem::path(clientSaveName).replace_extension(".vsgm1");
+			CResourceHandler::get("local")->createResource(controlServerSaveName.string(), true);
+		}
+
+		if(clientSaveName.empty())
+			throw std::runtime_error("Cannot open client part of " + CSH->si.mapname);
+		if(controlServerSaveName.empty() || !boost::filesystem::exists(controlServerSaveName))
+			throw std::runtime_error("Cannot open server part of " + CSH->si.mapname);
+
+		{
+			CLoadIntegrityValidator checkingLoader(clientSaveName, controlServerSaveName, MINIMAL_SERIALIZATION_VERSION);
+			loadCommonState(checkingLoader);
+			loader = checkingLoader.decay();
+		}
+
+	}
+	catch(std::exception &e)
+	{
+		logGlobal->error("Cannot load game %s. Error: %s", CSH->si.mapname, e.what());
+		throw; //obviously we cannot continue here
+	}
+	initMapHandler();
+
+	serialize(loader->serializer, loader->serializer.fileVersion);
+	initPlayerInterfaces();
+}
+
+void CClient::newGame()
+{
+	CStopWatch tmh;
+	logNetwork->info("\tSending/Getting info to/from the server: %d ms", tmh.getDiff());
+	gs = new CGameState();
+	logNetwork->info("\tCreating gamestate: %i",tmh.getDiff());
+
+	StartInfo * si;
+	*CSH->c >> si;
+	CSH->si = *si;
+	gs->init(&CSH->si, settings["general"]["saveRandomMaps"].Bool());
+	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
+
+	initMapHandler();
+	initPlayerInterfaces();
 }
 
 void CClient::serialize(BinarySerializer & h, const int version)
 {
 	assert(h.saving);
-	bool hotSeat = 1;//TODO:COMPATIBILITY
-	h & hotSeat;
-	{
-		ui8 players = playerint.size();
-		h & players;
+	ui8 players = playerint.size();
+	h & players;
 
-		for(auto i = playerint.begin(); i != playerint.end(); i++)
-		{
-			LOG_TRACE_PARAMS(logGlobal, "Saving player %s interface", i->first);
-			assert(i->first == i->second->playerID);
-			h & i->first;
-			h & i->second->dllName;
-			h & i->second->human;
-			i->second->saveGame(h, version);
-		}
+	for(auto i = playerint.begin(); i != playerint.end(); i++)
+	{
+		logGlobal->trace("Saving player %s interface", i->first);
+		assert(i->first == i->second->playerID);
+		h & i->first;
+		h & i->second->dllName;
+		h & i->second->human;
+		i->second->saveGame(h, version);
 	}
 }
 
 void CClient::serialize(BinaryDeserializer & h, const int version)
 {
-	for(auto id : CSH->myPlayers)
-	{
-		logGlobal->warn("LOADING: MY PLAYER: %d", static_cast<int>(id));
-	}
 	assert(!h.saving);
-	bool hotSeat = 1;//TODO:COMPATIBILITY
-	h & hotSeat;
+	if(version < 780)
 	{
-		ui8 players = 0; //fix for uninitialized warning
-		h & players;
+		bool hotSeat = false;
+		h & hotSeat;
+	}
 
-		for(int i=0; i < players; i++)
+	ui8 players = 0;
+	h & players;
+
+	for(int i = 0; i < players; i++)
+	{
+		std::string dllname;
+		PlayerColor pid;
+		bool isHuman = false;
+
+		h & pid;
+		h & dllname;
+		h & isHuman;
+		assert(dllname.length() == 0 || !isHuman);
+		if(pid == PlayerColor::NEUTRAL)
 		{
-			std::string dllname;
-			PlayerColor pid;
-			bool isHuman = false;
-
-			h & pid;
-			h & dllname;
-			h & isHuman;
-			LOG_TRACE_PARAMS(logGlobal, "Loading player %s interface", pid);
-
-			std::shared_ptr<CGameInterface> nInt;
-			if(dllname.length())
-			{
-				if(pid == PlayerColor::NEUTRAL)
-				{
-					if(CSH->getPlayers().count(pid))
-						installNewBattleInterface(CDynLibHandler::getNewBattleAI(dllname), pid);
-					//TODO? consider serialization
-					continue;
-				}
-				else
-				{
-					assert(!isHuman);
-					nInt = CDynLibHandler::getNewAI(dllname);
-				}
-			}
-			else
-			{
-				assert(isHuman);
-				nInt = std::make_shared<CPlayerInterface>(pid);
-			}
-
-			nInt->dllName = dllname;
-			nInt->human = isHuman;
-			nInt->playerID = pid;
-
-			nInt->loadGame(h, version);
-			/* MPTODO
-			if(settings["session"]["onlyai"].Bool() && isHuman)
-			{
-				removeGUI();
-				nInt.reset();
-				dllname = aiNameForPlayer(false);
-				nInt = CDynLibHandler::getNewAI(dllname);
-				nInt->dllName = dllname;
-				nInt->human = false;
-				nInt->playerID = pid;
-				installNewPlayerInterface(nInt, pid);
-				GH.totalRedraw();
-			}*/
-
-			if(!CSH->c->isHost())
-			{
-				if(!vstd::contains(CSH->getHumanColors(), pid))
-				{
-					logGlobal->warn("LOADING: I'm guest and player %s (%d) not mine. Reset PlayerInt for it!", pid.getStrCap(), pid.getNum());
-					nInt.reset();
-					continue;
-				}
-				else if(!isHuman)
-				{
-					logGlobal->warn("LOADING: I'm guest and player %s (%d) is now my player and not AI!", pid.getStrCap(), pid.getNum());
-					nInt.reset();
-					nInt = std::make_shared<CPlayerInterface>(pid);
-				}
-			}
-			else
-			{
-				// It was human players before loading, but now we should make it into AI player
-				if(isHuman && vstd::contains(CSH->getPlayers(), pid) && !vstd::contains(CSH->getHumanColors(), pid))
-				{
-					logGlobal->warn("LOADING: I'm host and player %s (%d) is now AI!", pid.getStrCap(), pid.getNum());
-					nInt.reset();
-					dllname = aiNameForPlayer(false);
-					nInt = CDynLibHandler::getNewAI(dllname);
-					nInt->dllName = dllname;
-					nInt->human = false;
-					nInt->playerID = pid;
-					installNewPlayerInterface(nInt, pid);
-				}
-				else if(!isHuman && vstd::contains(CSH->getHumanColors(), pid))
-				{
-					logGlobal->warn("LOADING: I'm host and player %s (%d) is now my PINT!", pid.getStrCap(), pid.getNum());
-					nInt.reset();
-					nInt = std::make_shared<CPlayerInterface>(pid);
-				}
-			}
-			if(CSH->getPlayers().count(pid))
-				installNewPlayerInterface(nInt, pid);
-		}
-		if(settings["session"]["spectate"].Bool())
-		{
-			removeGUI();
-			auto p = std::make_shared<CPlayerInterface>(PlayerColor::SPECTATOR);
-			installNewPlayerInterface(p, PlayerColor::SPECTATOR, true);
-			GH.curInt = p.get();
-			LOCPLINT->activateForSpectator();
-			GH.totalRedraw();
+			logGlobal->trace("Neutral battle interfaces are not serialized.");
+			continue;
 		}
 
-		if(CSH->getPlayers().count(PlayerColor::NEUTRAL))
-			loadNeutralBattleAI();
+		logGlobal->trace("Loading player %s interface", pid);
+		std::shared_ptr<CGameInterface> nInt;
+		if(dllname.length())
+			nInt = CDynLibHandler::getNewAI(dllname);
+		else
+			nInt = std::make_shared<CPlayerInterface>(pid);
+
+		nInt->dllName = dllname;
+		nInt->human = isHuman;
+		nInt->playerID = pid;
+
+		nInt->loadGame(h, version);
+
+		// Client no longer handle this player at all
+		if(!vstd::contains(CSH->getPlayers(), pid))
+		{
+			logGlobal->trace("Player %s is not belong to this client. Destroying interface", pid);
+		}
+		else if(isHuman && !vstd::contains(CSH->getHumanColors(), pid))
+		{
+			logGlobal->trace("Player %s is no longer controlled by human. Destroying interface", pid);
+		}
+		else if(!isHuman && vstd::contains(CSH->getHumanColors(), pid))
+		{
+			logGlobal->trace("Player %s is no longer controlled by AI. Destroying interface", pid);
+		}
+		else
+		{
+			installNewPlayerInterface(nInt, pid);
+			continue;
+		}
+		nInt.reset();
 	}
 }
 

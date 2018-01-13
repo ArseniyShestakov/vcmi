@@ -820,7 +820,7 @@ void processCommand(const std::string &message)
 		if(fname.size() && SEL)
 		{
 			CSaveFile out(fname);
-			out << CSH->sInfo;
+			out << CSH->si;
 		}
 	}
 	else if(cn == "start")
@@ -1347,7 +1347,7 @@ void startGame()
 		int i = 0;
 
 
-		for(auto & elem : CSH->sInfo.playerInfos)
+		for(auto & elem : CSH->si.playerInfos)
 		{
 			elem.second.playerID = PlayerSettings::PLAYER_AI;
 			if(i < ais.size())
@@ -1357,7 +1357,7 @@ void startGame()
 
     client = new CClient();
 	CPlayerInterface::howManyPeople = 0;
-	switch(CSH->sInfo.mode) //new game
+	switch(CSH->si.mode) //new game
 	{
 	case StartInfo::NEW_GAME:
 		client->newGame();
