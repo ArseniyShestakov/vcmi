@@ -61,7 +61,7 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 
 	selScreen->propagateNames();
 	selScreen->propagateOptions();
-	selScreen->toggleTab(selScreen->curTab);
+//	selScreen->toggleTab(selScreen->curTab);
 
 	GH.totalRedraw();
 }

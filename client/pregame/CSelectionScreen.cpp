@@ -260,7 +260,9 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		randMapTab->recActions = DISPOSE;
 	}
 	sel = new SelectionTab(screenType, std::bind(&CSelectionScreen::changeSelection, this, _1), gameMode); //scenario selection tab
-	sel->recActions = DISPOSE;
+	sel->recActions = DISPOSE; // MPTODO
+	sel->recActions = 255;
+	curTab = sel;
 
 	switch(screenType)
 	{
@@ -319,8 +321,6 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		CButton * opts = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, opt), SDLK_a);
 		opts->addTextOverlay(CGI->generaltexth->allTexts[501], FONT_SMALL, overlayColor);
 
-		sel->recActions = 255;
-		curTab = sel;
 		start = new CButton(Point(411, 535), "SCNRLOD.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_l);
 
 		if(isGuest())
@@ -332,11 +332,9 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		break;
 	}
 	case CMenuScreen::saveGame:
-		sel->recActions = 255;
 		start  = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_s);
 		break;
 	case CMenuScreen::campaignList:
-		sel->recActions = 255;
 		start  = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CSelectionScreen::startCampaign, this), SDLK_b);
 		break;
 	}
@@ -400,17 +398,6 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 		tab->recActions = 255;
 		tab->activate();
 		curTab = tab;
-	}
-	else
-	{
-//		curTab = nullptr;
-
-//		if(screenType == CMenuScreen::loadGame)
-//		{
-//			curTab = sel;
-//			curTab->recActions = 255;
-//			curTab->activate();
-//		}
 	}
 	GH.totalRedraw();
 }
