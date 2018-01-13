@@ -802,6 +802,8 @@ void PlayerBlocked::applyCl(CClient *cl)
 
 void YourTurn::applyCl(CClient *cl)
 {
+	logNetwork->debug("Server gives turn to %s", player.getStr());
+
 	CALL_IN_ALL_INTERFACES(playerStartsTurn, player);
 	CALL_ONLY_THAT_INTERFACE(player,yourTurn);
 }
