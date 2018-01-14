@@ -460,7 +460,6 @@ void CSelectionScreen::startCampaign()
 
 void CSelectionScreen::startScenario()
 {
-	if(screenType == CMenuScreen::newGame)
 	{
 		//there must be at least one human player before game can be started
 		std::map<PlayerColor, PlayerSettings>::const_iterator i;
@@ -468,7 +467,7 @@ void CSelectionScreen::startScenario()
 			if(i->second.playerID != PlayerSettings::PLAYER_AI)
 				break;
 
-		if(i == CSH->si.playerInfos.cend())
+		if(i == CSH->si.playerInfos.cend() && !settings["session"]["onlyai"].Bool())
 		{
 			GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[530])); //You must position yourself prior to starting the game.
 			return;

@@ -255,7 +255,7 @@ int main(int argc, char * argv[])
 		("spectate-battle-speed", po::value<int>(), "battle animation speed for spectator")
 		("spectate-skip-battle", "skip battles in spectator view")
 		("spectate-skip-battle-result", "skip battle result window")
-		("onlyAI", "runs without human player, all players will be default AI")
+		("onlyAI", "allow to run without human player, all players will be default AI")
 		("headless", "runs without GUI, implies --onlyAI")
 		("ai", po::value<std::vector<std::string>>(), "AI to be used for the player, can be specified several times for the consecutive players")
 		("oneGoodAI", "puts one default AI and the rest will be EmptyAI")
@@ -1338,21 +1338,6 @@ void startGame()
 	{
 		CServerHandler::serverAlive.waitWhileTrue();
 		CServerHandler::serverAlive.setn(true);
-	}
-
-	if(settings["session"]["onlyai"].Bool())
-	{
-		auto ais = vm.count("ai") ? vm["ai"].as<std::vector<std::string>>() : std::vector<std::string>();
-
-		int i = 0;
-
-
-		for(auto & elem : CSH->si.playerInfos)
-		{
-			elem.second.playerID = PlayerSettings::PLAYER_AI;
-			if(i < ais.size())
-				elem.second.name = ais[i++];
-		}
 	}
 
     client = new CClient();
