@@ -126,8 +126,6 @@ public:
 
 static CApplier<CBaseForGHApply> *applier = nullptr;
 
-std::atomic<bool> CVCMIServer::shuttingDown;
-
 CMP_stack cmpst ;
 
 static inline double distance(int3 a, int3 b)

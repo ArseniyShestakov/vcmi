@@ -51,6 +51,8 @@
 std::string NAME_AFFIX = "server";
 std::string NAME = GameConstants::VCMI_VERSION + std::string(" (") + NAME_AFFIX + ')';
 
+std::atomic<bool> CVCMIServer::shuttingDown;
+
 CVCMIServer::CVCMIServer(boost::program_options::variables_map & opts)
 	: port(3030), io(new boost::asio::io_service()), shm(nullptr), listeningThreads(0), upcomingConnection(nullptr), curmap(nullptr), curStartInfo(nullptr), state(RUNNING), cmdLineOptions(opts), currentPlayerId(1)
 {
