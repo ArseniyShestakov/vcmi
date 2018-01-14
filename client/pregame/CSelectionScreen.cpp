@@ -506,9 +506,6 @@ void CSelectionScreen::startScenario()
 	StartWithCurrentSettings swcs;
 	*CSH->c << &swcs;
 	ongoingClosing = true;
-	return;
-
-	CGP->showLoadingScreen(std::bind(&startGame));
 }
 
 void CSelectionScreen::saveGame()
