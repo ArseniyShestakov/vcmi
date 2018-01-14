@@ -59,7 +59,7 @@ public:
 	void sliderMove(int slidPos);
 	void printMaps(SDL_Surface * to);
 	int getLine();
-	void selectFName(std::string fname);
+	void selectFileName(std::string fname);
 	const CMapInfo * getSelectedMapInfo() const;
 
 private:

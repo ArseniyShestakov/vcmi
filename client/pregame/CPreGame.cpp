@@ -391,9 +391,6 @@ CPicture * CGPreGame::createPicture(const JsonNode & config)
 	return new CPicture(config["name"].String(), config["x"].Float(), config["y"].Float());
 }
 
-std::string CGPreGame::saveGameName = "";
-
-
 void CGPreGame::setPlayer(PlayerSettings & pset, ui8 player, const std::map<ui8, ClientPlayer> & playerNames)
 {
 	if(vstd::contains(playerNames, player))

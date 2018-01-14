@@ -161,8 +161,6 @@ public:
 	static CPicture * createPicture(const JsonNode & config);
 	static void setPlayer(PlayerSettings & pset, ui8 player, const std::map<ui8, ClientPlayer> & playerNames);
 	static void updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader, const std::map<ui8, ClientPlayer> & playerNames);
-	static PlayerColor playerColor;
-	static std::string saveGameName;
 };
 
 /// Simple window to enter the server's address.

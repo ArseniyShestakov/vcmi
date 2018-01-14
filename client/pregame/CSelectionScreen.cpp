@@ -508,12 +508,6 @@ void CSelectionScreen::startScenario()
 	ongoingClosing = true;
 	return;
 
-	CGPreGame::saveGameName.clear();
-	if(screenType == CMenuScreen::loadGame)
-	{
-		CGPreGame::saveGameName = CSH->si.mapname;
-	}
-
 	CGP->showLoadingScreen(std::bind(&startGame));
 }
 
@@ -522,20 +516,26 @@ void CSelectionScreen::saveGame()
 	if(!(sel && sel->txt && sel->txt->text.size()))
 		return;
 
-	CGPreGame::saveGameName = "Saves/" + sel->txt->text;
+	std::string path = "Saves/" + sel->txt->text;
 
-	CFunctionList<void()> overWrite;
-	overWrite += std::bind(&CCallback::save, LOCPLINT->cb.get(), CGPreGame::saveGameName);
-	overWrite += std::bind(&CGuiHandler::popIntTotally, &GH, this);
+	auto overWrite = [&]() -> void
+	{
+		Settings lastSave = settings.write["session"]["lastSave"];
+		lastSave->String() = path;
+		LOCPLINT->cb->save(path);
+		GH.popIntTotally(this);
+	};
 
-	if(CResourceHandler::get("local")->existsResource(ResourceID(CGPreGame::saveGameName, EResType::CLIENT_SAVEGAME)))
+	if(CResourceHandler::get("local")->existsResource(ResourceID(path, EResType::CLIENT_SAVEGAME)))
 	{
 		std::string hlp = CGI->generaltexth->allTexts[493]; //%s exists. Overwrite?
 		boost::algorithm::replace_first(hlp, "%s", sel->txt->text);
 		LOCPLINT->showYesNoDialog(hlp, overWrite, 0, false);
 	}
 	else
+	{
 		overWrite();
+	}
 }
 
 void CSelectionScreen::difficultyChange(int to)

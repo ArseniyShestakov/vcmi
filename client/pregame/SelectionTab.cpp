@@ -226,29 +226,14 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, const std::function<void(CM
 	switch(tabType)
 	{
 	case CMenuScreen::newGame:
-		logGlobal->error(settings["session"]["lastMap"].String());
-		if(settings["session"]["lastMap"].isNull())
-			selectFName("Maps/Arrogance");
-		else
-			selectFName(settings["session"]["lastMap"].String());
-
+		selectFileName(settings["session"]["lastMap"].String());
 		break;
 	case CMenuScreen::campaignList:
 		select(0);
 		break;
 	case CMenuScreen::loadGame:
 	case CMenuScreen::saveGame:
-		if(CGPreGame::saveGameName.empty())
-		{
-			if(tabType == CMenuScreen::saveGame)
-				txt->setText("NEWGAME");
-			else
-				select(0);
-		}
-		else
-		{
-			selectFName(CGPreGame::saveGameName);
-		}
+		selectFileName(settings["session"]["lastSave"].String());
 	}
 }
 
@@ -420,10 +405,16 @@ void SelectionTab::select(int position)
 	else if(position >= positions)
 		slider->moveBy(position - positions + 1);
 
+	// MPTODO this can be more elegant
 	if(tabType == CMenuScreen::newGame)
 	{
 		Settings lastMap = settings.write["session"]["lastMap"];
 		lastMap->String() = getSelectedMapInfo()->fileURI;
+	}
+	else if(tabType == CMenuScreen::loadGame)
+	{
+		Settings lastSave = settings.write["session"]["lastSave"];
+		lastSave->String() = getSelectedMapInfo()->fileURI;
 	}
 
 	if(txt)
@@ -595,7 +586,7 @@ int SelectionTab::getLine()
 	return line;
 }
 
-void SelectionTab::selectFName(std::string fname)
+void SelectionTab::selectFileName(std::string fname)
 {
 	boost::to_upper(fname);
 	for(int i = curItems.size() - 1; i >= 0; i--)

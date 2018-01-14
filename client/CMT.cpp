@@ -327,6 +327,10 @@ int main(int argc, char * argv[])
 	session["saveprefix"].String() = vm.count("saveprefix") ? vm["saveprefix"].as<std::string>() : "";
 	session["savefrequency"].Integer() = vm.count("savefrequency") ? vm["savefrequency"].as<si64>() : 1;
 
+	// MPTODO: probably last items should be saved between client restart and not just in session
+	session["lastMap"].String() = "Maps/Arrogance";
+	session["lastSave"].String() = "NEWGAME";
+
 	// Initialize logging based on settings
 	logConfig.configure();
 
