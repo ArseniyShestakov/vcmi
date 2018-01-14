@@ -126,7 +126,6 @@ public:
 	void save(const std::string & fname);
 	void endGame(bool closeConnection = true);
 
-	void initMapHandler();
 	void initPlayerInterfaces();
 	std::string aiNameForPlayer(const PlayerSettings & ps, bool battleAI); //empty means no AI -> human
 	std::string aiNameForPlayer(bool battleAI);

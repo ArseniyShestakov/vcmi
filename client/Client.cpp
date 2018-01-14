@@ -149,7 +149,6 @@ void CClient::newGame()
 	gs->init(&CSH->si, settings["general"]["saveRandomMaps"].Bool());
 	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
 
-	initMapHandler();
 	initPlayerInterfaces();
 }
 
@@ -190,7 +189,6 @@ void CClient::loadGame()
 		logGlobal->error("Cannot load game %s. Error: %s", CSH->si.mapname, e.what());
 		throw; //obviously we cannot continue here
 	}
-	initMapHandler();
 
 	serialize(loader->serializer, loader->serializer.fileVersion);
 	initPlayerInterfaces();
@@ -369,25 +367,17 @@ void CClient::endGame(bool closeConnection)
 	logNetwork->info("Client stopped.");
 }
 
-void CClient::initMapHandler()
-{
-	// Init map handler
-	if(gs->map)
-	{
-		if(!settings["session"]["headless"].Bool())
-		{
-			const_cast<CGameInfo *>(CGI)->mh = new CMapHandler();
-			CGI->mh->map = gs->map;
-//			logNetwork->info("Creating mapHandler: %d ms", tmh.getDiff());
-			CGI->mh->init();
-		}
-		pathInfo = make_unique<CPathsInfo>(getMapSize());
-//		logNetwork->info("Initializing mapHandler (together): %d ms", tmh.getDiff());
-	}
-}
-
 void CClient::initPlayerInterfaces()
 {
+	// TODO: CMapHandler initialization can probably go somewhere else
+	if(!settings["session"]["headless"].Bool())
+	{
+		const_cast<CGameInfo *>(CGI)->mh = new CMapHandler();
+		CGI->mh->map = gs->map;
+		CGI->mh->init();
+	}
+	pathInfo = make_unique<CPathsInfo>(getMapSize());
+
 	for(auto & elem : CSH->si.playerInfos) // MPTODO gs->scenarioOps->playerInfos
 	{
 		PlayerColor color = elem.first;
