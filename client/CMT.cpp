@@ -1333,7 +1333,6 @@ static void mainLoop()
 
 void startGame()
 {
-	CSH->myPlayers = SEL->getMyIds();
 	if(!settings["session"]["donotstartserver"].Bool())
 	{
 		CServerHandler::serverAlive.waitWhileTrue();

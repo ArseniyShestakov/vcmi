@@ -474,15 +474,6 @@ void CSelectionScreen::startScenario()
 		}
 	}
 
-	if(isHost())
-	{
-		start->block(true);
-		StartWithCurrentSettings swcs;
-		*CSH->c << &swcs;
-		ongoingClosing = true;
-		return;
-	}
-
 	if(!current)
 		return;
 
@@ -509,13 +500,19 @@ void CSelectionScreen::startScenario()
 		}
 	}
 
+	CSH->myPlayers = getMyIds();
+	assert(isHost());
+	start->block(true);
+	StartWithCurrentSettings swcs;
+	*CSH->c << &swcs;
+	ongoingClosing = true;
+	return;
+
 	CGPreGame::saveGameName.clear();
 	if(screenType == CMenuScreen::loadGame)
 	{
 		CGPreGame::saveGameName = CSH->si.mapname;
 	}
-	CSH->myPlayers = getMyIds();
-	CGP->removeFromGui();
 
 	CGP->showLoadingScreen(std::bind(&startGame));
 }
