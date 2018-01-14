@@ -390,11 +390,16 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 		curTab->deactivate();
 		curTab->recActions = DISPOSE;
 	}
+
 	if(curTab != tab)
 	{
 		tab->recActions = 255;
 		tab->activate();
 		curTab = tab;
+	}
+	else
+	{
+		curTab = nullptr;
 	}
 	GH.totalRedraw();
 }
