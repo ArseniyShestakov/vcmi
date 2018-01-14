@@ -62,6 +62,8 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 	selScreen->propagateNames();
 	selScreen->propagateOptions();
 //	selScreen->toggleTab(selScreen->curTab);
+	if(connectionID != CSH->c->connectionID)
+		selScreen->card->setChat(true);
 
 	GH.totalRedraw();
 }

@@ -262,7 +262,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		return isGuest() ? Colors::ORANGE : Colors::WHITE;;
 	};
 
-	auto initLobbyControls = [&]()
+	auto initLobby = [&]()
 	{
 		CButton * select = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
 		select->addCallback([&]()
@@ -284,6 +284,8 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 			opts->block(true);
 			start->block(true);
 		}
+
+		serverHandlingThread = new boost::thread(&CSelectionScreen::handleConnection, this);
 	};
 
 	switch(screenType)
@@ -306,13 +308,13 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		card->difficulty->setSelected(1);
 
 		start = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
-		initLobbyControls();
+		initLobby();
 		break;
 	}
 	case CMenuScreen::loadGame:
 	{
 		start = new CButton(Point(411, 535), "SCNRLOD.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_l);
-		initLobbyControls();
+		initLobby();
 		break;
 	}
 	case CMenuScreen::saveGame:
@@ -326,8 +328,6 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	start->assignedKeys.insert(SDLK_RETURN);
 
 	back = new CButton(Point(581, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
-
-	serverHandlingThread = new boost::thread(&CSelectionScreen::handleConnection, this);
 }
 
 CSelectionScreen::~CSelectionScreen()
@@ -357,7 +357,7 @@ void CSelectionScreen::showAll(SDL_Surface * to)
 
 void CSelectionScreen::toggleTab(CIntObject * tab)
 {
-	if(isHost() && CSH->c)
+	if(isHost() && CSH->c && screenType != CMenuScreen::saveGame)
 	{
 		PregameGuiAction pga;
 		if(tab == curTab)
@@ -429,7 +429,7 @@ void CSelectionScreen::changeSelection(const CMapInfo * to)
 		opt->recreate();
 	}
 
-	if(isHost() && CSH->c)
+	if(isHost() && CSH->c && screenType != CMenuScreen::saveGame)
 	{
 		SelectMap sm(*to);
 		*CSH->c << &sm;
@@ -671,7 +671,7 @@ CSavingScreen::~CSavingScreen()
 }
 
 InfoCard::InfoCard()
-	: sizes(nullptr), bg(nullptr), chatOn(false), chat(nullptr), playerListBg(nullptr), difficulty(nullptr)
+	: sizes(nullptr), bg(nullptr), showChat(true), chat(nullptr), playerListBg(nullptr), difficulty(nullptr)
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
 	CIntObject::type |= REDRAW_PARENT;
@@ -718,9 +718,7 @@ InfoCard::InfoCard()
 
 		playerListBg = new CPicture("CHATPLUG.bmp", 16, 276);
 		chat = new CChatBox(Rect(26, 132, 340, 132));
-
-		chatOn = true;
-		mapDescription->disable();
+		setChat(false); // FIXME: This shouln't be needed if chat / description wouldn't overlay each other on init
 	}
 
 	victory = new CAnimImage("SCNRVICT", 0, 0, 24, 302);
@@ -748,7 +746,7 @@ void InfoCard::showAll(SDL_Surface * to)
 		printAtLoc(CGI->generaltexth->allTexts[492] + ":", 133, 430, FONT_SMALL, Colors::YELLOW, to); //player difficulty
 		printAtLoc(CGI->generaltexth->allTexts[218] + ":", 290, 430, FONT_SMALL, Colors::YELLOW, to); //"Rating:"
 		printAtLoc(CGI->generaltexth->allTexts[495], 26, 22, FONT_SMALL, Colors::YELLOW, to); //Scenario Name:
-		if(!chatOn)
+		if(!showChat)
 		{
 			printAtLoc(CGI->generaltexth->allTexts[496], 26, 132, FONT_SMALL, Colors::YELLOW, to); //Scenario Description:
 			printAtLoc(CGI->generaltexth->allTexts[497], 26, 283, FONT_SMALL, Colors::YELLOW, to); //Victory Condition:
@@ -780,7 +778,7 @@ void InfoCard::showAll(SDL_Surface * to)
 	{
 		if(SEL->screenType != CMenuScreen::campaignList)
 		{
-			if(!chatOn)
+			if(!showChat)
 			{
 				CMapHeader * header = SEL->current->mapHeader.get();
 				//victory conditions
@@ -951,15 +949,15 @@ void InfoCard::showTeamsPopup()
 
 void InfoCard::toggleChat()
 {
-	setChat(!chatOn);
+	setChat(!showChat);
 }
 
 void InfoCard::setChat(bool activateChat)
 {
-	if(chatOn == activateChat)
+	if(showChat == activateChat)
 		return;
 
-	assert(active);
+//	assert(active); // FIXME: This shouln't be needed if chat / description wouldn't overlay each other on init
 
 	if(activateChat)
 	{
@@ -974,7 +972,7 @@ void InfoCard::setChat(bool activateChat)
 		playerListBg->disable();
 	}
 
-	chatOn = activateChat;
+	showChat = activateChat;
 	GH.totalRedraw();
 }
 

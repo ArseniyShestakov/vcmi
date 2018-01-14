@@ -115,7 +115,7 @@ class InfoCard : public CIntObject
 public:
 	CPicture * bg;
 
-	bool chatOn; //if chat is shown, then description is hidden
+	bool showChat; //if chat is shown, then description is hidden
 	CTextBox * mapDescription;
 	CChatBox * chat;
 	CPicture * playerListBg;
