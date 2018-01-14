@@ -485,6 +485,9 @@ void CSelectionScreen::startScenario()
 			GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[751]));
 			return;
 		}
+
+		UpdateStartOptions uso(CSH->si);
+		*CSH->c << &uso;
 	}
 	assert(isHost());
 	start->block(true);
