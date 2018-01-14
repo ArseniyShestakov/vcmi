@@ -537,8 +537,6 @@ void CMultiPlayers::enterSelectionScreen()
 	Settings name = settings.write["general"]["playerName"];
 	name->String() = names[0];
 
-	GH.popInts(2); //pop MP mode window and this
-
 	CGPreGame::openSel(state, mode, &names);
 }
 
