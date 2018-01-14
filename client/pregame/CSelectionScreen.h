@@ -82,6 +82,7 @@ public:
 	void changeSelection(const CMapInfo * to);
 	void startCampaign();
 	void startScenario();
+	void saveGame();
 	void difficultyChange(int to);
 
 	void handleConnection();

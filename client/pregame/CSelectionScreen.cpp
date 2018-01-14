@@ -329,7 +329,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		break;
 	}
 	case CMenuScreen::saveGame:
-		start  = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_s);
+		start  = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
 		break;
 	case CMenuScreen::campaignList:
 		start  = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CSelectionScreen::startCampaign, this), SDLK_b);
@@ -484,64 +484,62 @@ void CSelectionScreen::startScenario()
 		return;
 	}
 
-	if(screenType != CMenuScreen::saveGame)
+	if(!current)
+		return;
+
+	if(CSH->si.mapGenOptions)
 	{
-		if(!current)
+		//copy settings from interface to actual options. TODO: refactor, it used to have no effect at all -.-
+		CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
+
+		// Update player settings for RMG
+		for(const auto & psetPair : CSH->si.playerInfos)
+		{
+			const auto & pset = psetPair.second;
+			CSH->si.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
+			if(pset.playerID != PlayerSettings::PLAYER_AI)
+			{
+				CSH->si.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
+			}
+		}
+
+		if(!CSH->si.mapGenOptions->checkOptions())
+		{
+			GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[751]));
 			return;
-
-		if(CSH->si.mapGenOptions)
-		{
-			//copy settings from interface to actual options. TODO: refactor, it used to have no effect at all -.-
-			CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
-
-			// Update player settings for RMG
-			for(const auto & psetPair : CSH->si.playerInfos)
-			{
-				const auto & pset = psetPair.second;
-				CSH->si.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
-				if(pset.playerID != PlayerSettings::PLAYER_AI)
-				{
-					CSH->si.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
-				}
-			}
-
-			if(!CSH->si.mapGenOptions->checkOptions())
-			{
-				GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[751]));
-				return;
-			}
 		}
+	}
 
-		CGPreGame::saveGameName.clear();
-		if(screenType == CMenuScreen::loadGame)
-		{
-			CGPreGame::saveGameName = CSH->si.mapname;
-		}
-		CSH->myPlayers = getMyIds();
-		CGP->removeFromGui();
+	CGPreGame::saveGameName.clear();
+	if(screenType == CMenuScreen::loadGame)
+	{
+		CGPreGame::saveGameName = CSH->si.mapname;
+	}
+	CSH->myPlayers = getMyIds();
+	CGP->removeFromGui();
 
-		CGP->showLoadingScreen(std::bind(&startGame));
+	CGP->showLoadingScreen(std::bind(&startGame));
+}
+
+void CSelectionScreen::saveGame()
+{
+	if(!(sel && sel->txt && sel->txt->text.size()))
+		return;
+
+	CGPreGame::saveGameName = "Saves/" + sel->txt->text;
+
+	CFunctionList<void()> overWrite;
+	overWrite += std::bind(&CCallback::save, LOCPLINT->cb.get(), CGPreGame::saveGameName);
+	overWrite += std::bind(&CGuiHandler::popIntTotally, &GH, this);
+
+	if(CResourceHandler::get("local")->existsResource(ResourceID(CGPreGame::saveGameName, EResType::CLIENT_SAVEGAME)))
+	{
+		std::string hlp = CGI->generaltexth->allTexts[493]; //%s exists. Overwrite?
+		boost::algorithm::replace_first(hlp, "%s", sel->txt->text);
+		LOCPLINT->showYesNoDialog(hlp, overWrite, 0, false);
 	}
 	else
-	{
-		if(!(sel && sel->txt && sel->txt->text.size()))
-			return;
-
-		CGPreGame::saveGameName = "Saves/" + sel->txt->text;
-
-		CFunctionList<void()> overWrite;
-		overWrite += std::bind(&CCallback::save, LOCPLINT->cb.get(), CGPreGame::saveGameName);
-		overWrite += std::bind(&CGuiHandler::popIntTotally, &GH, this);
-
-		if(CResourceHandler::get("local")->existsResource(ResourceID(CGPreGame::saveGameName, EResType::CLIENT_SAVEGAME)))
-		{
-			std::string hlp = CGI->generaltexth->allTexts[493]; //%s exists. Overwrite?
-			boost::algorithm::replace_first(hlp, "%s", sel->txt->text);
-			LOCPLINT->showYesNoDialog(hlp, overWrite, 0, false);
-		}
-		else
-			overWrite();
-	}
+		overWrite();
 }
 
 void CSelectionScreen::difficultyChange(int to)
