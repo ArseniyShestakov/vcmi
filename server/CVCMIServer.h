@@ -92,5 +92,3 @@ public:
 	static void create();
 #endif
 };
-
-//extern std::atomic<bool> CVCMIServer::serverShuttingDown;

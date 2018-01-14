@@ -46,7 +46,6 @@
 #ifndef _MSC_VER
 #include <boost/thread/xtime.hpp>
 #endif
-extern std::atomic<bool> CVCMIServer::shuttingDown;
 #ifdef min
 #undef min
 #endif
@@ -126,6 +125,8 @@ public:
 };
 
 static CApplier<CBaseForGHApply> *applier = nullptr;
+
+std::atomic<bool> CVCMIServer::shuttingDown;
 
 CMP_stack cmpst ;
 
