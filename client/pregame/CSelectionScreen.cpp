@@ -486,8 +486,6 @@ void CSelectionScreen::startScenario()
 			return;
 		}
 	}
-
-	CSH->myPlayers = getMyIds();
 	assert(isHost());
 	start->block(true);
 	StartWithCurrentSettings swcs;

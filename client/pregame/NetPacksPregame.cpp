@@ -164,6 +164,7 @@ void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 	}
 	vstd::clear_pointer(selScreen->serverHandlingThread); //detach us
 
+	CSH->myPlayers = selScreen->getMyIds();
 	CGP->showLoadingScreen(std::bind(&startGame));
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)
 }
