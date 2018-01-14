@@ -240,56 +240,40 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	CSH->si.mode = (Type == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME);
 	CSH->si.turnTime = 0;
 	curTab = nullptr;
+	randMapTab = nullptr;
 
 	card = new InfoCard(); //right info card
 	if(screenType == CMenuScreen::campaignList)
 	{
 		opt = nullptr;
-		randMapTab = nullptr;
 	}
 	else
 	{
 		opt = new OptionsTab(); //scenario options tab
 		opt->recActions = DISPOSE;
-
-		randMapTab = new RandomMapTab();
-		randMapTab->getMapInfoChanged() += std::bind(&CSelectionScreen::changeSelection, this, _1);
-		randMapTab->recActions = DISPOSE;
 	}
 	sel = new SelectionTab(screenType, std::bind(&CSelectionScreen::changeSelection, this, _1), gameMode); //scenario selection tab
 	sel->recActions = DISPOSE; // MPTODO
 	sel->recActions = 255;
 	curTab = sel;
 
-	switch(screenType)
+	auto getButtonColor = [this]()
 	{
-	case CMenuScreen::newGame:
-	{
+		return isGuest() ? Colors::ORANGE : Colors::WHITE;;
+	};
 
-		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
-		card->difficulty->setSelected(1);
+	auto initLobbyControls = [&]()
+	{
 		CButton * select = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
 		select->addCallback([&]()
 		{
 			toggleTab(sel);
 			changeSelection(sel->getSelectedMapInfo());
 		});
-		SDL_Color orange = {232, 184, 32, 0};
-		SDL_Color overlayColor = isGuest() ? orange : Colors::WHITE;
-		select->addTextOverlay(CGI->generaltexth->allTexts[500], FONT_SMALL, overlayColor);
+		select->addTextOverlay(CGI->generaltexth->allTexts[500], FONT_SMALL, getButtonColor());
 
 		CButton * opts = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, opt), SDLK_a);
-		opts->addTextOverlay(CGI->generaltexth->allTexts[501], FONT_SMALL, overlayColor);
-
-		CButton * randomBtn = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
-		randomBtn->addTextOverlay(CGI->generaltexth->allTexts[740], FONT_SMALL, overlayColor);
-		randomBtn->addCallback([&]()
-		{
-			toggleTab(randMapTab);
-			changeSelection(randMapTab->getMapInfo());
-		});
-
-		start = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
+		opts->addTextOverlay(CGI->generaltexth->allTexts[501], FONT_SMALL, getButtonColor());
 
 		CButton * hideChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
 		hideChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
@@ -298,34 +282,37 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		{
 			select->block(true);
 			opts->block(true);
-			randomBtn->block(true);
 			start->block(true);
 		}
+	};
+
+	switch(screenType)
+	{
+	case CMenuScreen::newGame:
+	{
+		randMapTab = new RandomMapTab();
+		randMapTab->getMapInfoChanged() += std::bind(&CSelectionScreen::changeSelection, this, _1);
+		randMapTab->recActions = DISPOSE;
+		CButton * randomBtn = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
+		randomBtn->addTextOverlay(CGI->generaltexth->allTexts[740], FONT_SMALL, getButtonColor());
+		randomBtn->addCallback([&]()
+		{
+			toggleTab(randMapTab);
+			changeSelection(randMapTab->getMapInfo());
+		});
+		randomBtn->block(isGuest());
+
+		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
+		card->difficulty->setSelected(1);
+
+		start = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
+		initLobbyControls();
 		break;
 	}
 	case CMenuScreen::loadGame:
 	{
-		CButton * select = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
-		select->addCallback([&]()
-		{
-			toggleTab(sel);
-			changeSelection(sel->getSelectedMapInfo());
-		});
-		SDL_Color orange = {232, 184, 32, 0};
-		SDL_Color overlayColor = isGuest() ? orange : Colors::WHITE;
-		select->addTextOverlay(CGI->generaltexth->allTexts[500], FONT_SMALL, overlayColor);
-
-		CButton * opts = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, opt), SDLK_a);
-		opts->addTextOverlay(CGI->generaltexth->allTexts[501], FONT_SMALL, overlayColor);
-
 		start = new CButton(Point(411, 535), "SCNRLOD.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_l);
-
-		if(isGuest())
-		{
-			select->block(true);
-			opts->block(true);
-			start->block(true);
-		}
+		initLobbyControls();
 		break;
 	}
 	case CMenuScreen::saveGame:
