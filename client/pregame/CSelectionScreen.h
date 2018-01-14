@@ -73,7 +73,7 @@ public:
 	boost::recursive_mutex * mx;
 	std::list<CPackForSelectionScreen *> upcomingPacks; //protected by mx
 
-	bool ongoingClosing;
+	std::atomic<bool> ongoingClosing;
 
 	CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode GameMode = CMenuScreen::MULTI_NETWORK_HOST);
 	~CSelectionScreen();
