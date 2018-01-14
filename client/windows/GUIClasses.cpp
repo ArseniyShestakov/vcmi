@@ -24,6 +24,7 @@
 #include "../CVideoHandler.h"
 #include "../Graphics.h"
 #include "../mapHandler.h"
+#include "../CServerHandler.h"
 
 #include "../battle/CBattleInterfaceClasses.h"
 #include "../battle/CBattleInterface.h"
@@ -490,6 +491,13 @@ CSystemOptionsWindow::CSystemOptionsWindow():
 
 	restart = new CButton (Point(246, 357), "SORSTRT", CGI->generaltexth->zelp[323], [&](){ brestartf(); }, SDLK_r);
 	restart->setImageOrder(1, 0, 2, 3);
+
+	if(CSH->isGuest())
+	{
+		load->block(true);
+		save->block(true);
+		restart->block(true);
+	}
 
 	mainMenu = new CButton (Point(357, 357), "SOMAIN.DEF", CGI->generaltexth->zelp[320], [&](){ bmainmenuf(); }, SDLK_m);
 	mainMenu->setImageOrder(1, 0, 2, 3);

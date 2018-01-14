@@ -504,7 +504,7 @@ void CClient::stopConnection()
 	if(CSH->c)
 	{
 		boost::unique_lock<boost::mutex>(*CSH->c->wmx);
-		if(CSH->c->isHost()) //request closing connection
+		if(CSH->isHost()) //request closing connection
 		{
 			logNetwork->info("Connection has been requested to be closed.");
 			CloseServer close_server;

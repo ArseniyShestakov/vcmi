@@ -174,5 +174,6 @@ void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 void WelcomeClient::apply(CSelectionScreen * sel)
 {
 	CSH->c->connectionID = connectionId;
-//	sel->changeSelection(curmap);
+	//MPTODO
+	CSH->host = connectionId == 1;
 }

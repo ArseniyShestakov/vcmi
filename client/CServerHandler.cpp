@@ -106,11 +106,8 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
+	: c(nullptr), serverThread(nullptr), shm(nullptr), verbose(true), host(false)
 {
-	c = nullptr;
-	serverThread = nullptr;
-	shm = nullptr;
-	verbose = true;
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 
 #ifndef VCMI_ANDROID
@@ -222,12 +219,12 @@ std::set<PlayerColor> CServerHandler::getPlayers()
 	std::set<PlayerColor> players;
 	for(auto & elem : si.playerInfos)
 	{
-		if(CSH->c->isHost() && elem.second.playerID == PlayerSettings::PLAYER_AI || vstd::contains(CSH->myPlayers, elem.second.playerID))
+		if(isHost() && elem.second.playerID == PlayerSettings::PLAYER_AI || vstd::contains(myPlayers, elem.second.playerID))
 		{
 			players.insert(elem.first); //add player
 		}
 	}
-	if(CSH->c->isHost())
+	if(isHost())
 		players.insert(PlayerColor::NEUTRAL);
 
 	return players;
@@ -238,11 +235,21 @@ std::set<PlayerColor> CServerHandler::getHumanColors()
 	std::set<PlayerColor> players;
 	for(auto & elem : si.playerInfos)
 	{
-		if(vstd::contains(CSH->myPlayers, elem.second.playerID))
+		if(vstd::contains(myPlayers, elem.second.playerID))
 		{
 			players.insert(elem.first); //add player
 		}
 	}
 
 	return players;
+}
+
+bool CServerHandler::isHost() const
+{
+	return host;
+}
+
+bool CServerHandler::isGuest() const
+{
+	return !host;
 }

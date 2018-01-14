@@ -200,11 +200,6 @@ bool CConnection::isOpen() const
 	return socket && connected;
 }
 
-bool CConnection::isHost() const
-{
-	return connectionID == 1;
-}
-
 void CConnection::reportState(vstd::CLoggerBase * out)
 {
 	out->debug("CConnection");
