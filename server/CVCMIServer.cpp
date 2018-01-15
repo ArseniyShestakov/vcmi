@@ -120,13 +120,6 @@ void CVCMIServer::start()
 				processPack(toAnnounce.front());
 				toAnnounce.pop_front();
 			}
-
-//                      //we end sending thread if we ordered all our connections to stop
-//                      ending = true;
-//                      for(CPregameConnection *pc : connections)
-//                              if(!pc->sendStop)
-//                                      ending = false;
-
 			if(state != RUNNING)
 			{
 				logNetwork->info("Stopping listening for connections...");
@@ -209,8 +202,6 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 		CConnection * pc = new CConnection(upcomingConnection, NAME);
 		upcomingConnection = nullptr;
 		connections.insert(pc);
-		if(pc->connectionID == 1)
-			host = pc;
 		startListeningThread(pc);
 	}
 	catch(std::exception & e)
@@ -252,6 +243,11 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 				WelcomeClient wc;
 				wc.connectionId = cpc->connectionID;
 				wc.capabilities = capabilities;
+				if(!host)
+				{
+					host = cpc;
+					wc.giveHost = true;
+				}
 				*cpc << &wc;
 
 				logNetwork->info("Connection with client %d established. UUID: %s", cpc->connectionID, cpc->uuid);
@@ -312,11 +308,11 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 		connections -= cpc;
 
 		//notify other players about leaving
-		auto pl = new PlayerLeft();
-		pl->connectionID = cpc->connectionID;
-
 		for(auto & name : cpc->names)
 			announceTxt(boost::str(boost::format("%s(%d) left the game") % name % cpc->connectionID));
+
+		auto pl = new PlayerLeft();
+		pl->connectionID = cpc->connectionID;
 		toAnnounce.push_back(pl);
 
 		if(connections.empty())
@@ -324,6 +320,11 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 			logNetwork->error("Last connection lost, server will close itself...");
 			boost::this_thread::sleep(boost::posix_time::seconds(2)); //we should never be hasty when networking
 			state = ENDING_WITHOUT_START;
+		}
+		else if(cpc == host)
+		{
+			auto newHost = *RandomGeneratorUtil::nextItem(connections, CRandomGenerator::getDefault());
+			passHost(newHost->connectionID);
 		}
 	}
 
@@ -337,6 +338,10 @@ void CVCMIServer::processPack(CPackForSelectionScreen * pack)
 	if(dynamic_ptr_cast<CPregamePackToHost>(pack))
 	{
 		sendPack(host, *pack);
+	}
+	else if(PassHost * ph = dynamic_ptr_cast<PassHost>(pack))
+	{
+		passHost(ph->toConnection);
 	}
 	else if(SelectMap * sm = dynamic_ptr_cast<SelectMap>(pack))
 	{
@@ -398,6 +403,24 @@ void CVCMIServer::announceTxt(const std::string & txt, const std::string & playe
 	toAnnounce.push_front(new ChatMessage(cm));
 }
 
+void CVCMIServer::passHost(int toConnectionId)
+{
+	for(auto c : connections)
+	{
+		if(c->connectionID != toConnectionId)
+			continue;
+		if(host == c)
+			return;
+
+		host = c;
+		announceTxt(boost::str(boost::format("Pass host to connection %d") % toConnectionId));
+		auto ph = new PassHost();
+		ph->toConnection = toConnectionId;
+		boost::unique_lock<boost::recursive_mutex> queueLock(mx);
+		toAnnounce.push_back(ph);
+		return;
+	}
+}
 
 
 #if defined(__GNUC__) && !defined(__MINGW32__) && !defined(VCMI_ANDROID)

@@ -98,6 +98,15 @@ DLL_LINKAGE UpdateStartOptions::~UpdateStartOptions()
 		delete options;
 }
 
+DLL_LINKAGE PassHost::PassHost()
+{
+	toConnection = -1;
+}
+
+DLL_LINKAGE PassHost::~PassHost()
+{
+}
+
 DLL_LINKAGE void SetCommanderProperty::applyGs(CGameState *gs)
 {
 	CCommanderInstance * commander = gs->getHero(heroid)->commander;

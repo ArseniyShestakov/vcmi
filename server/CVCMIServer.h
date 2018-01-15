@@ -77,6 +77,7 @@ class CVCMIServer
 	void sendPack(CConnection * pc, const CPackForSelectionScreen & pack);
 	void announcePack(const CPackForSelectionScreen & pack);
 	void announceTxt(const std::string & txt, const std::string & playerName = "system");
+	void passHost(int toConnectionId);
 
 public:
 	static std::atomic<bool> shuttingDown;

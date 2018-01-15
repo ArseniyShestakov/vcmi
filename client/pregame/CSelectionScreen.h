@@ -28,7 +28,6 @@ struct ClientPlayer;
 class ISelectionScreenInfo
 {
 public:
-	CMenuScreen::EGameMode gameMode;
 	CMenuScreen::EState screenType; //new/save/load#Game
 	const CMapInfo * current;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
@@ -62,7 +61,12 @@ public:
 	InfoCard * card;
 	OptionsTab * opt;
 	RandomMapTab * randMapTab;
-	CButton * start, * back;
+
+	CButton * buttonSelect;
+	CButton * buttonRMG;
+	CButton * buttonOptions;
+	CButton * buttonStart;
+	CButton * buttonBack;
 
 	SelectionTab * sel;
 	CIntObject * curTab;
@@ -73,7 +77,7 @@ public:
 
 	std::atomic<bool> ongoingClosing;
 
-	CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode GameMode = CMenuScreen::MULTI_NETWORK_HOST);
+	CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST);
 	~CSelectionScreen();
 	void showAll(SDL_Surface * to) override;
 	void toggleTab(CIntObject * tab);
@@ -82,6 +86,7 @@ public:
 	void startScenario();
 	void saveGame();
 	void difficultyChange(int to);
+	void toggleMode(bool host);
 
 	void handleConnection();
 	void update() override;

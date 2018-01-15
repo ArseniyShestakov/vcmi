@@ -158,6 +158,19 @@ void PlayersNames::apply(CSelectionScreen * selScreen)
 		selScreen->playerNames = playerNames;
 }
 
+void PassHost::apply(CSelectionScreen *selScreen)
+{
+	if(CSH->host)
+	{
+		CSH->host = false;
+	}
+	else if(CSH->c->connectionID == toConnection)
+	{
+		CSH->host = true;
+	}
+	selScreen->toggleMode(CSH->host);
+}
+
 void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 {
 	if(!selScreen->ongoingClosing)
@@ -171,11 +184,9 @@ void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)
 }
 
-
-
-void WelcomeClient::apply(CSelectionScreen * sel)
+void WelcomeClient::apply(CSelectionScreen * selScreen)
 {
 	CSH->c->connectionID = connectionId;
-	//MPTODO
-	CSH->host = connectionId == 1;
+	CSH->host = giveHost;
+	selScreen->toggleMode(giveHost);
 }

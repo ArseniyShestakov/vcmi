@@ -149,7 +149,6 @@ std::vector<ui8> ISelectionScreenInfo::getMyIds() const
 
 ISelectionScreenInfo::ISelectionScreenInfo()
 {
-	gameMode = CMenuScreen::MULTI_NETWORK_HOST;
 	screenType = CMenuScreen::mainMenu;
 	assert(!SEL);
 	SEL = this;
@@ -192,12 +191,11 @@ ui8 ISelectionScreenInfo::getIdOfFirstUnallocatedPlayer() const
  * passed separately to CSaveGameScreen.
  */
 
-CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode GameMode)
+CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode)
 	: ISelectionScreenInfo(), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
 {
 	CGPreGame::create(); //we depend on its graphics
 	screenType = Type;
-	gameMode = GameMode;
 
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
 
@@ -247,33 +245,25 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	sel->recActions = 255;
 	curTab = sel;
 
-	auto getButtonColor = [this]()
-	{
-		return gameMode == CMenuScreen::MULTI_NETWORK_GUEST ? Colors::ORANGE : Colors::WHITE;;
-	};
+	buttonSelect = nullptr;
+	buttonRMG = nullptr;
+	buttonOptions = nullptr;
 
 	auto initLobby = [&]()
 	{
-		CButton * select = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
-		select->addCallback([&]()
+		buttonSelect = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
+		buttonSelect->addCallback([&]()
 		{
 			toggleTab(sel);
 			changeSelection(sel->getSelectedMapInfo());
 		});
-		select->addTextOverlay(CGI->generaltexth->allTexts[500], FONT_SMALL, getButtonColor());
 
-		CButton * opts = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, opt), SDLK_a);
-		opts->addTextOverlay(CGI->generaltexth->allTexts[501], FONT_SMALL, getButtonColor());
+		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, opt), SDLK_a);
 
-		CButton * hideChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
-		hideChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
+		CButton * buttonChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
+		buttonChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
 
-		if(gameMode == CMenuScreen::MULTI_NETWORK_GUEST)
-		{
-			select->block(true);
-			opts->block(true);
-			start->block(true);
-		}
+		toggleMode(gameMode == CMenuScreen::MULTI_NETWORK_HOST);
 
 		serverHandlingThread = new boost::thread(&CSelectionScreen::handleConnection, this);
 	};
@@ -285,39 +275,37 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		randMapTab = new RandomMapTab();
 		randMapTab->getMapInfoChanged() += std::bind(&CSelectionScreen::changeSelection, this, _1);
 		randMapTab->recActions = DISPOSE;
-		CButton * randomBtn = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
-		randomBtn->addTextOverlay(CGI->generaltexth->allTexts[740], FONT_SMALL, getButtonColor());
-		randomBtn->addCallback([&]()
+		buttonRMG = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
+		buttonRMG->addCallback([&]()
 		{
 			toggleTab(randMapTab);
 			changeSelection(randMapTab->getMapInfo());
 		});
-		randomBtn->block(gameMode == CMenuScreen::MULTI_NETWORK_GUEST);
 
 		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
 		card->difficulty->setSelected(1);
 
-		start = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
+		buttonStart = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
 		initLobby();
 		break;
 	}
 	case CMenuScreen::loadGame:
 	{
-		start = new CButton(Point(411, 535), "SCNRLOD.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_l);
+		buttonStart = new CButton(Point(411, 535), "SCNRLOD.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_l);
 		initLobby();
 		break;
 	}
 	case CMenuScreen::saveGame:
-		start  = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
+		buttonStart  = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
 		break;
 	case CMenuScreen::campaignList:
-		start  = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CSelectionScreen::startCampaign, this), SDLK_b);
+		buttonStart  = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CSelectionScreen::startCampaign, this), SDLK_b);
 		break;
 	}
 
-	start->assignedKeys.insert(SDLK_RETURN);
+	buttonStart->assignedKeys.insert(SDLK_RETURN);
 
-	back = new CButton(Point(581, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
+	buttonBack = new CButton(Point(581, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
 }
 
 CSelectionScreen::~CSelectionScreen()
@@ -480,7 +468,7 @@ void CSelectionScreen::startScenario()
 		*CSH->c << &uso;
 	}
 	assert(CSH->isHost());
-	start->block(true);
+	buttonStart->block(true);
 	StartWithCurrentSettings swcs;
 	*CSH->c << &swcs;
 	ongoingClosing = true;
@@ -519,6 +507,24 @@ void CSelectionScreen::difficultyChange(int to)
 	CSH->si.difficulty = to;
 	propagateOptions();
 	redraw();
+}
+
+void CSelectionScreen::toggleMode(bool host)
+{
+	auto getColor = [=]()
+	{
+		return host ? Colors::WHITE : Colors::ORANGE;
+	};
+	buttonSelect->addTextOverlay(CGI->generaltexth->allTexts[500], FONT_SMALL, getColor());
+	buttonOptions->addTextOverlay(CGI->generaltexth->allTexts[501], FONT_SMALL, getColor());
+	if(buttonRMG)
+	{
+		buttonRMG->addTextOverlay(CGI->generaltexth->allTexts[740], FONT_SMALL, getColor());
+		buttonRMG->block(!host);
+	}
+	buttonSelect->block(!host);
+	buttonOptions->block(!host);
+	buttonStart->block(!host);
 }
 
 void CSelectionScreen::handleConnection()
@@ -641,10 +647,25 @@ void CSelectionScreen::postRequest(ui8 what, ui8 dir, PlayerColor player)
 void CSelectionScreen::postChatMessage(const std::string & txt)
 {
 	assert(CSH->c);
-	ChatMessage cm;
-	cm.message = txt;
-	cm.playerName = playerNames[myFirstId()].name;
-	*CSH->c << &cm;
+	std::istringstream readed;
+	readed.str(txt);
+	std::string command;
+	readed >> command;
+	if(command == "!passhost")
+	{
+		std::string id;
+		readed >> id;
+		PassHost ph;
+		ph.toConnection = boost::lexical_cast<int>(id);
+		*CSH->c << &ph;
+	}
+	else
+	{
+		ChatMessage cm;
+		cm.message = txt;
+		cm.playerName = playerNames[myFirstId()].name;
+		*CSH->c << &cm;
+	}
 }
 
 CSavingScreen::CSavingScreen()

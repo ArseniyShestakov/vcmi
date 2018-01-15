@@ -2504,6 +2504,21 @@ struct ELF_VISIBILITY UpdateStartOptions : public CPregamePackToPropagate
 
 };
 
+struct ELF_VISIBILITY PassHost : public CPregamePackToPropagate
+{
+	int toConnection;
+
+	void apply(CSelectionScreen *selScreen);
+
+	DLL_LINKAGE PassHost();
+	DLL_LINKAGE ~PassHost();
+
+	template <typename Handler> void serialize(Handler & h, const int version)
+	{
+		h & toConnection;
+	}
+};
+
 struct PregameGuiAction : public CPregamePackToPropagate
 {
 	enum {NO_TAB, OPEN_OPTIONS, OPEN_SCENARIO_LIST, OPEN_RANDOM_MAP_OPTIONS}
@@ -2578,13 +2593,19 @@ struct StartWithCurrentSettings : public CPregamePackToPropagate
 struct WelcomeClient : public CPregamePackToPropagate
 {
 	int connectionId;
+	bool giveHost;
 	ServerCapabilities * capabilities;
+
+	WelcomeClient()
+		: connectionId(-1), giveHost(false), capabilities(nullptr)
+	{}
 
 	void apply(CSelectionScreen *selScreen);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & connectionId;
+		h & giveHost;
 		h & capabilities;
 	}
 };
@@ -2602,15 +2623,5 @@ struct WelcomeServer : public CPregamePackToServer
 	{
 		h & uuid;
 		h & names;
-	}
-};
-
-struct RequestHost : public CPregamePackToServer
-{
-	std::string uuid;
-
-	template <typename Handler> void serialize(Handler & h, const int version)
-	{
-		h & uuid;
 	}
 };

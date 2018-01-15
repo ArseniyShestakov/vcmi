@@ -361,12 +361,12 @@ void registerTypesPregamePacks(Serializer &s)
 	s.template registerType<CPregamePackToPropagate, PlayersNames>();
 	s.template registerType<CPregamePackToPropagate, StartWithCurrentSettings>();
 	s.template registerType<CPregamePackToPropagate, WelcomeClient>();
+	s.template registerType<CPregamePackToPropagate, PassHost>();
 
 	s.template registerType<CPregamePackToHost, PlayerJoined>();
 	s.template registerType<CPregamePackToHost, RequestOptionsChange>();
 
 	s.template registerType<CPregamePackToServer, WelcomeServer>();
-	s.template registerType<CPregamePackToServer, RequestHost>();
 
 }
 
