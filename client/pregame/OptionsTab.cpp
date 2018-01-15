@@ -88,7 +88,7 @@ void OptionsTab::recreate()
 
 void OptionsTab::nextCastle(PlayerColor player, int dir)
 {
-	if(SEL->isGuest())
+	if(CSH->isGuest())
 	{
 		SEL->postRequest(RequestOptionsChange::TOWN, dir, player);
 		return;
@@ -152,7 +152,7 @@ void OptionsTab::nextCastle(PlayerColor player, int dir)
 
 void OptionsTab::nextHero(PlayerColor player, int dir)
 {
-	if(SEL->isGuest())
+	if(CSH->isGuest())
 	{
 		SEL->postRequest(RequestOptionsChange::HERO, dir, player);
 		return;
@@ -206,7 +206,7 @@ int OptionsTab::nextAllowedHero(PlayerColor player, int min, int max, int incl, 
 
 void OptionsTab::nextBonus(PlayerColor player, int dir)
 {
-	if(SEL->isGuest())
+	if(CSH->isGuest())
 	{
 		SEL->postRequest(RequestOptionsChange::BONUS, dir, player);
 		return;
@@ -749,7 +749,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	{
 		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&OptionsTab::flagPressed, owner, s.color));
 		flag->hoverable = true;
-		flag->block(SEL->isGuest());
+		flag->block(CSH->isGuest());
 	}
 	else
 		flag = nullptr;
@@ -778,7 +778,7 @@ void OptionsTab::PlayerOptionsEntry::selectButtons()
 	if(!btns[0])
 		return;
 
-	const bool foreignPlayer = SEL->isGuest() && !SEL->isMyColor(s.color);
+	const bool foreignPlayer = CSH->isGuest() && !SEL->isMyColor(s.color);
 
 	if((pi.allowedFactions.size() < 2 && !pi.isFactionRandom) || foreignPlayer)
 	{

@@ -70,7 +70,7 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 
 void SelectMap::apply(CSelectionScreen * selScreen)
 {
-	if(selScreen->isGuest())
+	if(CSH->isGuest())
 	{
 		free = false;
 		selScreen->changeSelection(mapInfo);
@@ -79,7 +79,7 @@ void SelectMap::apply(CSelectionScreen * selScreen)
 
 void UpdateStartOptions::apply(CSelectionScreen * selScreen)
 {
-	if(!selScreen->isGuest())
+	if(!CSH->isGuest())
 		return;
 
 	selScreen->setSInfo(*options);
@@ -87,7 +87,7 @@ void UpdateStartOptions::apply(CSelectionScreen * selScreen)
 
 void PregameGuiAction::apply(CSelectionScreen * selScreen)
 {
-	if(!selScreen->isGuest())
+	if(!CSH->isGuest())
 		return;
 
 	switch(action)
@@ -109,7 +109,7 @@ void PregameGuiAction::apply(CSelectionScreen * selScreen)
 
 void RequestOptionsChange::apply(CSelectionScreen * selScreen)
 {
-	if(!selScreen->isHost())
+	if(!CSH->isHost())
 		return;
 
 	PlayerColor color = CSH->si.getPlayersSettings(playerID)->color;
@@ -130,7 +130,7 @@ void RequestOptionsChange::apply(CSelectionScreen * selScreen)
 
 void PlayerLeft::apply(CSelectionScreen * selScreen)
 {
-	if(selScreen->isGuest())
+	if(CSH->isGuest())
 		return;
 
 	for(auto & pair : selScreen->playerNames)
@@ -154,7 +154,7 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 
 void PlayersNames::apply(CSelectionScreen * selScreen)
 {
-	if(selScreen->isGuest())
+	if(CSH->isGuest())
 		selScreen->playerNames = playerNames;
 }
 

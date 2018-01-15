@@ -183,16 +183,6 @@ ui8 ISelectionScreenInfo::getIdOfFirstUnallocatedPlayer() const
 	return 0;
 }
 
-bool ISelectionScreenInfo::isGuest() const
-{
-	return gameMode == CMenuScreen::MULTI_NETWORK_GUEST;
-}
-
-bool ISelectionScreenInfo::isHost() const
-{
-	return gameMode == CMenuScreen::MULTI_NETWORK_HOST;
-}
-
 /**
  * Stores the current name of the savegame.
  *
@@ -259,7 +249,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 
 	auto getButtonColor = [this]()
 	{
-		return isGuest() ? Colors::ORANGE : Colors::WHITE;;
+		return gameMode == CMenuScreen::MULTI_NETWORK_GUEST ? Colors::ORANGE : Colors::WHITE;;
 	};
 
 	auto initLobby = [&]()
@@ -278,7 +268,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		CButton * hideChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
 		hideChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
 
-		if(isGuest())
+		if(gameMode == CMenuScreen::MULTI_NETWORK_GUEST)
 		{
 			select->block(true);
 			opts->block(true);
@@ -302,7 +292,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 			toggleTab(randMapTab);
 			changeSelection(randMapTab->getMapInfo());
 		});
-		randomBtn->block(isGuest());
+		randomBtn->block(gameMode == CMenuScreen::MULTI_NETWORK_GUEST);
 
 		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
 		card->difficulty->setSelected(1);
@@ -357,7 +347,7 @@ void CSelectionScreen::showAll(SDL_Surface * to)
 
 void CSelectionScreen::toggleTab(CIntObject * tab)
 {
-	if(isHost() && CSH->c && screenType != CMenuScreen::saveGame)
+	if(CSH->isHost() && CSH->c && screenType != CMenuScreen::saveGame)
 	{
 		PregameGuiAction pga;
 		if(tab == curTab)
@@ -395,7 +385,7 @@ void CSelectionScreen::changeSelection(const CMapInfo * to)
 {
 	if(current == to)
 		return;
-	if(isGuest())
+	if(CSH->isGuest())
 		vstd::clear_pointer(current);
 
 	current = to;
@@ -429,7 +419,7 @@ void CSelectionScreen::changeSelection(const CMapInfo * to)
 		opt->recreate();
 	}
 
-	if(isHost() && CSH->c && screenType != CMenuScreen::saveGame)
+	if(CSH->isHost() && CSH->c && screenType != CMenuScreen::saveGame)
 	{
 		SelectMap sm(*to);
 		*CSH->c << &sm;
@@ -489,7 +479,7 @@ void CSelectionScreen::startScenario()
 		UpdateStartOptions uso(CSH->si);
 		*CSH->c << &uso;
 	}
-	assert(isHost());
+	assert(CSH->isHost());
 	start->block(true);
 	StartWithCurrentSettings swcs;
 	*CSH->c << &swcs;
@@ -542,9 +532,8 @@ void CSelectionScreen::handleConnection()
 	registerTypesPregamePacks(*applier);
 	CSH->welcomeServer();
 
-	if(isHost())
+	if(CSH->isHost())
 	{
-
 		if(current)
 		{
 			SelectMap sm(*current);
@@ -633,7 +622,7 @@ void CSelectionScreen::propagateNames() const
 
 void CSelectionScreen::propagateOptions() const
 {
-	if(isHost() && CSH->c)
+	if(CSH->isHost() && CSH->c)
 	{
 		UpdateStartOptions ups(CSH->si);
 		*CSH->c << &ups;
@@ -642,7 +631,7 @@ void CSelectionScreen::propagateOptions() const
 
 void CSelectionScreen::postRequest(ui8 what, ui8 dir, PlayerColor player)
 {
-	if(!isGuest())
+	if(!CSH->isGuest())
 		return;
 
 	RequestOptionsChange roc(what, dir, CSH->si.playerInfos[player].connectedPlayerID);

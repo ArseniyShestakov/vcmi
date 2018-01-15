@@ -49,8 +49,6 @@ public:
 	void updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader);
 
 	ui8 getIdOfFirstUnallocatedPlayer() const; //returns 0 if none
-	bool isGuest() const;
-	bool isHost() const;
 
 };
 
