@@ -752,25 +752,25 @@ void InfoCard::showAll(SDL_Surface * to)
 			printAtLoc(CGI->generaltexth->allTexts[497], 26, 283, FONT_SMALL, Colors::YELLOW, to); //Victory Condition:
 			printAtLoc(CGI->generaltexth->allTexts[498], 26, 339, FONT_SMALL, Colors::YELLOW, to); //Loss Condition:
 		}
-		else //players list
+		else
 		{
-			auto playerNames = SEL->playerNames;
-			int playerSoFar = 0;//MPTODO
-			for(auto i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
+			int playerLeft = 0; // Players with assigned colors
+			int playersRight = 0;
+			for(auto & p : SEL->playerNames)
 			{
-				if(i->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
+				auto pset = CSH->getPlayerSettings(p.first);
+				int pid = p.first;
+				if(pset)
 				{
-					printAtLoc(i->second.name, 24, 285 + playerSoFar++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
-					playerNames.erase(i->second.connectedPlayerID);
+					auto name = boost::str(boost::format("%s (%d-%d %s)") % p.second.name % p.second.connection % pid % pset->color.getStr());
+					printAtLoc(name, 24, 285 + playerLeft++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
+				}
+				else
+				{
+					auto name = boost::str(boost::format("%s (%d-%d)") % p.second.name % p.second.connection % pid);
+					printAtLoc(name, 193, 285 + playersRight++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
 				}
 			}
-
-			playerSoFar = 0;
-			for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
-			{
-				printAtLoc(i->second.name, 193, 285 + playerSoFar++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
-			}
-
 		}
 	}
 

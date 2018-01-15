@@ -214,6 +214,16 @@ bool CServerHandler::isServerLocal()
 	return false;
 }
 
+const PlayerSettings * CServerHandler::getPlayerSettings(ui8 connectedPlayerId) const
+{
+	for(auto & elem : si.playerInfos)
+	{
+		if(elem.second.connectedPlayerID == connectedPlayerId)
+			return &elem.second;
+	}
+	return nullptr;
+}
+
 std::set<PlayerColor> CServerHandler::getPlayers()
 {
 	std::set<PlayerColor> players;

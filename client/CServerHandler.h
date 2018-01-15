@@ -41,6 +41,7 @@ public:
 	StartInfo si;
 	std::vector<std::string> myNames;
 	std::vector<ui8> myPlayers;
+	const PlayerSettings * getPlayerSettings(ui8 connectedPlayerId) const;
 	std::set<PlayerColor> getPlayers();
 	std::set<PlayerColor> getHumanColors();
 	bool isHost() const;
