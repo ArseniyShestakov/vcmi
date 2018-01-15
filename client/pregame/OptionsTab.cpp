@@ -32,7 +32,7 @@
 
 static void swapPlayers(PlayerSettings & a, PlayerSettings & b)
 {
-	std::swap(a.playerID, b.playerID);
+	std::swap(a.connectedPlayerID, b.connectedPlayerID);
 	std::swap(a.name, b.name);
 }
 
@@ -160,7 +160,7 @@ void OptionsTab::nextHero(PlayerColor player, int dir)
 
 	PlayerSettings & s = CSH->si.playerInfos[player];
 	int old = s.hero;
-	if(s.castle < 0 || s.playerID == PlayerSettings::PLAYER_AI || s.hero == PlayerSettings::NONE)
+	if(s.castle < 0 || s.connectedPlayerID == PlayerSettings::PLAYER_AI || s.hero == PlayerSettings::NONE)
 		return;
 
 	if(s.hero == PlayerSettings::RANDOM) // first/last available
@@ -258,7 +258,7 @@ void OptionsTab::flagPressed(PlayerColor color)
 	PlayerSettings * old = nullptr;
 
 	//identify clicked player
-	int clickedNameID = clicked.playerID; //human is a number of player, zero means AI
+	int clickedNameID = clicked.connectedPlayerID; //human is a number of player, zero means AI
 	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
 	{
 		PlayerSettings & restPos = CSH->si.playerInfos[playerToRestore.color];
@@ -293,10 +293,10 @@ void OptionsTab::flagPressed(PlayerColor color)
 	{
 		for(auto i = CSH->si.playerInfos.begin(); i != CSH->si.playerInfos.end(); i++)
 		{
-			int curNameID = i->second.playerID;
+			int curNameID = i->second.connectedPlayerID;
 			if(i->first != color && curNameID == newPlayer)
 			{
-				assert(i->second.playerID);
+				assert(i->second.connectedPlayerID);
 				playerToRestore.color = i->first;
 				playerToRestore.id = newPlayer;
 				SEL->setPlayer(i->second, 0); //set computer
@@ -791,7 +791,7 @@ void OptionsTab::PlayerOptionsEntry::selectButtons()
 		btns[1]->enable();
 	}
 
-	if((pi.defaultHero() != -1 || !s.playerID || s.castle < 0) //fixed hero
+	if((pi.defaultHero() != -1 || !s.connectedPlayerID || s.castle < 0) //fixed hero
 		|| foreignPlayer) //or not our player
 	{
 		btns[2]->disable();

@@ -398,7 +398,7 @@ void CGPreGame::setPlayer(PlayerSettings & pset, ui8 player, const std::map<ui8,
 	else
 		pset.name = CGI->generaltexth->allTexts[468]; //Computer
 
-	pset.playerID = player;
+	pset.connectedPlayerID = player;
 }
 
 void CGPreGame::updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader, const std::map<ui8, ClientPlayer> & playerNames)

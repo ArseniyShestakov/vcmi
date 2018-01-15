@@ -39,7 +39,7 @@ struct PlayerSettings
 	TeamID team;
 
 	std::string name;
-	ui8 playerID; //0 - AI, non-0 serves as player id
+	ui8 connectedPlayerID; //0 - AI, non-0 serves as player id
 	bool compOnly; //true if this player is a computer only player; required for RMG
 	template <typename Handler>
 	void serialize(Handler &h, const int version)
@@ -52,13 +52,13 @@ struct PlayerSettings
 		h & color;
 		h & handicap;
 		h & name;
-		h & playerID;
+		h & connectedPlayerID;
 		h & team;
 		h & compOnly;
 	}
 
 	PlayerSettings() : bonus(RANDOM), castle(NONE), hero(RANDOM), heroPortrait(RANDOM),
-		color(0), handicap(NO_HANDICAP), team(0), playerID(PLAYER_AI), compOnly(false)
+		color(0), handicap(NO_HANDICAP), team(0), connectedPlayerID(PLAYER_AI), compOnly(false)
 	{
 
 	}
@@ -100,8 +100,10 @@ struct StartInfo
 	PlayerSettings *getPlayersSettings(const ui8 nameID)
 	{
 		for(auto it=playerInfos.begin(); it != playerInfos.end(); ++it)
-			if(it->second.playerID == nameID)
+		{
+			if(it->second.connectedPlayerID == nameID)
 				return &it->second;
+		}
 
 		return nullptr;
 	}

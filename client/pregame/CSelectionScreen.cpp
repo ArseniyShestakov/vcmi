@@ -100,7 +100,7 @@ PlayerColor ISelectionScreenInfo::myFirstColor() const
 
 bool ISelectionScreenInfo::isMyColor(PlayerColor color) const
 {
-	ui8 id = CSH->si.playerInfos[color].playerID;
+	ui8 id = CSH->si.playerInfos[color].connectedPlayerID;
 	if(CSH->c && playerNames.find(id) != playerNames.end())
 	{
 		if(playerNames.find(id)->second.connection == CSH->c->connectionID)
@@ -139,8 +139,8 @@ std::vector<ui8> ISelectionScreenInfo::getMyIds() const
 		{
 			for(auto & elem : CSH->si.playerInfos)
 			{
-				if(elem.second.playerID == pair.first)
-					ids.push_back(elem.second.playerID);
+				if(elem.second.connectedPlayerID == pair.first)
+					ids.push_back(elem.second.connectedPlayerID);
 			}
 		}
 	}
@@ -451,7 +451,7 @@ void CSelectionScreen::startScenario()
 		//there must be at least one human player before game can be started
 		std::map<PlayerColor, PlayerSettings>::const_iterator i;
 		for(i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
-			if(i->second.playerID != PlayerSettings::PLAYER_AI)
+			if(i->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
 				break;
 
 		if(i == CSH->si.playerInfos.cend() && !settings["session"]["onlyai"].Bool())
@@ -474,7 +474,7 @@ void CSelectionScreen::startScenario()
 		{
 			const auto & pset = psetPair.second;
 			CSH->si.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
-			if(pset.playerID != PlayerSettings::PLAYER_AI)
+			if(pset.connectedPlayerID != PlayerSettings::PLAYER_AI)
 			{
 				CSH->si.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
 			}
@@ -645,7 +645,7 @@ void CSelectionScreen::postRequest(ui8 what, ui8 dir, PlayerColor player)
 	if(!isGuest())
 		return;
 
-	RequestOptionsChange roc(what, dir, CSH->si.playerInfos[player].playerID);
+	RequestOptionsChange roc(what, dir, CSH->si.playerInfos[player].connectedPlayerID);
 	*CSH->c << &roc;
 }
 
@@ -758,10 +758,10 @@ void InfoCard::showAll(SDL_Surface * to)
 			int playerSoFar = 0;//MPTODO
 			for(auto i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
 			{
-				if(i->second.playerID != PlayerSettings::PLAYER_AI)
+				if(i->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
 				{
 					printAtLoc(i->second.name, 24, 285 + playerSoFar++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
-					playerNames.erase(i->second.playerID);
+					playerNames.erase(i->second.connectedPlayerID);
 				}
 			}
 

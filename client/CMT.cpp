@@ -127,7 +127,7 @@ void startTestMap(const std::string &mapname)
 		PlayerSettings &pset = si.playerInfos[PlayerColor(i)];
 		pset.color = PlayerColor(i);
 		pset.name = CGI->generaltexth->allTexts[468];//Computer
-		pset.playerID = PlayerSettings::PLAYER_AI;
+		pset.connectedPlayerID = PlayerSettings::PLAYER_AI;
 		pset.compOnly = true;
 		pset.castle = 0;
 		pset.hero = -1;

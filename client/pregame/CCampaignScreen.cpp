@@ -459,7 +459,7 @@ void CBonusSelection::updateBonusSelection()
 			int faction = -1;
 			for(auto & elem : startInfo.playerInfos)
 			{
-				if(elem.second.playerID)
+				if(elem.second.connectedPlayerID)
 				{
 					faction = elem.second.castle;
 					break;
