@@ -56,7 +56,7 @@ class CVCMIServer
 
 	boost::program_options::variables_map cmdLineOptions;
 
-	CConnection * host;
+	CConnection * hostClient;
 	int listeningThreads;
 	std::set<CConnection *> connections;
 	std::list<CPackForSelectionScreen *> toAnnounce;

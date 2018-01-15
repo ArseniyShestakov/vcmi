@@ -202,6 +202,10 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 		CConnection * pc = new CConnection(upcomingConnection, NAME);
 		upcomingConnection = nullptr;
 		connections.insert(pc);
+		// MPTODO: this shouldn't be needed
+		// But right now we need to set host connection before starting listening thread
+		if(pc->connectionID == 1)
+			hostClient = pc;
 		startListeningThread(pc);
 	}
 	catch(std::exception & e)
@@ -234,8 +238,7 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 
 			boost::unique_lock<boost::recursive_mutex> queueLock(mx);
 
-			auto ws = dynamic_ptr_cast<WelcomeServer>(cpfs);
-			if(ws)
+			if(auto ws = dynamic_ptr_cast<WelcomeServer>(cpfs))
 			{
 				cpc->names = ws->names;
 				cpc->uuid = ws->uuid;
@@ -243,9 +246,9 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 				WelcomeClient wc;
 				wc.connectionId = cpc->connectionID;
 				wc.capabilities = capabilities;
-				if(!host)
+				if(hostClient->connectionID == cpc->connectionID)
 				{
-					host = cpc;
+					hostClient = cpc;
 					wc.giveHost = true;
 				}
 				*cpc << &wc;
@@ -269,6 +272,11 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 				toAnnounce.push_back(pj);
 			}
 
+			if(auto ph = dynamic_ptr_cast<PassHost>(cpfs))
+			{
+				passHost(ph->toConnection);
+			}
+
 			bool quitting = dynamic_ptr_cast<QuitMenuWithoutStarting>(cpfs),
 				startingGame = dynamic_ptr_cast<StartWithCurrentSettings>(cpfs);
 			if(quitting || startingGame) //host leaves main menu or wants to start game -> we end
@@ -277,7 +285,7 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 				if(!cpc->sendStop)
 					sendPack(cpc, *cpfs);
 
-				if(cpc == host)
+				if(cpc == hostClient)
 					toAnnounce.push_back(cpfs);
 			}
 			else
@@ -321,7 +329,7 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 			boost::this_thread::sleep(boost::posix_time::seconds(2)); //we should never be hasty when networking
 			state = ENDING_WITHOUT_START;
 		}
-		else if(cpc == host)
+		else if(cpc == hostClient)
 		{
 			auto newHost = *RandomGeneratorUtil::nextItem(connections, CRandomGenerator::getDefault());
 			passHost(newHost->connectionID);
@@ -335,15 +343,7 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 
 void CVCMIServer::processPack(CPackForSelectionScreen * pack)
 {
-	if(dynamic_ptr_cast<CPregamePackToHost>(pack))
-	{
-		sendPack(host, *pack);
-	}
-	else if(PassHost * ph = dynamic_ptr_cast<PassHost>(pack))
-	{
-		passHost(ph->toConnection);
-	}
-	else if(SelectMap * sm = dynamic_ptr_cast<SelectMap>(pack))
+	if(SelectMap * sm = dynamic_ptr_cast<SelectMap>(pack))
 	{
 		vstd::clear_pointer(curmap);
 		curmap = sm->mapInfo;
@@ -361,6 +361,12 @@ void CVCMIServer::processPack(CPackForSelectionScreen * pack)
 	{
 		state = ENDING_AND_STARTING_GAME;
 		announcePack(*pack);
+	}
+	// MPTODO: This was the first option, but something gone very wrong
+	// For some reason when I added PassHost netpack this started to crash.
+	else if(dynamic_ptr_cast<CPregamePackToHost>(pack))
+	{
+		sendPack(hostClient, *pack);
 	}
 	else
 		announcePack(*pack);
@@ -409,10 +415,10 @@ void CVCMIServer::passHost(int toConnectionId)
 	{
 		if(c->connectionID != toConnectionId)
 			continue;
-		if(host == c)
+		if(hostClient == c)
 			return;
 
-		host = c;
+		hostClient = c;
 		announceTxt(boost::str(boost::format("Pass host to connection %d") % toConnectionId));
 		auto ph = new PassHost();
 		ph->toConnection = toConnectionId;
