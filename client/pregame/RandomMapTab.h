@@ -18,7 +18,7 @@ public:
 	RandomMapTab();
 
 	void showAll(SDL_Surface * to) override;
-	void updateMapInfo();
+	void updateMapInfoByHost();
 	CFunctionList<void(const CMapInfo *)> & getMapInfoChanged();
 	const CMapInfo * getMapInfo() const;
 	const CMapGenOptions & getMapGenOptions() const;

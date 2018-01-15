@@ -12,6 +12,7 @@
 #include "RandomMapTab.h"
 
 #include "../CGameInfo.h"
+#include "../CServerHandler.h"
 #include "../gui/CAnimation.h"
 #include "../gui/CGuiHandler.h"
 #include "../widgets/CComponent.h"
@@ -41,8 +42,7 @@ RandomMapTab::RandomMapTab()
 		auto mapSizeVal = getPossibleMapSizes();
 		mapGenOptions.setWidth(mapSizeVal[btnId]);
 		mapGenOptions.setHeight(mapSizeVal[btnId]);
-		if(!SEL->isGuest())
-			updateMapInfo();
+		updateMapInfoByHost();
 	});
 
 	// Two levels
@@ -51,8 +51,7 @@ RandomMapTab::RandomMapTab()
 	twoLevelsBtn->addCallback([&](bool on)
 	{
 		mapGenOptions.setHasTwoLevels(on);
-		if(!SEL->isGuest())
-			updateMapInfo();
+		updateMapInfoByHost();
 	});
 
 	// Create number defs list
@@ -75,8 +74,7 @@ RandomMapTab::RandomMapTab()
 		deactivateButtonsFrom(teamsCntGroup, btnId);
 		deactivateButtonsFrom(compOnlyPlayersCntGroup, btnId);
 		validatePlayersCnt(btnId);
-		if(!SEL->isGuest())
-			updateMapInfo();
+		updateMapInfoByHost();
 	});
 
 	// Amount of teams
@@ -87,8 +85,7 @@ RandomMapTab::RandomMapTab()
 	teamsCntGroup->addCallback([&](int btnId)
 	{
 		mapGenOptions.setTeamCount(btnId);
-		if(!SEL->isGuest())
-			updateMapInfo();
+		updateMapInfoByHost();
 	});
 
 	// Computer only players
@@ -101,8 +98,7 @@ RandomMapTab::RandomMapTab()
 		mapGenOptions.setCompOnlyPlayerCount(btnId);
 		deactivateButtonsFrom(compOnlyTeamsCntGroup, (btnId == 0 ? 1 : btnId));
 		validateCompOnlyPlayersCnt(btnId);
-		if(!SEL->isGuest())
-			updateMapInfo();
+		updateMapInfoByHost();
 	});
 
 	// Computer only teams
@@ -114,8 +110,7 @@ RandomMapTab::RandomMapTab()
 	compOnlyTeamsCntGroup->addCallback([&](int btnId)
 	{
 		mapGenOptions.setCompOnlyTeamCount(btnId);
-		if(!SEL->isGuest())
-			updateMapInfo();
+		updateMapInfoByHost();
 	});
 
 	const int WIDE_BTN_WIDTH = 85;
@@ -148,8 +143,7 @@ RandomMapTab::RandomMapTab()
 	showRandMaps = new CButton(Point(54, 535), "RANSHOW", CGI->generaltexth->zelp[252]);
 
 	// Initialize map info object
-	if(!SEL->isGuest())
-		updateMapInfo();
+	updateMapInfoByHost();
 }
 
 void RandomMapTab::showAll(SDL_Surface * to)
@@ -182,8 +176,11 @@ void RandomMapTab::showAll(SDL_Surface * to)
 	printAtLoc(CGI->generaltexth->allTexts[758], 68, 465, FONT_SMALL, Colors::WHITE, to);
 }
 
-void RandomMapTab::updateMapInfo()
+void RandomMapTab::updateMapInfoByHost()
 {
+	if(CSH->isGuest())
+		return;
+
 	// Generate header info
 	mapInfo = make_unique<CMapInfo>();
 	mapInfo->isRandomMap = true;
