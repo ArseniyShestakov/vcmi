@@ -45,6 +45,7 @@ public:
 
 	SelectionTab(CMenuScreen::EState Type, const std::function<void(CMapInfo *)> & OnSelect, CMenuScreen::EGameMode GameMode = CMenuScreen::MULTI_NETWORK_HOST);
 	~SelectionTab();
+	void toggleMode(CMenuScreen::EGameMode mode);
 
 	void showAll(SDL_Surface * to) override;
 	void clickLeft(tribool down, bool previousState) override;

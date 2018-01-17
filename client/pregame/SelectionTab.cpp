@@ -137,49 +137,9 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, const std::function<void(CM
 		pos.y += 6;
 	}
 
-	if(GameMode == CMenuScreen::MULTI_NETWORK_GUEST)
-	{
-		positions = 18;
-	}
-	else
-	{
-		switch(tabType)
-		{
-		case CMenuScreen::newGame:
-			parseMaps(getFiles("Maps/", EResType::MAP));
-			positions = 18;
-			break;
-
-		case CMenuScreen::loadGame:
-		case CMenuScreen::saveGame:
-			parseGames(getFiles("Saves/", EResType::CLIENT_SAVEGAME), GameMode);
-			if(tabType == CMenuScreen::loadGame)
-			{
-				positions = 18;
-			}
-			else
-			{
-				positions = 16;
-			}
-			if(tabType == CMenuScreen::saveGame)
-			{
-				txt = new CTextInput(Rect(32, 539, 350, 20), Point(-32, -25), "GSSTRIP.bmp", 0);
-				txt->filters += CTextInput::filenameFilter;
-			}
-			break;
-
-		case CMenuScreen::campaignList:
-			parseCampaigns(getFiles("Maps/", EResType::CAMPAIGN));
-			positions = 18;
-			break;
-
-		default:
-			assert(0);
-			break;
-		}
-	}
-
 	generalSortingBy = (tabType == CMenuScreen::loadGame || tabType == CMenuScreen::saveGame) ? _fileName : _name;
+
+	toggleMode(GameMode);
 
 	if(tabType != CMenuScreen::campaignList)
 	{
@@ -234,6 +194,55 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, const std::function<void(CM
 	case CMenuScreen::loadGame:
 	case CMenuScreen::saveGame:
 		selectFileName(settings["session"]["lastSave"].String());
+	}
+}
+
+void SelectionTab::toggleMode(CMenuScreen::EGameMode mode)
+{
+	if(mode == CMenuScreen::MULTI_NETWORK_GUEST)
+	{
+		allItems.clear();
+		curItems.clear();
+		if(slider)
+			slider->block(true);
+		positions = 18;
+	}
+	else
+	{
+		switch(tabType)
+		{
+		case CMenuScreen::newGame:
+			parseMaps(getFiles("Maps/", EResType::MAP));
+			positions = 18;
+			break;
+
+		case CMenuScreen::loadGame:
+		case CMenuScreen::saveGame:
+			parseGames(getFiles("Saves/", EResType::CLIENT_SAVEGAME), mode);
+			if(tabType == CMenuScreen::loadGame)
+			{
+				positions = 18;
+			}
+			else
+			{
+				positions = 16;
+			}
+			if(tabType == CMenuScreen::saveGame)
+			{
+				txt = new CTextInput(Rect(32, 539, 350, 20), Point(-32, -25), "GSSTRIP.bmp", 0);
+				txt->filters += CTextInput::filenameFilter;
+			}
+			break;
+
+		case CMenuScreen::campaignList:
+			parseCampaigns(getFiles("Maps/", EResType::CAMPAIGN));
+			positions = 18;
+			break;
+
+		default:
+			assert(0);
+			break;
+		}
 	}
 }
 

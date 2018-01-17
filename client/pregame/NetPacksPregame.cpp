@@ -160,15 +160,14 @@ void PlayersNames::apply(CSelectionScreen * selScreen)
 
 void PassHost::apply(CSelectionScreen *selScreen)
 {
-	if(CSH->host)
-	{
-		CSH->host = false;
-	}
-	else if(CSH->c->connectionID == toConnection)
-	{
+	bool old = CSH->isHost();
+	if(CSH->c->connectionID == toConnection)
 		CSH->host = true;
-	}
-	selScreen->toggleMode(CSH->host);
+	else if(CSH->host)
+		CSH->host = false;
+
+	if(old != CSH->isHost())
+		selScreen->toggleMode(CSH->host);
 }
 
 void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)

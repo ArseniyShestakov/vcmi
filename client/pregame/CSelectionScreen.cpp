@@ -296,10 +296,10 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		break;
 	}
 	case CMenuScreen::saveGame:
-		buttonStart  = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
+		buttonStart = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
 		break;
 	case CMenuScreen::campaignList:
-		buttonStart  = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CSelectionScreen::startCampaign, this), SDLK_b);
+		buttonStart = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CSelectionScreen::startCampaign, this), SDLK_b);
 		break;
 	}
 
@@ -525,6 +525,9 @@ void CSelectionScreen::toggleMode(bool host)
 	buttonSelect->block(!host);
 	buttonOptions->block(!host);
 	buttonStart->block(!host);
+
+//	sel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
+//	opt->recreate();
 }
 
 void CSelectionScreen::handleConnection()
