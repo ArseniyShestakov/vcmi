@@ -226,7 +226,7 @@ void CVCMIServer::startListeningThread(CConnection * pc)
 
 void CVCMIServer::handleConnection(CConnection * cpc)
 {
-	setThreadName("CPregameServer::handleConnection");
+	setThreadName("CVCMIServer::handleConnection");
 	try
 	{
 		while(!cpc->receivedStop)
