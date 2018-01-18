@@ -537,15 +537,6 @@ void CSelectionScreen::propagateOptions() const
 	}
 }
 
-void CSelectionScreen::postRequest(ui8 what, ui8 dir, PlayerColor player)
-{
-	if(!CSH->isGuest())
-		return;
-
-	RequestOptionsChange roc(what, dir, CSH->si.playerInfos[player].connectedPlayerID);
-	*CSH->c << &roc;
-}
-
 void CSelectionScreen::postChatMessage(const std::string & txt)
 {
 	assert(CSH->c);

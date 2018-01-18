@@ -35,6 +35,9 @@
 #include "../lib/mapping/CMapInfo.h"
 #include "../lib/CGeneralTextHandler.h"
 
+// For map options
+#include "../lib/CHeroHandler.h"
+
 extern std::string NAME;
 
 void CServerHandler::startServer()
@@ -401,4 +404,152 @@ ui8 CServerHandler::getIdOfFirstUnallocatedPlayer() //MPTODO: must be const
 	}
 
 	return 0;
+}
+
+void CServerHandler::requestPlayerOptionChange(ui8 what, ui8 dir, PlayerColor player)
+{
+	RequestOptionsChange roc(what, dir, si.playerInfos[player].connectedPlayerID);
+	*c << &roc;
+}
+
+void CServerHandler::optionNextCastle(PlayerColor player, int dir)
+{
+	PlayerSettings & s = si.playerInfos[player];
+	si16 & cur = s.castle;
+	auto & allowed = current->mapHeader->players[s.color.getNum()].allowedFactions;
+	const bool allowRandomTown = current->mapHeader->players[s.color.getNum()].isFactionRandom;
+
+	if(cur == PlayerSettings::NONE) //no change
+		return;
+
+	if(cur == PlayerSettings::RANDOM) //first/last available
+	{
+		if(dir > 0)
+			cur = *allowed.begin(); //id of first town
+		else
+			cur = *allowed.rbegin(); //id of last town
+
+	}
+	else // next/previous available
+	{
+		if((cur == *allowed.begin() && dir < 0) || (cur == *allowed.rbegin() && dir > 0))
+		{
+			if(allowRandomTown)
+			{
+				cur = PlayerSettings::RANDOM;
+			}
+			else
+			{
+				if(dir > 0)
+					cur = *allowed.begin();
+				else
+					cur = *allowed.rbegin();
+			}
+		}
+		else
+		{
+			assert(dir >= -1 && dir <= 1); //othervice std::advance may go out of range
+			auto iter = allowed.find(cur);
+			std::advance(iter, dir);
+			cur = *iter;
+		}
+	}
+
+	if(s.hero >= 0 && !current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
+	{
+		s.hero = PlayerSettings::RANDOM;
+	}
+	if(cur < 0 && s.bonus == PlayerSettings::RESOURCE)
+		s.bonus = PlayerSettings::RANDOM;
+}
+
+void CServerHandler::optionNextHero(PlayerColor player, int dir)
+{
+	PlayerSettings & s = si.playerInfos[player];
+	if(s.castle < 0 || s.connectedPlayerID == PlayerSettings::PLAYER_AI || s.hero == PlayerSettings::NONE)
+		return;
+
+	if(s.hero == PlayerSettings::RANDOM) // first/last available
+	{
+		int max = CGI->heroh->heroes.size(),
+			min = 0;
+		s.hero = nextAllowedHero(player, min, max, 0, dir);
+	}
+	else
+	{
+		if(dir > 0)
+			s.hero = nextAllowedHero(player, s.hero, CGI->heroh->heroes.size(), 1, dir);
+		else
+			s.hero = nextAllowedHero(player, -1, s.hero, 1, dir); // min needs to be -1 -- hero at index 0 would be skipped otherwise
+	}
+}
+
+int CServerHandler::nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir)
+{
+	if(dir > 0)
+	{
+		for(int i = min + incl; i <= max - incl; i++)
+			if(canUseThisHero(player, i))
+				return i;
+	}
+	else
+	{
+		for(int i = max - incl; i >= min + incl; i--)
+			if(canUseThisHero(player, i))
+				return i;
+	}
+	return -1;
+}
+
+void CServerHandler::optionNextBonus(PlayerColor player, int dir)
+{
+	PlayerSettings & s = si.playerInfos[player];
+	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
+
+	if(s.hero == PlayerSettings::NONE &&
+		!current->mapHeader->players[s.color.getNum()].heroesNames.size() &&
+		ret == PlayerSettings::ARTIFACT) //no hero - can't be artifact
+	{
+		if(dir < 0)
+			ret = PlayerSettings::RANDOM;
+		else
+			ret = PlayerSettings::GOLD;
+	}
+
+	if(ret > PlayerSettings::RESOURCE)
+		ret = PlayerSettings::RANDOM;
+	if(ret < PlayerSettings::RANDOM)
+		ret = PlayerSettings::RESOURCE;
+
+	if(s.castle == PlayerSettings::RANDOM && ret == PlayerSettings::RESOURCE) //random castle - can't be resource
+	{
+		if(dir < 0)
+			ret = PlayerSettings::GOLD;
+		else
+			ret = PlayerSettings::RANDOM;
+	}
+}
+
+bool CServerHandler::canUseThisHero(PlayerColor player, int ID)
+{
+	return CGI->heroh->heroes.size() > ID
+		&& si.playerInfos[player].castle == CGI->heroh->heroes[ID]->heroClass->faction
+		&& !vstd::contains(getUsedHeroes(), ID)
+		&& current->mapHeader->allowedHeroes[ID];
+}
+
+std::vector<int> CServerHandler::getUsedHeroes()
+{
+	std::vector<int> heroIds;
+	for(auto & p : si.playerInfos)
+	{
+		const auto & heroes = current->mapHeader->players[p.first.getNum()].heroesNames;
+		for(auto & hero : heroes)
+			if(hero.heroId >= 0) //in VCMI map format heroId = -1 means random hero
+				heroIds.push_back(hero.heroId);
+
+		if(p.second.hero != PlayerSettings::RANDOM)
+			heroIds.push_back(p.second.hero);
+	}
+	return heroIds;
 }

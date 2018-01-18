@@ -83,8 +83,6 @@ public:
 
 	CSlider * turnDuration;
 
-	std::set<int> usedHeroes;
-
 	struct PlayerToRestore
 	{
 		PlayerColor color;
@@ -101,14 +99,10 @@ public:
 
 	void showAll(SDL_Surface * to) override;
 	void recreate();
-	void nextCastle(PlayerColor player, int dir); //dir == -1 or +1
-	void nextHero(PlayerColor player, int dir); //dir == -1 or +1
-	int nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir);
-	void nextBonus(PlayerColor player, int dir); //dir == -1 or +1
+	void changePlayerOption(ui8 what, PlayerColor player, int dir); //dir == -1 or +1
 	void setTurnLength(int npos);
 	void flagPressed(PlayerColor player);
 
 
 
-	bool canUseThisHero(PlayerColor player, int ID);
 };

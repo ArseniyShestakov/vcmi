@@ -34,7 +34,6 @@ public:
 	virtual ~ISelectionScreenInfo();
 	virtual void update(){};
 	virtual void propagateOptions() const {};
-	virtual void postRequest(ui8 what, ui8 dir, PlayerColor player) {};
 	virtual void postChatMessage(const std::string & txt){};
 
 };
@@ -82,7 +81,6 @@ public:
 
 	void propagateNames() const;
 	void propagateOptions() const override;
-	void postRequest(ui8 what, ui8 dir, PlayerColor player) override;
 	void postChatMessage(const std::string & txt) override;
 };
 

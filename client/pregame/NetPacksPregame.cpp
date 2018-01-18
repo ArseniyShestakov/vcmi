@@ -126,15 +126,16 @@ void RequestOptionsChange::apply(CSelectionScreen * selScreen)
 	switch(what)
 	{
 	case TOWN:
-		selScreen->opt->nextCastle(color, direction);
+		CSH->optionNextCastle(color, direction);
 		break;
 	case HERO:
-		selScreen->opt->nextHero(color, direction);
+		CSH->optionNextHero(color, direction);
 		break;
 	case BONUS:
-		selScreen->opt->nextBonus(color, direction);
+		CSH->optionNextBonus(color, direction);
 		break;
 	}
+	selScreen->propagateOptions();
 }
 
 void PlayerLeft::apply(CSelectionScreen * selScreen)

@@ -67,163 +67,17 @@ void OptionsTab::recreate()
 		delete elem.second;
 	}
 	entries.clear();
-	usedHeroes.clear();
 
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
 	for(auto it = CSH->si.playerInfos.begin(); it != CSH->si.playerInfos.end(); ++it)
 	{
 		entries.insert(std::make_pair(it->first, new PlayerOptionsEntry(this, it->second)));
-		const std::vector<SHeroName> & heroes = CSH->current->mapHeader->players[it->first.getNum()].heroesNames;
-		for(auto & heroe : heroes)
-			if(heroe.heroId >= 0) //in VCMI map format heroId = -1 means random hero
-				usedHeroes.insert(heroe.heroId);
-
-		if(it->second.hero != PlayerSettings::RANDOM)
-			usedHeroes.insert(it->second.hero);
 	}
 }
 
-void OptionsTab::nextCastle(PlayerColor player, int dir)
+void OptionsTab::changePlayerOption(ui8 what, PlayerColor player, int dir)
 {
-	if(CSH->isGuest())
-	{
-		SEL->postRequest(RequestOptionsChange::TOWN, dir, player);
-		return;
-	}
-
-	PlayerSettings & s = CSH->si.playerInfos[player];
-	si16 & cur = s.castle;
-	auto & allowed = CSH->current->mapHeader->players[s.color.getNum()].allowedFactions;
-	const bool allowRandomTown = CSH->current->mapHeader->players[s.color.getNum()].isFactionRandom;
-
-	if(cur == PlayerSettings::NONE) //no change
-		return;
-
-	if(cur == PlayerSettings::RANDOM) //first/last available
-	{
-		if(dir > 0)
-			cur = *allowed.begin(); //id of first town
-		else
-			cur = *allowed.rbegin(); //id of last town
-
-	}
-	else // next/previous available
-	{
-		if((cur == *allowed.begin() && dir < 0) || (cur == *allowed.rbegin() && dir > 0))
-		{
-			if(allowRandomTown)
-			{
-				cur = PlayerSettings::RANDOM;
-			}
-			else
-			{
-				if(dir > 0)
-					cur = *allowed.begin();
-				else
-					cur = *allowed.rbegin();
-			}
-		}
-		else
-		{
-			assert(dir >= -1 && dir <= 1); //othervice std::advance may go out of range
-			auto iter = allowed.find(cur);
-			std::advance(iter, dir);
-			cur = *iter;
-		}
-	}
-
-	if(s.hero >= 0 && !CSH->current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
-	{
-		s.hero = PlayerSettings::RANDOM;
-	}
-	if(cur < 0 && s.bonus == PlayerSettings::RESOURCE)
-		s.bonus = PlayerSettings::RANDOM;
-
-
-	SEL->propagateOptions();
-}
-
-void OptionsTab::nextHero(PlayerColor player, int dir)
-{
-	if(CSH->isGuest())
-	{
-		SEL->postRequest(RequestOptionsChange::HERO, dir, player);
-		return;
-	}
-
-	PlayerSettings & s = CSH->si.playerInfos[player];
-	int old = s.hero;
-	if(s.castle < 0 || s.connectedPlayerID == PlayerSettings::PLAYER_AI || s.hero == PlayerSettings::NONE)
-		return;
-
-	if(s.hero == PlayerSettings::RANDOM) // first/last available
-	{
-		int max = CGI->heroh->heroes.size(),
-			min = 0;
-		s.hero = nextAllowedHero(player, min, max, 0, dir);
-	}
-	else
-	{
-		if(dir > 0)
-			s.hero = nextAllowedHero(player, s.hero, CGI->heroh->heroes.size(), 1, dir);
-		else
-			s.hero = nextAllowedHero(player, -1, s.hero, 1, dir); // min needs to be -1 -- hero at index 0 would be skipped otherwise
-	}
-	SEL->propagateOptions();
-}
-
-int OptionsTab::nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir)
-{
-	if(dir > 0)
-	{
-		for(int i = min + incl; i <= max - incl; i++)
-			if(canUseThisHero(player, i))
-				return i;
-	}
-	else
-	{
-		for(int i = max - incl; i >= min + incl; i--)
-			if(canUseThisHero(player, i))
-				return i;
-	}
-	return -1;
-}
-
-void OptionsTab::nextBonus(PlayerColor player, int dir)
-{
-	if(CSH->isGuest())
-	{
-		SEL->postRequest(RequestOptionsChange::BONUS, dir, player);
-		return;
-	}
-
-	PlayerSettings & s = CSH->si.playerInfos[player];
-	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
-
-	if(s.hero == PlayerSettings::NONE &&
-		!CSH->current->mapHeader->players[s.color.getNum()].heroesNames.size() &&
-		ret == PlayerSettings::ARTIFACT) //no hero - can't be artifact
-	{
-		if(dir < 0)
-			ret = PlayerSettings::RANDOM;
-		else
-			ret = PlayerSettings::GOLD;
-	}
-
-	if(ret > PlayerSettings::RESOURCE)
-		ret = PlayerSettings::RANDOM;
-	if(ret < PlayerSettings::RANDOM)
-		ret = PlayerSettings::RESOURCE;
-
-	if(s.castle == PlayerSettings::RANDOM && ret == PlayerSettings::RESOURCE) //random castle - can't be resource
-	{
-		if(dir < 0)
-			ret = PlayerSettings::GOLD;
-		else
-			ret = PlayerSettings::RANDOM;
-	}
-
-	SEL->propagateOptions();
+	CSH->requestPlayerOptionChange(what, dir, player);
 }
 
 void OptionsTab::setTurnLength(int npos)
@@ -289,14 +143,6 @@ void OptionsTab::flagPressed(PlayerColor color)
 		}
 	}
 	SEL->propagateOptions();
-}
-
-bool OptionsTab::canUseThisHero(PlayerColor player, int ID)
-{
-	return CGI->heroh->heroes.size() > ID
-		&& CSH->si.playerInfos[player].castle == CGI->heroh->heroes[ID]->heroClass->faction
-		&& !vstd::contains(usedHeroes, ID)
-		&& CSH->current->mapHeader->allowedHeroes[ID];
 }
 
 size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
@@ -692,12 +538,12 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	bg = new CPicture(BitmapHandler::loadBitmap(bgs[s.color.getNum()]), 0, 0, true);
 	if(SEL->screenType == CMenuScreen::newGame)
 	{
-		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&OptionsTab::nextCastle, owner, s.color, -1));
-		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&OptionsTab::nextCastle, owner, s.color, +1));
-		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&OptionsTab::nextHero, owner, s.color, -1));
-		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&OptionsTab::nextHero, owner, s.color, +1));
-		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&OptionsTab::nextBonus, owner, s.color, -1));
-		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&OptionsTab::nextBonus, owner, s.color, +1));
+		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::TOWN, s.color, -1));
+		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::TOWN, s.color, +1));
+		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::HERO, s.color, -1));
+		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::HERO, s.color, +1));
+		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::BONUS, s.color, -1));
+		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::BONUS, s.color, +1));
 	}
 	else
 		for(auto & elem : btns)

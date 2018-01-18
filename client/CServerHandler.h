@@ -59,6 +59,14 @@ public:
 
 	ui8 getIdOfFirstUnallocatedPlayer(); //returns 0 if none
 
+	void requestPlayerOptionChange(ui8 what, ui8 dir, PlayerColor player);
+	void optionNextCastle(PlayerColor player, int dir); //dir == -1 or +1
+	void optionNextHero(PlayerColor player, int dir); //dir == -1 or +1
+	int nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir);
+	bool canUseThisHero(PlayerColor player, int ID);
+	std::vector<int> getUsedHeroes();
+	void optionNextBonus(PlayerColor player, int dir); //dir == -1 or +1
+
 	bool isHost() const;
 	bool isGuest() const;
 
