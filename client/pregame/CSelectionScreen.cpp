@@ -329,52 +329,33 @@ void CSelectionScreen::startCampaign()
 
 void CSelectionScreen::startScenario()
 {
+	try
 	{
-		//there must be at least one human player before game can be started
-		std::map<PlayerColor, PlayerSettings>::const_iterator i;
-		for(i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
-			if(i->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
-				break;
-
-		if(i == CSH->si.playerInfos.cend() && !settings["session"]["onlyai"].Bool())
+		if(CSH->current && CSH->current->isRandomMap && randMapTab)
 		{
-			GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[530])); //You must position yourself prior to starting the game.
-			return;
+			//copy settings from interface to actual options. TODO: refactor, it used to have no effect at all -.-
+			CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
 		}
+		CSH->tryStartGame();
+		buttonStart->block(true);
+		ongoingClosing = true;
 	}
-
-	if(!CSH->current)
-		return;
-
-	if(CSH->si.mapGenOptions)
+	catch(mapMissingException & e)
 	{
-		//copy settings from interface to actual options. TODO: refactor, it used to have no effect at all -.-
-		CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
 
-		// Update player settings for RMG
-		for(const auto & psetPair : CSH->si.playerInfos)
-		{
-			const auto & pset = psetPair.second;
-			CSH->si.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
-			if(pset.connectedPlayerID != PlayerSettings::PLAYER_AI)
-			{
-				CSH->si.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
-			}
-		}
-
-		if(!CSH->si.mapGenOptions->checkOptions())
-		{
-			GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[751]));
-			return;
-		}
-
-		CSH->propagateOptions();
 	}
-	assert(CSH->isHost());
-	buttonStart->block(true);
-	StartWithCurrentSettings swcs;
-	*CSH->c << &swcs;
-	ongoingClosing = true;
+	catch(noHumanException & e) //for boost errors just log, not crash - probably client shut down connection
+	{
+		GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[530])); // You must position yourself prior to starting the game.
+	}
+	catch(noTemplateException & e)
+	{
+		GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[751]));
+	}
+	catch(...)
+	{
+
+	}
 }
 
 void CSelectionScreen::saveGame()

@@ -595,3 +595,39 @@ void CServerHandler::propagateMap()
 	sm.mapInfo = current.get();
 	*c << &sm;
 }
+
+void CServerHandler::tryStartGame()
+{
+	if(!current)
+		throw mapMissingException();
+
+	//there must be at least one human player before game can be started
+	std::map<PlayerColor, PlayerSettings>::const_iterator i;
+	for(i = si.playerInfos.cbegin(); i != si.playerInfos.cend(); i++)
+		if(i->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
+			break;
+
+	if(i == si.playerInfos.cend() && !settings["session"]["onlyai"].Bool())
+		throw noHumanException();
+
+	if(si.mapGenOptions && si.mode == StartInfo::NEW_GAME)
+	{
+		// Update player settings for RMG
+		for(const auto & psetPair : si.playerInfos)
+		{
+			const auto & pset = psetPair.second;
+			si.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
+			if(pset.connectedPlayerID != PlayerSettings::PLAYER_AI)
+			{
+				si.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
+			}
+		}
+
+		if(!si.mapGenOptions->checkOptions())
+			throw noTemplateException();
+
+		propagateOptions();
+	}
+	StartWithCurrentSettings swcs;
+	*c << &swcs;
+}

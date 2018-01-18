@@ -73,6 +73,8 @@ public:
 	void propagateOptions(); //MPTODO: should be const;
 	void propagateMap(); // const
 
+	void tryStartGame();
+
 	bool isHost() const;
 	bool isGuest() const;
 
@@ -93,5 +95,9 @@ public:
 	void welcomeServer();
 	void stopConnection();
 };
+
+class mapMissingException : public std::exception {};
+class noHumanException : public std::exception {};
+class noTemplateException : public std::exception {};
 
 extern CServerHandler * CSH;
