@@ -225,8 +225,6 @@ CSelectionScreen::~CSelectionScreen()
 	ongoingClosing = true;
 	if(serverHandlingThread)
 	{
-		QuitMenuWithoutStarting qmws;
-		*CSH->c << &qmws;
 		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
 			processPacks();
 		serverHandlingThread->join();
@@ -246,7 +244,7 @@ void CSelectionScreen::showAll(SDL_Surface * to)
 
 void CSelectionScreen::toggleTab(CIntObject * tab)
 {
-	if(CSH->isHost() && CSH->c && screenType != CMenuScreen::saveGame)
+	if(screenType != CMenuScreen::saveGame)
 	{
 		PregameGuiAction pga;
 		if(tab == curTab)
@@ -258,7 +256,7 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 		else if(tab == randMapTab)
 			pga.action = PregameGuiAction::OPEN_RANDOM_MAP_OPTIONS;
 
-		*CSH->c << &pga;
+		CSH->propagateGuiAction(pga);
 	}
 
 	if(curTab && curTab->active)
@@ -486,30 +484,6 @@ void CSelectionScreen::processPacks()
 		CBaseForPGApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
 		apply->applyOnPG(this, pack);
 		delete pack;
-	}
-}
-
-void CSelectionScreen::postChatMessage(const std::string & txt)
-{
-	assert(CSH->c);
-	std::istringstream readed;
-	readed.str(txt);
-	std::string command;
-	readed >> command;
-	if(command == "!passhost")
-	{
-		std::string id;
-		readed >> id;
-		PassHost ph;
-		ph.toConnection = boost::lexical_cast<int>(id);
-		*CSH->c << &ph;
-	}
-	else
-	{
-		ChatMessage cm;
-		cm.message = txt;
-		cm.playerName = CSH->playerNames[CSH->myFirstId()].name;
-		*CSH->c << &cm;
 	}
 }
 
@@ -850,7 +824,7 @@ void CChatBox::keyPressed(const SDL_KeyboardEvent & key)
 {
 	if(key.keysym.sym == SDLK_RETURN && key.state == SDL_PRESSED && inputBox->text.size())
 	{
-		SEL->postChatMessage(inputBox->text);
+		CSH->postChatMessage(inputBox->text);
 		inputBox->setText("");
 	}
 	else

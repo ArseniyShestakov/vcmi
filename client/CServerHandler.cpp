@@ -596,6 +596,14 @@ void CServerHandler::propagateMap()
 	*c << &sm;
 }
 
+void CServerHandler::propagateGuiAction(PregameGuiAction & pga)
+{
+	if(isGuest() || !c)
+		return;
+
+	*c << &pga;
+}
+
 void CServerHandler::tryStartGame()
 {
 	if(!current)
@@ -630,4 +638,33 @@ void CServerHandler::tryStartGame()
 	}
 	StartWithCurrentSettings swcs;
 	*c << &swcs;
+}
+
+void CServerHandler::postChatMessage(const std::string & txt)
+{
+	std::istringstream readed;
+	readed.str(txt);
+	std::string command;
+	readed >> command;
+	if(command == "!passhost")
+	{
+		std::string id;
+		readed >> id;
+		PassHost ph;
+		ph.toConnection = boost::lexical_cast<int>(id);
+		*c << &ph;
+	}
+	else
+	{
+		ChatMessage cm;
+		cm.message = txt;
+		cm.playerName = playerNames[myFirstId()].name;
+		*c << &cm;
+	}
+}
+
+void CServerHandler::quitWithoutStarting()
+{
+	QuitMenuWithoutStarting qmws;
+	*c << &qmws;
 }

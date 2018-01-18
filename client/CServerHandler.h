@@ -17,6 +17,7 @@ struct ServerCapabilities;
 class CMapInfo;
 struct ClientPlayer;
 class CMapHeader;
+struct PregameGuiAction;
 
 #include "../lib/CondSh.h"
 #include "../lib/CStopWatch.h"
@@ -72,8 +73,12 @@ public:
 	void propagateNames() const;
 	void propagateOptions(); //MPTODO: should be const;
 	void propagateMap(); // const
+	void propagateGuiAction(PregameGuiAction & pga);
 
 	void tryStartGame();
+
+	void postChatMessage(const std::string & txt);
+	void quitWithoutStarting();
 
 	bool isHost() const;
 	bool isGuest() const;

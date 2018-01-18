@@ -33,7 +33,6 @@ public:
 	ISelectionScreenInfo();
 	virtual ~ISelectionScreenInfo();
 	virtual void update(){};
-	virtual void postChatMessage(const std::string & txt){};
 
 };
 
@@ -77,8 +76,6 @@ public:
 	void handleConnection();
 	void update() override;
 	void processPacks();
-
-	void postChatMessage(const std::string & txt) override;
 };
 
 /// Save game screen
