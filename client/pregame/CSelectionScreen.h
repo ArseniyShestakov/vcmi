@@ -29,25 +29,13 @@ class ISelectionScreenInfo
 {
 public:
 	CMenuScreen::EState screenType; //new/save/load#Game
-	std::shared_ptr<CMapInfo> current;
-	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 
-	PlayerColor myFirstColor() const;
-	bool isMyColor(PlayerColor color) const;
-	ui8 myFirstId() const;
-	bool isMyId(ui8 id) const;
-	std::vector<ui8> getMyIds() const;
 	ISelectionScreenInfo();
 	virtual ~ISelectionScreenInfo();
 	virtual void update(){};
 	virtual void propagateOptions() const {};
 	virtual void postRequest(ui8 what, ui8 dir, PlayerColor player) {};
 	virtual void postChatMessage(const std::string & txt){};
-
-	void setPlayer(PlayerSettings & pset, ui8 player);
-	void updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader);
-
-	ui8 getIdOfFirstUnallocatedPlayer() const; //returns 0 if none
 
 };
 

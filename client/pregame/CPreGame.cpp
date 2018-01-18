@@ -390,65 +390,6 @@ CPicture * CGPreGame::createPicture(const JsonNode & config)
 {
 	return new CPicture(config["name"].String(), config["x"].Float(), config["y"].Float());
 }
-
-void CGPreGame::setPlayer(PlayerSettings & pset, ui8 player, const std::map<ui8, ClientPlayer> & playerNames)
-{
-	if(vstd::contains(playerNames, player))
-		pset.name = playerNames.find(player)->second.name;
-	else
-		pset.name = CGI->generaltexth->allTexts[468]; //Computer
-
-	pset.connectedPlayerID = player;
-}
-
-void CGPreGame::updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader, const std::map<ui8, ClientPlayer> & playerNames)
-{
-	sInfo.playerInfos.clear();
-	if(!mapHeader.get())
-	{
-		return;
-	}
-
-	sInfo.mapname = filename;
-
-	auto namesIt = playerNames.cbegin();
-
-	for(int i = 0; i < mapHeader->players.size(); i++)
-	{
-		const PlayerInfo & pinfo = mapHeader->players[i];
-
-		//neither computer nor human can play - no player
-		if(!(pinfo.canHumanPlay || pinfo.canComputerPlay))
-			continue;
-
-		PlayerSettings & pset = sInfo.playerInfos[PlayerColor(i)];
-		pset.color = PlayerColor(i);
-		if(pinfo.canHumanPlay && namesIt != playerNames.cend())
-		{
-			setPlayer(pset, namesIt++->first, playerNames);
-		}
-		else
-		{
-			setPlayer(pset, 0, playerNames);
-			if(!pinfo.canHumanPlay)
-			{
-				pset.compOnly = true;
-			}
-		}
-
-		pset.castle = pinfo.defaultCastle();
-		pset.hero = pinfo.defaultHero();
-
-		if(pset.hero != PlayerSettings::RANDOM && pinfo.hasCustomMainHero())
-		{
-			pset.hero = pinfo.mainCustomHeroId;
-			pset.heroName = pinfo.mainCustomHeroName;
-			pset.heroPortrait = pinfo.mainCustomHeroPortrait;
-		}
-
-		pset.handicap = PlayerSettings::NO_HANDICAP;
-	}
-}
 //MPTODO
 
 CMultiMode::CMultiMode(CMenuScreen::EState State)

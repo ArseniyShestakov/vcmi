@@ -1,4 +1,4 @@
-/*
+﻿/*
  * CServerHandler.h, part of VCMI engine
  *
  * Authors: listed in file AUTHORS in main folder
@@ -14,6 +14,9 @@ class PlayerColor;
 struct StartInfo;
 
 struct ServerCapabilities;
+class CMapInfo;
+struct ClientPlayer;
+class CMapHeader;
 
 #include "../lib/CondSh.h"
 #include "../lib/CStopWatch.h"
@@ -41,9 +44,22 @@ public:
 	StartInfo si;
 	std::vector<std::string> myNames;
 	std::vector<ui8> myPlayers;
+	std::shared_ptr<CMapInfo> current;
+	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 	const PlayerSettings * getPlayerSettings(ui8 connectedPlayerId) const;
 	std::set<PlayerColor> getPlayers();
 	std::set<PlayerColor> getHumanColors();
+	void setPlayer(PlayerSettings & pset, ui8 player) const;
+	void updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader) const;
+
+	PlayerColor myFirstColor() const;
+	bool isMyColor(PlayerColor color) const;
+	ui8 myFirstId() const;
+	bool isMyId(ui8 id) const;
+	std::vector<ui8> getMyIds() const;
+
+	ui8 getIdOfFirstUnallocatedPlayer(); //returns 0 if none
+
 	bool isHost() const;
 	bool isGuest() const;
 

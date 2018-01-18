@@ -18,6 +18,7 @@
 #include "../CMusicHandler.h"
 #include "../CVideoHandler.h"
 #include "../CPlayerInterface.h"
+#include "../CServerHandler.h"
 #include "../gui/CAnimation.h"
 #include "../gui/CGuiHandler.h"
 #include "../widgets/CComponent.h"
@@ -718,7 +719,7 @@ void CBonusSelection::selectMap(int mapNr, bool initialSelect)
 
 		std::map<ui8, std::string> names;
 		names[1] = settings["general"]["playerName"].String();
-//MPTODO		CGPreGame::updateStartInfo(ourCampaign->camp->header.filename, startInfo, ourHeader, names);
+// MPTODO		CSH->updateStartInfo(ourCampaign->camp->header.filename, startInfo, ourHeader, names);
 
 		mapDescription->setText(ourHeader->description);
 

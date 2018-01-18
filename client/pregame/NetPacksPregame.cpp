@@ -45,14 +45,14 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 {
 	for(auto & player : players)
 	{
-		SEL->playerNames.insert(player);
+		CSH->playerNames.insert(player);
 
 		//put new player in first slot with AI
 		for(auto & elem : CSH->si.playerInfos)
 		{
 			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
 			{
-				selScreen->setPlayer(elem.second, player.first);
+				CSH->setPlayer(elem.second, player.first);
 				selScreen->opt->entries[elem.second.color]->selectButtons();
 				break;
 			}
@@ -133,16 +133,16 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 	if(CSH->isGuest())
 		return;
 
-	for(auto & pair : selScreen->playerNames)
+	for(auto & pair : CSH->playerNames)
 	{
 		if(pair.second.connection != connectionID)
 			continue;
 
-		selScreen->playerNames.erase(pair.first);
+		CSH->playerNames.erase(pair.first);
 
 		if(PlayerSettings * s = CSH->si.getPlayersSettings(pair.first)) //it's possible that player was unallocated
 		{
-			selScreen->setPlayer(*s, 0);
+			CSH->setPlayer(*s, 0);
 			selScreen->opt->entries[s->color]->selectButtons();
 		}
 	}
@@ -155,7 +155,7 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 void PlayersNames::apply(CSelectionScreen * selScreen)
 {
 	if(CSH->isGuest())
-		selScreen->playerNames = playerNames;
+		CSH->playerNames = playerNames;
 }
 
 void PassHost::apply(CSelectionScreen *selScreen)
@@ -178,7 +178,7 @@ void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 	}
 	vstd::clear_pointer(selScreen->serverHandlingThread); //detach us
 
-	CSH->myPlayers = selScreen->getMyIds();
+	CSH->myPlayers = CSH->getMyIds();
 	CGP->showLoadingScreen(std::bind(&startGame));
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)
 }

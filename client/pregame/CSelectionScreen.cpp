@@ -87,66 +87,6 @@ public:
 
 static CApplier<CBaseForPGApply> * applier = nullptr;
 
-PlayerColor ISelectionScreenInfo::myFirstColor() const
-{
-	for(auto & pair : CSH->si.playerInfos)
-	{
-		if(isMyColor(pair.first))
-			return pair.first;
-	}
-
-	return PlayerColor::CANNOT_DETERMINE;
-}
-
-bool ISelectionScreenInfo::isMyColor(PlayerColor color) const
-{
-	ui8 id = CSH->si.playerInfos[color].connectedPlayerID;
-	if(CSH->c && playerNames.find(id) != playerNames.end())
-	{
-		if(playerNames.find(id)->second.connection == CSH->c->connectionID)
-			return true;
-	}
-	return false;
-}
-
-ui8 ISelectionScreenInfo::myFirstId() const
-{
-	for(auto & pair : playerNames)
-	{
-		if(pair.second.connection == CSH->c->connectionID)
-			return pair.first;
-	}
-
-	return 0;
-}
-
-bool ISelectionScreenInfo::isMyId(ui8 id) const
-{
-	for(auto & pair : playerNames)
-	{
-		if(pair.second.connection == CSH->c->connectionID && pair.second.color == id)
-			return true;
-	}
-	return false;
-}
-std::vector<ui8> ISelectionScreenInfo::getMyIds() const
-{
-	std::vector<ui8> ids;
-
-	for(auto & pair : playerNames)
-	{
-		if(pair.second.connection == CSH->c->connectionID)
-		{
-			for(auto & elem : CSH->si.playerInfos)
-			{
-				if(elem.second.connectedPlayerID == pair.first)
-					ids.push_back(elem.second.connectedPlayerID);
-			}
-		}
-	}
-	return ids;
-}
-
 ISelectionScreenInfo::ISelectionScreenInfo()
 {
 	screenType = CMenuScreen::mainMenu;
@@ -158,27 +98,6 @@ ISelectionScreenInfo::~ISelectionScreenInfo()
 {
 	assert(SEL == this);
 	SEL = nullptr;
-}
-
-void ISelectionScreenInfo::updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader)
-{
-	CGPreGame::updateStartInfo(filename, sInfo, mapHeader, playerNames);
-}
-
-void ISelectionScreenInfo::setPlayer(PlayerSettings & pset, ui8 player)
-{
-	CGPreGame::setPlayer(pset, player, playerNames);
-}
-
-ui8 ISelectionScreenInfo::getIdOfFirstUnallocatedPlayer() const
-{
-	for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
-	{
-		if(!CSH->si.getPlayersSettings(i->first))
-			return i->first;
-	}
-
-	return 0;
 }
 
 /**
@@ -318,7 +237,7 @@ CSelectionScreen::~CSelectionScreen()
 		serverHandlingThread->join();
 		delete serverHandlingThread;
 	}
-	playerNames.clear();
+	CSH->playerNames.clear();
 
 	vstd::clear_pointer(applier);
 	delete mx;
@@ -369,12 +288,12 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 
 void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 {
-	if(current == to)
+	if(CSH->current == to)
 		return;
 	if(CSH->isGuest())
-		current.reset();
+		CSH->current.reset();
 
-	current = to;
+	CSH->current = to;
 
 	if(to && (screenType == CMenuScreen::loadGame || screenType == CMenuScreen::saveGame))
 		CSH->si.difficulty = to->scenarioOpts->difficulty;
@@ -383,9 +302,9 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 	{
 		std::unique_ptr<CMapHeader> emptyHeader;
 		if(to)
-			updateStartInfo(to->fileURI, CSH->si, to->mapHeader);
+			CSH->updateStartInfo(to->fileURI, CSH->si, to->mapHeader);
 		else
-			updateStartInfo("", CSH->si, emptyHeader);
+			CSH->updateStartInfo("", CSH->si, emptyHeader);
 
 		if(screenType == CMenuScreen::newGame)
 		{
@@ -417,8 +336,8 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 
 void CSelectionScreen::startCampaign()
 {
-	if(SEL->current)
-		GH.pushInt(new CBonusSelection(SEL->current->fileURI));
+	if(CSH->current)
+		GH.pushInt(new CBonusSelection(CSH->current->fileURI));
 }
 
 void CSelectionScreen::startScenario()
@@ -437,7 +356,7 @@ void CSelectionScreen::startScenario()
 		}
 	}
 
-	if(!current)
+	if(!CSH->current)
 		return;
 
 	if(CSH->si.mapGenOptions)
@@ -541,9 +460,9 @@ void CSelectionScreen::handleConnection()
 
 	if(CSH->isHost())
 	{
-		if(current)
+		if(CSH->current)
 		{
-			SelectMap sm(*current);
+			SelectMap sm(*CSH->current);
 			*CSH->c << &sm;
 
 			UpdateStartOptions uso(CSH->si);
@@ -609,7 +528,7 @@ void CSelectionScreen::processPacks()
 void CSelectionScreen::setSInfo(const StartInfo & si)
 {
 	CSH->si = si;
-	if(current)
+	if(CSH->current)
 		opt->recreate(); //will force to recreate using current sInfo
 
 	card->difficulty->setSelected(si.difficulty);
@@ -623,7 +542,7 @@ void CSelectionScreen::setSInfo(const StartInfo & si)
 void CSelectionScreen::propagateNames() const
 {
 	PlayersNames pn;
-	pn.playerNames = playerNames;
+	pn.playerNames = CSH->playerNames;
 	*CSH->c << &pn;
 }
 
@@ -664,7 +583,7 @@ void CSelectionScreen::postChatMessage(const std::string & txt)
 	{
 		ChatMessage cm;
 		cm.message = txt;
-		cm.playerName = playerNames[myFirstId()].name;
+		cm.playerName = CSH->playerNames[CSH->myFirstId()].name;
 		*CSH->c << &cm;
 	}
 }
@@ -767,7 +686,7 @@ void InfoCard::showAll(SDL_Surface * to)
 		{
 			int playerLeft = 0; // Players with assigned colors
 			int playersRight = 0;
-			for(auto & p : SEL->playerNames)
+			for(auto & p : CSH->playerNames)
 			{
 				auto pset = CSH->getPlayerSettings(p.first);
 				int pid = p.first;
@@ -785,13 +704,13 @@ void InfoCard::showAll(SDL_Surface * to)
 		}
 	}
 
-	if(SEL->current)
+	if(CSH->current)
 	{
 		if(SEL->screenType != CMenuScreen::campaignList)
 		{
 			if(!showChat)
 			{
-				CMapHeader * header = SEL->current->mapHeader.get();
+				CMapHeader * header = CSH->current->mapHeader.get();
 				//victory conditions
 				printAtLoc(header->victoryMessage, 60, 307, FONT_SMALL, Colors::WHITE, to);
 				victory->setFrame(header->victoryIconIndex);
@@ -803,12 +722,12 @@ void InfoCard::showAll(SDL_Surface * to)
 			}
 
 			//difficulty
-			assert(SEL->current->mapHeader->difficulty <= 4);
-			std::string & diff = CGI->generaltexth->arraytxt[142 + SEL->current->mapHeader->difficulty];
+			assert(CSH->current->mapHeader->difficulty <= 4);
+			std::string & diff = CGI->generaltexth->arraytxt[142 + CSH->current->mapHeader->difficulty];
 			printAtMiddleLoc(diff, 62, 472, FONT_SMALL, Colors::WHITE, to);
 
 			//selecting size icon
-			switch(SEL->current->mapHeader->width)
+			switch(CSH->current->mapHeader->width)
 			{
 			case 36:
 				sizes->setFrame(0);
@@ -829,7 +748,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			sizes->showAll(to);
 
 			if(SEL->screenType == CMenuScreen::loadGame)
-				printToLoc(SEL->current->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
+				printToLoc(CSH->current->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
 
 			//print flags
 			int fx = 34 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
@@ -837,14 +756,14 @@ void InfoCard::showAll(SDL_Surface * to)
 
 			TeamID myT;
 
-			if(SEL->myFirstColor() < PlayerColor::PLAYER_LIMIT)
-				myT = SEL->current->mapHeader->players[SEL->myFirstColor().getNum()].team;
+			if(CSH->myFirstColor() < PlayerColor::PLAYER_LIMIT)
+				myT = CSH->current->mapHeader->players[CSH->myFirstColor().getNum()].team;
 			else
 				myT = TeamID::NO_TEAM;
 
 			for(auto i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
 			{
-				int * myx = ((i->first == SEL->myFirstColor() || SEL->current->mapHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
+				int * myx = ((i->first == CSH->myFirstColor() || CSH->current->mapHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
 				IImage * flag = sFlags->getImage(i->first.getNum(), 0);
 				flag->draw(to, pos.x + *myx, pos.y + 399);
 				*myx += flag->width();
@@ -878,11 +797,11 @@ void InfoCard::showAll(SDL_Surface * to)
 
 		if(SEL->screenType == CMenuScreen::campaignList)
 		{
-			name = SEL->current->campaignHeader->name;
+			name = CSH->current->campaignHeader->name;
 		}
 		else
 		{
-			name = SEL->current->mapHeader->name;
+			name = CSH->current->mapHeader->name;
 		}
 
 		//name
@@ -896,7 +815,7 @@ void InfoCard::showAll(SDL_Surface * to)
 void InfoCard::clickRight(tribool down, bool previousState)
 {
 	static const Rect flagArea(19, 397, 335, 23);
-	if(SEL->current && down && SEL->current && isItInLoc(flagArea, GH.current->motion.x, GH.current->motion.y))
+	if(CSH->current && down && CSH->current && isItInLoc(flagArea, GH.current->motion.x, GH.current->motion.y))
 		showTeamsPopup();
 }
 
@@ -924,11 +843,11 @@ void InfoCard::changeSelection(const std::shared_ptr<CMapInfo> to)
 
 void InfoCard::showTeamsPopup()
 {
-	SDL_Surface * bmp = CMessage::drawDialogBox(256, 90 + 50 * SEL->current->mapHeader->howManyTeams);
+	SDL_Surface * bmp = CMessage::drawDialogBox(256, 90 + 50 * CSH->current->mapHeader->howManyTeams);
 
 	graphics->fonts[FONT_MEDIUM]->renderTextCenter(bmp, CGI->generaltexth->allTexts[657], Colors::YELLOW, Point(128, 30));
 
-	for(int i = 0; i < SEL->current->mapHeader->howManyTeams; i++)
+	for(int i = 0; i < CSH->current->mapHeader->howManyTeams; i++)
 	{
 		std::vector<ui8> flags;
 		std::string hlp = CGI->generaltexth->allTexts[656]; //Team %d
@@ -938,8 +857,8 @@ void InfoCard::showTeamsPopup()
 
 		for(int j = 0; j < PlayerColor::PLAYER_LIMIT_I; j++)
 		{
-			if((SEL->current->mapHeader->players[j].canHumanPlay || SEL->current->mapHeader->players[j].canComputerPlay)
-				&& SEL->current->mapHeader->players[j].team == TeamID(i))
+			if((CSH->current->mapHeader->players[j].canHumanPlay || CSH->current->mapHeader->players[j].canComputerPlay)
+				&& CSH->current->mapHeader->players[j].team == TeamID(i))
 			{
 				flags.push_back(j);
 			}
@@ -1031,15 +950,15 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 
 	assert(LOCPLINT);
 	CSH->si = *LOCPLINT->cb->getStartInfo(); // MPTODO
-	assert(!SEL->current);
-	current = mapInfoFromGame();
+	assert(!CSH->current);
+	CSH->current = mapInfoFromGame();
 
 	screenType = CMenuScreen::scenarioInfo;
 
 	card = new InfoCard();
 	opt = new OptionsTab();
 	opt->recreate();
-	card->changeSelection(current);
+	card->changeSelection(CSH->current);
 
 	card->difficulty->setSelected(startInfo->difficulty);
 	back = new CButton(Point(584, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
@@ -1047,5 +966,5 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 
 CScenarioInfo::~CScenarioInfo()
 {
-	current.reset();
+	CSH->current.reset();
 }

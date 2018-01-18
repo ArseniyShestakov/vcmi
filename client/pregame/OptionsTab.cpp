@@ -79,7 +79,7 @@ void OptionsTab::recreate()
 	for(auto it = CSH->si.playerInfos.begin(); it != CSH->si.playerInfos.end(); ++it)
 	{
 		entries.insert(std::make_pair(it->first, new PlayerOptionsEntry(this, it->second)));
-		const std::vector<SHeroName> & heroes = SEL->current->mapHeader->players[it->first.getNum()].heroesNames;
+		const std::vector<SHeroName> & heroes = CSH->current->mapHeader->players[it->first.getNum()].heroesNames;
 		for(auto & heroe : heroes)
 			if(heroe.heroId >= 0) //in VCMI map format heroId = -1 means random hero
 				usedHeroes.insert(heroe.heroId);
@@ -96,8 +96,8 @@ void OptionsTab::nextCastle(PlayerColor player, int dir)
 
 	PlayerSettings & s = CSH->si.playerInfos[player];
 	si16 & cur = s.castle;
-	auto & allowed = SEL->current->mapHeader->players[s.color.getNum()].allowedFactions;
-	const bool allowRandomTown = SEL->current->mapHeader->players[s.color.getNum()].isFactionRandom;
+	auto & allowed = CSH->current->mapHeader->players[s.color.getNum()].allowedFactions;
+	const bool allowRandomTown = CSH->current->mapHeader->players[s.color.getNum()].isFactionRandom;
 
 	if(cur == PlayerSettings::NONE) //no change
 		return;
@@ -135,7 +135,7 @@ void OptionsTab::nextCastle(PlayerColor player, int dir)
 		}
 	}
 
-	if(s.hero >= 0 && !SEL->current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
+	if(s.hero >= 0 && !CSH->current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
 	{
 		usedHeroes.erase(s.hero); // restore previously selected hero back to available pool
 		s.hero = PlayerSettings::RANDOM;
@@ -216,7 +216,7 @@ void OptionsTab::nextBonus(PlayerColor player, int dir)
 	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
 
 	if(s.hero == PlayerSettings::NONE &&
-		!SEL->current->mapHeader->players[s.color.getNum()].heroesNames.size() &&
+		!CSH->current->mapHeader->players[s.color.getNum()].heroesNames.size() &&
 		ret == PlayerSettings::ARTIFACT) //no hero - can't be artifact
 	{
 		if(dir < 0)
@@ -262,7 +262,7 @@ void OptionsTab::flagPressed(PlayerColor color)
 	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
 	{
 		PlayerSettings & restPos = CSH->si.playerInfos[playerToRestore.color];
-		SEL->setPlayer(restPos, playerToRestore.id);
+		CSH->setPlayer(restPos, playerToRestore.id);
 		playerToRestore.reset();
 	}
 
@@ -271,22 +271,22 @@ void OptionsTab::flagPressed(PlayerColor color)
 	//who will be put here?
 	if(!clickedNameID) //AI player clicked -> if possible replace computer with unallocated player
 	{
-		newPlayer = SEL->getIdOfFirstUnallocatedPlayer();
+		newPlayer = CSH->getIdOfFirstUnallocatedPlayer();
 		if(!newPlayer) //no "free" player -> get just first one
-			newPlayer = SEL->playerNames.begin()->first;
+			newPlayer = CSH->playerNames.begin()->first;
 	}
 	else //human clicked -> take next
 	{
-		auto i = SEL->playerNames.find(clickedNameID); //clicked one
+		auto i = CSH->playerNames.find(clickedNameID); //clicked one
 		i++; //player AFTER clicked one
 
-		if(i != SEL->playerNames.end())
+		if(i != CSH->playerNames.end())
 			newPlayer = i->first;
 		else
 			newPlayer = 0; //AI if we scrolled through all players
 	}
 
-	SEL->setPlayer(clicked, newPlayer); //put player
+	CSH->setPlayer(clicked, newPlayer); //put player
 
 	//if that player was somewhere else, we need to replace him with computer
 	if(newPlayer) //not AI
@@ -299,7 +299,7 @@ void OptionsTab::flagPressed(PlayerColor color)
 				assert(i->second.connectedPlayerID);
 				playerToRestore.color = i->first;
 				playerToRestore.id = newPlayer;
-				SEL->setPlayer(i->second, 0); //set computer
+				CSH->setPlayer(i->second, 0); //set computer
 				old = &i->second;
 				break;
 			}
@@ -326,7 +326,7 @@ bool OptionsTab::canUseThisHero(PlayerColor player, int ID)
 	return CGI->heroh->heroes.size() > ID
 		&& CSH->si.playerInfos[player].castle == CGI->heroh->heroes[ID]->heroClass->faction
 		&& !vstd::contains(usedHeroes, ID)
-		&& SEL->current->mapHeader->allowedHeroes[ID];
+		&& CSH->current->mapHeader->allowedHeroes[ID];
 }
 
 size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
@@ -684,7 +684,7 @@ void OptionsTab::SelectedBox::clickRight(tribool down, bool previousState)
 		// cases when we do not need to display a message
 		if(settings.castle == -2 && CPlayerSettingsHelper::type == TOWN)
 			return;
-		if(settings.hero == -2 && !SEL->current->mapHeader->players[settings.color.getNum()].hasCustomMainHero() && CPlayerSettingsHelper::type == HERO)
+		if(settings.hero == -2 && !CSH->current->mapHeader->players[settings.color.getNum()].hasCustomMainHero() && CPlayerSettingsHelper::type == HERO)
 			return;
 
 		GH.pushInt(new CPregameTooltipBox(*this));
@@ -692,7 +692,7 @@ void OptionsTab::SelectedBox::clickRight(tribool down, bool previousState)
 }
 
 OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSettings & S)
-	: pi(SEL->current->mapHeader->players[S.color.getNum()]), s(S)
+	: pi(CSH->current->mapHeader->players[S.color.getNum()]), s(S)
 {
 	OBJ_CONSTRUCTION;
 	defActions |= SHARE_POS;
@@ -700,7 +700,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	int serial = 0;
 	for(int g = 0; g < s.color.getNum(); ++g)
 	{
-		PlayerInfo & itred = SEL->current->mapHeader->players[g];
+		PlayerInfo & itred = CSH->current->mapHeader->players[g];
 		if(itred.canComputerPlay || itred.canHumanPlay)
 			serial++;
 	}
@@ -735,8 +735,8 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 
 	selectButtons();
 
-	assert(SEL->current && SEL->current->mapHeader);
-	const PlayerInfo & p = SEL->current->mapHeader->players[s.color.getNum()];
+	assert(CSH->current && CSH->current->mapHeader);
+	const PlayerInfo & p = CSH->current->mapHeader->players[s.color.getNum()];
 	assert(p.canComputerPlay || p.canHumanPlay); //someone must be able to control this player
 	if(p.canHumanPlay && p.canComputerPlay)
 		whoCanPlay = HUMAN_OR_CPU;
@@ -745,7 +745,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	else
 		whoCanPlay = HUMAN;
 
-	if(SEL->screenType != CMenuScreen::scenarioInfo && SEL->current->mapHeader->players[s.color.getNum()].canHumanPlay)
+	if(SEL->screenType != CMenuScreen::scenarioInfo && CSH->current->mapHeader->players[s.color.getNum()].canHumanPlay)
 	{
 		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&OptionsTab::flagPressed, owner, s.color));
 		flag->hoverable = true;
@@ -778,7 +778,7 @@ void OptionsTab::PlayerOptionsEntry::selectButtons()
 	if(!btns[0])
 		return;
 
-	const bool foreignPlayer = CSH->isGuest() && !SEL->isMyColor(s.color);
+	const bool foreignPlayer = CSH->isGuest() && !CSH->isMyColor(s.color);
 
 	if((pi.allowedFactions.size() < 2 && !pi.isFactionRandom) || foreignPlayer)
 	{

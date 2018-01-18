@@ -29,6 +29,11 @@
 #include "../lib/rmg/CMapGenOptions.h"
 #include "../lib/mapping/CCampaignHandler.h"
 
+//
+#include "CGameInfo.h"
+#include "../lib/mapping/CMap.h"
+#include "../lib/CGeneralTextHandler.h"
+
 extern std::string NAME;
 
 void CServerHandler::startServer()
@@ -262,4 +267,139 @@ bool CServerHandler::isHost() const
 bool CServerHandler::isGuest() const
 {
 	return !host;
+}
+
+void CServerHandler::setPlayer(PlayerSettings & pset, ui8 player) const
+{
+	if(vstd::contains(playerNames, player))
+		pset.name = playerNames.find(player)->second.name;
+	else
+		pset.name = CGI->generaltexth->allTexts[468]; //Computer
+
+	pset.connectedPlayerID = player;
+}
+
+void CServerHandler::updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader) const
+{
+	sInfo.playerInfos.clear();
+	if(!mapHeader.get())
+	{
+		return;
+	}
+
+	sInfo.mapname = filename;
+
+	auto namesIt = playerNames.cbegin();
+
+	for(int i = 0; i < mapHeader->players.size(); i++)
+	{
+		const PlayerInfo & pinfo = mapHeader->players[i];
+
+		//neither computer nor human can play - no player
+		if(!(pinfo.canHumanPlay || pinfo.canComputerPlay))
+			continue;
+
+		PlayerSettings & pset = sInfo.playerInfos[PlayerColor(i)];
+		pset.color = PlayerColor(i);
+		if(pinfo.canHumanPlay && namesIt != playerNames.cend())
+		{
+			setPlayer(pset, namesIt++->first);
+		}
+		else
+		{
+			setPlayer(pset, 0);
+			if(!pinfo.canHumanPlay)
+			{
+				pset.compOnly = true;
+			}
+		}
+
+		pset.castle = pinfo.defaultCastle();
+		pset.hero = pinfo.defaultHero();
+
+		if(pset.hero != PlayerSettings::RANDOM && pinfo.hasCustomMainHero())
+		{
+			pset.hero = pinfo.mainCustomHeroId;
+			pset.heroName = pinfo.mainCustomHeroName;
+			pset.heroPortrait = pinfo.mainCustomHeroPortrait;
+		}
+
+		pset.handicap = PlayerSettings::NO_HANDICAP;
+	}
+}
+
+
+PlayerColor CServerHandler::myFirstColor() const
+{
+	for(auto & pair : si.playerInfos)
+	{
+		if(isMyColor(pair.first))
+			return pair.first;
+	}
+
+	return PlayerColor::CANNOT_DETERMINE;
+}
+
+bool CServerHandler::isMyColor(PlayerColor color) const
+{
+	if(si.playerInfos.find(color) != si.playerInfos.end())
+	{
+		ui8 id = si.playerInfos.find(color)->second.connectedPlayerID;
+		if(c && playerNames.find(id) != playerNames.end())
+		{
+			if(playerNames.find(id)->second.connection == c->connectionID)
+				return true;
+		}
+	}
+	return false;
+}
+
+ui8 CServerHandler::myFirstId() const
+{
+	for(auto & pair : playerNames)
+	{
+		if(pair.second.connection == c->connectionID)
+			return pair.first;
+	}
+
+	return 0;
+}
+
+bool CServerHandler::isMyId(ui8 id) const
+{
+	for(auto & pair : playerNames)
+	{
+		if(pair.second.connection == c->connectionID && pair.second.color == id)
+			return true;
+	}
+	return false;
+}
+
+std::vector<ui8> CServerHandler::getMyIds() const
+{
+	std::vector<ui8> ids;
+
+	for(auto & pair : playerNames)
+	{
+		if(pair.second.connection == c->connectionID)
+		{
+			for(auto & elem : si.playerInfos)
+			{
+				if(elem.second.connectedPlayerID == pair.first)
+					ids.push_back(elem.second.connectedPlayerID);
+			}
+		}
+	}
+	return ids;
+}
+
+ui8 CServerHandler::getIdOfFirstUnallocatedPlayer() //MPTODO: must be const
+{
+	for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
+	{
+		if(!si.getPlayersSettings(i->first))
+			return i->first;
+	}
+
+	return 0;
 }
