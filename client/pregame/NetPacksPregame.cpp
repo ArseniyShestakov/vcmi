@@ -80,9 +80,6 @@ void SelectMap::apply(CSelectionScreen * selScreen)
 
 void UpdateStartOptions::apply(CSelectionScreen * selScreen)
 {
-	if(!CSH->isGuest())
-		return;
-
 	CSH->si = *startInfo;
 	if(CSH->current)
 		selScreen->opt->recreate(); //will force to recreate using current sInfo

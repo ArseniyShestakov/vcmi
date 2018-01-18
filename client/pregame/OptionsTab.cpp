@@ -77,6 +77,9 @@ void OptionsTab::recreate()
 		for(auto & heroe : heroes)
 			if(heroe.heroId >= 0) //in VCMI map format heroId = -1 means random hero
 				usedHeroes.insert(heroe.heroId);
+
+		if(it->second.hero != PlayerSettings::RANDOM)
+			usedHeroes.insert(it->second.hero);
 	}
 }
 
@@ -131,17 +134,13 @@ void OptionsTab::nextCastle(PlayerColor player, int dir)
 
 	if(s.hero >= 0 && !CSH->current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
 	{
-		usedHeroes.erase(s.hero); // restore previously selected hero back to available pool
 		s.hero = PlayerSettings::RANDOM;
 	}
 	if(cur < 0 && s.bonus == PlayerSettings::RESOURCE)
 		s.bonus = PlayerSettings::RANDOM;
 
-	entries[player]->selectButtons();
 
 	SEL->propagateOptions();
-	entries[player]->update();
-	redraw();
 }
 
 void OptionsTab::nextHero(PlayerColor player, int dir)
@@ -169,14 +168,6 @@ void OptionsTab::nextHero(PlayerColor player, int dir)
 			s.hero = nextAllowedHero(player, s.hero, CGI->heroh->heroes.size(), 1, dir);
 		else
 			s.hero = nextAllowedHero(player, -1, s.hero, 1, dir); // min needs to be -1 -- hero at index 0 would be skipped otherwise
-	}
-
-	if(old != s.hero)
-	{
-		usedHeroes.erase(old);
-		usedHeroes.insert(s.hero);
-		entries[player]->update();
-		redraw();
 	}
 	SEL->propagateOptions();
 }
@@ -233,8 +224,6 @@ void OptionsTab::nextBonus(PlayerColor player, int dir)
 	}
 
 	SEL->propagateOptions();
-	entries[player]->update();
-	redraw();
 }
 
 void OptionsTab::setTurnLength(int npos)
@@ -299,20 +288,7 @@ void OptionsTab::flagPressed(PlayerColor color)
 			}
 		}
 	}
-
-	entries[clicked.color]->selectButtons();
-	if(old)
-	{
-		entries[old->color]->selectButtons();
-		if(old->hero >= 0)
-			usedHeroes.erase(old->hero);
-
-		old->hero = entries[old->color]->pi.defaultHero();
-		entries[old->color]->update(); // update previous frame images in case entries were auto-updated
-	}
-
 	SEL->propagateOptions();
-	GH.totalRedraw();
 }
 
 bool OptionsTab::canUseThisHero(PlayerColor player, int ID)
@@ -758,13 +734,6 @@ void OptionsTab::PlayerOptionsEntry::showAll(SDL_Surface * to)
 	CIntObject::showAll(to);
 	printAtMiddleLoc(s.name, 55, 10, FONT_SMALL, Colors::WHITE, to);
 	printAtMiddleWBLoc(CGI->generaltexth->arraytxt[206 + whoCanPlay], 28, 39, FONT_TINY, 50, Colors::WHITE, to);
-}
-
-void OptionsTab::PlayerOptionsEntry::update()
-{
-	town->update();
-	hero->update();
-	bonus->update();
 }
 
 void OptionsTab::PlayerOptionsEntry::selectButtons()

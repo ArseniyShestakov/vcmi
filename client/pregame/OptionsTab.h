@@ -78,7 +78,6 @@ public:
 
 		PlayerOptionsEntry(OptionsTab * owner, PlayerSettings & S);
 		void showAll(SDL_Surface * to) override;
-		void update();
 		void selectButtons(); //hides unavailable buttons
 	};
 
