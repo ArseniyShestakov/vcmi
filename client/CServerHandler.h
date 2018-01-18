@@ -43,7 +43,6 @@ public:
 	bool host;
 	StartInfo si;
 	std::vector<std::string> myNames;
-	std::vector<ui8> myPlayers;
 	std::shared_ptr<CMapInfo> current;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 	const PlayerSettings * getPlayerSettings(ui8 connectedPlayerId) const;

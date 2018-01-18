@@ -30,12 +30,6 @@
 #include "../../lib/CTownHandler.h"
 #include "../../lib/CHeroHandler.h"
 
-static void swapPlayers(PlayerSettings & a, PlayerSettings & b)
-{
-	std::swap(a.connectedPlayerID, b.connectedPlayerID);
-	std::swap(a.name, b.name);
-}
-
 OptionsTab::OptionsTab()
 	: turnDuration(nullptr)
 {

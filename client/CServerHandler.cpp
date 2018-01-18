@@ -234,7 +234,7 @@ std::set<PlayerColor> CServerHandler::getPlayers()
 	std::set<PlayerColor> players;
 	for(auto & elem : si.playerInfos)
 	{
-		if(isHost() && elem.second.connectedPlayerID == PlayerSettings::PLAYER_AI || vstd::contains(myPlayers, elem.second.connectedPlayerID))
+		if(isHost() && elem.second.connectedPlayerID == PlayerSettings::PLAYER_AI || vstd::contains(getMyIds(), elem.second.connectedPlayerID))
 		{
 			players.insert(elem.first); //add player
 		}
@@ -250,7 +250,7 @@ std::set<PlayerColor> CServerHandler::getHumanColors()
 	std::set<PlayerColor> players;
 	for(auto & elem : si.playerInfos)
 	{
-		if(vstd::contains(myPlayers, elem.second.connectedPlayerID))
+		if(vstd::contains(getMyIds(), elem.second.connectedPlayerID))
 		{
 			players.insert(elem.first); //add player
 		}
