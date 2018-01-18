@@ -295,20 +295,16 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 
 	CSH->current = to;
 
-	if(to && (screenType == CMenuScreen::loadGame || screenType == CMenuScreen::saveGame))
-		CSH->si.difficulty = to->scenarioOpts->difficulty;
+	if(CSH->current && (screenType == CMenuScreen::loadGame || screenType == CMenuScreen::saveGame))
+		CSH->si.difficulty = CSH->current->scenarioOpts->difficulty;
 
 	if(screenType != CMenuScreen::campaignList)
 	{
-		std::unique_ptr<CMapHeader> emptyHeader;
-		if(to)
-			CSH->updateStartInfo(to->fileURI, CSH->si, to->mapHeader);
-		else
-			CSH->updateStartInfo("", CSH->si, emptyHeader);
+		CSH->updateStartInfo();
 
 		if(screenType == CMenuScreen::newGame)
 		{
-			if(to && to->isRandomMap)
+			if(CSH->current && CSH->current->isRandomMap)
 			{
 				CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
 			}
@@ -318,7 +314,7 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 			}
 		}
 	}
-	card->changeSelection(to);
+	card->changeSelection();
 	if(screenType != CMenuScreen::campaignList)
 	{
 		opt->recreate();
@@ -326,7 +322,7 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 
 	if(CSH->isHost() && CSH->c && screenType != CMenuScreen::saveGame)
 	{
-		SelectMap sm(*to);
+		SelectMap sm(*CSH->current);
 		*CSH->c << &sm;
 
 		UpdateStartOptions uso(CSH->si);
@@ -819,14 +815,14 @@ void InfoCard::clickRight(tribool down, bool previousState)
 		showTeamsPopup();
 }
 
-void InfoCard::changeSelection(const std::shared_ptr<CMapInfo> to)
+void InfoCard::changeSelection()
 {
-	if(to && mapDescription)
+	if(CSH->current && mapDescription)
 	{
 		if(SEL->screenType == CMenuScreen::campaignList)
-			mapDescription->setText(to->campaignHeader->description);
+			mapDescription->setText(CSH->current->campaignHeader->description);
 		else
-			mapDescription->setText(to->mapHeader->description);
+			mapDescription->setText(CSH->current->mapHeader->description);
 
 		mapDescription->label->scrollTextTo(0);
 		if(mapDescription->slider)
@@ -958,7 +954,7 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 	card = new InfoCard();
 	opt = new OptionsTab();
 	opt->recreate();
-	card->changeSelection(CSH->current);
+	card->changeSelection();
 
 	card->difficulty->setSelected(startInfo->difficulty);
 	back = new CButton(Point(584, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);

@@ -49,7 +49,7 @@ public:
 	std::set<PlayerColor> getPlayers();
 	std::set<PlayerColor> getHumanColors();
 	void setPlayer(PlayerSettings & pset, ui8 player) const;
-	void updateStartInfo(std::string filename, StartInfo & sInfo, const std::unique_ptr<CMapHeader> & mapHeader) const;
+	void updateStartInfo();
 
 	PlayerColor myFirstColor() const;
 	bool isMyColor(PlayerColor color) const;

@@ -117,7 +117,7 @@ public:
 	~InfoCard();
 	void showAll(SDL_Surface * to) override;
 	void clickRight(tribool down, bool previousState) override;
-	void changeSelection(const std::shared_ptr<CMapInfo> to);
+	void changeSelection();
 	void showTeamsPopup();
 	void toggleChat();
 	void setChat(bool activateChat);
