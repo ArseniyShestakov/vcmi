@@ -86,7 +86,9 @@ void UpdateStartOptions::apply(CSelectionScreen * selScreen)
 
 	selScreen->card->difficulty->setSelected(startInfo->difficulty);
 
-	if(selScreen->curTab == selScreen->randMapTab)
+	// MPTODO: idea is to always apply any changes on guest as well as on host
+	// Though applying of randMapTab options cause crash if host just decide to open it
+	if(selScreen->curTab == selScreen->randMapTab && startInfo->mapGenOptions)
 		selScreen->randMapTab->setMapGenOptions(startInfo->mapGenOptions);
 
 	GH.totalRedraw();
