@@ -232,7 +232,6 @@ CSelectionScreen::~CSelectionScreen()
 		serverHandlingThread->join();
 		delete serverHandlingThread;
 	}
-	CSH->playerNames.clear();
 
 	vstd::clear_pointer(applier);
 	delete mx;
@@ -315,13 +314,10 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 		opt->recreate();
 	}
 
-	if(CSH->isHost() && CSH->c && screenType != CMenuScreen::saveGame)
+	if(screenType != CMenuScreen::saveGame)
 	{
-		SelectMap sm(*CSH->current);
-		*CSH->c << &sm;
-
-		UpdateStartOptions uso(CSH->si);
-		*CSH->c << &uso;
+		CSH->propagateMap();
+		CSH->propagateOptions();
 	}
 }
 
@@ -372,8 +368,7 @@ void CSelectionScreen::startScenario()
 			return;
 		}
 
-		UpdateStartOptions uso(CSH->si);
-		*CSH->c << &uso;
+		CSH->propagateOptions();
 	}
 	assert(CSH->isHost());
 	buttonStart->block(true);
@@ -413,7 +408,7 @@ void CSelectionScreen::difficultyChange(int to)
 {
 	assert(screenType == CMenuScreen::newGame);
 	CSH->si.difficulty = to;
-	propagateOptions();
+	CSH->propagateOptions();
 	redraw();
 }
 
@@ -453,11 +448,8 @@ void CSelectionScreen::handleConnection()
 	{
 		if(CSH->current)
 		{
-			SelectMap sm(*CSH->current);
-			*CSH->c << &sm;
-
-			UpdateStartOptions uso(CSH->si);
-			*CSH->c << &uso;
+			CSH->propagateMap();
+			CSH->propagateOptions();
 		}
 	}
 
@@ -513,22 +505,6 @@ void CSelectionScreen::processPacks()
 		CBaseForPGApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
 		apply->applyOnPG(this, pack);
 		delete pack;
-	}
-}
-
-void CSelectionScreen::propagateNames() const
-{
-	PlayersNames pn;
-	pn.playerNames = CSH->playerNames;
-	*CSH->c << &pn;
-}
-
-void CSelectionScreen::propagateOptions() const
-{
-	if(CSH->isHost() && CSH->c)
-	{
-		UpdateStartOptions ups(CSH->si);
-		*CSH->c << &ups;
 	}
 }
 

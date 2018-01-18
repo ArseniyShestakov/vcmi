@@ -33,7 +33,6 @@ public:
 	ISelectionScreenInfo();
 	virtual ~ISelectionScreenInfo();
 	virtual void update(){};
-	virtual void propagateOptions() const {};
 	virtual void postChatMessage(const std::string & txt){};
 
 };
@@ -79,8 +78,6 @@ public:
 	void update() override;
 	void processPacks();
 
-	void propagateNames() const;
-	void propagateOptions() const override;
 	void postChatMessage(const std::string & txt) override;
 };
 

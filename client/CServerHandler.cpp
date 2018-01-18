@@ -38,6 +38,9 @@
 // For map options
 #include "../lib/CHeroHandler.h"
 
+// netpacks serialization
+#include "../lib/CCreatureHandler.h"
+
 extern std::string NAME;
 
 void CServerHandler::startServer()
@@ -556,8 +559,39 @@ std::vector<int> CServerHandler::getUsedHeroes()
 
 void CServerHandler::reset(StartInfo::EMode mode)
 {
+	playerNames.clear();
 	si.difficulty = 1;
 	si.mode = mode;
 	si.turnTime = 0;
 	myNames.clear();
+}
+
+void CServerHandler::propagateNames() const
+{
+	if(isGuest() || !c)
+		return;
+
+	PlayersNames pn;
+	pn.playerNames = playerNames;
+	*c << &pn;
+}
+
+void CServerHandler::propagateOptions()
+{
+	if(isGuest() || !c)
+		return;
+
+	UpdateStartOptions ups;
+	ups.si = &si;
+	*c << &ups;
+}
+
+void CServerHandler::propagateMap()
+{
+	if(isGuest() || !c)
+		return;
+
+	SelectMap sm;
+	sm.mapInfo = current.get();
+	*c << &sm;
 }

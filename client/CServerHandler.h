@@ -69,6 +69,10 @@ public:
 
 	void reset(StartInfo::EMode mode);
 
+	void propagateNames() const;
+	void propagateOptions(); //MPTODO: should be const;
+	void propagateMap(); // const
+
 	bool isHost() const;
 	bool isGuest() const;
 

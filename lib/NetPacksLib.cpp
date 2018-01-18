@@ -64,49 +64,6 @@ DLL_LINKAGE void SetSecSkill::applyGs(CGameState *gs)
 	hero->setSecSkillLevel(which, val, abs);
 }
 
-DLL_LINKAGE SelectMap::SelectMap(CMapInfo &src)
-{
-	mapInfo = &src;
-	free = false;
-}
-DLL_LINKAGE SelectMap::SelectMap()
-{
-	mapInfo = nullptr;
-	free = true;
-}
-
-DLL_LINKAGE SelectMap::~SelectMap()
-{
-	if(free)
-		delete mapInfo;
-}
-
-DLL_LINKAGE  UpdateStartOptions::UpdateStartOptions(StartInfo &src)
-{
-	startInfo = &src;
-	free = false;
-}
-DLL_LINKAGE  UpdateStartOptions::UpdateStartOptions()
-{
-	startInfo = nullptr;
-	free = true;
-}
-
-DLL_LINKAGE UpdateStartOptions::~UpdateStartOptions()
-{
-	if(free)
-		delete startInfo;
-}
-
-DLL_LINKAGE PassHost::PassHost()
-{
-	toConnection = -1;
-}
-
-DLL_LINKAGE PassHost::~PassHost()
-{
-}
-
 DLL_LINKAGE void SetCommanderProperty::applyGs(CGameState *gs)
 {
 	CCommanderInstance * commander = gs->getHero(heroid)->commander;

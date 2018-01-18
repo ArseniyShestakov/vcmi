@@ -2425,6 +2425,7 @@ struct ChatMessage : public CPregamePackToPropagate
 	std::string playerName, message;
 
 	void apply(CSelectionScreen *selScreen);
+
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & playerName;
@@ -2437,7 +2438,9 @@ struct QuitMenuWithoutStarting : public CPregamePackToPropagate
 	void apply(CSelectionScreen *selScreen);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
-	{}
+	{
+
+	}
 };
 
 struct ClientPlayer // MPTODO
@@ -2468,14 +2471,11 @@ struct PlayerJoined : public CPregamePackToHost
 	}
 };
 
-struct ELF_VISIBILITY SelectMap : public CPregamePackToPropagate
+struct SelectMap : public CPregamePackToPropagate
 {
 	CMapInfo *mapInfo;
-	bool free;//local flag, do not serialize
 
-	DLL_LINKAGE SelectMap(CMapInfo &src);
-	DLL_LINKAGE SelectMap();
-	DLL_LINKAGE ~SelectMap();
+	SelectMap() : mapInfo(nullptr) {}
 
 	void apply(CSelectionScreen *selScreen);
 
@@ -2486,32 +2486,28 @@ struct ELF_VISIBILITY SelectMap : public CPregamePackToPropagate
 
 };
 
-struct ELF_VISIBILITY UpdateStartOptions : public CPregamePackToPropagate
+struct UpdateStartOptions : public CPregamePackToPropagate
 {
-	StartInfo * startInfo;
-	bool free; //local flag, do not serialize
+	StartInfo * si;
 
 	void apply(CSelectionScreen *selScreen);
 
-	DLL_LINKAGE UpdateStartOptions(StartInfo &src);
-	DLL_LINKAGE UpdateStartOptions();
-	DLL_LINKAGE ~UpdateStartOptions();
+	UpdateStartOptions() : si(nullptr) {}
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & startInfo;
+		h & si;
 	}
 
 };
 
-struct ELF_VISIBILITY PassHost : public CPregamePackToPropagate
+struct PassHost : public CPregamePackToPropagate
 {
 	int toConnection;
 
 	void apply(CSelectionScreen *selScreen);
 
-	DLL_LINKAGE PassHost();
-	DLL_LINKAGE ~PassHost();
+	PassHost() : toConnection(-1) {}
 
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
@@ -2586,7 +2582,7 @@ struct StartWithCurrentSettings : public CPregamePackToPropagate
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		//h & playerNames;
+
 	}
 };
 

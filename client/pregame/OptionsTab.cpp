@@ -142,7 +142,7 @@ void OptionsTab::flagPressed(PlayerColor color)
 			}
 		}
 	}
-	SEL->propagateOptions();
+	CSH->propagateOptions();
 }
 
 size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()

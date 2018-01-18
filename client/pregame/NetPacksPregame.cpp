@@ -60,8 +60,8 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 		}
 	}
 
-	selScreen->propagateNames();
-	selScreen->propagateOptions();
+	CSH->propagateNames();
+	CSH->propagateOptions();
 //	selScreen->toggleTab(selScreen->curTab);
 	if(connectionID != CSH->c->connectionID)
 		selScreen->card->setChat(true);
@@ -73,23 +73,22 @@ void SelectMap::apply(CSelectionScreen * selScreen)
 {
 	if(CSH->isGuest())
 	{
-		free = false;
 		selScreen->changeSelection(std::make_shared<CMapInfo>(*mapInfo));
 	}
 }
 
 void UpdateStartOptions::apply(CSelectionScreen * selScreen)
 {
-	CSH->si = *startInfo;
+	CSH->si = *si;
 	if(CSH->current)
 		selScreen->opt->recreate(); //will force to recreate using current sInfo
 
-	selScreen->card->difficulty->setSelected(startInfo->difficulty);
+	selScreen->card->difficulty->setSelected(si->difficulty);
 
 	// MPTODO: idea is to always apply any changes on guest as well as on host
 	// Though applying of randMapTab options cause crash if host just decide to open it
-	if(selScreen->curTab == selScreen->randMapTab && startInfo->mapGenOptions)
-		selScreen->randMapTab->setMapGenOptions(startInfo->mapGenOptions);
+	if(selScreen->curTab == selScreen->randMapTab && si->mapGenOptions)
+		selScreen->randMapTab->setMapGenOptions(si->mapGenOptions);
 
 	GH.totalRedraw();
 }
@@ -135,7 +134,7 @@ void RequestOptionsChange::apply(CSelectionScreen * selScreen)
 		CSH->optionNextBonus(color, direction);
 		break;
 	}
-	selScreen->propagateOptions();
+	CSH->propagateOptions();
 }
 
 void PlayerLeft::apply(CSelectionScreen * selScreen)
@@ -157,8 +156,8 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 		}
 	}
 
-	selScreen->propagateNames();
-	selScreen->propagateOptions();
+	CSH->propagateNames();
+	CSH->propagateOptions();
 	GH.totalRedraw();
 }
 
