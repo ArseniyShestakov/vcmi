@@ -1949,7 +1949,7 @@ void CAdventureOptions::showScenarioInfo()
 	}
 	else
 	{
-		GH.pushInt(new CScenarioInfo(LOCPLINT->cb->getMapHeader(), LOCPLINT->cb->getStartInfo()));
+		GH.pushInt(new CScenarioInfo());
 	}
 }
 

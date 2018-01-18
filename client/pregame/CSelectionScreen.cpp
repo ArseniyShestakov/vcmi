@@ -521,20 +521,6 @@ void CSelectionScreen::processPacks()
 	}
 }
 
-void CSelectionScreen::setSInfo(const StartInfo & si)
-{
-	CSH->si = si;
-	if(CSH->current)
-		opt->recreate(); //will force to recreate using current sInfo
-
-	card->difficulty->setSelected(si.difficulty);
-
-	if(curTab == randMapTab)
-		randMapTab->setMapGenOptions(si.mapGenOptions);
-
-	GH.totalRedraw();
-}
-
 void CSelectionScreen::propagateNames() const
 {
 	PlayersNames pn;
@@ -587,7 +573,6 @@ void CSelectionScreen::postChatMessage(const std::string & txt)
 CSavingScreen::CSavingScreen()
 	: CSelectionScreen(CMenuScreen::saveGame, (LOCPLINT->cb->getStartInfo()->mode == StartInfo::CAMPAIGN ? CMenuScreen::SINGLE_CAMPAIGN : CMenuScreen::MULTI_NETWORK_HOST))
 {
-	ourGame = mapInfoFromGame();
 	CSH->si = *LOCPLINT->cb->getStartInfo();
 }
 
@@ -937,7 +922,7 @@ void CChatBox::addNewMessage(const std::string & text)
 		chatHistory->slider->moveToMax();
 }
 
-CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * startInfo)
+CScenarioInfo::CScenarioInfo()
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
 	pos.w = 762;
@@ -945,9 +930,7 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 	center(pos);
 
 	assert(LOCPLINT);
-	CSH->si = *LOCPLINT->cb->getStartInfo(); // MPTODO
-	assert(!CSH->current);
-	CSH->current = mapInfoFromGame();
+	CSH->si = *LOCPLINT->cb->getStartInfo();
 
 	screenType = CMenuScreen::scenarioInfo;
 
@@ -956,7 +939,7 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 	opt->recreate();
 	card->changeSelection();
 
-	card->difficulty->setSelected(startInfo->difficulty);
+	card->difficulty->setSelected(CSH->si.difficulty);
 	back = new CButton(Point(584, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
 }
 

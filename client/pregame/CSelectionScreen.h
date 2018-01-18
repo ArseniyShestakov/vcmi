@@ -80,7 +80,6 @@ public:
 	void update() override;
 	void processPacks();
 
-	void setSInfo(const StartInfo & si);
 	void propagateNames() const;
 	void propagateOptions() const override;
 	void postRequest(ui8 what, ui8 dir, PlayerColor player) override;
@@ -91,9 +90,6 @@ public:
 class CSavingScreen : public CSelectionScreen
 {
 public:
-	std::shared_ptr<CMapInfo> ourGame;
-
-
 	CSavingScreen();
 	~CSavingScreen();
 };
@@ -145,7 +141,7 @@ public:
 	InfoCard * card;
 	OptionsTab * opt;
 
-	CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * startInfo);
+	CScenarioInfo();
 	~CScenarioInfo();
 };
 

@@ -2488,8 +2488,8 @@ struct ELF_VISIBILITY SelectMap : public CPregamePackToPropagate
 
 struct ELF_VISIBILITY UpdateStartOptions : public CPregamePackToPropagate
 {
-	StartInfo *options;
-	bool free;//local flag, do not serialize
+	StartInfo * startInfo;
+	bool free; //local flag, do not serialize
 
 	void apply(CSelectionScreen *selScreen);
 
@@ -2499,7 +2499,7 @@ struct ELF_VISIBILITY UpdateStartOptions : public CPregamePackToPropagate
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & options;
+		h & startInfo;
 	}
 
 };

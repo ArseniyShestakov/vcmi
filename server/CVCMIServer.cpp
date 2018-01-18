@@ -353,7 +353,7 @@ void CVCMIServer::processPack(CPackForSelectionScreen * pack)
 	else if(UpdateStartOptions * uso = dynamic_ptr_cast<UpdateStartOptions>(pack))
 	{
 		vstd::clear_pointer(curStartInfo);
-		curStartInfo = uso->options;
+		curStartInfo = uso->startInfo;
 		uso->free = false;
 		announcePack(*pack);
 	}

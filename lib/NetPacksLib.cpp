@@ -83,19 +83,19 @@ DLL_LINKAGE SelectMap::~SelectMap()
 
 DLL_LINKAGE  UpdateStartOptions::UpdateStartOptions(StartInfo &src)
 {
-	options = &src;
+	startInfo = &src;
 	free = false;
 }
 DLL_LINKAGE  UpdateStartOptions::UpdateStartOptions()
 {
-	options = nullptr;
+	startInfo = nullptr;
 	free = true;
 }
 
 DLL_LINKAGE UpdateStartOptions::~UpdateStartOptions()
 {
 	if(free)
-		delete options;
+		delete startInfo;
 }
 
 DLL_LINKAGE PassHost::PassHost()
