@@ -320,9 +320,9 @@ void CGPreGame::update()
 
 void CGPreGame::openSel(CMenuScreen::EState screenType, CMenuScreen::EGameMode gameMode, const std::vector<std::string> * names)
 {
+	CSH->reset(screenType == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME);
 	GH.pushInt(new CSelectionScreen(screenType, gameMode));
 
-	CSH->myNames.clear();
 	if(names && !names->empty()) //if have custom set of player names - use it
 		CSH->myNames = *names;
 	else

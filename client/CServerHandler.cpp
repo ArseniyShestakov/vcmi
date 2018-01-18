@@ -553,3 +553,11 @@ std::vector<int> CServerHandler::getUsedHeroes()
 	}
 	return heroIds;
 }
+
+void CServerHandler::reset(StartInfo::EMode mode)
+{
+	si.difficulty = 1;
+	si.mode = mode;
+	si.turnTime = 0;
+	myNames.clear();
+}

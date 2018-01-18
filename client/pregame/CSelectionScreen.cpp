@@ -139,11 +139,6 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		bg = new CPicture(RandomGeneratorUtil::nextItem(bgNames, CRandomGenerator::getDefault())->String(), 0, 0);
 		pos = bg->center();
 	}
-
-	CSH->si.difficulty = 1;
-
-	CSH->si.mode = (Type == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME);
-	CSH->si.turnTime = 0;
 	curTab = nullptr;
 	randMapTab = nullptr;
 

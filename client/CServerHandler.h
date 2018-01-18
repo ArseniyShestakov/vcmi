@@ -67,6 +67,8 @@ public:
 	std::vector<int> getUsedHeroes();
 	void optionNextBonus(PlayerColor player, int dir); //dir == -1 or +1
 
+	void reset(StartInfo::EMode mode);
+
 	bool isHost() const;
 	bool isGuest() const;
 
