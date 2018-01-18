@@ -1821,7 +1821,7 @@ void CGameHandler::run(bool resume)
 	{
 		if (!resume)
 		{
-			(*cc) << gs->initialOpts; // gs->scenarioOps
+			(*cc) << *gs->initialOpts; // gs->scenarioOps
 		}
 
 		std::set<PlayerColor> players;

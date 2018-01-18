@@ -142,10 +142,7 @@ void CClient::newGame()
 	logNetwork->info("\tSending/Getting info to/from the server: %d ms", tmh.getDiff());
 	gs = new CGameState();
 	logNetwork->info("\tCreating gamestate: %i", tmh.getDiff());
-
-	StartInfo * si;
-	*CSH->c >> si;
-	CSH->si = *si;
+	*CSH->c >> CSH->si;
 	gs->init(&CSH->si, settings["general"]["saveRandomMaps"].Bool());
 	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
 
@@ -280,7 +277,7 @@ void CClient::run()
 {
 	setThreadName("CClient::run");
 
-	*CSH->c << CSH->getPlayers();
+	*CSH->c << CSH->getPlayers(); // MPTODO: Server shouldn't need this
 
 	CSH->c->enableStackSendingByID();
 	CSH->c->disableSmartPointerSerialization();
