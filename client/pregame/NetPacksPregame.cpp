@@ -73,7 +73,7 @@ void SelectMap::apply(CSelectionScreen * selScreen)
 	if(CSH->isGuest())
 	{
 		free = false;
-		selScreen->changeSelection(mapInfo);
+		selScreen->changeSelection(std::make_shared<CMapInfo>(*mapInfo));
 	}
 }
 

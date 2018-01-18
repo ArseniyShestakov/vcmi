@@ -19,8 +19,8 @@ public:
 
 	void showAll(SDL_Surface * to) override;
 	void updateMapInfoByHost();
-	CFunctionList<void(const CMapInfo *)> & getMapInfoChanged();
-	const CMapInfo * getMapInfo() const;
+	CFunctionList<void(const std::shared_ptr<CMapInfo>)> & getMapInfoChanged();
+	std::shared_ptr<CMapInfo> getMapInfo() const;
 	const CMapGenOptions & getMapGenOptions() const;
 	void setMapGenOptions(std::shared_ptr<CMapGenOptions> opts);
 
@@ -38,6 +38,6 @@ private:
 		* compOnlyTeamsCntGroup, * waterContentGroup, * monsterStrengthGroup;
 	CButton * showRandMaps;
 	CMapGenOptions mapGenOptions;
-	std::unique_ptr<CMapInfo> mapInfo;
-	CFunctionList<void(const CMapInfo *)> mapInfoChanged;
+	std::shared_ptr<CMapInfo> mapInfo;
+	CFunctionList<void(std::shared_ptr<CMapInfo>)> mapInfoChanged;
 };

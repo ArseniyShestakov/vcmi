@@ -182,7 +182,7 @@ void RandomMapTab::updateMapInfoByHost()
 		return;
 
 	// Generate header info
-	mapInfo = make_unique<CMapInfo>();
+	mapInfo = std::make_shared<CMapInfo>();
 	mapInfo->isRandomMap = true;
 	mapInfo->mapHeader = make_unique<CMapHeader>();
 	mapInfo->mapHeader->version = EMapFormat::SOD;
@@ -219,17 +219,17 @@ void RandomMapTab::updateMapInfoByHost()
 		mapInfo->mapHeader->players.push_back(player);
 	}
 
-	mapInfoChanged(mapInfo.get());
+	mapInfoChanged(mapInfo);
 }
 
-CFunctionList<void(const CMapInfo *)> & RandomMapTab::getMapInfoChanged()
+CFunctionList<void(std::shared_ptr<CMapInfo>)> & RandomMapTab::getMapInfoChanged()
 {
 	return mapInfoChanged;
 }
 
-const CMapInfo * RandomMapTab::getMapInfo() const
+std::shared_ptr<CMapInfo> RandomMapTab::getMapInfo() const
 {
-	return mapInfo.get();
+	return mapInfo;
 }
 
 const CMapGenOptions & RandomMapTab::getMapGenOptions() const

@@ -2470,10 +2470,10 @@ struct PlayerJoined : public CPregamePackToHost
 
 struct ELF_VISIBILITY SelectMap : public CPregamePackToPropagate
 {
-	const CMapInfo *mapInfo;
+	CMapInfo *mapInfo;
 	bool free;//local flag, do not serialize
 
-	DLL_LINKAGE SelectMap(const CMapInfo &src);
+	DLL_LINKAGE SelectMap(CMapInfo &src);
 	DLL_LINKAGE SelectMap();
 	DLL_LINKAGE ~SelectMap();
 

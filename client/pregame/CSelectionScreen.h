@@ -29,7 +29,7 @@ class ISelectionScreenInfo
 {
 public:
 	CMenuScreen::EState screenType; //new/save/load#Game
-	const CMapInfo * current;
+	std::shared_ptr<CMapInfo> current;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 
 	PlayerColor myFirstColor() const;
@@ -81,7 +81,7 @@ public:
 	~CSelectionScreen();
 	void showAll(SDL_Surface * to) override;
 	void toggleTab(CIntObject * tab);
-	void changeSelection(const CMapInfo * to);
+	void changeSelection(std::shared_ptr<CMapInfo> to);
 	void startCampaign();
 	void startScenario();
 	void saveGame();
@@ -103,7 +103,7 @@ public:
 class CSavingScreen : public CSelectionScreen
 {
 public:
-	const CMapInfo * ourGame;
+	std::shared_ptr<CMapInfo> ourGame;
 
 
 	CSavingScreen();
@@ -129,7 +129,7 @@ public:
 	~InfoCard();
 	void showAll(SDL_Surface * to) override;
 	void clickRight(tribool down, bool previousState) override;
-	void changeSelection(const CMapInfo * to);
+	void changeSelection(const std::shared_ptr<CMapInfo> to);
 	void showTeamsPopup();
 	void toggleChat();
 	void setChat(bool activateChat);

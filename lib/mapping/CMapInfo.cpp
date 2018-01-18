@@ -45,7 +45,7 @@ CMapInfo::CMapInfo() : scenarioOpts(nullptr), playerAmnt(0), humanPlayers(0),
 
 #define STEAL(x) x = std::move(tmp.x)
 
-CMapInfo::CMapInfo(CMapInfo && tmp):
+CMapInfo::CMapInfo(CMapInfo & tmp):
 	scenarioOpts(nullptr), playerAmnt(0), humanPlayers(0),
 	actualHumanPlayers(0), isRandomMap(false)
 {

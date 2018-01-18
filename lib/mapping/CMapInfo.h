@@ -40,7 +40,7 @@ public:
 	bool isRandomMap; // true if the map will be created randomly, false if not
 
 	CMapInfo();
-	CMapInfo(CMapInfo && tmp);
+	CMapInfo(CMapInfo & tmp);
 	virtual ~CMapInfo();
 
 	CMapInfo &operator=(CMapInfo &&other);

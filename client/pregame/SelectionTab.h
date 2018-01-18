@@ -21,7 +21,7 @@ class mapSorter
 {
 public:
 	ESortBy sortBy;
-	bool operator()(const CMapInfo * aaa, const CMapInfo * bbb);
+	bool operator()(const std::shared_ptr<CMapInfo> aaa, const std::shared_ptr<CMapInfo> bbb);
 	mapSorter(ESortBy es) : sortBy(es){};
 };
 
@@ -32,10 +32,10 @@ public:
 	int positions; //how many entries (games/maps) can be shown
 	CPicture * bg; //general bg image
 	CSlider * slider;
-	std::vector<CMapInfo> allItems;
-	std::vector<CMapInfo *> curItems;
+	std::vector<std::shared_ptr<CMapInfo>> allItems;
+	std::vector<std::shared_ptr<CMapInfo>> curItems;
 	size_t selectionPos;
-	std::function<void(CMapInfo *)> onSelect;
+	std::function<void(std::shared_ptr<CMapInfo>)> onSelect;
 
 	ESortBy sortingBy;
 	ESortBy generalSortingBy;
@@ -43,7 +43,7 @@ public:
 
 	CTextInput * txt;
 
-	SelectionTab(CMenuScreen::EState Type, const std::function<void(CMapInfo *)> & OnSelect, CMenuScreen::EGameMode GameMode = CMenuScreen::MULTI_NETWORK_HOST);
+	SelectionTab(CMenuScreen::EState Type, const std::function<void(std::shared_ptr<CMapInfo>)> & OnSelect, CMenuScreen::EGameMode GameMode = CMenuScreen::MULTI_NETWORK_HOST);
 	~SelectionTab();
 	void toggleMode(CMenuScreen::EGameMode mode);
 
@@ -61,7 +61,7 @@ public:
 	void printMaps(SDL_Surface * to);
 	int getLine();
 	void selectFileName(std::string fname);
-	const CMapInfo * getSelectedMapInfo() const;
+	std::shared_ptr<CMapInfo> getSelectedMapInfo() const;
 
 private:
 	std::shared_ptr<CAnimation> formatIcons;

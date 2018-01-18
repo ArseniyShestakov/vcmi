@@ -64,7 +64,7 @@ DLL_LINKAGE void SetSecSkill::applyGs(CGameState *gs)
 	hero->setSecSkillLevel(which, val, abs);
 }
 
-DLL_LINKAGE SelectMap::SelectMap(const CMapInfo &src)
+DLL_LINKAGE SelectMap::SelectMap(CMapInfo &src)
 {
 	mapInfo = &src;
 	free = false;

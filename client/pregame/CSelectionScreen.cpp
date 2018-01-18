@@ -45,9 +45,9 @@
 
 void startGame();
 
-static CMapInfo * mapInfoFromGame()
+static std::shared_ptr<CMapInfo> mapInfoFromGame()
 {
-	auto ret = new CMapInfo();
+	auto ret = std::make_shared<CMapInfo>();
 	ret->mapHeader = std::unique_ptr<CMapHeader>(new CMapHeader(*LOCPLINT->cb->getMapHeader()));
 	return ret;
 }
@@ -152,7 +152,6 @@ ISelectionScreenInfo::ISelectionScreenInfo()
 	screenType = CMenuScreen::mainMenu;
 	assert(!SEL);
 	SEL = this;
-	current = nullptr;
 }
 
 ISelectionScreenInfo::~ISelectionScreenInfo()
@@ -223,7 +222,6 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	}
 
 	CSH->si.difficulty = 1;
-	current = nullptr;
 
 	CSH->si.mode = (Type == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME);
 	CSH->si.turnTime = 0;
@@ -369,12 +367,12 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 	GH.totalRedraw();
 }
 
-void CSelectionScreen::changeSelection(const CMapInfo * to)
+void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 {
 	if(current == to)
 		return;
 	if(CSH->isGuest())
-		vstd::clear_pointer(current);
+		current.reset();
 
 	current = to;
 
@@ -526,7 +524,7 @@ void CSelectionScreen::toggleMode(bool host)
 	buttonOptions->block(!host);
 	buttonStart->block(!host);
 
-//	sel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
+	sel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
 //	opt->recreate();
 }
 
@@ -831,7 +829,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			sizes->showAll(to);
 
 			if(SEL->screenType == CMenuScreen::loadGame)
-				printToLoc((static_cast<const CMapInfo *>(SEL->current))->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
+				printToLoc(SEL->current->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
 
 			//print flags
 			int fx = 34 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
@@ -902,7 +900,7 @@ void InfoCard::clickRight(tribool down, bool previousState)
 		showTeamsPopup();
 }
 
-void InfoCard::changeSelection(const CMapInfo * to)
+void InfoCard::changeSelection(const std::shared_ptr<CMapInfo> to)
 {
 	if(to && mapDescription)
 	{
@@ -1049,5 +1047,5 @@ CScenarioInfo::CScenarioInfo(const CMapHeader * mapHeader, const StartInfo * sta
 
 CScenarioInfo::~CScenarioInfo()
 {
-	delete current;
+	current.reset();
 }

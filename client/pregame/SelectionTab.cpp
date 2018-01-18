@@ -39,7 +39,7 @@
 #include "../../lib/registerTypes/RegisterTypes.h"
 
 
-bool mapSorter::operator()(const CMapInfo * aaa, const CMapInfo * bbb)
+bool mapSorter::operator()(const std::shared_ptr<CMapInfo> aaa, const std::shared_ptr<CMapInfo> bbb)
 {
 	auto a = aaa->mapHeader.get();
 	auto b = bbb->mapHeader.get();
@@ -112,7 +112,7 @@ bool mapSorter::operator()(const CMapInfo * aaa, const CMapInfo * bbb)
 	}
 }
 
-SelectionTab::SelectionTab(CMenuScreen::EState Type, const std::function<void(CMapInfo *)> & OnSelect, CMenuScreen::EGameMode GameMode)
+SelectionTab::SelectionTab(CMenuScreen::EState Type, const std::function<void(std::shared_ptr<CMapInfo>)> & OnSelect, CMenuScreen::EGameMode GameMode)
 	: bg(nullptr), onSelect(OnSelect)
 {
 	OBJ_CONSTRUCTION;
@@ -338,15 +338,15 @@ void SelectionTab::filter(int size, bool selectFirst)
 
 	if(tabType == CMenuScreen::campaignList)
 	{
-		for(auto & elem : allItems)
-			curItems.push_back(&elem);
+		for(auto elem : allItems)
+			curItems.push_back(elem);
 	}
 	else
 	{
-		for(auto & elem : allItems)
+		for(auto elem : allItems)
 		{
-			if(elem.mapHeader && elem.mapHeader->version && (!size || elem.mapHeader->width == size))
-				curItems.push_back(&elem);
+			if(elem->mapHeader && elem->mapHeader->version && (!size || elem->mapHeader->width == size))
+				curItems.push_back(elem);
 		}
 	}
 
@@ -466,7 +466,7 @@ void SelectionTab::printMaps(SDL_Surface * to)
 	SDL_Color itemColor;
 	for(int line = 0; line < positions && elemIdx < curItems.size(); elemIdx++, line++)
 	{
-		CMapInfo * currentItem = curItems[elemIdx];
+		auto currentItem = curItems[elemIdx];
 
 		if(elemIdx == selectionPos)
 			itemColor = Colors::YELLOW;
@@ -611,7 +611,7 @@ void SelectionTab::selectFileName(std::string fname)
 	selectAbs(0);
 }
 
-const CMapInfo * SelectionTab::getSelectedMapInfo() const
+std::shared_ptr<CMapInfo> SelectionTab::getSelectedMapInfo() const
 {
 	return curItems.empty() ? nullptr : curItems[selectionPos];
 }
@@ -624,13 +624,13 @@ void SelectionTab::parseMaps(const std::unordered_set<ResourceID> & files)
 	{
 		try
 		{
-			CMapInfo mapInfo;
-			mapInfo.mapInit(file.getName());
+			auto mapInfo = std::make_shared<CMapInfo>();
+			mapInfo->mapInit(file.getName());
 
 			// ignore unsupported map versions (e.g. WoG maps without WoG)
 			// but accept VCMI maps
-			if((mapInfo.mapHeader->version >= EMapFormat::VCMI) || (mapInfo.mapHeader->version <= CGI->modh->settings.data["textData"]["mapVersion"].Float()))
-				allItems.push_back(std::move(mapInfo));
+			if((mapInfo->mapHeader->version >= EMapFormat::VCMI) || (mapInfo->mapHeader->version <= CGI->modh->settings.data["textData"]["mapVersion"].Float()))
+				allItems.push_back(mapInfo);
 		}
 		catch(std::exception & e)
 		{
@@ -649,35 +649,35 @@ void SelectionTab::parseGames(const std::unordered_set<ResourceID> & files, CMen
 			lf.checkMagicBytes(SAVEGAME_MAGIC);
 
 			// Create the map info object
-			CMapInfo mapInfo;
-			mapInfo.mapHeader = make_unique<CMapHeader>();
-			mapInfo.scenarioOpts = nullptr; //to be created by serialiser
-			lf >> *(mapInfo.mapHeader.get()) >> mapInfo.scenarioOpts;
-			mapInfo.fileURI = file.getName();
-			mapInfo.countPlayers();
+			auto mapInfo = std::make_shared<CMapInfo>();
+			mapInfo->mapHeader = make_unique<CMapHeader>();
+			mapInfo->scenarioOpts = nullptr; //to be created by serialiser
+			lf >> *(mapInfo->mapHeader.get()) >> mapInfo->scenarioOpts;
+			mapInfo->fileURI = file.getName();
+			mapInfo->countPlayers();
 			std::time_t time = boost::filesystem::last_write_time(*CResourceHandler::get()->getResourceName(file));
-			mapInfo.date = std::asctime(std::localtime(&time));
+			mapInfo->date = std::asctime(std::localtime(&time));
 
 			// Filter out other game modes
-			bool isCampaign = mapInfo.scenarioOpts->mode == StartInfo::CAMPAIGN;
-			bool isMultiplayer = mapInfo.actualHumanPlayers > 1;
+			bool isCampaign = mapInfo->scenarioOpts->mode == StartInfo::CAMPAIGN;
+			bool isMultiplayer = mapInfo->actualHumanPlayers > 1;
 			switch(gameMode) /// MPTODO
 			{
 ////			case CMenuScreen::SINGLE_PLAYER:
 ////				if(isMultiplayer || isCampaign)
-////					mapInfo.mapHeader.reset();
+////					mapInfo->mapHeader.reset();
 ////				break;
 			case CMenuScreen::SINGLE_CAMPAIGN:
 				if(!isCampaign)
-					mapInfo.mapHeader.reset();
+					mapInfo->mapHeader.reset();
 				break;
 			default:
 				if(!isMultiplayer)
-					mapInfo.mapHeader.reset();
+					mapInfo->mapHeader.reset();
 				break;
 			}
 
-			allItems.push_back(std::move(mapInfo));
+			allItems.push_back(mapInfo);
 		}
 		catch(const std::exception & e)
 		{
@@ -691,11 +691,11 @@ void SelectionTab::parseCampaigns(const std::unordered_set<ResourceID> & files)
 	allItems.reserve(files.size());
 	for(auto & file : files)
 	{
-		CMapInfo info;
+		auto info = std::make_shared<CMapInfo>();
 		//allItems[i].date = std::asctime(std::localtime(&files[i].date));
-		info.fileURI = file.getName();
-		info.campaignInit();
-		allItems.push_back(std::move(info));
+		info->fileURI = file.getName();
+		info->campaignInit();
+		allItems.push_back(info);
 	}
 }
 
