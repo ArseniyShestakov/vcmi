@@ -18,6 +18,7 @@ class CMapInfo;
 struct ClientPlayer;
 class CMapHeader;
 struct PregameGuiAction;
+struct PlayerInfo;
 
 #include "../lib/CondSh.h"
 #include "../lib/CStopWatch.h"
@@ -79,6 +80,8 @@ public:
 
 	void postChatMessage(const std::string & txt);
 	void quitWithoutStarting();
+
+	PlayerInfo getPlayerInfo(int color) const;
 
 	bool isHost() const;
 	bool isGuest() const;

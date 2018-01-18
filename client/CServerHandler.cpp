@@ -668,3 +668,8 @@ void CServerHandler::quitWithoutStarting()
 	QuitMenuWithoutStarting qmws;
 	*c << &qmws;
 }
+
+PlayerInfo CServerHandler::getPlayerInfo(int color) const
+{
+	return CSH->current->mapHeader->players[color];
+}

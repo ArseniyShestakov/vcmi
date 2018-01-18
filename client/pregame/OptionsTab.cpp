@@ -500,7 +500,7 @@ void OptionsTab::SelectedBox::clickRight(tribool down, bool previousState)
 		// cases when we do not need to display a message
 		if(settings.castle == -2 && CPlayerSettingsHelper::type == TOWN)
 			return;
-		if(settings.hero == -2 && !CSH->current->mapHeader->players[settings.color.getNum()].hasCustomMainHero() && CPlayerSettingsHelper::type == HERO)
+		if(settings.hero == -2 && !CSH->getPlayerInfo(settings.color.getNum()).hasCustomMainHero() && CPlayerSettingsHelper::type == HERO)
 			return;
 
 		GH.pushInt(new CPregameTooltipBox(*this));
@@ -508,7 +508,7 @@ void OptionsTab::SelectedBox::clickRight(tribool down, bool previousState)
 }
 
 OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSettings & S)
-	: pi(CSH->current->mapHeader->players[S.color.getNum()]), s(S)
+	: pi(CSH->getPlayerInfo(S.color.getNum())), s(S)
 {
 	OBJ_CONSTRUCTION;
 	defActions |= SHARE_POS;
@@ -516,7 +516,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	int serial = 0;
 	for(int g = 0; g < s.color.getNum(); ++g)
 	{
-		PlayerInfo & itred = CSH->current->mapHeader->players[g];
+		auto itred = CSH->getPlayerInfo(g);
 		if(itred.canComputerPlay || itred.canHumanPlay)
 			serial++;
 	}
@@ -552,7 +552,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	selectButtons();
 
 	assert(CSH->current && CSH->current->mapHeader);
-	const PlayerInfo & p = CSH->current->mapHeader->players[s.color.getNum()];
+	const PlayerInfo & p = CSH->getPlayerInfo(s.color.getNum());
 	assert(p.canComputerPlay || p.canHumanPlay); //someone must be able to control this player
 	if(p.canHumanPlay && p.canComputerPlay)
 		whoCanPlay = HUMAN_OR_CPU;
@@ -561,7 +561,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	else
 		whoCanPlay = HUMAN;
 
-	if(SEL->screenType != CMenuScreen::scenarioInfo && CSH->current->mapHeader->players[s.color.getNum()].canHumanPlay)
+	if(SEL->screenType != CMenuScreen::scenarioInfo && CSH->getPlayerInfo(s.color.getNum()).canHumanPlay)
 	{
 		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&OptionsTab::flagPressed, owner, s.color));
 		flag->hoverable = true;

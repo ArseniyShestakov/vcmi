@@ -655,13 +655,13 @@ void InfoCard::showAll(SDL_Surface * to)
 			TeamID myT;
 
 			if(CSH->myFirstColor() < PlayerColor::PLAYER_LIMIT)
-				myT = CSH->current->mapHeader->players[CSH->myFirstColor().getNum()].team;
+				myT = CSH->getPlayerInfo(CSH->myFirstColor().getNum()).team;
 			else
 				myT = TeamID::NO_TEAM;
 
 			for(auto i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
 			{
-				int * myx = ((i->first == CSH->myFirstColor() || CSH->current->mapHeader->players[i->first.getNum()].team == myT) ? &fx : &ex);
+				int * myx = ((i->first == CSH->myFirstColor() || CSH->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
 				IImage * flag = sFlags->getImage(i->first.getNum(), 0);
 				flag->draw(to, pos.x + *myx, pos.y + 399);
 				*myx += flag->width();
@@ -755,8 +755,8 @@ void InfoCard::showTeamsPopup()
 
 		for(int j = 0; j < PlayerColor::PLAYER_LIMIT_I; j++)
 		{
-			if((CSH->current->mapHeader->players[j].canHumanPlay || CSH->current->mapHeader->players[j].canComputerPlay)
-				&& CSH->current->mapHeader->players[j].team == TeamID(i))
+			if((CSH->getPlayerInfo(j).canHumanPlay || CSH->getPlayerInfo(j).canComputerPlay)
+				&& CSH->getPlayerInfo(j).team == TeamID(i))
 			{
 				flags.push_back(j);
 			}

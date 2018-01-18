@@ -66,8 +66,8 @@ public:
 
 	struct PlayerOptionsEntry : public CIntObject
 	{
-		PlayerInfo & pi;
-		PlayerSettings & s;
+		PlayerInfo pi;
+		PlayerSettings s;
 		CPicture * bg;
 		CButton * btns[6]; //left and right for town, hero, bonus
 		CButton * flag;
