@@ -804,6 +804,9 @@ void CServerHandler::processPacks()
 
 void CServerHandler::optionsFlagPressed(PlayerColor color)
 {
+	if(isGuest() || !c)
+		return;
+
 	struct PlayerToRestore
 	{
 		PlayerColor color;
@@ -868,6 +871,9 @@ void CServerHandler::optionsFlagPressed(PlayerColor color)
 
 void CServerHandler::optionSetTurnLength(int npos)
 {
+	if(isGuest() || !c)
+		return;
+
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
 	si.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
 	propagateOptions();
@@ -906,4 +912,13 @@ void CServerHandler::setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOp
 			si.mapGenOptions.reset();
 		}
 	}
+}
+
+void CServerHandler::requestDifficultyChange(int to)
+{
+	if(isGuest() || !c)
+		return;
+
+	si.difficulty = to;
+	propagateOptions();
 }

@@ -151,7 +151,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 			tabRand->updateMapInfoByHost(); // MPTODO: This is only needed to force-update mapInfo in CSH when tab is opened
 		});
 
-		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
+		card->difficulty->addCallback(std::bind(&CServerHandler::requestDifficultyChange, CSH, _1));
 		card->difficulty->setSelected(1);
 
 		buttonStart = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
@@ -165,7 +165,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		break;
 	}
 	case CMenuScreen::saveGame:
-//		tabSel->onSelect += std::bind(&CSelectionScreen::changeSelectionSave, this, _1);
+		tabSel->onSelect = std::bind(&CSelectionScreen::changeSelectionSave, this, _1);
 		buttonStart = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
 		break;
 	case CMenuScreen::campaignList:
@@ -300,14 +300,6 @@ void CSelectionScreen::saveGame()
 	{
 		overWrite();
 	}
-}
-
-void CSelectionScreen::difficultyChange(int to)
-{
-	assert(screenType == CMenuScreen::newGame);
-	CSH->si.difficulty = to;
-	CSH->propagateOptions();
-	redraw();
 }
 
 void CSelectionScreen::toggleMode(bool host)

@@ -99,6 +99,8 @@ public:
 
 	void setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOpts);
 
+	void requestDifficultyChange(int to);
+
 	bool isHost() const;
 	bool isGuest() const;
 

@@ -64,7 +64,6 @@ public:
 	void startCampaign();
 	void startScenario();
 	void saveGame();
-	void difficultyChange(int to);
 	void toggleMode(bool host);
 };
 
