@@ -671,5 +671,5 @@ void CServerHandler::quitWithoutStarting()
 
 PlayerInfo CServerHandler::getPlayerInfo(int color) const
 {
-	return CSH->current->mapHeader->players[color];
+	return current->mapHeader->players[color];
 }
