@@ -71,6 +71,8 @@ public:
 	bool canUseThisHero(PlayerColor player, int ID);
 	std::vector<int> getUsedHeroes();
 	void optionNextBonus(PlayerColor player, int dir); //dir == -1 or +1
+	void optionsFlagPressed(PlayerColor color);
+	void optionSetTurnLength(int npos);
 
 	void reset(StartInfo::EMode mode);
 

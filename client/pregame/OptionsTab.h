@@ -82,26 +82,10 @@ public:
 	};
 
 	CSlider * turnDuration;
-
-	struct PlayerToRestore
-	{
-		PlayerColor color;
-		int id;
-		void reset() { id = -1; color = PlayerColor::CANNOT_DETERMINE; }
-		PlayerToRestore(){ reset(); }
-	} playerToRestore;
-
-
 	std::map<PlayerColor, PlayerOptionsEntry *> entries; //indexed by color
 
 	OptionsTab();
 
 	void showAll(SDL_Surface * to) override;
 	void recreate();
-	void changePlayerOption(ui8 what, PlayerColor player, int dir); //dir == -1 or +1
-	void setTurnLength(int npos);
-	void flagPressed(PlayerColor player);
-
-
-
 };

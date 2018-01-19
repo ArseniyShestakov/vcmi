@@ -30,9 +30,6 @@
 #include "../../lib/CTownHandler.h"
 #include "../../lib/CHeroHandler.h"
 
-// TODO: This should probably go somewhere into VCMI config JSON
-static const int POSSIBLE_TURNTIME[] = {1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 0};
-
 OptionsTab::OptionsTab()
 	: turnDuration(nullptr)
 {
@@ -41,7 +38,7 @@ OptionsTab::OptionsTab()
 	pos = bg->pos;
 
 	if(SEL->screenType == CMenuScreen::newGame || SEL->screenType == CMenuScreen::loadGame)
-		turnDuration = new CSlider(Point(55, 551), 194, std::bind(&OptionsTab::setTurnLength, this, _1), 1, ARRAY_COUNT(POSSIBLE_TURNTIME), ARRAY_COUNT(POSSIBLE_TURNTIME), true, CSlider::BLUE);
+		turnDuration = new CSlider(Point(55, 551), 194, std::bind(&CServerHandler::optionSetTurnLength, CSH, _1), 1, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), true, CSlider::BLUE);
 }
 
 void OptionsTab::showAll(SDL_Surface * to)
@@ -72,77 +69,7 @@ void OptionsTab::recreate()
 		entries.insert(std::make_pair(it->first, new PlayerOptionsEntry(this, it->second)));
 	}
 
-	turnDuration->moveTo(std::distance(POSSIBLE_TURNTIME, std::find(POSSIBLE_TURNTIME, POSSIBLE_TURNTIME + ARRAY_COUNT(POSSIBLE_TURNTIME), CSH->si.turnTime)));
-}
-
-void OptionsTab::changePlayerOption(ui8 what, PlayerColor player, int dir)
-{
-	CSH->requestPlayerOptionChange(what, dir, player);
-}
-
-void OptionsTab::setTurnLength(int npos)
-{
-	vstd::amin(npos, ARRAY_COUNT(POSSIBLE_TURNTIME) - 1);
-
-	CSH->si.turnTime = POSSIBLE_TURNTIME[npos];
-	CSH->propagateOptions();
-	redraw();
-}
-
-void OptionsTab::flagPressed(PlayerColor color)
-{
-	PlayerSettings & clicked = CSH->si.playerInfos[color];
-	PlayerSettings * old = nullptr;
-
-	//identify clicked player
-	int clickedNameID = clicked.connectedPlayerID; //human is a number of player, zero means AI
-	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
-	{
-		PlayerSettings & restPos = CSH->si.playerInfos[playerToRestore.color];
-		CSH->setPlayer(restPos, playerToRestore.id);
-		playerToRestore.reset();
-	}
-
-	int newPlayer; //which player will take clicked position
-
-	//who will be put here?
-	if(!clickedNameID) //AI player clicked -> if possible replace computer with unallocated player
-	{
-		newPlayer = CSH->getIdOfFirstUnallocatedPlayer();
-		if(!newPlayer) //no "free" player -> get just first one
-			newPlayer = CSH->playerNames.begin()->first;
-	}
-	else //human clicked -> take next
-	{
-		auto i = CSH->playerNames.find(clickedNameID); //clicked one
-		i++; //player AFTER clicked one
-
-		if(i != CSH->playerNames.end())
-			newPlayer = i->first;
-		else
-			newPlayer = 0; //AI if we scrolled through all players
-	}
-
-	CSH->setPlayer(clicked, newPlayer); //put player
-
-	//if that player was somewhere else, we need to replace him with computer
-	if(newPlayer) //not AI
-	{
-		for(auto i = CSH->si.playerInfos.begin(); i != CSH->si.playerInfos.end(); i++)
-		{
-			int curNameID = i->second.connectedPlayerID;
-			if(i->first != color && curNameID == newPlayer)
-			{
-				assert(i->second.connectedPlayerID);
-				playerToRestore.color = i->first;
-				playerToRestore.id = newPlayer;
-				CSH->setPlayer(i->second, 0); //set computer
-				old = &i->second;
-				break;
-			}
-		}
-	}
-	CSH->propagateOptions();
+	turnDuration->moveTo(std::distance(GameConstants::POSSIBLE_TURNTIME, std::find(GameConstants::POSSIBLE_TURNTIME, GameConstants::POSSIBLE_TURNTIME + ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), CSH->si.turnTime)));
 }
 
 size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
@@ -538,12 +465,12 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	bg = new CPicture(BitmapHandler::loadBitmap(bgs[s.color.getNum()]), 0, 0, true);
 	if(SEL->screenType == CMenuScreen::newGame)
 	{
-		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::TOWN, s.color, -1));
-		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::TOWN, s.color, +1));
-		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::HERO, s.color, -1));
-		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::HERO, s.color, +1));
-		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::BONUS, s.color, -1));
-		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&OptionsTab::changePlayerOption, owner, RequestOptionsChange::BONUS, s.color, +1));
+		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&CServerHandler::requestPlayerOptionChange, CSH, RequestOptionsChange::TOWN, -1, s.color));
+		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&CServerHandler::requestPlayerOptionChange, CSH, RequestOptionsChange::TOWN, +1, s.color));
+		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&CServerHandler::requestPlayerOptionChange, CSH, RequestOptionsChange::HERO, -1, s.color));
+		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&CServerHandler::requestPlayerOptionChange, CSH, RequestOptionsChange::HERO, +1, s.color));
+		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&CServerHandler::requestPlayerOptionChange, CSH, RequestOptionsChange::BONUS, -1, s.color));
+		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&CServerHandler::requestPlayerOptionChange, CSH, RequestOptionsChange::BONUS, +1, s.color));
 	}
 	else
 		for(auto & elem : btns)
@@ -563,7 +490,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 
 	if(SEL->screenType != CMenuScreen::scenarioInfo && CSH->getPlayerInfo(s.color.getNum()).canHumanPlay)
 	{
-		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&OptionsTab::flagPressed, owner, s.color));
+		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&CServerHandler::optionsFlagPressed, CSH, s.color));
 		flag->hoverable = true;
 		flag->block(CSH->isGuest());
 	}

@@ -806,3 +806,74 @@ void CServerHandler::processPacks()
 		delete pack;
 	}
 }
+
+void CServerHandler::optionsFlagPressed(PlayerColor color)
+{
+	struct PlayerToRestore
+	{
+		PlayerColor color;
+		int id;
+		void reset() { id = -1; color = PlayerColor::CANNOT_DETERMINE; }
+		PlayerToRestore(){ reset(); }
+	} playerToRestore;
+
+	PlayerSettings & clicked = si.playerInfos[color];
+	PlayerSettings * old = nullptr;
+
+	//identify clicked player
+	int clickedNameID = clicked.connectedPlayerID; //human is a number of player, zero means AI
+	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
+	{
+		PlayerSettings & restPos = si.playerInfos[playerToRestore.color];
+		setPlayer(restPos, playerToRestore.id);
+		playerToRestore.reset();
+	}
+
+	int newPlayer; //which player will take clicked position
+
+	//who will be put here?
+	if(!clickedNameID) //AI player clicked -> if possible replace computer with unallocated player
+	{
+		newPlayer = getIdOfFirstUnallocatedPlayer();
+		if(!newPlayer) //no "free" player -> get just first one
+			newPlayer = playerNames.begin()->first;
+	}
+	else //human clicked -> take next
+	{
+		auto i = playerNames.find(clickedNameID); //clicked one
+		i++; //player AFTER clicked one
+
+		if(i != playerNames.end())
+			newPlayer = i->first;
+		else
+			newPlayer = 0; //AI if we scrolled through all players
+	}
+
+	setPlayer(clicked, newPlayer); //put player
+
+	//if that player was somewhere else, we need to replace him with computer
+	if(newPlayer) //not AI
+	{
+		for(auto i = si.playerInfos.begin(); i != si.playerInfos.end(); i++)
+		{
+			int curNameID = i->second.connectedPlayerID;
+			if(i->first != color && curNameID == newPlayer)
+			{
+				assert(i->second.connectedPlayerID);
+				playerToRestore.color = i->first;
+				playerToRestore.id = newPlayer;
+				setPlayer(i->second, 0); //set computer
+				old = &i->second;
+				break;
+			}
+		}
+	}
+	propagateOptions();
+}
+
+void CServerHandler::optionSetTurnLength(int npos)
+{
+	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
+	si.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
+	propagateOptions();
+}
