@@ -877,3 +877,27 @@ void CServerHandler::requestChangeSelection(std::shared_ptr<CMapInfo> to)
 	sm.mapInfo = to.get();
 	*c << &sm;
 }
+
+void CServerHandler::setCurrentMap(CMapInfo * mapInfo)
+{
+	if(mapInfo)
+		current = std::make_shared<CMapInfo>(*mapInfo);
+	else
+		current.reset();
+
+	if(current && si.mode == StartInfo::LOAD_GAME)
+		si.difficulty = current->scenarioOpts->difficulty;
+
+	updateStartInfo();
+	if(si.mode == StartInfo::NEW_GAME)
+	{
+		if(current && current->isRandomMap)
+		{
+//			si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(selScreen->tabRand->getMapGenOptions()));
+		}
+		else
+		{
+			si.mapGenOptions.reset();
+		}
+	}
+}

@@ -97,6 +97,8 @@ public:
 	void processPacks();
 	void stopServerConnection();
 
+	void setCurrentMap(CMapInfo * mapInfo);
+
 	bool isHost() const;
 	bool isGuest() const;
 
