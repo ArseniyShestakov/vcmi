@@ -651,8 +651,11 @@ void CServerHandler::postChatMessage(const std::string & txt)
 		std::string id;
 		readed >> id;
 		PassHost ph;
-		ph.toConnection = boost::lexical_cast<int>(id);
-		*c << &ph;
+		if(id.length())
+		{
+			ph.toConnection = boost::lexical_cast<int>(id);
+			*c << &ph;
+		}
 	}
 	else
 	{
