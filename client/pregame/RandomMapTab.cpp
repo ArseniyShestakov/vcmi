@@ -221,10 +221,10 @@ void RandomMapTab::updateMapInfoByHost()
 		mapInfo->mapHeader->players.push_back(player);
 	}
 
-	mapInfoChanged(mapInfo);
+	mapInfoChanged(mapInfo, &mapGenOptions);
 }
 
-CFunctionList<void(std::shared_ptr<CMapInfo>)> & RandomMapTab::getMapInfoChanged()
+CFunctionList<void(std::shared_ptr<CMapInfo>, CMapGenOptions *)> & RandomMapTab::getMapInfoChanged()
 {
 	return mapInfoChanged;
 }

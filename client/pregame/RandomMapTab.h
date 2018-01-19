@@ -19,7 +19,7 @@ public:
 
 	void showAll(SDL_Surface * to) override;
 	void updateMapInfoByHost();
-	CFunctionList<void(const std::shared_ptr<CMapInfo>)> & getMapInfoChanged();
+	CFunctionList<void(const std::shared_ptr<CMapInfo>, CMapGenOptions *)> & getMapInfoChanged();
 	std::shared_ptr<CMapInfo> getMapInfo() const;
 	const CMapGenOptions & getMapGenOptions() const;
 	void setMapGenOptions(std::shared_ptr<CMapGenOptions> opts);
@@ -39,5 +39,5 @@ private:
 	CButton * showRandMaps;
 	CMapGenOptions mapGenOptions;
 	std::shared_ptr<CMapInfo> mapInfo;
-	CFunctionList<void(std::shared_ptr<CMapInfo>)> mapInfoChanged;
+	CFunctionList<void(std::shared_ptr<CMapInfo>, CMapGenOptions *)> mapInfoChanged;
 };

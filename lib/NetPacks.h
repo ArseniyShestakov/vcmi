@@ -38,6 +38,7 @@ struct QuestInfo;
 class CMapInfo;
 struct StartInfo;
 struct ServerCapabilities;
+class CMapGenOptions;
 
 struct CPackForClient : public CPack
 {
@@ -2474,14 +2475,16 @@ struct PlayerJoined : public CPregamePackToHost
 struct SelectMap : public CPregamePackToPropagate
 {
 	CMapInfo *mapInfo;
+	CMapGenOptions * mapGenOpts;
 
-	SelectMap() : mapInfo(nullptr) {}
+	SelectMap() : mapInfo(nullptr), mapGenOpts(nullptr) {}
 
 	void apply(CSelectionScreen *selScreen);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & mapInfo;
+		h & mapGenOpts;
 	}
 
 };

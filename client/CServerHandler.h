@@ -87,7 +87,7 @@ public:
 
 	PlayerInfo getPlayerInfo(int color) const;
 
-	void requestChangeSelection(std::shared_ptr<CMapInfo> to);
+	void requestChangeSelection(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr);
 
 	std::list<CPackForSelectionScreen *> upcomingPacks; //protected by mx
 
@@ -97,7 +97,7 @@ public:
 	void processPacks();
 	void stopServerConnection();
 
-	void setCurrentMap(CMapInfo * mapInfo);
+	void setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOpts);
 
 	bool isHost() const;
 	bool isGuest() const;

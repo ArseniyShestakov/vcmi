@@ -868,17 +868,18 @@ void CServerHandler::optionSetTurnLength(int npos)
 	propagateOptions();
 }
 
-void CServerHandler::requestChangeSelection(std::shared_ptr<CMapInfo> to)
+void CServerHandler::requestChangeSelection(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
 {
 	if(isGuest() || !c || current == to)
 		return;
 
 	SelectMap sm;
 	sm.mapInfo = to.get();
+	sm.mapGenOpts = mapGenOpts;
 	*c << &sm;
 }
 
-void CServerHandler::setCurrentMap(CMapInfo * mapInfo)
+void CServerHandler::setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOpts)
 {
 	if(mapInfo)
 		current = std::make_shared<CMapInfo>(*mapInfo);
@@ -893,7 +894,7 @@ void CServerHandler::setCurrentMap(CMapInfo * mapInfo)
 	{
 		if(current && current->isRandomMap)
 		{
-//			si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(selScreen->tabRand->getMapGenOptions()));
+			si.mapGenOptions = std::shared_ptr<CMapGenOptions>(mapGenOpts);
 		}
 		else
 		{

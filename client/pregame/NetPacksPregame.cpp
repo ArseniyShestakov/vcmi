@@ -71,7 +71,7 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 
 void SelectMap::apply(CSelectionScreen * selScreen)
 {
-	CSH->setCurrentMap(mapInfo);
+	CSH->setCurrentMap(mapInfo, mapGenOpts);
 	CSH->propagateOptions();
 	selScreen->card->changeSelection();
 	if(selScreen->screenType != CMenuScreen::campaignList)

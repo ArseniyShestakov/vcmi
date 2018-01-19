@@ -120,7 +120,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 
 	auto initLobby = [&]()
 	{
-		tabSel->onSelect = std::bind(&CServerHandler::requestChangeSelection, CSH, _1);
+		tabSel->onSelect = std::bind(&CServerHandler::requestChangeSelection, CSH, _1, nullptr);
 
 		buttonSelect = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
 		buttonSelect->addCallback([&]()
@@ -142,13 +142,13 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	case CMenuScreen::newGame:
 	{
 		tabRand = new RandomMapTab();
-		tabRand->getMapInfoChanged() += std::bind(&CServerHandler::requestChangeSelection, CSH, _1);
+		tabRand->getMapInfoChanged() += std::bind(&CServerHandler::requestChangeSelection, CSH, _1, _2);
 		tabRand->recActions = DISPOSE;
 		buttonRMG = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
 		buttonRMG->addCallback([&]()
 		{
 			toggleTab(tabRand);
-			CSH->requestChangeSelection(tabRand->getMapInfo());
+			tabRand->updateMapInfoByHost(); // MPTODO: This is only needed to force-update mapInfo in CSH when tab is opened
 		});
 
 		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
@@ -239,18 +239,6 @@ void CSelectionScreen::changeSelectionSave(std::shared_ptr<CMapInfo> to)
 	if(screenType != CMenuScreen::campaignList)
 	{
 		CSH->updateStartInfo();
-
-		if(screenType == CMenuScreen::newGame)
-		{
-			if(CSH->current && CSH->current->isRandomMap)
-			{
-				CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(tabRand->getMapGenOptions()));
-			}
-			else
-			{
-				CSH->si.mapGenOptions.reset();
-			}
-		}
 	}
 */
 	card->changeSelection();
@@ -266,11 +254,6 @@ void CSelectionScreen::startScenario()
 {
 	try
 	{
-		if(CSH->current && CSH->current->isRandomMap && tabRand)
-		{
-			//copy settings from interface to actual options. TODO: refactor, it used to have no effect at all -.-
-			CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(tabRand->getMapGenOptions()));
-		}
 		CSH->tryStartGame();
 		buttonStart->block(true);
 	}
