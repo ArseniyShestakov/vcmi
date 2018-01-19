@@ -71,9 +71,30 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 
 void SelectMap::apply(CSelectionScreen * selScreen)
 {
-	if(CSH->isGuest())
+	if(mapInfo)
+		CSH->current = std::make_shared<CMapInfo>(*mapInfo);
+	else
+		CSH->current.reset();
+
+	if(CSH->current && CSH->si.mode == StartInfo::LOAD_GAME)
+		CSH->si.difficulty = CSH->current->scenarioOpts->difficulty;
+
+	CSH->updateStartInfo();
+	if(CSH->si.mode == StartInfo::NEW_GAME)
 	{
-		selScreen->changeSelection(std::make_shared<CMapInfo>(*mapInfo));
+		if(CSH->current && CSH->current->isRandomMap)
+		{
+			CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(selScreen->tabRand->getMapGenOptions()));
+		}
+		else
+		{
+			CSH->si.mapGenOptions.reset();
+		}
+	}
+	selScreen->card->changeSelection();
+	if(selScreen->screenType != CMenuScreen::campaignList)
+	{
+		selScreen->tabOpt->recreate();
 	}
 }
 

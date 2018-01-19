@@ -78,7 +78,6 @@ public:
 
 	void propagateNames() const;
 	void propagateOptions(); //MPTODO: should be const;
-	void propagateMap(); // const
 	void propagateGuiAction(PregameGuiAction & pga);
 
 	void tryStartGame();
@@ -87,6 +86,8 @@ public:
 	void quitWithoutStarting();
 
 	PlayerInfo getPlayerInfo(int color) const;
+
+	void requestChangeSelection(std::shared_ptr<CMapInfo> to);
 
 	std::list<CPackForSelectionScreen *> upcomingPacks; //protected by mx
 

@@ -642,16 +642,6 @@ void CServerHandler::propagateOptions()
 	*c << &ups;
 }
 
-void CServerHandler::propagateMap()
-{
-	if(isGuest() || !c)
-		return;
-
-	SelectMap sm;
-	sm.mapInfo = current.get();
-	*c << &sm;
-}
-
 void CServerHandler::propagateGuiAction(PregameGuiAction & pga)
 {
 	if(isGuest() || !c)
@@ -751,7 +741,7 @@ void CServerHandler::handleConnection()
 	{
 		if(current)
 		{
-			propagateMap();
+//			propagateMap();
 			propagateOptions();
 		}
 	}
@@ -876,4 +866,14 @@ void CServerHandler::optionSetTurnLength(int npos)
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
 	si.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
 	propagateOptions();
+}
+
+void CServerHandler::requestChangeSelection(std::shared_ptr<CMapInfo> to)
+{
+	if(isGuest() || !c || current == to)
+		return;
+
+	SelectMap sm;
+	sm.mapInfo = to.get();
+	*c << &sm;
 }

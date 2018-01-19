@@ -112,8 +112,8 @@ bool mapSorter::operator()(const std::shared_ptr<CMapInfo> aaa, const std::share
 	}
 }
 
-SelectionTab::SelectionTab(CMenuScreen::EState Type, const std::function<void(std::shared_ptr<CMapInfo>)> & OnSelect, CMenuScreen::EGameMode GameMode)
-	: bg(nullptr), onSelect(OnSelect)
+SelectionTab::SelectionTab(CMenuScreen::EState Type, CMenuScreen::EGameMode GameMode)
+	: bg(nullptr), onSelect(nullptr)
 {
 	OBJ_CONSTRUCTION;
 	selectionPos = 0;
@@ -432,7 +432,8 @@ void SelectionTab::select(int position)
 		txt->setText(filename.stem().string());
 	}
 
-	onSelect(curItems[py]);
+	if(onSelect)
+		onSelect(curItems[py]);
 }
 
 void SelectionTab::selectAbs(int position)

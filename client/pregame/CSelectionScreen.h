@@ -59,7 +59,8 @@ public:
 	~CSelectionScreen();
 	void showAll(SDL_Surface * to) override;
 	void toggleTab(CIntObject * tab);
-	void changeSelection(std::shared_ptr<CMapInfo> to);
+	void changeSelection();
+	void changeSelectionSave(std::shared_ptr<CMapInfo> to);
 	void startCampaign();
 	void startScenario();
 	void saveGame();

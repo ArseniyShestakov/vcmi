@@ -109,7 +109,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		tabOpt = new OptionsTab(); //scenario options tab
 		tabOpt->recActions = DISPOSE;
 	}
-	tabSel = new SelectionTab(screenType, std::bind(&CSelectionScreen::changeSelection, this, _1), gameMode); //scenario selection tab
+	tabSel = new SelectionTab(screenType, gameMode); //scenario selection tab
 	tabSel->recActions = DISPOSE; // MPTODO
 	tabSel->recActions = 255;
 	curTab = tabSel;
@@ -120,11 +120,13 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 
 	auto initLobby = [&]()
 	{
+		tabSel->onSelect = std::bind(&CServerHandler::requestChangeSelection, CSH, _1);
+
 		buttonSelect = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
 		buttonSelect->addCallback([&]()
 		{
 			toggleTab(tabSel);
-			changeSelection(tabSel->getSelectedMapInfo());
+			CSH->requestChangeSelection(tabSel->getSelectedMapInfo());
 		});
 
 		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, tabOpt), SDLK_a);
@@ -140,13 +142,13 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	case CMenuScreen::newGame:
 	{
 		tabRand = new RandomMapTab();
-		tabRand->getMapInfoChanged() += std::bind(&CSelectionScreen::changeSelection, this, _1);
+		tabRand->getMapInfoChanged() += std::bind(&CServerHandler::requestChangeSelection, CSH, _1);
 		tabRand->recActions = DISPOSE;
 		buttonRMG = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
 		buttonRMG->addCallback([&]()
 		{
 			toggleTab(tabRand);
-			changeSelection(tabRand->getMapInfo());
+			CSH->requestChangeSelection(tabRand->getMapInfo());
 		});
 
 		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
@@ -163,6 +165,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		break;
 	}
 	case CMenuScreen::saveGame:
+//		tabSel->onSelect += std::bind(&CSelectionScreen::changeSelectionSave, this, _1);
 		buttonStart = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
 		break;
 	case CMenuScreen::campaignList:
@@ -223,18 +226,16 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 	GH.totalRedraw();
 }
 
-void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
+void CSelectionScreen::changeSelectionSave(std::shared_ptr<CMapInfo> to)
 {
 	if(CSH->current == to)
 		return;
-	if(CSH->isGuest())
-		CSH->current.reset();
 
 	CSH->current = to;
 
-	if(CSH->current && (screenType == CMenuScreen::loadGame || screenType == CMenuScreen::saveGame))
+	if(CSH->current)
 		CSH->si.difficulty = CSH->current->scenarioOpts->difficulty;
-
+/*
 	if(screenType != CMenuScreen::campaignList)
 	{
 		CSH->updateStartInfo();
@@ -251,17 +252,8 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 			}
 		}
 	}
+*/
 	card->changeSelection();
-	if(screenType != CMenuScreen::campaignList)
-	{
-		tabOpt->recreate();
-	}
-
-	if(screenType != CMenuScreen::saveGame)
-	{
-		CSH->propagateMap();
-		CSH->propagateOptions();
-	}
 }
 
 void CSelectionScreen::startCampaign()

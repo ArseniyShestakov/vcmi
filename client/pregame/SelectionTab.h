@@ -43,7 +43,7 @@ public:
 
 	CTextInput * txt;
 
-	SelectionTab(CMenuScreen::EState Type, const std::function<void(std::shared_ptr<CMapInfo>)> & OnSelect, CMenuScreen::EGameMode GameMode = CMenuScreen::MULTI_NETWORK_HOST);
+	SelectionTab(CMenuScreen::EState Type, CMenuScreen::EGameMode GameMode = CMenuScreen::MULTI_NETWORK_HOST);
 	~SelectionTab();
 	void toggleMode(CMenuScreen::EGameMode mode);
 
