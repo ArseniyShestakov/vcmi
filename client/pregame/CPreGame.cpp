@@ -36,7 +36,6 @@
 #include "../CBitmapHandler.h"
 #include "../Client.h"
 #include "../../lib/NetPacks.h"
-#include "../../lib/registerTypes//RegisterTypes.h"
 #include "../../lib/CThreadHelper.h"
 #include "../../lib/CConfigHandler.h"
 #include "../../lib/GameConstants.h"
@@ -305,8 +304,7 @@ void CGPreGame::update()
 		menu->switchToTab(0);
 	}
 
-	if(SEL)
-		SEL->update();
+	CSH->processPacks();
 
 	// Handles mouse and key input
 	GH.updateTime();

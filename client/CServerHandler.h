@@ -19,6 +19,7 @@ struct ClientPlayer;
 class CMapHeader;
 struct PregameGuiAction;
 struct PlayerInfo;
+struct CPackForSelectionScreen;
 
 #include "../lib/CondSh.h"
 #include "../lib/CStopWatch.h"
@@ -32,7 +33,9 @@ private:
 	void callServer(); //calls server via system(), should be called as thread
 public:
 	CStopWatch th;
-	boost::thread *serverThread; //thread that called system to run server
+	boost::thread * serverThread; //thread that called system to run server
+	boost::thread * serverHandlingThread;
+	boost::recursive_mutex * mx;
 	SharedMemory * shm;
 	std::string uuid;
 	bool verbose; //whether to print log msgs
@@ -82,6 +85,14 @@ public:
 	void quitWithoutStarting();
 
 	PlayerInfo getPlayerInfo(int color) const;
+
+	std::list<CPackForSelectionScreen *> upcomingPacks; //protected by mx
+
+	std::atomic<bool> ongoingClosing;
+
+	void handleConnection();
+	void processPacks();
+	void stopServerConnection();
 
 	bool isHost() const;
 	bool isGuest() const;

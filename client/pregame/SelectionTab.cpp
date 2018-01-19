@@ -36,7 +36,7 @@
 #include "../../lib/CHeroHandler.h"
 #include "../../lib/filesystem/Filesystem.h"
 #include "../../lib/serializer/Connection.h"
-#include "../../lib/registerTypes/RegisterTypes.h"
+#include "../../lib/CModHandler.h"
 
 
 bool mapSorter::operator()(const std::shared_ptr<CMapInfo> aaa, const std::shared_ptr<CMapInfo> bbb)

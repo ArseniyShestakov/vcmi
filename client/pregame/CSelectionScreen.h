@@ -28,11 +28,10 @@ struct ClientPlayer;
 class ISelectionScreenInfo
 {
 public:
-	CMenuScreen::EState screenType; //new/save/load#Game
+	CMenuScreen::EState screenType;
 
 	ISelectionScreenInfo();
 	virtual ~ISelectionScreenInfo();
-	virtual void update(){};
 
 };
 
@@ -56,12 +55,6 @@ public:
 	RandomMapTab * tabRand;
 	CIntObject * curTab;
 
-	boost::thread * serverHandlingThread;
-	boost::recursive_mutex * mx;
-	std::list<CPackForSelectionScreen *> upcomingPacks; //protected by mx
-
-	std::atomic<bool> ongoingClosing;
-
 	CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST);
 	~CSelectionScreen();
 	void showAll(SDL_Surface * to) override;
@@ -72,10 +65,6 @@ public:
 	void saveGame();
 	void difficultyChange(int to);
 	void toggleMode(bool host);
-
-	void handleConnection();
-	void update() override;
-	void processPacks();
 };
 
 /// Save game screen

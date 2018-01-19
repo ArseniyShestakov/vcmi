@@ -41,6 +41,46 @@
 // netpacks serialization
 #include "../lib/CCreatureHandler.h"
 
+// Applier
+#include "../lib/registerTypes/RegisterTypes.h"
+#include "../lib/NetPacks.h"
+#include "pregame/CSelectionScreen.h"
+
+template<typename T> class CApplyOnPG;
+
+class CBaseForPGApply
+{
+public:
+	virtual void applyOnPG(CSelectionScreen * selScr, void * pack) const = 0;
+	virtual ~CBaseForPGApply(){};
+	template<typename U> static CBaseForPGApply * getApplier(const U * t = nullptr)
+	{
+		return new CApplyOnPG<U>();
+	}
+};
+
+template<typename T> class CApplyOnPG : public CBaseForPGApply
+{
+public:
+	void applyOnPG(CSelectionScreen * selScr, void * pack) const override
+	{
+		T * ptr = static_cast<T *>(pack);
+		ptr->apply(selScr);
+	}
+};
+
+template<> class CApplyOnPG<CPack>: public CBaseForPGApply
+{
+public:
+	void applyOnPG(CSelectionScreen * selScr, void * pack) const override
+	{
+		logGlobal->error("Cannot apply on PG plain CPack!");
+		assert(0);
+	}
+};
+
+static CApplier<CBaseForPGApply> * applier = nullptr;
+
 extern std::string NAME;
 
 void CServerHandler::startServer()
@@ -118,7 +158,7 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
-	: c(nullptr), serverThread(nullptr), shm(nullptr), verbose(true), host(false)
+	: c(nullptr), serverThread(nullptr), shm(nullptr), verbose(true), host(false), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 
@@ -202,6 +242,7 @@ void CServerHandler::justConnectToServer(const std::string &host, const ui16 por
 			// MPTODO: remove SDL dependency from server handler
 			SDL_Delay(2000);
 		}
+		serverHandlingThread = new boost::thread(&CServerHandler::handleConnection, this);
 	}
 }
 
@@ -216,6 +257,21 @@ void CServerHandler::welcomeServer()
 void CServerHandler::stopConnection()
 {
 	vstd::clear_pointer(c);
+}
+
+void CServerHandler::stopServerConnection()
+{
+	ongoingClosing = true;
+	if(serverHandlingThread)
+	{
+		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
+			processPacks();
+		serverHandlingThread->join();
+		delete serverHandlingThread;
+	}
+
+	vstd::clear_pointer(applier);
+	delete mx;
 }
 
 bool CServerHandler::isServerLocal()
@@ -636,6 +692,7 @@ void CServerHandler::tryStartGame()
 
 		propagateOptions();
 	}
+	ongoingClosing = true;
 	StartWithCurrentSettings swcs;
 	*c << &swcs;
 }
@@ -668,6 +725,7 @@ void CServerHandler::postChatMessage(const std::string & txt)
 
 void CServerHandler::quitWithoutStarting()
 {
+	ongoingClosing = true;
 	QuitMenuWithoutStarting qmws;
 	*c << &qmws;
 }
@@ -675,4 +733,76 @@ void CServerHandler::quitWithoutStarting()
 PlayerInfo CServerHandler::getPlayerInfo(int color) const
 {
 	return current->mapHeader->players[color];
+}
+
+
+void CServerHandler::handleConnection()
+{
+	setThreadName("CServerHandler::handleConnection");
+
+	while(!c)
+		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
+
+	applier = new CApplier<CBaseForPGApply>();
+	registerTypesPregamePacks(*applier);
+	welcomeServer();
+
+	if(isHost())
+	{
+		if(current)
+		{
+			propagateMap();
+			propagateOptions();
+		}
+	}
+
+	try
+	{
+		while(c)
+		{
+			CPackForSelectionScreen * pack = nullptr;
+			*c >> pack;
+			logNetwork->trace("Received a pack of type %s", typeid(*pack).name());
+			assert(pack);
+			if(QuitMenuWithoutStarting * endingPack = dynamic_cast<QuitMenuWithoutStarting *>(pack))
+			{
+				endingPack->apply(static_cast<CSelectionScreen *>(SEL));
+			}
+			else if(StartWithCurrentSettings * endingPack = dynamic_cast<StartWithCurrentSettings *>(pack))
+			{
+				endingPack->apply(static_cast<CSelectionScreen *>(SEL));
+			}
+			else
+			{
+				boost::unique_lock<boost::recursive_mutex> lock(*mx);
+				upcomingPacks.push_back(pack);
+			}
+		}
+	}
+	catch(int i)
+	{
+		if(i != 666)
+			throw;
+	}
+	catch(...)
+	{
+		handleException();
+		throw;
+	}
+}
+
+void CServerHandler::processPacks()
+{
+	if(!serverHandlingThread)
+		return;
+
+	boost::unique_lock<boost::recursive_mutex> lock(*mx);
+	while(!upcomingPacks.empty())
+	{
+		CPackForSelectionScreen * pack = upcomingPacks.front();
+		upcomingPacks.pop_front();
+		CBaseForPGApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
+		apply->applyOnPG(static_cast<CSelectionScreen *>(SEL), pack);
+		delete pack;
+	}
 }

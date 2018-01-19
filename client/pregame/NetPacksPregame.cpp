@@ -34,7 +34,7 @@ void ChatMessage::apply(CSelectionScreen * selScreen)
 
 void QuitMenuWithoutStarting::apply(CSelectionScreen * selScreen)
 {
-	if(!selScreen->ongoingClosing)
+	if(!CSH->ongoingClosing)
 	{
 		*CSH->c << this; //resend to confirm
 		GH.popIntTotally(selScreen); //will wait with deleting us before this thread ends
@@ -181,11 +181,11 @@ void PassHost::apply(CSelectionScreen *selScreen)
 
 void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 {
-	if(!selScreen->ongoingClosing)
+	if(!CSH->ongoingClosing)
 	{
 		*CSH->c << this; //resend to confirm
 	}
-	vstd::clear_pointer(selScreen->serverHandlingThread); //detach us
+	vstd::clear_pointer(CSH->serverHandlingThread); //detach us
 
 	CGP->showLoadingScreen(std::bind(&startGame));
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)

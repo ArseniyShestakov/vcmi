@@ -41,51 +41,8 @@
 #include "../../lib/CThreadHelper.h"
 #include "../../lib/filesystem/Filesystem.h"
 #include "../../lib/serializer/Connection.h"
-#include "../../lib/registerTypes/RegisterTypes.h"
 
 void startGame();
-
-static std::shared_ptr<CMapInfo> mapInfoFromGame()
-{
-	auto ret = std::make_shared<CMapInfo>();
-	ret->mapHeader = std::unique_ptr<CMapHeader>(new CMapHeader(*LOCPLINT->cb->getMapHeader()));
-	return ret;
-}
-
-template<typename T> class CApplyOnPG;
-
-class CBaseForPGApply
-{
-public:
-	virtual void applyOnPG(CSelectionScreen * selScr, void * pack) const = 0;
-	virtual ~CBaseForPGApply(){};
-	template<typename U> static CBaseForPGApply * getApplier(const U * t = nullptr)
-	{
-		return new CApplyOnPG<U>();
-	}
-};
-
-template<typename T> class CApplyOnPG : public CBaseForPGApply
-{
-public:
-	void applyOnPG(CSelectionScreen * selScr, void * pack) const override
-	{
-		T * ptr = static_cast<T *>(pack);
-		ptr->apply(selScr);
-	}
-};
-
-template<> class CApplyOnPG<CPack>: public CBaseForPGApply
-{
-public:
-	void applyOnPG(CSelectionScreen * selScr, void * pack) const override
-	{
-		logGlobal->error("Cannot apply on PG plain CPack!");
-		assert(0);
-	}
-};
-
-static CApplier<CBaseForPGApply> * applier = nullptr;
 
 ISelectionScreenInfo::ISelectionScreenInfo()
 {
@@ -110,7 +67,7 @@ ISelectionScreenInfo::~ISelectionScreenInfo()
  */
 
 CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode)
-	: ISelectionScreenInfo(), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
+	: ISelectionScreenInfo()
 {
 	CGPreGame::create(); //we depend on its graphics
 	screenType = Type;
@@ -176,8 +133,6 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		buttonChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
 
 		toggleMode(gameMode == CMenuScreen::MULTI_NETWORK_HOST);
-
-		serverHandlingThread = new boost::thread(&CSelectionScreen::handleConnection, this);
 	};
 
 	switch(screenType)
@@ -222,17 +177,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 
 CSelectionScreen::~CSelectionScreen()
 {
-	ongoingClosing = true;
-	if(serverHandlingThread)
-	{
-		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
-			processPacks();
-		serverHandlingThread->join();
-		delete serverHandlingThread;
-	}
-
-	vstd::clear_pointer(applier);
-	delete mx;
+	CSH->stopServerConnection();
 }
 
 void CSelectionScreen::showAll(SDL_Surface * to)
@@ -336,7 +281,6 @@ void CSelectionScreen::startScenario()
 		}
 		CSH->tryStartGame();
 		buttonStart->block(true);
-		ongoingClosing = true;
 	}
 	catch(mapMissingException & e)
 	{
@@ -411,81 +355,6 @@ void CSelectionScreen::toggleMode(bool host)
 	tabSel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
 	if(CSH->current)
 		tabOpt->recreate();
-}
-
-void CSelectionScreen::handleConnection()
-{
-	setThreadName("CSelectionScreen::handleConnection");
-
-	while(!CSH->c)
-		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-
-	applier = new CApplier<CBaseForPGApply>();
-	registerTypesPregamePacks(*applier);
-	CSH->welcomeServer();
-
-	if(CSH->isHost())
-	{
-		if(CSH->current)
-		{
-			CSH->propagateMap();
-			CSH->propagateOptions();
-		}
-	}
-
-	try
-	{
-		assert(CSH->c);
-		while(CSH->c)
-		{
-			CPackForSelectionScreen * pack = nullptr;
-			*CSH->c >> pack;
-			logNetwork->trace("Received a pack of type %s", typeid(*pack).name());
-			assert(pack);
-			if(QuitMenuWithoutStarting * endingPack = dynamic_cast<QuitMenuWithoutStarting *>(pack))
-			{
-				endingPack->apply(this);
-			}
-			else if(StartWithCurrentSettings * endingPack = dynamic_cast<StartWithCurrentSettings *>(pack))
-			{
-				endingPack->apply(this);
-			}
-			else
-			{
-				boost::unique_lock<boost::recursive_mutex> lll(*mx);
-				upcomingPacks.push_back(pack);
-			}
-		}
-	}
-	catch(int i)
-	{
-		if(i != 666)
-			throw;
-	}
-	catch(...)
-	{
-		handleException();
-		throw;
-	}
-}
-
-void CSelectionScreen::update()
-{
-	if(serverHandlingThread)
-		processPacks();
-}
-
-void CSelectionScreen::processPacks()
-{
-	boost::unique_lock<boost::recursive_mutex> lll(*mx);
-	while(!upcomingPacks.empty())
-	{
-		CPackForSelectionScreen * pack = upcomingPacks.front();
-		upcomingPacks.pop_front();
-		CBaseForPGApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
-		apply->applyOnPG(this, pack);
-		delete pack;
-	}
 }
 
 CSavingScreen::CSavingScreen()
