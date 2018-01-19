@@ -123,6 +123,7 @@ RandomMapTab::RandomMapTab()
 	waterContentGroup->addCallback([&](int btnId)
 	{
 		mapGenOptions.setWaterContent(static_cast<EWaterContent::EWaterContent>(btnId));
+		updateMapInfoByHost();
 	});
 
 	// Monster strength
@@ -137,6 +138,7 @@ RandomMapTab::RandomMapTab()
 			mapGenOptions.setMonsterStrength(EMonsterStrength::RANDOM);
 		else
 			mapGenOptions.setMonsterStrength(static_cast<EMonsterStrength::EMonsterStrength>(btnId + EMonsterStrength::GLOBAL_WEAK)); //value 2 to 4
+		updateMapInfoByHost();
 	});
 
 	// Show random maps btn
@@ -326,6 +328,7 @@ void RandomMapTab::validateCompOnlyPlayersCnt(int compOnlyPlayersCnt)
 	{
 		int compOnlyTeamCount = compOnlyPlayersCnt == 0 ? 0 : compOnlyPlayersCnt - 1;
 		mapGenOptions.setCompOnlyTeamCount(compOnlyTeamCount);
+		updateMapInfoByHost();
 		compOnlyTeamsCntGroup->setSelected(compOnlyTeamCount);
 	}
 }
