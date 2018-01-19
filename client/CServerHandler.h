@@ -74,7 +74,7 @@ public:
 	void optionsFlagPressed(PlayerColor color);
 	void optionSetTurnLength(int npos);
 
-	void reset(StartInfo::EMode mode);
+	void prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names);
 
 	void propagateNames() const;
 	void propagateOptions(); //MPTODO: should be const;

@@ -171,11 +171,11 @@ class CSimpleJoinScreen : public CIntObject
 	CTextInput * address;
 	CTextInput * port;
 
-	void connectToServer();
+	void connectToServer(IShowActivatable * sel);
 	void onChange(const std::string & newText);
 
 public:
-	CSimpleJoinScreen();
+	CSimpleJoinScreen(IShowActivatable * sel);
 };
 
 class CLoadingScreen : public CWindowObject

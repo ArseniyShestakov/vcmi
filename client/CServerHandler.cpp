@@ -613,13 +613,18 @@ std::vector<int> CServerHandler::getUsedHeroes()
 	return heroIds;
 }
 
-void CServerHandler::reset(StartInfo::EMode mode)
+void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
 {
 	playerNames.clear();
 	si.difficulty = 1;
 	si.mode = mode;
 	si.turnTime = 0;
 	myNames.clear();
+	if(names && !names->empty()) //if have custom set of player names - use it
+		myNames = *names;
+	else
+		myNames.push_back(settings["general"]["playerName"].String());
+
 }
 
 void CServerHandler::propagateNames() const
