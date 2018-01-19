@@ -246,14 +246,6 @@ void CServerHandler::justConnectToServer(const std::string &host, const ui16 por
 	}
 }
 
-void CServerHandler::welcomeServer()
-{
-	c->enterPregameConnectionMode();
-
-	WelcomeServer ws(uuid, myNames);
-	*c << &ws;
-}
-
 void CServerHandler::stopConnection()
 {
 	vstd::clear_pointer(c);
@@ -734,25 +726,15 @@ PlayerInfo CServerHandler::getPlayerInfo(int color) const
 void CServerHandler::handleConnection()
 {
 	setThreadName("CServerHandler::handleConnection");
-
-	while(!c)
-		boost::this_thread::sleep(boost::posix_time::milliseconds(5));
-
+	c->enterPregameConnectionMode();
 	applier = new CApplier<CBaseForPGApply>();
 	registerTypesPregamePacks(*applier);
-	welcomeServer();
-
-	if(isHost())
-	{
-		if(current)
-		{
-//			propagateMap();
-			propagateOptions();
-		}
-	}
 
 	try
 	{
+		WelcomeServer ws(uuid, myNames);
+		*c << &ws;
+
 		while(c)
 		{
 			CPackForSelectionScreen * pack = nullptr;

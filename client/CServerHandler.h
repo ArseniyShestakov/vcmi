@@ -118,7 +118,6 @@ public:
 	CServerHandler();
 	virtual ~CServerHandler();
 
-	void welcomeServer();
 	void stopConnection();
 };
 
