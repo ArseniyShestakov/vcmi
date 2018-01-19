@@ -140,22 +140,22 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		pos = bg->center();
 	}
 	curTab = nullptr;
-	randMapTab = nullptr;
+	tabRand = nullptr;
 
 	card = new InfoCard(); //right info card
 	if(screenType == CMenuScreen::campaignList)
 	{
-		opt = nullptr;
+		tabOpt = nullptr;
 	}
 	else
 	{
-		opt = new OptionsTab(); //scenario options tab
-		opt->recActions = DISPOSE;
+		tabOpt = new OptionsTab(); //scenario options tab
+		tabOpt->recActions = DISPOSE;
 	}
-	sel = new SelectionTab(screenType, std::bind(&CSelectionScreen::changeSelection, this, _1), gameMode); //scenario selection tab
-	sel->recActions = DISPOSE; // MPTODO
-	sel->recActions = 255;
-	curTab = sel;
+	tabSel = new SelectionTab(screenType, std::bind(&CSelectionScreen::changeSelection, this, _1), gameMode); //scenario selection tab
+	tabSel->recActions = DISPOSE; // MPTODO
+	tabSel->recActions = 255;
+	curTab = tabSel;
 
 	buttonSelect = nullptr;
 	buttonRMG = nullptr;
@@ -166,11 +166,11 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		buttonSelect = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
 		buttonSelect->addCallback([&]()
 		{
-			toggleTab(sel);
-			changeSelection(sel->getSelectedMapInfo());
+			toggleTab(tabSel);
+			changeSelection(tabSel->getSelectedMapInfo());
 		});
 
-		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, opt), SDLK_a);
+		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, tabOpt), SDLK_a);
 
 		CButton * buttonChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
 		buttonChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
@@ -184,14 +184,14 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	{
 	case CMenuScreen::newGame:
 	{
-		randMapTab = new RandomMapTab();
-		randMapTab->getMapInfoChanged() += std::bind(&CSelectionScreen::changeSelection, this, _1);
-		randMapTab->recActions = DISPOSE;
+		tabRand = new RandomMapTab();
+		tabRand->getMapInfoChanged() += std::bind(&CSelectionScreen::changeSelection, this, _1);
+		tabRand->recActions = DISPOSE;
 		buttonRMG = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
 		buttonRMG->addCallback([&]()
 		{
-			toggleTab(randMapTab);
-			changeSelection(randMapTab->getMapInfo());
+			toggleTab(tabRand);
+			changeSelection(tabRand->getMapInfo());
 		});
 
 		card->difficulty->addCallback(std::bind(&CSelectionScreen::difficultyChange, this, _1));
@@ -249,11 +249,11 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 		PregameGuiAction pga;
 		if(tab == curTab)
 			pga.action = PregameGuiAction::NO_TAB;
-		else if(tab == opt)
+		else if(tab == tabOpt)
 			pga.action = PregameGuiAction::OPEN_OPTIONS;
-		else if(tab == sel)
+		else if(tab == tabSel)
 			pga.action = PregameGuiAction::OPEN_SCENARIO_LIST;
-		else if(tab == randMapTab)
+		else if(tab == tabRand)
 			pga.action = PregameGuiAction::OPEN_RANDOM_MAP_OPTIONS;
 
 		CSH->propagateGuiAction(pga);
@@ -298,7 +298,7 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 		{
 			if(CSH->current && CSH->current->isRandomMap)
 			{
-				CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
+				CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(tabRand->getMapGenOptions()));
 			}
 			else
 			{
@@ -309,7 +309,7 @@ void CSelectionScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 	card->changeSelection();
 	if(screenType != CMenuScreen::campaignList)
 	{
-		opt->recreate();
+		tabOpt->recreate();
 	}
 
 	if(screenType != CMenuScreen::saveGame)
@@ -329,10 +329,10 @@ void CSelectionScreen::startScenario()
 {
 	try
 	{
-		if(CSH->current && CSH->current->isRandomMap && randMapTab)
+		if(CSH->current && CSH->current->isRandomMap && tabRand)
 		{
 			//copy settings from interface to actual options. TODO: refactor, it used to have no effect at all -.-
-			CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(randMapTab->getMapGenOptions()));
+			CSH->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(new CMapGenOptions(tabRand->getMapGenOptions()));
 		}
 		CSH->tryStartGame();
 		buttonStart->block(true);
@@ -358,10 +358,10 @@ void CSelectionScreen::startScenario()
 
 void CSelectionScreen::saveGame()
 {
-	if(!(sel && sel->txt && sel->txt->text.size()))
+	if(!(tabSel && tabSel->txt && tabSel->txt->text.size()))
 		return;
 
-	std::string path = "Saves/" + sel->txt->text;
+	std::string path = "Saves/" + tabSel->txt->text;
 
 	auto overWrite = [&]() -> void
 	{
@@ -374,7 +374,7 @@ void CSelectionScreen::saveGame()
 	if(CResourceHandler::get("local")->existsResource(ResourceID(path, EResType::CLIENT_SAVEGAME)))
 	{
 		std::string hlp = CGI->generaltexth->allTexts[493]; //%s exists. Overwrite?
-		boost::algorithm::replace_first(hlp, "%s", sel->txt->text);
+		boost::algorithm::replace_first(hlp, "%s", tabSel->txt->text);
 		LOCPLINT->showYesNoDialog(hlp, overWrite, 0, false);
 	}
 	else
@@ -408,9 +408,9 @@ void CSelectionScreen::toggleMode(bool host)
 	buttonOptions->block(!host);
 	buttonStart->block(!host);
 
-	sel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
+	tabSel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
 	if(CSH->current)
-		opt->recreate();
+		tabOpt->recreate();
 }
 
 void CSelectionScreen::handleConnection()

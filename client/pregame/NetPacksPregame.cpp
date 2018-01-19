@@ -54,7 +54,7 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
 			{
 				CSH->setPlayer(elem.second, player.first);
-				selScreen->opt->entries[elem.second.color]->selectButtons();
+				selScreen->tabOpt->entries[elem.second.color]->selectButtons();
 				break;
 			}
 		}
@@ -81,14 +81,14 @@ void UpdateStartOptions::apply(CSelectionScreen * selScreen)
 {
 	CSH->si = *si;
 	if(CSH->current)
-		selScreen->opt->recreate(); //will force to recreate using current sInfo
+		selScreen->tabOpt->recreate(); //will force to recreate using current sInfo
 
 	selScreen->card->difficulty->setSelected(si->difficulty);
 
 	// MPTODO: idea is to always apply any changes on guest as well as on host
 	// Though applying of randMapTab options cause crash if host just decide to open it
-	if(selScreen->curTab == selScreen->randMapTab && si->mapGenOptions)
-		selScreen->randMapTab->setMapGenOptions(si->mapGenOptions);
+	if(selScreen->curTab == selScreen->tabRand && si->mapGenOptions)
+		selScreen->tabRand->setMapGenOptions(si->mapGenOptions);
 
 	GH.totalRedraw();
 }
@@ -104,13 +104,13 @@ void PregameGuiAction::apply(CSelectionScreen * selScreen)
 		selScreen->toggleTab(selScreen->curTab);
 		break;
 	case OPEN_OPTIONS:
-		selScreen->toggleTab(selScreen->opt);
+		selScreen->toggleTab(selScreen->tabOpt);
 		break;
 	case OPEN_SCENARIO_LIST:
-		selScreen->toggleTab(selScreen->sel);
+		selScreen->toggleTab(selScreen->tabSel);
 		break;
 	case OPEN_RANDOM_MAP_OPTIONS:
-		selScreen->toggleTab(selScreen->randMapTab);
+		selScreen->toggleTab(selScreen->tabRand);
 		break;
 	}
 }
@@ -152,7 +152,7 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 		if(PlayerSettings * s = CSH->si.getPlayersSettings(pair.first)) //it's possible that player was unallocated
 		{
 			CSH->setPlayer(*s, 0);
-			selScreen->opt->entries[s->color]->selectButtons();
+			selScreen->tabOpt->entries[s->color]->selectButtons();
 		}
 	}
 

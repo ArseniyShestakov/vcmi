@@ -44,8 +44,6 @@ class CSelectionScreen : public CIntObject, public ISelectionScreenInfo
 public:
 	CPicture * bg; //general bg image
 	InfoCard * card;
-	OptionsTab * opt;
-	RandomMapTab * randMapTab;
 
 	CButton * buttonSelect;
 	CButton * buttonRMG;
@@ -53,7 +51,9 @@ public:
 	CButton * buttonStart;
 	CButton * buttonBack;
 
-	SelectionTab * sel;
+	SelectionTab * tabSel;
+	OptionsTab * tabOpt;
+	RandomMapTab * tabRand;
 	CIntObject * curTab;
 
 	boost::thread * serverHandlingThread;
