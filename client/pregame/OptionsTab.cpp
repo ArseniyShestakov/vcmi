@@ -30,6 +30,9 @@
 #include "../../lib/CTownHandler.h"
 #include "../../lib/CHeroHandler.h"
 
+// TODO: This should probably go somewhere into VCMI config JSON
+static const int POSSIBLE_TURNTIME[] = {1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 0};
+
 OptionsTab::OptionsTab()
 	: turnDuration(nullptr)
 {
@@ -37,13 +40,8 @@ OptionsTab::OptionsTab()
 	bg = new CPicture("ADVOPTBK", 0, 6);
 	pos = bg->pos;
 
-	if(SEL->screenType == CMenuScreen::newGame)
-		turnDuration = new CSlider(Point(55, 551), 194, std::bind(&OptionsTab::setTurnLength, this, _1), 1, 11, 11, true, CSlider::BLUE);
-}
-
-OptionsTab::~OptionsTab()
-{
-
+	if(SEL->screenType == CMenuScreen::newGame || SEL->screenType == CMenuScreen::loadGame)
+		turnDuration = new CSlider(Point(55, 551), 194, std::bind(&OptionsTab::setTurnLength, this, _1), 1, ARRAY_COUNT(POSSIBLE_TURNTIME), ARRAY_COUNT(POSSIBLE_TURNTIME), true, CSlider::BLUE);
 }
 
 void OptionsTab::showAll(SDL_Surface * to)
@@ -73,6 +71,8 @@ void OptionsTab::recreate()
 	{
 		entries.insert(std::make_pair(it->first, new PlayerOptionsEntry(this, it->second)));
 	}
+
+	turnDuration->moveTo(std::distance(POSSIBLE_TURNTIME, std::find(POSSIBLE_TURNTIME, POSSIBLE_TURNTIME + ARRAY_COUNT(POSSIBLE_TURNTIME), CSH->si.turnTime)));
 }
 
 void OptionsTab::changePlayerOption(ui8 what, PlayerColor player, int dir)
@@ -82,10 +82,10 @@ void OptionsTab::changePlayerOption(ui8 what, PlayerColor player, int dir)
 
 void OptionsTab::setTurnLength(int npos)
 {
-	static const int times[] = {1, 2, 4, 6, 8, 10, 15, 20, 25, 30, 0};
-	vstd::amin(npos, ARRAY_COUNT(times) - 1);
+	vstd::amin(npos, ARRAY_COUNT(POSSIBLE_TURNTIME) - 1);
 
-	CSH->si.turnTime = times[npos];
+	CSH->si.turnTime = POSSIBLE_TURNTIME[npos];
+	CSH->propagateOptions();
 	redraw();
 }
 

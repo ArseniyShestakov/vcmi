@@ -95,7 +95,6 @@ public:
 	std::map<PlayerColor, PlayerOptionsEntry *> entries; //indexed by color
 
 	OptionsTab();
-	~OptionsTab();
 
 	void showAll(SDL_Surface * to) override;
 	void recreate();
