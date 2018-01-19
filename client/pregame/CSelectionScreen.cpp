@@ -409,7 +409,8 @@ void CSelectionScreen::toggleMode(bool host)
 	buttonStart->block(!host);
 
 	sel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
-//	opt->recreate();
+	if(CSH->current)
+		opt->recreate();
 }
 
 void CSelectionScreen::handleConnection()
