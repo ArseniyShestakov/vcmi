@@ -54,7 +54,6 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
 			{
 				CSH->setPlayerConnectedId(elem.second, player.first);
-				selScreen->tabOpt->entries[elem.second.color]->selectButtons();
 				break;
 			}
 		}
@@ -152,10 +151,10 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 
 		CSH->playerNames.erase(pair.first);
 
-		if(PlayerSettings * s = CSH->si.getPlayersSettings(pair.first)) //it's possible that player was unallocated
+		// Reset in-game players client used back to AI
+		if(PlayerSettings * s = CSH->si.getPlayersSettings(pair.first))
 		{
-			CSH->setPlayerConnectedId(*s, 0);
-			selScreen->tabOpt->entries[s->color]->selectButtons();
+			CSH->setPlayerConnectedId(*s, PlayerSettings::PLAYER_AI);
 		}
 	}
 
