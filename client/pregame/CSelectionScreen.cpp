@@ -142,7 +142,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	case CMenuScreen::newGame:
 	{
 		tabRand = new RandomMapTab();
-		tabRand->getMapInfoChanged() += std::bind(&CServerHandler::setMapInfo, CSH, _1, _2);
+		tabRand->getMapInfoChanged() += std::bind(&IServerAPI::setMapInfo, CSH, _1, _2);
 		tabRand->recActions = DISPOSE;
 		buttonRMG = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
 		buttonRMG->addCallback([&]()
@@ -151,7 +151,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 			tabRand->updateMapInfoByHost(); // MPTODO: This is only needed to force-update mapInfo in CSH when tab is opened
 		});
 
-		card->difficulty->addCallback(std::bind(&CServerHandler::setDifficulty, CSH, _1));
+		card->difficulty->addCallback(std::bind(&IServerAPI::setDifficulty, CSH, _1));
 		card->difficulty->setSelected(1);
 
 		buttonStart = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);

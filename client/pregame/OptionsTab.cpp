@@ -38,7 +38,7 @@ OptionsTab::OptionsTab()
 	pos = bg->pos;
 
 	if(SEL->screenType == CMenuScreen::newGame || SEL->screenType == CMenuScreen::loadGame)
-		turnDuration = new CSlider(Point(55, 551), 194, std::bind(&CServerHandler::setTurnLength, CSH, _1), 1, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), true, CSlider::BLUE);
+		turnDuration = new CSlider(Point(55, 551), 194, std::bind(&IServerAPI::setTurnLength, CSH, _1), 1, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), true, CSlider::BLUE);
 }
 
 void OptionsTab::showAll(SDL_Surface * to)
@@ -465,12 +465,12 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	bg = new CPicture(BitmapHandler::loadBitmap(bgs[s.color.getNum()]), 0, 0, true);
 	if(SEL->screenType == CMenuScreen::newGame)
 	{
-		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::TOWN, -1, s.color));
-		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::TOWN, +1, s.color));
-		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::HERO, -1, s.color));
-		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::HERO, +1, s.color));
-		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::BONUS, -1, s.color));
-		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::BONUS, +1, s.color));
+		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&IServerAPI::setPlayerOption, CSH, ChangePlayerOptions::TOWN, -1, s.color));
+		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&IServerAPI::setPlayerOption, CSH, ChangePlayerOptions::TOWN, +1, s.color));
+		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&IServerAPI::setPlayerOption, CSH, ChangePlayerOptions::HERO, -1, s.color));
+		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&IServerAPI::setPlayerOption, CSH, ChangePlayerOptions::HERO, +1, s.color));
+		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&IServerAPI::setPlayerOption, CSH, ChangePlayerOptions::BONUS, -1, s.color));
+		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&IServerAPI::setPlayerOption, CSH, ChangePlayerOptions::BONUS, +1, s.color));
 	}
 	else
 		for(auto & elem : btns)
@@ -490,7 +490,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 
 	if(SEL->screenType != CMenuScreen::scenarioInfo && CSH->getPlayerInfo(s.color.getNum()).canHumanPlay)
 	{
-		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&CServerHandler::setPlayer, CSH, s.color));
+		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&IServerAPI::setPlayer, CSH, s.color));
 		flag->hoverable = true;
 		flag->block(CSH->isGuest());
 	}
