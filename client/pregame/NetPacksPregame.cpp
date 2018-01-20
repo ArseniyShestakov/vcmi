@@ -120,12 +120,10 @@ void PregameGuiAction::apply(CSelectionScreen * selScreen)
 	}
 }
 
-void RequestOptionsChange::apply(CSelectionScreen * selScreen)
+void ChangePlayerOptions::apply(CSelectionScreen * selScreen)
 {
 	if(CSH->isGuest())
 		return;
-
-	PlayerColor color = CSH->si.getPlayersSettings(playerID)->color;
 
 	switch(what)
 	{

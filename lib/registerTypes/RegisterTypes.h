@@ -364,7 +364,7 @@ void registerTypesPregamePacks(Serializer &s)
 	s.template registerType<CLobbyPackToPropagate, PassHost>();
 
 	s.template registerType<CLobbyPackToHost, PlayerJoined>();
-	s.template registerType<CLobbyPackToHost, RequestOptionsChange>();
+	s.template registerType<CLobbyPackToHost, ChangePlayerOptions>();
 
 	s.template registerType<CLobbyPackToServer, WelcomeServer>();
 

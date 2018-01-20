@@ -465,12 +465,12 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	bg = new CPicture(BitmapHandler::loadBitmap(bgs[s.color.getNum()]), 0, 0, true);
 	if(SEL->screenType == CMenuScreen::newGame)
 	{
-		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&CServerHandler::setPlayerOption, CSH, RequestOptionsChange::TOWN, -1, s.color));
-		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&CServerHandler::setPlayerOption, CSH, RequestOptionsChange::TOWN, +1, s.color));
-		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&CServerHandler::setPlayerOption, CSH, RequestOptionsChange::HERO, -1, s.color));
-		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&CServerHandler::setPlayerOption, CSH, RequestOptionsChange::HERO, +1, s.color));
-		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&CServerHandler::setPlayerOption, CSH, RequestOptionsChange::BONUS, -1, s.color));
-		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&CServerHandler::setPlayerOption, CSH, RequestOptionsChange::BONUS, +1, s.color));
+		btns[0] = new CButton(Point(107, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[132], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::TOWN, -1, s.color));
+		btns[1] = new CButton(Point(168, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[133], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::TOWN, +1, s.color));
+		btns[2] = new CButton(Point(183, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[148], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::HERO, -1, s.color));
+		btns[3] = new CButton(Point(244, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[149], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::HERO, +1, s.color));
+		btns[4] = new CButton(Point(259, 5), "ADOPLFA.DEF", CGI->generaltexth->zelp[164], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::BONUS, -1, s.color));
+		btns[5] = new CButton(Point(320, 5), "ADOPRTA.DEF", CGI->generaltexth->zelp[165], std::bind(&CServerHandler::setPlayerOption, CSH, ChangePlayerOptions::BONUS, +1, s.color));
 	}
 	else
 		for(auto & elem : btns)

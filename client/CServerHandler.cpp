@@ -422,7 +422,10 @@ ui8 CServerHandler::getIdOfFirstUnallocatedPlayer() //MPTODO: must be const
 
 void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 {
-	RequestOptionsChange roc(what, dir, si.playerInfos[player].connectedPlayerID);
+	ChangePlayerOptions roc;
+	roc.what = what;
+	roc.direction = dir;
+	roc.color = player;
 	*c << &roc;
 }
 

@@ -2535,28 +2535,23 @@ struct PregameGuiAction : public CLobbyPackToPropagate
 	}
 };
 
-struct RequestOptionsChange : public CLobbyPackToHost
+struct ChangePlayerOptions : public CLobbyPackToHost
 {
 	enum EWhat {TOWN, HERO, BONUS};
 	ui8 what;
 	si8 direction; //-1 or +1
-	ui8 playerID;
-
-	RequestOptionsChange(ui8 What, si8 Dir, ui8 Player)
-		:what(What), direction(Dir), playerID(Player)
-	{}
-	RequestOptionsChange()
-		:what(0), direction(0), playerID(0)
+	PlayerColor color;
+	ChangePlayerOptions()
+		:what(0), direction(0), color(PlayerColor::CANNOT_DETERMINE)
 	{}
 
 	void apply(CSelectionScreen *selScreen);
-
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & what;
 		h & direction;
-		h & playerID;
+		h & color;
 	}
 };
 
