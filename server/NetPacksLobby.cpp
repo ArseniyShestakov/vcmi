@@ -35,8 +35,8 @@ bool WelcomeServer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	for(auto & name : c->names)
 		logNetwork->info("Client %d player: %s", c->connectionID, name);
 
-	PlayerJoined pj;
-	pj.connectionID = c->connectionID;
+	auto pj = new PlayerJoined();
+	pj->connectionID = c->connectionID;
 	for(auto & name : c->names)
 	{
 		srv->announceTxt(boost::str(boost::format("%s(%d) joins the game") % name % c->connectionID));
@@ -45,9 +45,9 @@ bool WelcomeServer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 		cp.connection = c->connectionID;
 		cp.name = name;
 		cp.color = 255;
-		pj.players.insert(std::make_pair(srv->currentPlayerId++, cp));
+		pj->players.insert(std::make_pair(srv->currentPlayerId++, cp));
 	}
-	srv->addToAnnounceQueue(&pj);
+	srv->addToAnnounceQueue(pj);
 	return true;
 }
 

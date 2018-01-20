@@ -319,7 +319,7 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 
 		auto pl = new PlayerLeft();
 		pl->connectionID = cpc->connectionID;
-		toAnnounce.push_back(pl);
+		addToAnnounceQueue(pl);
 
 		if(connections.empty())
 		{
@@ -380,18 +380,19 @@ void CVCMIServer::announcePack(const CPackForLobby & pack)
 void CVCMIServer::announceTxt(const std::string & txt, const std::string & playerName)
 {
 	logNetwork->info("%s says: %s", playerName, txt);
-	ChatMessage cm;
-	cm.playerName = playerName;
-	cm.message = txt;
-
-	boost::unique_lock<boost::recursive_mutex> queueLock(mx);
-	toAnnounce.push_front(new ChatMessage(cm));
+	auto cm = new ChatMessage();
+	cm->playerName = playerName;
+	cm->message = txt;
+	addToAnnounceQueue(cm, true);
 }
 
-void CVCMIServer::addToAnnounceQueue(CPackForLobby * pack)
+void CVCMIServer::addToAnnounceQueue(CPackForLobby * pack, bool front)
 {
 	boost::unique_lock<boost::recursive_mutex> queueLock(mx);
-	toAnnounce.push_back(pack);
+	if(front)
+		toAnnounce.push_front(pack);
+	else
+		toAnnounce.push_back(pack);
 }
 
 void CVCMIServer::passHost(int toConnectionId)
@@ -407,8 +408,7 @@ void CVCMIServer::passHost(int toConnectionId)
 		announceTxt(boost::str(boost::format("Pass host to connection %d") % toConnectionId));
 		auto ph = new PassHost();
 		ph->toConnection = toConnectionId;
-		boost::unique_lock<boost::recursive_mutex> queueLock(mx);
-		toAnnounce.push_back(ph);
+		addToAnnounceQueue(ph);
 		return;
 	}
 }

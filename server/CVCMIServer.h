@@ -90,7 +90,7 @@ public:
 	ServerCapabilities * capabilities;
 	void sendPack(CConnection * pc, const CPackForLobby & pack);
 	void announceTxt(const std::string & txt, const std::string & playerName = "system");
-	void addToAnnounceQueue(CPackForLobby * pack);
+	void addToAnnounceQueue(CPackForLobby * pack, bool front = false);
 
 #ifdef VCMI_ANDROID
 	static void create();

@@ -44,6 +44,9 @@ void QuitMenuWithoutStarting::apply(CSelectionScreen * selScreen)
 
 void PlayerJoined::apply(CSelectionScreen * selScreen)
 {
+	if(CSH->isGuest())
+		return;
+
 	for(auto & player : players)
 	{
 		CSH->playerNames.insert(player);
@@ -119,7 +122,7 @@ void PregameGuiAction::apply(CSelectionScreen * selScreen)
 
 void RequestOptionsChange::apply(CSelectionScreen * selScreen)
 {
-	if(!CSH->isHost())
+	if(CSH->isGuest())
 		return;
 
 	PlayerColor color = CSH->si.getPlayersSettings(playerID)->color;
