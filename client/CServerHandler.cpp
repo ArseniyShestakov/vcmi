@@ -480,7 +480,7 @@ void CServerHandler::optionNextCastle(PlayerColor player, int dir)
 void CServerHandler::optionNextHero(PlayerColor player, int dir)
 {
 	PlayerSettings & s = si.playerInfos[player];
-	if(s.castle < 0 || s.connectedPlayerID == PlayerSettings::PLAYER_AI || s.hero == PlayerSettings::NONE)
+	if(s.castle < 0 || s.hero == PlayerSettings::NONE)
 		return;
 
 	if(s.hero == PlayerSettings::RANDOM) // first/last available

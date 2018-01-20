@@ -527,7 +527,7 @@ void OptionsTab::PlayerOptionsEntry::hideUnavailableButtons()
 		btns[1]->enable();
 	}
 
-	if((pi.defaultHero() != -1 || !s.connectedPlayerID || s.castle < 0) //fixed hero
+	if((pi.defaultHero() != -1 || s.castle < 0) //fixed hero
 		|| foreignPlayer) //or not our player
 	{
 		btns[2]->disable();
