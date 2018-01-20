@@ -46,40 +46,40 @@
 #include "../lib/NetPacks.h"
 #include "pregame/CSelectionScreen.h"
 
-template<typename T> class CApplyOnPG;
+template<typename T> class CApplyOnLobby;
 
-class CBaseForPGApply
+class CBaseForLobbyApply
 {
 public:
-	virtual void applyOnPG(CSelectionScreen * selScr, void * pack) const = 0;
-	virtual ~CBaseForPGApply(){};
-	template<typename U> static CBaseForPGApply * getApplier(const U * t = nullptr)
+	virtual void applyOnLobby(CSelectionScreen * selScr, void * pack) const = 0;
+	virtual ~CBaseForLobbyApply(){};
+	template<typename U> static CBaseForLobbyApply * getApplier(const U * t = nullptr)
 	{
-		return new CApplyOnPG<U>();
+		return new CApplyOnLobby<U>();
 	}
 };
 
-template<typename T> class CApplyOnPG : public CBaseForPGApply
+template<typename T> class CApplyOnLobby : public CBaseForLobbyApply
 {
 public:
-	void applyOnPG(CSelectionScreen * selScr, void * pack) const override
+	void applyOnLobby(CSelectionScreen * selScr, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
 		ptr->apply(selScr);
 	}
 };
 
-template<> class CApplyOnPG<CPack>: public CBaseForPGApply
+template<> class CApplyOnLobby<CPack>: public CBaseForLobbyApply
 {
 public:
-	void applyOnPG(CSelectionScreen * selScr, void * pack) const override
+	void applyOnLobby(CSelectionScreen * selScr, void * pack) const override
 	{
-		logGlobal->error("Cannot apply on PG plain CPack!");
+		logGlobal->error("Cannot apply plain CPack!");
 		assert(0);
 	}
 };
 
-static CApplier<CBaseForPGApply> * applier = nullptr;
+static CApplier<CBaseForLobbyApply> * applier = nullptr;
 
 extern std::string NAME;
 
@@ -716,7 +716,7 @@ void CServerHandler::threadHandleConnection()
 {
 	setThreadName("CServerHandler::threadHandleConnection");
 	c->enterPregameConnectionMode();
-	applier = new CApplier<CBaseForPGApply>();
+	applier = new CApplier<CBaseForLobbyApply>();
 	registerTypesPregamePacks(*applier);
 
 	try
@@ -767,8 +767,8 @@ void CServerHandler::processPacks()
 	{
 		CPackForSelectionScreen * pack = upcomingPacks.front();
 		upcomingPacks.pop_front();
-		CBaseForPGApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
-		apply->applyOnPG(static_cast<CSelectionScreen *>(SEL), pack);
+		CBaseForLobbyApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
+		apply->applyOnLobby(static_cast<CSelectionScreen *>(SEL), pack);
 		delete pack;
 	}
 }
