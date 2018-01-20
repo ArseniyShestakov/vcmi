@@ -26,8 +26,21 @@ struct CPackForSelectionScreen;
 
 #include "../lib/StartInfo.h"
 
+class IServerAPI
+{
+public:
+	virtual void setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr) =0;
+	virtual void setPlayerOption(ui8 what, ui8 dir, PlayerColor player) =0;
+	virtual void setPlayer(PlayerColor color) =0;
+	virtual void setTurnLength(int npos) =0;
+	virtual void setDifficulty(int to) =0;
+	virtual void sendMessage(const std::string & txt) =0;
+	virtual void startGame() =0;
+	virtual void stopServer() =0;
+};
+
 /// structure to handle running server and connecting to it
-class CServerHandler
+class CServerHandler : public IServerAPI
 {
 public:
 	CStopWatch th;
@@ -64,18 +77,18 @@ public:
 	std::vector<ui8> getMyIds() const;
 	ui8 getIdOfFirstUnallocatedPlayer(); //returns 0 if none
 
-	// Lobby server API. UI call these to request changes on server-side
-	void requestChangeSelection(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr);
-	void requestPlayerOptionChange(ui8 what, ui8 dir, PlayerColor player);
-	void optionsFlagPressed(PlayerColor color);
-	void optionSetTurnLength(int npos);
-	void requestDifficultyChange(int to);
-	void postChatMessage(const std::string & txt);
-	void tryStartGame();
-	void quitWithoutStarting();
+	// Lobby server API for UI
+	void setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr) override;
+	void setPlayer(PlayerColor color) override;
+	void setPlayerOption(ui8 what, ui8 dir, PlayerColor player) override;
+	void setTurnLength(int npos) override;
+	void setDifficulty(int to) override;
+	void sendMessage(const std::string & txt) override;
+	void startGame() override;
+	void stopServer() override;
 
 	// Code only called from internals and netpacks. Should be moved on server-side
-	void setPlayer(PlayerSettings & pset, ui8 player) const;
+	void setPlayerConnectedId(PlayerSettings & pset, ui8 player) const;
 	void updateStartInfo();
 	void setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOpts);
 	void optionNextHero(PlayerColor player, int dir); //dir == -1 or +1

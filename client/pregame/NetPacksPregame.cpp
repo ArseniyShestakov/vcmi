@@ -53,7 +53,7 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 		{
 			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
 			{
-				CSH->setPlayer(elem.second, player.first);
+				CSH->setPlayerConnectedId(elem.second, player.first);
 				selScreen->tabOpt->entries[elem.second.color]->selectButtons();
 				break;
 			}
@@ -154,7 +154,7 @@ void PlayerLeft::apply(CSelectionScreen * selScreen)
 
 		if(PlayerSettings * s = CSH->si.getPlayersSettings(pair.first)) //it's possible that player was unallocated
 		{
-			CSH->setPlayer(*s, 0);
+			CSH->setPlayerConnectedId(*s, 0);
 			selScreen->tabOpt->entries[s->color]->selectButtons();
 		}
 	}

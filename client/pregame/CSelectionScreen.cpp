@@ -120,13 +120,13 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 
 	auto initLobby = [&]()
 	{
-		tabSel->onSelect = std::bind(&CServerHandler::requestChangeSelection, CSH, _1, nullptr);
+		tabSel->onSelect = std::bind(&IServerAPI::setMapInfo, CSH, _1, nullptr);
 
 		buttonSelect = new CButton(Point(411, 80), "GSPBUTT.DEF", CGI->generaltexth->zelp[45], 0, SDLK_s);
 		buttonSelect->addCallback([&]()
 		{
 			toggleTab(tabSel);
-			CSH->requestChangeSelection(tabSel->getSelectedMapInfo());
+			CSH->setMapInfo(tabSel->getSelectedMapInfo());
 		});
 
 		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, tabOpt), SDLK_a);
@@ -142,7 +142,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	case CMenuScreen::newGame:
 	{
 		tabRand = new RandomMapTab();
-		tabRand->getMapInfoChanged() += std::bind(&CServerHandler::requestChangeSelection, CSH, _1, _2);
+		tabRand->getMapInfoChanged() += std::bind(&CServerHandler::setMapInfo, CSH, _1, _2);
 		tabRand->recActions = DISPOSE;
 		buttonRMG = new CButton(Point(411, 105), "GSPBUTT.DEF", CGI->generaltexth->zelp[47], 0, SDLK_r);
 		buttonRMG->addCallback([&]()
@@ -151,7 +151,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 			tabRand->updateMapInfoByHost(); // MPTODO: This is only needed to force-update mapInfo in CSH when tab is opened
 		});
 
-		card->difficulty->addCallback(std::bind(&CServerHandler::requestDifficultyChange, CSH, _1));
+		card->difficulty->addCallback(std::bind(&CServerHandler::setDifficulty, CSH, _1));
 		card->difficulty->setSelected(1);
 
 		buttonStart = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
@@ -254,7 +254,7 @@ void CSelectionScreen::startScenario()
 {
 	try
 	{
-		CSH->tryStartGame();
+		CSH->startGame();
 		buttonStart->block(true);
 	}
 	catch(mapMissingException & e)
@@ -661,7 +661,7 @@ void CChatBox::keyPressed(const SDL_KeyboardEvent & key)
 {
 	if(key.keysym.sym == SDLK_RETURN && key.state == SDL_PRESSED && inputBox->text.size())
 	{
-		CSH->postChatMessage(inputBox->text);
+		CSH->sendMessage(inputBox->text);
 		inputBox->setText("");
 	}
 	else

@@ -258,7 +258,7 @@ void CServerHandler::stopServerConnection()
 	ongoingClosing = true;
 	if(serverHandlingThread)
 	{
-		quitWithoutStarting();
+		stopServer();
 		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
 			processPacks();
 		serverHandlingThread->join();
@@ -327,7 +327,7 @@ bool CServerHandler::isGuest() const
 	return !host;
 }
 
-void CServerHandler::setPlayer(PlayerSettings & pset, ui8 player) const
+void CServerHandler::setPlayerConnectedId(PlayerSettings & pset, ui8 player) const
 {
 	if(vstd::contains(playerNames, player))
 		pset.name = playerNames.find(player)->second.name;
@@ -359,11 +359,11 @@ void CServerHandler::updateStartInfo()
 		pset.color = PlayerColor(i);
 		if(pinfo.canHumanPlay && namesIt != playerNames.cend())
 		{
-			setPlayer(pset, namesIt++->first);
+			setPlayerConnectedId(pset, namesIt++->first);
 		}
 		else
 		{
-			setPlayer(pset, 0);
+			setPlayerConnectedId(pset, 0);
 			if(!pinfo.canHumanPlay)
 			{
 				pset.compOnly = true;
@@ -460,7 +460,7 @@ ui8 CServerHandler::getIdOfFirstUnallocatedPlayer() //MPTODO: must be const
 	return 0;
 }
 
-void CServerHandler::requestPlayerOptionChange(ui8 what, ui8 dir, PlayerColor player)
+void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 {
 	RequestOptionsChange roc(what, dir, si.playerInfos[player].connectedPlayerID);
 	*c << &roc;
@@ -650,7 +650,7 @@ void CServerHandler::propagateGuiAction(PregameGuiAction & pga)
 	*c << &pga;
 }
 
-void CServerHandler::tryStartGame()
+void CServerHandler::startGame()
 {
 	if(!current)
 		throw mapMissingException();
@@ -687,7 +687,7 @@ void CServerHandler::tryStartGame()
 	*c << &swcs;
 }
 
-void CServerHandler::postChatMessage(const std::string & txt)
+void CServerHandler::sendMessage(const std::string & txt)
 {
 	std::istringstream readed;
 	readed.str(txt);
@@ -713,7 +713,7 @@ void CServerHandler::postChatMessage(const std::string & txt)
 	}
 }
 
-void CServerHandler::quitWithoutStarting()
+void CServerHandler::stopServer()
 {
 	if(isGuest() || !c)
 		return;
@@ -790,7 +790,7 @@ void CServerHandler::processPacks()
 	}
 }
 
-void CServerHandler::optionsFlagPressed(PlayerColor color)
+void CServerHandler::setPlayer(PlayerColor color)
 {
 	if(isGuest() || !c)
 		return;
@@ -811,7 +811,7 @@ void CServerHandler::optionsFlagPressed(PlayerColor color)
 	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
 	{
 		PlayerSettings & restPos = si.playerInfos[playerToRestore.color];
-		setPlayer(restPos, playerToRestore.id);
+		setPlayerConnectedId(restPos, playerToRestore.id);
 		playerToRestore.reset();
 	}
 
@@ -835,7 +835,7 @@ void CServerHandler::optionsFlagPressed(PlayerColor color)
 			newPlayer = 0; //AI if we scrolled through all players
 	}
 
-	setPlayer(clicked, newPlayer); //put player
+	setPlayerConnectedId(clicked, newPlayer); //put player
 
 	//if that player was somewhere else, we need to replace him with computer
 	if(newPlayer) //not AI
@@ -848,7 +848,7 @@ void CServerHandler::optionsFlagPressed(PlayerColor color)
 				assert(i->second.connectedPlayerID);
 				playerToRestore.color = i->first;
 				playerToRestore.id = newPlayer;
-				setPlayer(i->second, 0); //set computer
+				setPlayerConnectedId(i->second, 0); //set computer
 				old = &i->second;
 				break;
 			}
@@ -857,7 +857,7 @@ void CServerHandler::optionsFlagPressed(PlayerColor color)
 	propagateOptions();
 }
 
-void CServerHandler::optionSetTurnLength(int npos)
+void CServerHandler::setTurnLength(int npos)
 {
 	if(isGuest() || !c)
 		return;
@@ -867,7 +867,7 @@ void CServerHandler::optionSetTurnLength(int npos)
 	propagateOptions();
 }
 
-void CServerHandler::requestChangeSelection(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
+void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
 {
 	if(isGuest() || !c || current == to)
 		return;
@@ -902,7 +902,7 @@ void CServerHandler::setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOp
 	}
 }
 
-void CServerHandler::requestDifficultyChange(int to)
+void CServerHandler::setDifficulty(int to)
 {
 	if(isGuest() || !c)
 		return;
