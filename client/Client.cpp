@@ -58,8 +58,6 @@ std::atomic_bool androidTestServerReadyFlag;
 
 ThreadSafeVector<int> CClient::waitingRequest;
 
-CondSh<bool> CServerHandler::serverAlive(false);
-
 template<typename T> class CApplyOnCL;
 
 class CBaseForCLApply

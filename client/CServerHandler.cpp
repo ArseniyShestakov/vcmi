@@ -83,6 +83,8 @@ static CApplier<CBaseForPGApply> * applier = nullptr;
 
 extern std::string NAME;
 
+CondSh<bool> CServerHandler::serverAlive(false);
+
 void CServerHandler::startServer()
 {
 	if(settings["session"]["donotstartserver"].Bool())
@@ -224,14 +226,14 @@ void CServerHandler::callServer()
 #endif
 }
 
-void CServerHandler::justConnectToServer(const std::string &host, const ui16 port)
+void CServerHandler::justConnectToServer(const std::string & addr, const ui16 port)
 {
 	while(!c)
 	{
 		try
 		{
 			logNetwork->info("Establishing connection...");
-			c = new CConnection(	host.size() ? host : settings["server"]["server"].String(),
+			c = new CConnection(	addr.size() ? addr : settings["server"]["server"].String(),
 									port ? port : getDefaultPort(),
 									NAME);
 			c->connectionID = 1; // TODO: Refactoring for the server so IDs set outside of CConnection
@@ -242,8 +244,8 @@ void CServerHandler::justConnectToServer(const std::string &host, const ui16 por
 			// MPTODO: remove SDL dependency from server handler
 			SDL_Delay(2000);
 		}
-		serverHandlingThread = new boost::thread(&CServerHandler::handleConnection, this);
 	}
+	serverHandlingThread = new boost::thread(&CServerHandler::handleConnection, this);
 }
 
 void CServerHandler::stopConnection()
@@ -267,7 +269,7 @@ void CServerHandler::stopServerConnection()
 	delete mx;
 }
 
-bool CServerHandler::isServerLocal()
+bool CServerHandler::isServerLocal() const
 {
 	if(serverThread)
 		return true;
