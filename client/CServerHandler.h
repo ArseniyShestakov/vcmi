@@ -21,7 +21,6 @@ struct PregameGuiAction;
 struct PlayerInfo;
 struct CPackForSelectionScreen;
 
-#include "../lib/CondSh.h"
 #include "../lib/CStopWatch.h"
 
 #include "../lib/StartInfo.h"
@@ -46,7 +45,7 @@ public:
 	CStopWatch th;
 	bool verbose; //whether to print log msgs
 
-	boost::thread * serverThread; //thread that called system to run server
+	boost::thread * localServerThread; //thread that called system to run server
 	boost::thread * serverHandlingThread;
 	SharedMemory * shm;
 	std::string uuid;
@@ -111,7 +110,7 @@ public:
 	void justConnectToServer(const std::string &addr = "", const ui16 port = 0); //connects to given host without taking any other actions (like setting up server)
 	static ui16 getDefaultPort();
 	static std::string getDefaultPortStr();
-	void handleConnection();
+	void threadHandleConnection();
 	void processPacks();
 	void stopServerConnection();
 	void stopConnection();
@@ -120,15 +119,11 @@ public:
 	bool isGuest() const;
 
 	// Functions for setting up local server
-	static CondSh<bool> serverAlive;  //used to prevent game start from executing if server is already running
-
-	void waitForServer(); //waits till server is ready
-	void startServerAndConnect(); //connects to server
-	void startServer(); //creates a thread with callServer
-
+	void startLocalServerAndConnect();
 	bool isServerLocal() const;
+
 private:
-	void callServer(); //calls server via system(), should be called as thread
+	void threadRunServer();
 };
 
 class mapMissingException : public std::exception {};

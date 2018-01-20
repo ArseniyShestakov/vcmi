@@ -323,7 +323,7 @@ void CGPreGame::openSel(CMenuScreen::EState screenType, CMenuScreen::EGameMode g
 	IShowActivatable * sel = new CSelectionScreen(screenType, gameMode);
 	if(gameMode == CMenuScreen::MULTI_NETWORK_HOST && !settings["session"]["donotstartserver"].Bool())
 	{
-		CSH->startServerAndConnect();
+		CSH->startLocalServerAndConnect();
 		GH.pushInt(sel);
 	}
 	else

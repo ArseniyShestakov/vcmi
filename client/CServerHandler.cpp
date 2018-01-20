@@ -83,12 +83,10 @@ static CApplier<CBaseForPGApply> * applier = nullptr;
 
 extern std::string NAME;
 
-CondSh<bool> CServerHandler::serverAlive(false);
-
-void CServerHandler::startServer()
+void CServerHandler::startLocalServerAndConnect()
 {
-	if(settings["session"]["donotstartserver"].Bool())
-		return;
+	if(localServerThread)
+		localServerThread->join();
 
 	th.update();
 
@@ -96,20 +94,10 @@ void CServerHandler::startServer()
 	CAndroidVMHelper envHelper;
 	envHelper.callStaticVoidMethod(CAndroidVMHelper::NATIVE_METHODS_DEFAULT_CLASS, "startServer", true);
 #else
-	serverThread = new boost::thread(&CServerHandler::callServer, this); //runs server executable;
+	localServerThread = new boost::thread(&CServerHandler::threadRunServer, this); //runs server executable;
 #endif
 	if(verbose)
 		logNetwork->info("Setting up thread calling server: %d ms", th.getDiff());
-}
-
-void CServerHandler::waitForServer()
-{
-	if(settings["session"]["donotstartserver"].Bool())
-		return;
-
-	if(serverThread)
-		serverThread->join();
-	startServer();
 
 	th.update();
 
@@ -128,11 +116,6 @@ void CServerHandler::waitForServer()
 #endif
 	if(verbose)
 		logNetwork->info("Waiting for server: %d ms", th.getDiff());
-}
-
-void CServerHandler::startServerAndConnect()
-{
-	waitForServer();
 
 	th.update(); //put breakpoint here to attach to server before it does something stupid
 
@@ -160,42 +143,21 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
-	: c(nullptr), serverThread(nullptr), shm(nullptr), verbose(true), host(false), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
+	: c(nullptr), localServerThread(nullptr), shm(nullptr), verbose(true), host(false), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
-
-#ifndef VCMI_ANDROID
-	if(settings["session"]["donotstartserver"].Bool() || settings["session"]["disable-shm"].Bool())
-		return;
-
-	std::string sharedMemoryName = "vcmi_memory";
-	if(settings["session"]["enable-shm-uuid"].Bool())
-	{
-		//used or automated testing when multiple clients start simultaneously
-		sharedMemoryName += "_" + uuid;
-	}
-	try
-	{
-		shm = new SharedMemory(sharedMemoryName, true);
-	}
-	catch(...)
-	{
-		vstd::clear_pointer(shm);
-		logNetwork->error("Cannot open interprocess memory. Continue without it...");
-	}
-#endif
 }
 
 CServerHandler::~CServerHandler()
 {
 	delete shm;
-	delete serverThread; //detaches, not kills thread
+	delete localServerThread; //detaches, not kills thread
 }
 
-void CServerHandler::callServer()
+void CServerHandler::threadRunServer()
 {
 #ifndef VCMI_ANDROID
-	setThreadName("CServerHandler::callServer");
+	setThreadName("CServerHandler::threadRunServer");
 	const std::string logName = (VCMIDirs::get().userCachePath() / "server_log.txt").string();
 	std::string comm = VCMIDirs::get().serverPath().string()
 		+ " --port=" + getDefaultPortStr()
@@ -213,13 +175,11 @@ void CServerHandler::callServer()
 	if (result == 0)
 	{
 		logNetwork->info("Server closed correctly");
-		CServerHandler::serverAlive.setn(false);
 	}
 	else
 	{
 		logNetwork->error("Error: server failed to close correctly or crashed!");
 		logNetwork->error("Check %s for more info", logName);
-		CServerHandler::serverAlive.setn(false);
 		// TODO: make client return to main menu if server actually crashed during game.
 //		exit(1);// exit in case of error. Othervice without working server VCMI will hang
 	}
@@ -245,7 +205,7 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 			SDL_Delay(2000);
 		}
 	}
-	serverHandlingThread = new boost::thread(&CServerHandler::handleConnection, this);
+	serverHandlingThread = new boost::thread(&CServerHandler::threadHandleConnection, this);
 }
 
 void CServerHandler::stopConnection()
@@ -271,7 +231,7 @@ void CServerHandler::stopServerConnection()
 
 bool CServerHandler::isServerLocal() const
 {
-	if(serverThread)
+	if(localServerThread)
 		return true;
 
 	return false;
@@ -620,6 +580,29 @@ void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vec
 	else
 		myNames.push_back(settings["general"]["playerName"].String());
 
+#ifndef VCMI_ANDROID
+	if(shm)
+		vstd::clear_pointer(shm);
+
+	if(!settings["session"]["disable-shm"].Bool())
+	{
+		std::string sharedMemoryName = "vcmi_memory";
+		if(settings["session"]["enable-shm-uuid"].Bool())
+		{
+			//used or automated testing when multiple clients start simultaneously
+			sharedMemoryName += "_" + uuid;
+		}
+		try
+		{
+			shm = new SharedMemory(sharedMemoryName, true);
+		}
+		catch(...)
+		{
+			vstd::clear_pointer(shm);
+			logNetwork->error("Cannot open interprocess memory. Continue without it...");
+		}
+	}
+#endif
 }
 
 void CServerHandler::propagateNames() const
@@ -729,9 +712,9 @@ PlayerInfo CServerHandler::getPlayerInfo(int color) const
 }
 
 
-void CServerHandler::handleConnection()
+void CServerHandler::threadHandleConnection()
 {
-	setThreadName("CServerHandler::handleConnection");
+	setThreadName("CServerHandler::threadHandleConnection");
 	c->enterPregameConnectionMode();
 	applier = new CApplier<CBaseForPGApply>();
 	registerTypesPregamePacks(*applier);

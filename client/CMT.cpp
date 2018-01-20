@@ -1337,13 +1337,7 @@ static void mainLoop()
 
 void startGame()
 {
-	if(!settings["session"]["donotstartserver"].Bool())
-	{
-		CServerHandler::serverAlive.waitWhileTrue();
-		CServerHandler::serverAlive.setn(true);
-	}
-
-    client = new CClient();
+	client = new CClient();
 	CPlayerInterface::howManyPeople = 0;
 	switch(CSH->si.mode) //new game
 	{

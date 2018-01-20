@@ -9,7 +9,6 @@
  */
 #pragma once
 #include <SDL_render.h>
-#include "../lib/CondSh.h"
 
 extern SDL_Texture * screenTexture;
 

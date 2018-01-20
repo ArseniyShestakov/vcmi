@@ -9,9 +9,7 @@
  */
 #pragma once
 
-
 #include "../lib/ConstTransitivePtr.h"
-#include "../lib/CondSh.h"
 
 class CModHandler;
 class CMapHandler;
@@ -72,5 +70,3 @@ public:
 	CGameInfo();
 };
 extern const CGameInfo* CGI;
-
-////////////// extern CondSh<bool> serverAlive;
