@@ -140,10 +140,10 @@ CVCMIServer::~CVCMIServer()
 	delete acceptor;
 	delete upcomingConnection;
 
-	for(CPackForLobby * pack : toAnnounce)
+	for(CPackForLobby * pack : announceQueue)
 		delete pack;
 
-	toAnnounce.clear();
+	announceQueue.clear();
 
 	//TODO pregameconnections
 }
@@ -172,10 +172,10 @@ void CVCMIServer::start()
 	{
 		{
 			boost::unique_lock<boost::recursive_mutex> myLock(mx);
-			while(!toAnnounce.empty())
+			while(!announceQueue.empty())
 			{
-				processPack(toAnnounce.front());
-				toAnnounce.pop_front();
+				processPack(announceQueue.front());
+				announceQueue.pop_front();
 			}
 			if(state != RUNNING)
 			{
@@ -390,9 +390,9 @@ void CVCMIServer::addToAnnounceQueue(CPackForLobby * pack, bool front)
 {
 	boost::unique_lock<boost::recursive_mutex> queueLock(mx);
 	if(front)
-		toAnnounce.push_front(pack);
+		announceQueue.push_front(pack);
 	else
-		toAnnounce.push_back(pack);
+		announceQueue.push_back(pack);
 }
 
 void CVCMIServer::passHost(int toConnectionId)

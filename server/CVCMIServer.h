@@ -59,7 +59,7 @@ public:
 
 	int listeningThreads;
 	std::set<CConnection *> connections;
-	std::list<CPackForLobby *> toAnnounce;
+	std::list<CPackForLobby *> announceQueue;
 	boost::recursive_mutex mx;
 
 	TSocket * upcomingConnection;

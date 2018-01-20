@@ -476,7 +476,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 		for(auto & elem : btns)
 			elem = nullptr;
 
-	selectButtons();
+	hideUnavailableButtons();
 
 	assert(CSH->current && CSH->current->mapHeader);
 	const PlayerInfo & p = CSH->getPlayerInfo(s.color.getNum());
@@ -509,7 +509,7 @@ void OptionsTab::PlayerOptionsEntry::showAll(SDL_Surface * to)
 	printAtMiddleWBLoc(CGI->generaltexth->arraytxt[206 + whoCanPlay], 28, 39, FONT_TINY, 50, Colors::WHITE, to);
 }
 
-void OptionsTab::PlayerOptionsEntry::selectButtons()
+void OptionsTab::PlayerOptionsEntry::hideUnavailableButtons()
 {
 	if(!btns[0])
 		return;

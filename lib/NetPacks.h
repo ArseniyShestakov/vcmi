@@ -2416,7 +2416,7 @@ struct CPackForLobby : public CPack
 
 	bool applyServerBefore(CVCMIServer * srv, CConnection * c)
 	{
-		return false;
+		return true;
 	}
 
 	void applyServerAfter(CVCMIServer * srv, CConnection * c) {}

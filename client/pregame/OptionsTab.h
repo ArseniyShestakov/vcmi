@@ -78,7 +78,7 @@ public:
 
 		PlayerOptionsEntry(OptionsTab * owner, PlayerSettings & S);
 		void showAll(SDL_Surface * to) override;
-		void selectButtons(); //hides unavailable buttons
+		void hideUnavailableButtons();
 	};
 
 	CSlider * turnDuration;
