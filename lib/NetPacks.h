@@ -39,6 +39,7 @@ class CMapInfo;
 struct StartInfo;
 struct ServerCapabilities;
 class CMapGenOptions;
+struct ClientPlayer;
 
 struct CPackForClient : public CPack
 {
@@ -2441,20 +2442,6 @@ struct QuitMenuWithoutStarting : public CPregamePackToPropagate
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 
-	}
-};
-
-struct ClientPlayer // MPTODO
-{
-	int connection;
-	ui8 color;
-	std::string name;
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-		h & connection;
-		h & color;
-		h & name;
 	}
 };
 
