@@ -726,7 +726,7 @@ void CServerHandler::threadHandleConnection()
 
 		while(c)
 		{
-			CPackForSelectionScreen * pack = nullptr;
+			CPackForLobby * pack = nullptr;
 			*c >> pack;
 			logNetwork->trace("Received a pack of type %s", typeid(*pack).name());
 			assert(pack);
@@ -765,7 +765,7 @@ void CServerHandler::processPacks()
 	boost::unique_lock<boost::recursive_mutex> lock(*mx);
 	while(!upcomingPacks.empty())
 	{
-		CPackForSelectionScreen * pack = upcomingPacks.front();
+		CPackForLobby * pack = upcomingPacks.front();
 		upcomingPacks.pop_front();
 		CBaseForLobbyApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
 		apply->applyOnLobby(static_cast<CSelectionScreen *>(SEL), pack);

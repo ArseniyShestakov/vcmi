@@ -15,7 +15,7 @@ class CTextBox;
 class CTextInput;
 class CAnimImage;
 class CToggleGroup;
-struct CPackForSelectionScreen;
+struct CPackForLobby;
 class RandomMapTab;
 class OptionsTab;
 class SelectionTab;

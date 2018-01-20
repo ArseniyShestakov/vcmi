@@ -14,7 +14,7 @@
 class CMapInfo;
 
 class CConnection;
-struct CPackForSelectionScreen;
+struct CPackForLobby;
 class CGameHandler;
 struct SharedMemory;
 
@@ -45,6 +45,7 @@ struct StartInfo;
 struct ServerCapabilities;
 class CVCMIServer
 {
+public:
 	enum
 	{
 		INVALID, RUNNING, ENDING_WITHOUT_START, ENDING_AND_STARTING_GAME
@@ -56,30 +57,26 @@ class CVCMIServer
 
 	boost::program_options::variables_map cmdLineOptions;
 
-	CConnection * hostClient;
 	int listeningThreads;
 	std::set<CConnection *> connections;
-	std::list<CPackForSelectionScreen *> toAnnounce;
+	std::list<CPackForLobby *> toAnnounce;
 	boost::recursive_mutex mx;
 
 	TSocket * upcomingConnection;
 
 	const CMapInfo * curmap;
 	StartInfo * curStartInfo;
-	ServerCapabilities * capabilities;
 
 	void startAsyncAccept();
 	void connectionAccepted(const boost::system::error_code & ec);
 	void startListeningThread(CConnection * pc);
 	void handleConnection(CConnection * cpc);
 
-	void processPack(CPackForSelectionScreen * pack);
-	void sendPack(CConnection * pc, const CPackForSelectionScreen & pack);
-	void announcePack(const CPackForSelectionScreen & pack);
-	void announceTxt(const std::string & txt, const std::string & playerName = "system");
+	void processPack(CPackForLobby * pack);
+	void announcePack(const CPackForLobby & pack);
 	void passHost(int toConnectionId);
 
-public:
+//public:
 	static std::atomic<bool> shuttingDown;
 	std::atomic<ui8> currentPlayerId;
 
@@ -88,6 +85,12 @@ public:
 
 	void start();
 	void startGame();
+
+	CConnection * hostClient;
+	ServerCapabilities * capabilities;
+	void sendPack(CConnection * pc, const CPackForLobby & pack);
+	void announceTxt(const std::string & txt, const std::string & playerName = "system");
+	void addToAnnounceQueue(CPackForLobby * pack);
 
 #ifdef VCMI_ANDROID
 	static void create();

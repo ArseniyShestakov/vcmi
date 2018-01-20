@@ -347,26 +347,26 @@ void registerTypesServerPacks(Serializer &s)
 template<typename Serializer>
 void registerTypesPregamePacks(Serializer &s)
 {
-	s.template registerType<CPack, CPackForSelectionScreen>();
-	s.template registerType<CPackForSelectionScreen, CPregamePackToPropagate>();
-	s.template registerType<CPackForSelectionScreen, CPregamePackToHost>();
-	s.template registerType<CPackForSelectionScreen, CPregamePackToServer>();
+	s.template registerType<CPack, CPackForLobby>();
+	s.template registerType<CPackForLobby, CLobbyPackToPropagate>();
+	s.template registerType<CPackForLobby, CLobbyPackToHost>();
+	s.template registerType<CPackForLobby, CLobbyPackToServer>();
 
-	s.template registerType<CPregamePackToPropagate, ChatMessage>();
-	s.template registerType<CPregamePackToPropagate, QuitMenuWithoutStarting>();
-	s.template registerType<CPregamePackToPropagate, SelectMap>();
-	s.template registerType<CPregamePackToPropagate, UpdateStartOptions>();
-	s.template registerType<CPregamePackToPropagate, PregameGuiAction>();
-	s.template registerType<CPregamePackToPropagate, PlayerLeft>();
-	s.template registerType<CPregamePackToPropagate, PlayersNames>();
-	s.template registerType<CPregamePackToPropagate, StartWithCurrentSettings>();
-	s.template registerType<CPregamePackToPropagate, WelcomeClient>();
-	s.template registerType<CPregamePackToPropagate, PassHost>();
+	s.template registerType<CLobbyPackToPropagate, ChatMessage>();
+	s.template registerType<CLobbyPackToPropagate, QuitMenuWithoutStarting>();
+	s.template registerType<CLobbyPackToPropagate, SelectMap>();
+	s.template registerType<CLobbyPackToPropagate, UpdateStartOptions>();
+	s.template registerType<CLobbyPackToPropagate, PregameGuiAction>();
+	s.template registerType<CLobbyPackToPropagate, PlayerLeft>();
+	s.template registerType<CLobbyPackToPropagate, PlayersNames>();
+	s.template registerType<CLobbyPackToPropagate, StartWithCurrentSettings>();
+	s.template registerType<CLobbyPackToPropagate, WelcomeClient>();
+	s.template registerType<CLobbyPackToPropagate, PassHost>();
 
-	s.template registerType<CPregamePackToHost, PlayerJoined>();
-	s.template registerType<CPregamePackToHost, RequestOptionsChange>();
+	s.template registerType<CLobbyPackToHost, PlayerJoined>();
+	s.template registerType<CLobbyPackToHost, RequestOptionsChange>();
 
-	s.template registerType<CPregamePackToServer, WelcomeServer>();
+	s.template registerType<CLobbyPackToServer, WelcomeServer>();
 
 }
 

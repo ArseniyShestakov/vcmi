@@ -44,9 +44,63 @@
 
 #include "../lib/UnlockGuard.h"
 
+// for applier
+#include "../lib/registerTypes/RegisterTypes.h"
+
 #if defined(__GNUC__) && !defined(__MINGW32__) && !defined(VCMI_ANDROID)
 #include <execinfo.h>
 #endif
+
+template<typename T> class CApplyOnServer;
+
+class CBaseForServerApply
+{
+public:
+	virtual bool applyOnServerBefore(CVCMIServer * srv, CConnection * c, void * pack) const =0;
+	virtual void applyOnServerAfter(CVCMIServer * srv, CConnection * c, void * pack) const =0;
+	virtual ~CBaseForServerApply() {}
+	template<typename U> static CBaseForServerApply * getApplier(const U * t = nullptr)
+	{
+		return new CApplyOnServer<U>();
+	}
+};
+
+template <typename T> class CApplyOnServer : public CBaseForServerApply
+{
+public:
+	bool applyOnServerBefore(CVCMIServer * srv, CConnection * c, void * pack) const override
+	{
+		T * ptr = static_cast<T *>(pack);
+		ptr->c = c;
+		return ptr->applyServerBefore(srv, c);
+	}
+
+	void applyOnServerAfter(CVCMIServer * srv, CConnection * c, void * pack) const override
+	{
+		T * ptr = static_cast<T *>(pack);
+		ptr->c = c;
+		ptr->applyServerAfter(srv, c);
+	}
+};
+
+template <>
+class CApplyOnServer<CPack> : public CBaseForServerApply
+{
+public:
+	bool applyOnServerBefore(CVCMIServer * srv, CConnection * c, void * pack) const override
+	{
+		logGlobal->error("Cannot apply plain CPack!");
+		assert(0);
+		return false;
+	}
+	void applyOnServerAfter(CVCMIServer * srv, CConnection * c, void * pack) const override
+	{
+		logGlobal->error("Cannot apply plain CPack!");
+		assert(0);
+	}
+};
+
+static CApplier<CBaseForServerApply> * applier = nullptr;
 
 std::string NAME_AFFIX = "server";
 std::string NAME = GameConstants::VCMI_VERSION + std::string(" (") + NAME_AFFIX + ')';
@@ -57,6 +111,9 @@ CVCMIServer::CVCMIServer(boost::program_options::variables_map & opts)
 	: port(3030), io(new boost::asio::io_service()), shm(nullptr), listeningThreads(0), upcomingConnection(nullptr), curmap(nullptr), curStartInfo(nullptr), state(RUNNING), cmdLineOptions(opts), currentPlayerId(1)
 {
 	logNetwork->trace("CVCMIServer created!");
+	applier = new CApplier<CBaseForServerApply>();
+	registerTypesPregamePacks(*applier);
+
 	if(cmdLineOptions.count("port"))
 		port = cmdLineOptions["port"].as<ui16>();
 	logNetwork->info("Port %d will be used", port);
@@ -83,7 +140,7 @@ CVCMIServer::~CVCMIServer()
 	delete acceptor;
 	delete upcomingConnection;
 
-	for(CPackForSelectionScreen * pack : toAnnounce)
+	for(CPackForLobby * pack : toAnnounce)
 		delete pack;
 
 	toAnnounce.clear();
@@ -231,77 +288,18 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 	{
 		while(!cpc->receivedStop)
 		{
-			CPackForSelectionScreen * cpfs = nullptr;
-			*cpc >> cpfs;
-
-			logNetwork->info("Got package to announce %s from %s", typeid(*cpfs).name(), cpc->toString());
-
-			boost::unique_lock<boost::recursive_mutex> queueLock(mx);
-
-			if(auto ws = dynamic_ptr_cast<WelcomeServer>(cpfs))
+			CPackForLobby * pack = nullptr;
+			*cpc >> pack;
+			logNetwork->info("Got package to announce %s from %s", typeid(*pack).name(), cpc->toString());
+			CBaseForServerApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
+			if(apply->applyOnServerBefore(this, cpc, pack))
 			{
-				cpc->names = ws->names;
-				cpc->uuid = ws->uuid;
-
-				WelcomeClient wc;
-				wc.connectionId = cpc->connectionID;
-				wc.capabilities = capabilities;
-				if(hostClient->connectionID == cpc->connectionID)
-				{
-					hostClient = cpc;
-					wc.giveHost = true;
-				}
-				*cpc << &wc;
-
-				logNetwork->info("Connection with client %d established. UUID: %s", cpc->connectionID, cpc->uuid);
-				for(auto & name : cpc->names)
-					logNetwork->info("Client %d player: %s", cpc->connectionID, name);
-
-				auto pj = new PlayerJoined();
-				pj->connectionID = cpc->connectionID;
-				for(auto & name : cpc->names)
-				{
-					announceTxt(boost::str(boost::format("%s(%d) joins the game") % name % cpc->connectionID));
-
-					ClientPlayer cp;
-					cp.connection = cpc->connectionID;
-					cp.name = name;
-					cp.color = 255;
-					pj->players.insert(std::make_pair(currentPlayerId++, cp));
-				}
-				toAnnounce.push_back(pj);
-			}
-
-			if(auto ph = dynamic_ptr_cast<PassHost>(cpfs))
-			{
-				passHost(ph->toConnection);
-			}
-
-			bool quitting = dynamic_ptr_cast<QuitMenuWithoutStarting>(cpfs),
-				startingGame = dynamic_ptr_cast<StartWithCurrentSettings>(cpfs);
-			if(quitting || startingGame) //host leaves main menu or wants to start game -> we end
-			{
-				cpc->receivedStop = true;
-				if(!cpc->sendStop)
-					sendPack(cpc, *cpfs);
-
-				if(cpc == hostClient)
-					toAnnounce.push_back(cpfs);
+				addToAnnounceQueue(pack);
+				apply->applyOnServerAfter(this, cpc, pack);
 			}
 			else
-				toAnnounce.push_back(cpfs);
+				delete pack;
 
-			if(startingGame)
-			{
-				//wait for sending thread to announce start
-				auto unlock = vstd::makeUnlockGuard(mx);
-				while(state == RUNNING)
-					boost::this_thread::sleep(boost::posix_time::milliseconds(50));
-			}
-			else if(quitting) // Server must be stopped if host is leaving from lobby to avoid crash
-			{
-				CVCMIServer::shuttingDown = true;
-			}
 		}
 	}
 	catch(const std::exception & e)
@@ -341,28 +339,11 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 	vstd::clear_pointer(cpc->handler);
 }
 
-void CVCMIServer::processPack(CPackForSelectionScreen * pack)
+void CVCMIServer::processPack(CPackForLobby * pack)
 {
-	if(SelectMap * sm = dynamic_ptr_cast<SelectMap>(pack))
-	{
-		vstd::clear_pointer(curmap);
-		curmap = sm->mapInfo;
-		announcePack(*pack);
-	}
-	else if(UpdateStartOptions * uso = dynamic_ptr_cast<UpdateStartOptions>(pack))
-	{
-		vstd::clear_pointer(curStartInfo);
-		curStartInfo = uso->si;
-		announcePack(*pack);
-	}
-	else if(dynamic_ptr_cast<StartWithCurrentSettings>(pack))
-	{
-		state = ENDING_AND_STARTING_GAME;
-		announcePack(*pack);
-	}
 	// MPTODO: This was the first option, but something gone very wrong
 	// For some reason when I added PassHost netpack this started to crash.
-	else if(dynamic_ptr_cast<CPregamePackToHost>(pack))
+	if(dynamic_ptr_cast<CLobbyPackToHost>(pack))
 	{
 		sendPack(hostClient, *pack);
 	}
@@ -372,7 +353,7 @@ void CVCMIServer::processPack(CPackForSelectionScreen * pack)
 	delete pack;
 }
 
-void CVCMIServer::sendPack(CConnection * pc, const CPackForSelectionScreen & pack)
+void CVCMIServer::sendPack(CConnection * pc, const CPackForLobby & pack)
 {
 	if(!pc->sendStop)
 	{
@@ -390,7 +371,7 @@ void CVCMIServer::sendPack(CConnection * pc, const CPackForSelectionScreen & pac
 	}
 }
 
-void CVCMIServer::announcePack(const CPackForSelectionScreen & pack)
+void CVCMIServer::announcePack(const CPackForLobby & pack)
 {
 	for(CConnection * pc : connections)
 		sendPack(pc, pack);
@@ -405,6 +386,12 @@ void CVCMIServer::announceTxt(const std::string & txt, const std::string & playe
 
 	boost::unique_lock<boost::recursive_mutex> queueLock(mx);
 	toAnnounce.push_front(new ChatMessage(cm));
+}
+
+void CVCMIServer::addToAnnounceQueue(CPackForLobby * pack)
+{
+	boost::unique_lock<boost::recursive_mutex> queueLock(mx);
+	toAnnounce.push_back(pack);
 }
 
 void CVCMIServer::passHost(int toConnectionId)
