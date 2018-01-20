@@ -256,6 +256,7 @@ void CServerHandler::stopServerConnection()
 	ongoingClosing = true;
 	if(serverHandlingThread)
 	{
+		quitWithoutStarting();
 		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
 			processPacks();
 		serverHandlingThread->join();
@@ -712,6 +713,9 @@ void CServerHandler::postChatMessage(const std::string & txt)
 
 void CServerHandler::quitWithoutStarting()
 {
+	if(isGuest() || !c)
+		return;
+
 	ongoingClosing = true;
 	QuitMenuWithoutStarting qmws;
 	*c << &qmws;
