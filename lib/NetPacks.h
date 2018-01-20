@@ -2458,15 +2458,12 @@ struct QuitMenuWithoutStarting : public CLobbyPackToPropagate
 
 struct PlayerJoined : public CLobbyPackToHost
 {
-	std::map<ui8, ClientPlayer> players;
 	ui8 connectionID;
 
 	void apply(CSelectionScreen *selScreen);
 
-
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & players;
 		h & connectionID;
 	}
 };
@@ -2545,7 +2542,7 @@ struct ChangePlayerOptions : public CLobbyPackToHost
 		:what(0), direction(0), color(PlayerColor::CANNOT_DETERMINE)
 	{}
 
-	void apply(CSelectionScreen *selScreen);
+	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -2629,5 +2626,44 @@ struct WelcomeServer : public CLobbyPackToServer
 	{
 		h & uuid;
 		h & names;
+	}
+};
+
+struct SetPlayer : public CLobbyPackToHost
+{
+	PlayerColor color;
+	SetPlayer() : color(PlayerColor::CANNOT_DETERMINE){}
+
+	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & color;
+	}
+};
+
+struct SetTurnTime : public CLobbyPackToHost
+{
+	ui8 turnTime;
+	SetTurnTime() : turnTime(0) {}
+
+	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & turnTime;
+	}
+};
+
+struct SetDifficulty : public CLobbyPackToHost
+{
+	ui8 difficulty;
+	SetDifficulty() : difficulty(0) {}
+
+	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & difficulty;
 	}
 };

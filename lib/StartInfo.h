@@ -13,6 +13,7 @@
 
 class CMapGenOptions;
 class CCampaignState;
+class CMapInfo;
 
 /// Struct which describes the name, the color, the starting bonus of a player
 struct PlayerSettings
@@ -169,4 +170,12 @@ struct ServerCapabilities
 		h & allowReconnect;
 		h & allowSpectating;
 	}
+};
+
+struct LobbyInfo
+{
+
+	StartInfo si;
+	std::shared_ptr<CMapInfo> current;
+	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 };

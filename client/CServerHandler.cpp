@@ -287,63 +287,6 @@ bool CServerHandler::isGuest() const
 	return !host;
 }
 
-void CServerHandler::setPlayerConnectedId(PlayerSettings & pset, ui8 player) const
-{
-	if(vstd::contains(playerNames, player))
-		pset.name = playerNames.find(player)->second.name;
-	else
-		pset.name = CGI->generaltexth->allTexts[468]; //Computer
-
-	pset.connectedPlayerID = player;
-}
-
-void CServerHandler::updateStartInfo()
-{
-	si.playerInfos.clear();
-	if(!current)
-		return;
-
-	si.mapname = current->fileURI;
-
-	auto namesIt = playerNames.cbegin();
-
-	for(int i = 0; i < current->mapHeader->players.size(); i++)
-	{
-		const PlayerInfo & pinfo = current->mapHeader->players[i];
-
-		//neither computer nor human can play - no player
-		if(!(pinfo.canHumanPlay || pinfo.canComputerPlay))
-			continue;
-
-		PlayerSettings & pset = si.playerInfos[PlayerColor(i)];
-		pset.color = PlayerColor(i);
-		if(pinfo.canHumanPlay && namesIt != playerNames.cend())
-		{
-			setPlayerConnectedId(pset, namesIt++->first);
-		}
-		else
-		{
-			setPlayerConnectedId(pset, 0);
-			if(!pinfo.canHumanPlay)
-			{
-				pset.compOnly = true;
-			}
-		}
-
-		pset.castle = pinfo.defaultCastle();
-		pset.hero = pinfo.defaultHero();
-
-		if(pset.hero != PlayerSettings::RANDOM && pinfo.hasCustomMainHero())
-		{
-			pset.hero = pinfo.mainCustomHeroId;
-			pset.heroName = pinfo.mainCustomHeroName;
-			pset.heroPortrait = pinfo.mainCustomHeroPortrait;
-		}
-
-		pset.handicap = PlayerSettings::NO_HANDICAP;
-	}
-}
-
 
 PlayerColor CServerHandler::myFirstColor() const
 {
@@ -409,17 +352,6 @@ std::vector<ui8> CServerHandler::getMyIds() const
 	return ids;
 }
 
-ui8 CServerHandler::getIdOfFirstUnallocatedPlayer() //MPTODO: must be const
-{
-	for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
-	{
-		if(!si.getPlayersSettings(i->first))
-			return i->first;
-	}
-
-	return 0;
-}
-
 void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 {
 	ChangePlayerOptions roc;
@@ -427,148 +359,6 @@ void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 	roc.direction = dir;
 	roc.color = player;
 	*c << &roc;
-}
-
-void CServerHandler::optionNextCastle(PlayerColor player, int dir)
-{
-	PlayerSettings & s = si.playerInfos[player];
-	si16 & cur = s.castle;
-	auto & allowed = current->mapHeader->players[s.color.getNum()].allowedFactions;
-	const bool allowRandomTown = current->mapHeader->players[s.color.getNum()].isFactionRandom;
-
-	if(cur == PlayerSettings::NONE) //no change
-		return;
-
-	if(cur == PlayerSettings::RANDOM) //first/last available
-	{
-		if(dir > 0)
-			cur = *allowed.begin(); //id of first town
-		else
-			cur = *allowed.rbegin(); //id of last town
-
-	}
-	else // next/previous available
-	{
-		if((cur == *allowed.begin() && dir < 0) || (cur == *allowed.rbegin() && dir > 0))
-		{
-			if(allowRandomTown)
-			{
-				cur = PlayerSettings::RANDOM;
-			}
-			else
-			{
-				if(dir > 0)
-					cur = *allowed.begin();
-				else
-					cur = *allowed.rbegin();
-			}
-		}
-		else
-		{
-			assert(dir >= -1 && dir <= 1); //othervice std::advance may go out of range
-			auto iter = allowed.find(cur);
-			std::advance(iter, dir);
-			cur = *iter;
-		}
-	}
-
-	if(s.hero >= 0 && !current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
-	{
-		s.hero = PlayerSettings::RANDOM;
-	}
-	if(cur < 0 && s.bonus == PlayerSettings::RESOURCE)
-		s.bonus = PlayerSettings::RANDOM;
-}
-
-void CServerHandler::optionNextHero(PlayerColor player, int dir)
-{
-	PlayerSettings & s = si.playerInfos[player];
-	if(s.castle < 0 || s.hero == PlayerSettings::NONE)
-		return;
-
-	if(s.hero == PlayerSettings::RANDOM) // first/last available
-	{
-		int max = CGI->heroh->heroes.size(),
-			min = 0;
-		s.hero = nextAllowedHero(player, min, max, 0, dir);
-	}
-	else
-	{
-		if(dir > 0)
-			s.hero = nextAllowedHero(player, s.hero, CGI->heroh->heroes.size(), 1, dir);
-		else
-			s.hero = nextAllowedHero(player, -1, s.hero, 1, dir); // min needs to be -1 -- hero at index 0 would be skipped otherwise
-	}
-}
-
-int CServerHandler::nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir)
-{
-	if(dir > 0)
-	{
-		for(int i = min + incl; i <= max - incl; i++)
-			if(canUseThisHero(player, i))
-				return i;
-	}
-	else
-	{
-		for(int i = max - incl; i >= min + incl; i--)
-			if(canUseThisHero(player, i))
-				return i;
-	}
-	return -1;
-}
-
-void CServerHandler::optionNextBonus(PlayerColor player, int dir)
-{
-	PlayerSettings & s = si.playerInfos[player];
-	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
-
-	if(s.hero == PlayerSettings::NONE &&
-		!current->mapHeader->players[s.color.getNum()].heroesNames.size() &&
-		ret == PlayerSettings::ARTIFACT) //no hero - can't be artifact
-	{
-		if(dir < 0)
-			ret = PlayerSettings::RANDOM;
-		else
-			ret = PlayerSettings::GOLD;
-	}
-
-	if(ret > PlayerSettings::RESOURCE)
-		ret = PlayerSettings::RANDOM;
-	if(ret < PlayerSettings::RANDOM)
-		ret = PlayerSettings::RESOURCE;
-
-	if(s.castle == PlayerSettings::RANDOM && ret == PlayerSettings::RESOURCE) //random castle - can't be resource
-	{
-		if(dir < 0)
-			ret = PlayerSettings::GOLD;
-		else
-			ret = PlayerSettings::RANDOM;
-	}
-}
-
-bool CServerHandler::canUseThisHero(PlayerColor player, int ID)
-{
-	return CGI->heroh->heroes.size() > ID
-		&& si.playerInfos[player].castle == CGI->heroh->heroes[ID]->heroClass->faction
-		&& !vstd::contains(getUsedHeroes(), ID)
-		&& current->mapHeader->allowedHeroes[ID];
-}
-
-std::vector<int> CServerHandler::getUsedHeroes()
-{
-	std::vector<int> heroIds;
-	for(auto & p : si.playerInfos)
-	{
-		const auto & heroes = current->mapHeader->players[p.first.getNum()].heroesNames;
-		for(auto & hero : heroes)
-			if(hero.heroId >= 0) //in VCMI map format heroId = -1 means random hero
-				heroIds.push_back(hero.heroId);
-
-		if(p.second.hero != PlayerSettings::RANDOM)
-			heroIds.push_back(p.second.hero);
-	}
-	return heroIds;
 }
 
 void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
@@ -606,26 +396,6 @@ void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vec
 		}
 	}
 #endif
-}
-
-void CServerHandler::propagateNames() const
-{
-	if(isGuest() || !c)
-		return;
-
-	PlayersNames pn;
-	pn.playerNames = playerNames;
-	*c << &pn;
-}
-
-void CServerHandler::propagateOptions()
-{
-	if(isGuest() || !c)
-		return;
-
-	UpdateStartOptions ups;
-	ups.si = &si;
-	*c << &ups;
 }
 
 void CServerHandler::propagateGuiAction(PregameGuiAction & pga)
@@ -666,7 +436,7 @@ void CServerHandler::startGame()
 		if(!si.mapGenOptions->checkOptions())
 			throw noTemplateException();
 
-		propagateOptions();
+		//propagateOptions();
 	}
 	ongoingClosing = true;
 	StartWithCurrentSettings swcs;
@@ -781,66 +551,9 @@ void CServerHandler::setPlayer(PlayerColor color)
 	if(isGuest() || !c)
 		return;
 
-	struct PlayerToRestore
-	{
-		PlayerColor color;
-		int id;
-		void reset() { id = -1; color = PlayerColor::CANNOT_DETERMINE; }
-		PlayerToRestore(){ reset(); }
-	} playerToRestore;
-
-	PlayerSettings & clicked = si.playerInfos[color];
-	PlayerSettings * old = nullptr;
-
-	//identify clicked player
-	int clickedNameID = clicked.connectedPlayerID; //human is a number of player, zero means AI
-	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
-	{
-		PlayerSettings & restPos = si.playerInfos[playerToRestore.color];
-		setPlayerConnectedId(restPos, playerToRestore.id);
-		playerToRestore.reset();
-	}
-
-	int newPlayer; //which player will take clicked position
-
-	//who will be put here?
-	if(!clickedNameID) //AI player clicked -> if possible replace computer with unallocated player
-	{
-		newPlayer = getIdOfFirstUnallocatedPlayer();
-		if(!newPlayer) //no "free" player -> get just first one
-			newPlayer = playerNames.begin()->first;
-	}
-	else //human clicked -> take next
-	{
-		auto i = playerNames.find(clickedNameID); //clicked one
-		i++; //player AFTER clicked one
-
-		if(i != playerNames.end())
-			newPlayer = i->first;
-		else
-			newPlayer = 0; //AI if we scrolled through all players
-	}
-
-	setPlayerConnectedId(clicked, newPlayer); //put player
-
-	//if that player was somewhere else, we need to replace him with computer
-	if(newPlayer) //not AI
-	{
-		for(auto i = si.playerInfos.begin(); i != si.playerInfos.end(); i++)
-		{
-			int curNameID = i->second.connectedPlayerID;
-			if(i->first != color && curNameID == newPlayer)
-			{
-				assert(i->second.connectedPlayerID);
-				playerToRestore.color = i->first;
-				playerToRestore.id = newPlayer;
-				setPlayerConnectedId(i->second, 0); //set computer
-				old = &i->second;
-				break;
-			}
-		}
-	}
-	propagateOptions();
+	SetPlayer sp;
+	sp.color = color;
+	*c << &sp;
 }
 
 void CServerHandler::setTurnLength(int npos)
@@ -849,8 +562,9 @@ void CServerHandler::setTurnLength(int npos)
 		return;
 
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
-	si.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
-	propagateOptions();
+	SetTurnTime stt;
+	stt.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
+	*c << &stt;
 }
 
 void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
@@ -864,35 +578,12 @@ void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * m
 	*c << &sm;
 }
 
-void CServerHandler::setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOpts)
-{
-	if(mapInfo)
-		current = std::make_shared<CMapInfo>(*mapInfo);
-	else
-		current.reset();
-
-	if(current && si.mode == StartInfo::LOAD_GAME)
-		si.difficulty = current->scenarioOpts->difficulty;
-
-	updateStartInfo();
-	if(si.mode == StartInfo::NEW_GAME)
-	{
-		if(current && current->isRandomMap)
-		{
-			si.mapGenOptions = std::shared_ptr<CMapGenOptions>(mapGenOpts);
-		}
-		else
-		{
-			si.mapGenOptions.reset();
-		}
-	}
-}
-
 void CServerHandler::setDifficulty(int to)
 {
 	if(isGuest() || !c)
 		return;
 
-	si.difficulty = to;
-	propagateOptions();
+	SetDifficulty sd;
+	sd.difficulty = to;
+	*c << &sd;
 }

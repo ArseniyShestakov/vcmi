@@ -14,6 +14,8 @@
 #include "../lib/NetPacks.h"
 #include "../lib/serializer/Connection.h"
 #include "../lib/StartInfo.h"
+#include "../lib/mapping/CMapInfo.h"
+#include "../lib/rmg/CMapGenOptions.h"
 
 
 bool WelcomeServer::applyServerBefore(CVCMIServer * srv, CConnection * c)
@@ -35,19 +37,7 @@ bool WelcomeServer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	for(auto & name : c->names)
 		logNetwork->info("Client %d player: %s", c->connectionID, name);
 
-	auto pj = new PlayerJoined();
-	pj->connectionID = c->connectionID;
-	for(auto & name : c->names)
-	{
-		srv->announceTxt(boost::str(boost::format("%s(%d) joins the game") % name % c->connectionID));
-
-		ClientPlayer cp;
-		cp.connection = c->connectionID;
-		cp.name = name;
-		cp.color = 255;
-		pj->players.insert(std::make_pair(srv->currentPlayerId++, cp));
-	}
-	srv->addToAnnounceQueue(pj);
+	srv->playerJoined(c);
 	return true;
 }
 
@@ -100,6 +90,23 @@ bool SelectMap::applyServerBefore(CVCMIServer *srv, CConnection *c)
 {
 	vstd::clear_pointer(srv->curmap);
 	srv->curmap = mapInfo;
+
+	if(srv->current && srv->si.mode == StartInfo::LOAD_GAME)
+		srv->si.difficulty = srv->current->scenarioOpts->difficulty;
+
+	srv->updateStartInfo();
+	if(srv->si.mode == StartInfo::NEW_GAME)
+	{
+		if(srv->current && srv->current->isRandomMap)
+		{
+			srv->si.mapGenOptions = std::shared_ptr<CMapGenOptions>(mapGenOpts);
+		}
+		else
+		{
+			srv->si.mapGenOptions.reset();
+		}
+	}
+	srv->propagateOptions();
 	return true;
 }
 
@@ -108,4 +115,97 @@ bool UpdateStartOptions::applyServerBefore(CVCMIServer *srv, CConnection *c)
 	vstd::clear_pointer(srv->curStartInfo);
 	srv->curStartInfo = si;
 	return true;
+}
+
+bool ChangePlayerOptions::applyServerBefore(CVCMIServer * srv, CConnection * c)
+{
+	switch(what)
+	{
+	case TOWN:
+		srv->optionNextCastle(color, direction);
+		break;
+	case HERO:
+		srv->optionNextHero(color, direction);
+		break;
+	case BONUS:
+		srv->optionNextBonus(color, direction);
+		break;
+	}
+	srv->propagateOptions();
+}
+
+bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
+{
+	struct PlayerToRestore
+	{
+		PlayerColor color;
+		int id;
+		void reset() { id = -1; color = PlayerColor::CANNOT_DETERMINE; }
+		PlayerToRestore(){ reset(); }
+	} playerToRestore;
+
+	PlayerSettings & clicked = srv->si.playerInfos[color];
+	PlayerSettings * old = nullptr;
+
+	//identify clicked player
+	int clickedNameID = clicked.connectedPlayerID; //human is a number of player, zero means AI
+	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
+	{
+		PlayerSettings & restPos = srv->si.playerInfos[playerToRestore.color];
+		srv->setPlayerConnectedId(restPos, playerToRestore.id);
+		playerToRestore.reset();
+	}
+
+	int newPlayer; //which player will take clicked position
+
+	//who will be put here?
+	if(!clickedNameID) //AI player clicked -> if possible replace computer with unallocated player
+	{
+		newPlayer = srv->getIdOfFirstUnallocatedPlayer();
+		if(!newPlayer) //no "free" player -> get just first one
+			newPlayer = srv->playerNames.begin()->first;
+	}
+	else //human clicked -> take next
+	{
+		auto i = srv->playerNames.find(clickedNameID); //clicked one
+		i++; //player AFTER clicked one
+
+		if(i != srv->playerNames.end())
+			newPlayer = i->first;
+		else
+			newPlayer = 0; //AI if we scrolled through all players
+	}
+
+	srv->setPlayerConnectedId(clicked, newPlayer); //put player
+
+	//if that player was somewhere else, we need to replace him with computer
+	if(newPlayer) //not AI
+	{
+		for(auto i = srv->si.playerInfos.begin(); i != srv->si.playerInfos.end(); i++)
+		{
+			int curNameID = i->second.connectedPlayerID;
+			if(i->first != color && curNameID == newPlayer)
+			{
+				assert(i->second.connectedPlayerID);
+				playerToRestore.color = i->first;
+				playerToRestore.id = newPlayer;
+				srv->setPlayerConnectedId(i->second, 0); //set computer
+				old = &i->second;
+				break;
+			}
+		}
+	}
+	srv->propagateOptions();
+}
+
+bool SetTurnTime::applyServerBefore(CVCMIServer * srv, CConnection * c)
+{
+	srv->si.turnTime = turnTime;
+	srv->propagateOptions();
+}
+
+bool SetDifficulty::applyServerBefore(CVCMIServer * srv, CConnection * c)
+{
+	srv->si.difficulty = difficulty;
+	srv->propagateOptions();
 }

@@ -9,6 +9,8 @@
  */
 #pragma once
 
+#include "../lib/StartInfo.h"
+
 #include <boost/program_options.hpp>
 
 class CMapInfo;
@@ -43,7 +45,10 @@ typedef boost::asio::basic_stream_socket<boost::asio::ip::tcp, boost::asio::stre
 
 struct StartInfo;
 struct ServerCapabilities;
-class CVCMIServer
+struct LobbyInfo;
+class PlayerSettings;
+class PlayerColor;
+class CVCMIServer : public LobbyInfo
 {
 public:
 	enum
@@ -91,6 +96,25 @@ public:
 	void sendPack(CConnection * pc, const CPackForLobby & pack);
 	void announceTxt(const std::string & txt, const std::string & playerName = "system");
 	void addToAnnounceQueue(CPackForLobby * pack, bool front = false);
+
+	void setPlayerConnectedId(PlayerSettings & pset, ui8 player) const;
+	void updateStartInfo();
+
+	void playerJoined(CConnection * c);
+	void playerLeft(CConnection * c);
+
+	void propagateNames();
+	void propagateOptions(); //MPTODO: should be const;
+
+	// Code only called from internals and netpacks. Should be moved on server-side
+	void optionNextHero(PlayerColor player, int dir); //dir == -1 or +1
+	int nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir);
+	bool canUseThisHero(PlayerColor player, int ID);
+	std::vector<int> getUsedHeroes();
+	void optionNextBonus(PlayerColor player, int dir); //dir == -1 or +1
+	void optionNextCastle(PlayerColor player, int dir); //dir == -1 or +
+
+	ui8 getIdOfFirstUnallocatedPlayer();
 
 #ifdef VCMI_ANDROID
 	static void create();

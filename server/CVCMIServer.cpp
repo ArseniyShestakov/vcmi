@@ -317,9 +317,7 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 		for(auto & name : cpc->names)
 			announceTxt(boost::str(boost::format("%s(%d) left the game") % name % cpc->connectionID));
 
-		auto pl = new PlayerLeft();
-		pl->connectionID = cpc->connectionID;
-		addToAnnounceQueue(pl);
+		playerLeft(cpc);
 
 		if(connections.empty())
 		{
@@ -412,6 +410,324 @@ void CVCMIServer::passHost(int toConnectionId)
 		return;
 	}
 }
+
+void CVCMIServer::playerJoined(CConnection * c)
+{
+	auto pj = new PlayerJoined();
+	pj->connectionID = c->connectionID;
+	addToAnnounceQueue(pj);
+
+	for(auto & name : c->names)
+	{
+		ui8 id = currentPlayerId++;
+		announceTxt(boost::str(boost::format("%s(%d) joins the game") % name % c->connectionID));
+
+		ClientPlayer cp;
+		cp.connection = c->connectionID;
+		cp.name = name;
+		cp.color = 255;
+		playerNames.insert(std::make_pair(id, cp));
+
+
+		//put new player in first slot with AI
+		for(auto & elem : si.playerInfos)
+		{
+			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
+			{
+				setPlayerConnectedId(elem.second, id);
+				break;
+			}
+		}
+	}
+
+	propagateNames();
+	propagateOptions();
+}
+
+void CVCMIServer::playerLeft(CConnection * c)
+{
+	auto pl = new PlayerLeft();
+	pl->connectionID = c->connectionID;
+	addToAnnounceQueue(pl);
+
+	for(auto & pair : playerNames)
+	{
+		if(pair.second.connection != c->connectionID)
+			continue;
+
+		playerNames.erase(pair.first);
+
+		// Reset in-game players client used back to AI
+		if(PlayerSettings * s = si.getPlayersSettings(pair.first))
+		{
+			setPlayerConnectedId(*s, PlayerSettings::PLAYER_AI);
+		}
+	}
+
+	propagateNames();
+	propagateOptions();
+}
+
+
+
+
+
+
+
+
+void CVCMIServer::setPlayerConnectedId(PlayerSettings & pset, ui8 player) const
+{
+	if(vstd::contains(playerNames, player))
+		pset.name = playerNames.find(player)->second.name;
+	else
+		pset.name = VLC->generaltexth->allTexts[468]; //Computer
+
+	pset.connectedPlayerID = player;
+}
+
+void CVCMIServer::updateStartInfo()
+{
+	si.playerInfos.clear();
+	if(!current)
+		return;
+
+	si.mapname = current->fileURI;
+
+	auto namesIt = playerNames.cbegin();
+
+	for(int i = 0; i < current->mapHeader->players.size(); i++)
+	{
+		const PlayerInfo & pinfo = current->mapHeader->players[i];
+
+		//neither computer nor human can play - no player
+		if(!(pinfo.canHumanPlay || pinfo.canComputerPlay))
+			continue;
+
+		PlayerSettings & pset = si.playerInfos[PlayerColor(i)];
+		pset.color = PlayerColor(i);
+		if(pinfo.canHumanPlay && namesIt != playerNames.cend())
+		{
+			setPlayerConnectedId(pset, namesIt++->first);
+		}
+		else
+		{
+			setPlayerConnectedId(pset, 0);
+			if(!pinfo.canHumanPlay)
+			{
+				pset.compOnly = true;
+			}
+		}
+
+		pset.castle = pinfo.defaultCastle();
+		pset.hero = pinfo.defaultHero();
+
+		if(pset.hero != PlayerSettings::RANDOM && pinfo.hasCustomMainHero())
+		{
+			pset.hero = pinfo.mainCustomHeroId;
+			pset.heroName = pinfo.mainCustomHeroName;
+			pset.heroPortrait = pinfo.mainCustomHeroPortrait;
+		}
+
+		pset.handicap = PlayerSettings::NO_HANDICAP;
+	}
+}
+
+
+
+
+void CVCMIServer::propagateNames()
+{
+	auto pn = new PlayersNames();
+	pn->playerNames = playerNames;
+	addToAnnounceQueue(pn);
+}
+
+void CVCMIServer::propagateOptions()
+{
+	auto ups = new UpdateStartOptions();
+	ups->si = &si;
+	addToAnnounceQueue(ups);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+void CVCMIServer::optionNextCastle(PlayerColor player, int dir)
+{
+	PlayerSettings & s = si.playerInfos[player];
+	si16 & cur = s.castle;
+	auto & allowed = current->mapHeader->players[s.color.getNum()].allowedFactions;
+	const bool allowRandomTown = current->mapHeader->players[s.color.getNum()].isFactionRandom;
+
+	if(cur == PlayerSettings::NONE) //no change
+		return;
+
+	if(cur == PlayerSettings::RANDOM) //first/last available
+	{
+		if(dir > 0)
+			cur = *allowed.begin(); //id of first town
+		else
+			cur = *allowed.rbegin(); //id of last town
+
+	}
+	else // next/previous available
+	{
+		if((cur == *allowed.begin() && dir < 0) || (cur == *allowed.rbegin() && dir > 0))
+		{
+			if(allowRandomTown)
+			{
+				cur = PlayerSettings::RANDOM;
+			}
+			else
+			{
+				if(dir > 0)
+					cur = *allowed.begin();
+				else
+					cur = *allowed.rbegin();
+			}
+		}
+		else
+		{
+			assert(dir >= -1 && dir <= 1); //othervice std::advance may go out of range
+			auto iter = allowed.find(cur);
+			std::advance(iter, dir);
+			cur = *iter;
+		}
+	}
+
+	if(s.hero >= 0 && !current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
+	{
+		s.hero = PlayerSettings::RANDOM;
+	}
+	if(cur < 0 && s.bonus == PlayerSettings::RESOURCE)
+		s.bonus = PlayerSettings::RANDOM;
+}
+
+void CVCMIServer::optionNextHero(PlayerColor player, int dir)
+{
+	PlayerSettings & s = si.playerInfos[player];
+	if(s.castle < 0 || s.hero == PlayerSettings::NONE)
+		return;
+
+	if(s.hero == PlayerSettings::RANDOM) // first/last available
+	{
+		int max = VLC->heroh->heroes.size(),
+			min = 0;
+		s.hero = nextAllowedHero(player, min, max, 0, dir);
+	}
+	else
+	{
+		if(dir > 0)
+			s.hero = nextAllowedHero(player, s.hero, VLC->heroh->heroes.size(), 1, dir);
+		else
+			s.hero = nextAllowedHero(player, -1, s.hero, 1, dir); // min needs to be -1 -- hero at index 0 would be skipped otherwise
+	}
+}
+
+int CVCMIServer::nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir)
+{
+	if(dir > 0)
+	{
+		for(int i = min + incl; i <= max - incl; i++)
+			if(canUseThisHero(player, i))
+				return i;
+	}
+	else
+	{
+		for(int i = max - incl; i >= min + incl; i--)
+			if(canUseThisHero(player, i))
+				return i;
+	}
+	return -1;
+}
+
+void CVCMIServer::optionNextBonus(PlayerColor player, int dir)
+{
+	PlayerSettings & s = si.playerInfos[player];
+	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
+
+	if(s.hero == PlayerSettings::NONE &&
+		!current->mapHeader->players[s.color.getNum()].heroesNames.size() &&
+		ret == PlayerSettings::ARTIFACT) //no hero - can't be artifact
+	{
+		if(dir < 0)
+			ret = PlayerSettings::RANDOM;
+		else
+			ret = PlayerSettings::GOLD;
+	}
+
+	if(ret > PlayerSettings::RESOURCE)
+		ret = PlayerSettings::RANDOM;
+	if(ret < PlayerSettings::RANDOM)
+		ret = PlayerSettings::RESOURCE;
+
+	if(s.castle == PlayerSettings::RANDOM && ret == PlayerSettings::RESOURCE) //random castle - can't be resource
+	{
+		if(dir < 0)
+			ret = PlayerSettings::GOLD;
+		else
+			ret = PlayerSettings::RANDOM;
+	}
+}
+
+bool CVCMIServer::canUseThisHero(PlayerColor player, int ID)
+{
+	return VLC->heroh->heroes.size() > ID
+		&& si.playerInfos[player].castle == VLC->heroh->heroes[ID]->heroClass->faction
+		&& !vstd::contains(getUsedHeroes(), ID)
+		&& current->mapHeader->allowedHeroes[ID];
+}
+
+std::vector<int> CVCMIServer::getUsedHeroes()
+{
+	std::vector<int> heroIds;
+	for(auto & p : si.playerInfos)
+	{
+		const auto & heroes = current->mapHeader->players[p.first.getNum()].heroesNames;
+		for(auto & hero : heroes)
+			if(hero.heroId >= 0) //in VCMI map format heroId = -1 means random hero
+				heroIds.push_back(hero.heroId);
+
+		if(p.second.hero != PlayerSettings::RANDOM)
+			heroIds.push_back(p.second.hero);
+	}
+	return heroIds;
+}
+
+
+
+
+
+
+
+ui8 CVCMIServer::getIdOfFirstUnallocatedPlayer() //MPTODO: must be const
+{
+	for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
+	{
+		if(!si.getPlayersSettings(i->first))
+			return i->first;
+	}
+
+	return 0;
+}
+
+
+
+
+
+
+
+
+
 
 
 #if defined(__GNUC__) && !defined(__MINGW32__) && !defined(VCMI_ANDROID)

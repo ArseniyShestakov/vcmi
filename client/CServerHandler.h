@@ -39,7 +39,7 @@ public:
 };
 
 /// structure to handle running server and connecting to it
-class CServerHandler : public IServerAPI
+class CServerHandler : public IServerAPI, public LobbyInfo
 {
 public:
 	CStopWatch th;
@@ -60,10 +60,7 @@ public:
 
 	// Lobby state storage
 	bool host;
-	StartInfo si;
 	std::vector<std::string> myNames;
-	std::shared_ptr<CMapInfo> current;
-	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
 	// Helpers for lobby state access
 	const PlayerSettings * getPlayerSettings(ui8 connectedPlayerId) const;
 	PlayerInfo getPlayerInfo(int color) const;
@@ -74,7 +71,6 @@ public:
 	ui8 myFirstId() const;
 	bool isMyId(ui8 id) const;
 	std::vector<ui8> getMyIds() const;
-	ui8 getIdOfFirstUnallocatedPlayer(); //returns 0 if none
 
 	// Lobby server API for UI
 	void setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr) override;
@@ -86,20 +82,7 @@ public:
 	void startGame() override;
 	void stopServer() override;
 
-	// Code only called from internals and netpacks. Should be moved on server-side
-	void setPlayerConnectedId(PlayerSettings & pset, ui8 player) const;
-	void updateStartInfo();
-	void setCurrentMap(CMapInfo * mapInfo, CMapGenOptions * mapGenOpts);
-	void optionNextHero(PlayerColor player, int dir); //dir == -1 or +1
-	int nextAllowedHero(PlayerColor player, int min, int max, int incl, int dir);
-	bool canUseThisHero(PlayerColor player, int ID);
-	std::vector<int> getUsedHeroes();
-	void optionNextBonus(PlayerColor player, int dir); //dir == -1 or +1
-	void optionNextCastle(PlayerColor player, int dir); //dir == -1 or +1
-
 	// Some functions we need to get rid of since only server will propagate options
-	void propagateNames() const;
-	void propagateOptions(); //MPTODO: should be const;
 	void propagateGuiAction(PregameGuiAction & pga);
 
 	// Connection to exist server

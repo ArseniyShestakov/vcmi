@@ -44,26 +44,6 @@ void QuitMenuWithoutStarting::apply(CSelectionScreen * selScreen)
 
 void PlayerJoined::apply(CSelectionScreen * selScreen)
 {
-	if(CSH->isGuest())
-		return;
-
-	for(auto & player : players)
-	{
-		CSH->playerNames.insert(player);
-
-		//put new player in first slot with AI
-		for(auto & elem : CSH->si.playerInfos)
-		{
-			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
-			{
-				CSH->setPlayerConnectedId(elem.second, player.first);
-				break;
-			}
-		}
-	}
-
-	CSH->propagateNames();
-	CSH->propagateOptions();
 //	selScreen->toggleTab(selScreen->curTab);
 	if(connectionID != CSH->c->connectionID)
 		selScreen->card->setChat(true);
@@ -73,8 +53,10 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 
 void SelectMap::apply(CSelectionScreen * selScreen)
 {
-	CSH->setCurrentMap(mapInfo, mapGenOpts);
-	CSH->propagateOptions();
+	if(mapInfo)
+		CSH->current = std::make_shared<CMapInfo>(*mapInfo);
+	else
+		CSH->current.reset();
 	selScreen->card->changeSelection();
 	if(selScreen->screenType != CMenuScreen::campaignList)
 	{
@@ -120,54 +102,13 @@ void PregameGuiAction::apply(CSelectionScreen * selScreen)
 	}
 }
 
-void ChangePlayerOptions::apply(CSelectionScreen * selScreen)
-{
-	if(CSH->isGuest())
-		return;
-
-	switch(what)
-	{
-	case TOWN:
-		CSH->optionNextCastle(color, direction);
-		break;
-	case HERO:
-		CSH->optionNextHero(color, direction);
-		break;
-	case BONUS:
-		CSH->optionNextBonus(color, direction);
-		break;
-	}
-	CSH->propagateOptions();
-}
-
 void PlayerLeft::apply(CSelectionScreen * selScreen)
 {
-	if(CSH->isGuest())
-		return;
-
-	for(auto & pair : CSH->playerNames)
-	{
-		if(pair.second.connection != connectionID)
-			continue;
-
-		CSH->playerNames.erase(pair.first);
-
-		// Reset in-game players client used back to AI
-		if(PlayerSettings * s = CSH->si.getPlayersSettings(pair.first))
-		{
-			CSH->setPlayerConnectedId(*s, PlayerSettings::PLAYER_AI);
-		}
-	}
-
-	CSH->propagateNames();
-	CSH->propagateOptions();
-	GH.totalRedraw();
 }
 
 void PlayersNames::apply(CSelectionScreen * selScreen)
 {
-	if(CSH->isGuest())
-		CSH->playerNames = playerNames;
+	CSH->playerNames = playerNames;
 }
 
 void PassHost::apply(CSelectionScreen *selScreen)
