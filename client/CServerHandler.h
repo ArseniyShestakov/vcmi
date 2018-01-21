@@ -62,7 +62,6 @@ public:
 	bool host;
 	std::vector<std::string> myNames;
 	// Helpers for lobby state access
-	const PlayerSettings * getPlayerSettings(ui8 connectedPlayerId) const;
 	PlayerInfo getPlayerInfo(int color) const;
 	std::set<PlayerColor> getPlayers();
 	std::set<PlayerColor> getHumanColors();

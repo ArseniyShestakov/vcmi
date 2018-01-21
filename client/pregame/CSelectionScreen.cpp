@@ -423,7 +423,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			int playersRight = 0;
 			for(auto & p : CSH->playerNames)
 			{
-				auto pset = CSH->getPlayerSettings(p.first);
+				const auto pset = CSH->si.getPlayersSettings(p.first);
 				int pid = p.first;
 				if(pset)
 				{

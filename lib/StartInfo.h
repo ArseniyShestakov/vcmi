@@ -98,12 +98,12 @@ struct StartInfo
 		return const_cast<StartInfo&>(*this).getIthPlayersSettings(no);
 	}
 
-	PlayerSettings *getPlayersSettings(const ui8 nameID)
+	PlayerSettings * getPlayersSettings(const ui8 connectedPlayerID)
 	{
-		for(auto it=playerInfos.begin(); it != playerInfos.end(); ++it)
+		for(auto & elem : playerInfos)
 		{
-			if(it->second.connectedPlayerID == nameID)
-				return &it->second;
+			if(elem.second.connectedPlayerID == connectedPlayerID)
+				return &elem.second;
 		}
 
 		return nullptr;
