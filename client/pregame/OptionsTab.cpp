@@ -64,12 +64,12 @@ void OptionsTab::recreate()
 	entries.clear();
 
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-	for(auto it = CSH->si.playerInfos.begin(); it != CSH->si.playerInfos.end(); ++it)
+	for(auto it = CSH->si->playerInfos.begin(); it != CSH->si->playerInfos.end(); ++it)
 	{
 		entries.insert(std::make_pair(it->first, new PlayerOptionsEntry(this, it->second)));
 	}
 
-	turnDuration->moveTo(std::distance(GameConstants::POSSIBLE_TURNTIME, std::find(GameConstants::POSSIBLE_TURNTIME, GameConstants::POSSIBLE_TURNTIME + ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), CSH->si.turnTime)));
+	turnDuration->moveTo(std::distance(GameConstants::POSSIBLE_TURNTIME, std::find(GameConstants::POSSIBLE_TURNTIME, GameConstants::POSSIBLE_TURNTIME + ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), CSH->si->turnTime)));
 }
 
 size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
@@ -478,7 +478,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 
 	hideUnavailableButtons();
 
-	assert(CSH->current && CSH->current->mapHeader);
+	assert(CSH->mi && CSH->mi->mapHeader);
 	const PlayerInfo & p = CSH->getPlayerInfo(s.color.getNum());
 	assert(p.canComputerPlay || p.canHumanPlay); //someone must be able to control this player
 	if(p.canHumanPlay && p.canComputerPlay)

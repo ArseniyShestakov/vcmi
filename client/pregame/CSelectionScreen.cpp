@@ -228,13 +228,13 @@ void CSelectionScreen::toggleTab(CIntObject * tab)
 
 void CSelectionScreen::changeSelectionSave(std::shared_ptr<CMapInfo> to)
 {
-	if(CSH->current == to)
+	if(CSH->mi == to)
 		return;
 
-	CSH->current = to;
+	CSH->mi = to;
 
-	if(CSH->current)
-		CSH->si.difficulty = CSH->current->scenarioOpts->difficulty;
+	if(CSH->mi)
+		CSH->si->difficulty = CSH->mi->scenarioOpts->difficulty;
 /*
 	if(screenType != CMenuScreen::campaignList)
 	{
@@ -246,8 +246,8 @@ void CSelectionScreen::changeSelectionSave(std::shared_ptr<CMapInfo> to)
 
 void CSelectionScreen::startCampaign()
 {
-	if(CSH->current)
-		GH.pushInt(new CBonusSelection(CSH->current->fileURI));
+	if(CSH->mi)
+		GH.pushInt(new CBonusSelection(CSH->mi->fileURI));
 }
 
 void CSelectionScreen::startScenario()
@@ -320,14 +320,14 @@ void CSelectionScreen::toggleMode(bool host)
 	buttonStart->block(!host);
 
 	tabSel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
-	if(CSH->current)
+	if(CSH->mi)
 		tabOpt->recreate();
 }
 
 CSavingScreen::CSavingScreen()
 	: CSelectionScreen(CMenuScreen::saveGame, (LOCPLINT->cb->getStartInfo()->mode == StartInfo::CAMPAIGN ? CMenuScreen::SINGLE_CAMPAIGN : CMenuScreen::MULTI_NETWORK_HOST))
 {
-	CSH->si = *LOCPLINT->cb->getStartInfo();
+//MPTODO	CSH->si = &(*LOCPLINT->cb->getStartInfo());
 }
 
 CSavingScreen::~CSavingScreen()
@@ -423,7 +423,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			int playersRight = 0;
 			for(auto & p : CSH->playerNames)
 			{
-				const auto pset = CSH->si.getPlayersSettings(p.first);
+				const auto pset = CSH->si->getPlayersSettings(p.first);
 				int pid = p.first;
 				if(pset)
 				{
@@ -439,13 +439,13 @@ void InfoCard::showAll(SDL_Surface * to)
 		}
 	}
 
-	if(CSH->current)
+	if(CSH->mi)
 	{
 		if(SEL->screenType != CMenuScreen::campaignList)
 		{
 			if(!showChat)
 			{
-				CMapHeader * header = CSH->current->mapHeader.get();
+				CMapHeader * header = CSH->mi->mapHeader.get();
 				//victory conditions
 				printAtLoc(header->victoryMessage, 60, 307, FONT_SMALL, Colors::WHITE, to);
 				victory->setFrame(header->victoryIconIndex);
@@ -457,12 +457,12 @@ void InfoCard::showAll(SDL_Surface * to)
 			}
 
 			//difficulty
-			assert(CSH->current->mapHeader->difficulty <= 4);
-			std::string & diff = CGI->generaltexth->arraytxt[142 + CSH->current->mapHeader->difficulty];
+			assert(CSH->mi->mapHeader->difficulty <= 4);
+			std::string & diff = CGI->generaltexth->arraytxt[142 + CSH->mi->mapHeader->difficulty];
 			printAtMiddleLoc(diff, 62, 472, FONT_SMALL, Colors::WHITE, to);
 
 			//selecting size icon
-			switch(CSH->current->mapHeader->width)
+			switch(CSH->mi->mapHeader->width)
 			{
 			case 36:
 				sizes->setFrame(0);
@@ -483,7 +483,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			sizes->showAll(to);
 
 			if(SEL->screenType == CMenuScreen::loadGame)
-				printToLoc(CSH->current->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
+				printToLoc(CSH->mi->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
 
 			//print flags
 			int fx = 34 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
@@ -496,7 +496,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			else
 				myT = TeamID::NO_TEAM;
 
-			for(auto i = CSH->si.playerInfos.cbegin(); i != CSH->si.playerInfos.cend(); i++)
+			for(auto i = CSH->si->playerInfos.cbegin(); i != CSH->si->playerInfos.cend(); i++)
 			{
 				int * myx = ((i->first == CSH->myFirstColor() || CSH->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
 				IImage * flag = sFlags->getImage(i->first.getNum(), 0);
@@ -506,7 +506,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			}
 
 			std::string tob;
-			switch(CSH->si.difficulty)
+			switch(CSH->si->difficulty)
 			{
 			case 0:
 				tob = "80%";
@@ -532,11 +532,11 @@ void InfoCard::showAll(SDL_Surface * to)
 
 		if(SEL->screenType == CMenuScreen::campaignList)
 		{
-			name = CSH->current->campaignHeader->name;
+			name = CSH->mi->campaignHeader->name;
 		}
 		else
 		{
-			name = CSH->current->mapHeader->name;
+			name = CSH->mi->mapHeader->name;
 		}
 
 		//name
@@ -550,18 +550,18 @@ void InfoCard::showAll(SDL_Surface * to)
 void InfoCard::clickRight(tribool down, bool previousState)
 {
 	static const Rect flagArea(19, 397, 335, 23);
-	if(CSH->current && down && CSH->current && isItInLoc(flagArea, GH.current->motion.x, GH.current->motion.y))
+	if(CSH->mi && down && CSH->mi && isItInLoc(flagArea, GH.current->motion.x, GH.current->motion.y))
 		showTeamsPopup();
 }
 
 void InfoCard::changeSelection()
 {
-	if(CSH->current && mapDescription)
+	if(CSH->mi && mapDescription)
 	{
 		if(SEL->screenType == CMenuScreen::campaignList)
-			mapDescription->setText(CSH->current->campaignHeader->description);
+			mapDescription->setText(CSH->mi->campaignHeader->description);
 		else
-			mapDescription->setText(CSH->current->mapHeader->description);
+			mapDescription->setText(CSH->mi->mapHeader->description);
 
 		mapDescription->label->scrollTextTo(0);
 		if(mapDescription->slider)
@@ -570,7 +570,7 @@ void InfoCard::changeSelection()
 		if(SEL->screenType != CMenuScreen::newGame && SEL->screenType != CMenuScreen::campaignList)
 		{
 			//difficulty->block(true);
-			difficulty->setSelected(CSH->si.difficulty);
+			difficulty->setSelected(CSH->si->difficulty);
 		}
 	}
 	redraw();
@@ -578,11 +578,11 @@ void InfoCard::changeSelection()
 
 void InfoCard::showTeamsPopup()
 {
-	SDL_Surface * bmp = CMessage::drawDialogBox(256, 90 + 50 * CSH->current->mapHeader->howManyTeams);
+	SDL_Surface * bmp = CMessage::drawDialogBox(256, 90 + 50 * CSH->mi->mapHeader->howManyTeams);
 
 	graphics->fonts[FONT_MEDIUM]->renderTextCenter(bmp, CGI->generaltexth->allTexts[657], Colors::YELLOW, Point(128, 30));
 
-	for(int i = 0; i < CSH->current->mapHeader->howManyTeams; i++)
+	for(int i = 0; i < CSH->mi->mapHeader->howManyTeams; i++)
 	{
 		std::vector<ui8> flags;
 		std::string hlp = CGI->generaltexth->allTexts[656]; //Team %d
@@ -684,7 +684,7 @@ CScenarioInfo::CScenarioInfo()
 	center(pos);
 
 	assert(LOCPLINT);
-	CSH->si = *LOCPLINT->cb->getStartInfo();
+//MPTODO	CSH->si = &(*LOCPLINT->cb->getStartInfo());
 
 	screenType = CMenuScreen::scenarioInfo;
 
@@ -693,11 +693,11 @@ CScenarioInfo::CScenarioInfo()
 	opt->recreate();
 	card->changeSelection();
 
-	card->difficulty->setSelected(CSH->si.difficulty);
+	card->difficulty->setSelected(CSH->si->difficulty);
 	back = new CButton(Point(584, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
 }
 
 CScenarioInfo::~CScenarioInfo()
 {
-	CSH->current.reset();
+	CSH->mi.reset();
 }

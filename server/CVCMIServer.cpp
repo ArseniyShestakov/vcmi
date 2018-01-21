@@ -108,7 +108,7 @@ std::string NAME = GameConstants::VCMI_VERSION + std::string(" (") + NAME_AFFIX 
 std::atomic<bool> CVCMIServer::shuttingDown;
 
 CVCMIServer::CVCMIServer(boost::program_options::variables_map & opts)
-	: port(3030), io(new boost::asio::io_service()), shm(nullptr), listeningThreads(0), upcomingConnection(nullptr), curmap(nullptr), curStartInfo(nullptr), state(RUNNING), cmdLineOptions(opts), currentPlayerId(1)
+	: LobbyInfo(), port(3030), io(new boost::asio::io_service()), shm(nullptr), listeningThreads(0), upcomingConnection(nullptr), state(RUNNING), cmdLineOptions(opts), currentPlayerId(1)
 {
 	logNetwork->trace("CVCMIServer created!");
 	applier = new CApplier<CBaseForServerApply>();
@@ -215,14 +215,14 @@ void CVCMIServer::startGame()
 	logNetwork->info("Preparing new game");
 	CGameHandler gh;
 
-	switch(curStartInfo->mode)
+	switch(si->mode)
 	{
 	case StartInfo::NEW_GAME:
-		gh.init(curStartInfo);
+		gh.init(si.get());
 		break;
 
 	case StartInfo::LOAD_GAME:
-		CLoadFile lf(*CResourceHandler::get("local")->getResourceName(ResourceID(curStartInfo->mapname, EResType::SERVER_SAVEGAME)), MINIMAL_SERIALIZATION_VERSION);
+		CLoadFile lf(*CResourceHandler::get("local")->getResourceName(ResourceID(si->mapname, EResType::SERVER_SAVEGAME)), MINIMAL_SERIALIZATION_VERSION);
 		gh.loadCommonState(lf);
 		lf >> gh;
 		break;
@@ -232,7 +232,7 @@ void CVCMIServer::startGame()
 		c->addStdVecItems(gh.gs);
 
 //	gh.sendCommonState(*conn);
-	gh.run(curStartInfo->mode == StartInfo::LOAD_GAME);
+	gh.run(si->mode == StartInfo::LOAD_GAME);
 }
 
 void CVCMIServer::startAsyncAccept()
@@ -430,7 +430,7 @@ void CVCMIServer::playerJoined(CConnection * c)
 
 
 		//put new player in first slot with AI
-		for(auto & elem : si.playerInfos)
+		for(auto & elem : si->playerInfos)
 		{
 			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
 			{
@@ -458,7 +458,7 @@ void CVCMIServer::playerLeft(CConnection * c)
 		playerNames.erase(pair.first);
 
 		// Reset in-game players client used back to AI
-		if(PlayerSettings * s = si.getPlayersSettings(pair.first))
+		if(PlayerSettings * s = si->getPlayersSettings(pair.first))
 		{
 			setPlayerConnectedId(*s, PlayerSettings::PLAYER_AI);
 		}
@@ -487,23 +487,23 @@ void CVCMIServer::setPlayerConnectedId(PlayerSettings & pset, ui8 player) const
 
 void CVCMIServer::updateStartInfo()
 {
-	si.playerInfos.clear();
-	if(!current)
+	si->playerInfos.clear();
+	if(!mi)
 		return;
 
-	si.mapname = current->fileURI;
+	si->mapname = mi->fileURI;
 
 	auto namesIt = playerNames.cbegin();
 
-	for(int i = 0; i < current->mapHeader->players.size(); i++)
+	for(int i = 0; i < mi->mapHeader->players.size(); i++)
 	{
-		const PlayerInfo & pinfo = current->mapHeader->players[i];
+		const PlayerInfo & pinfo = mi->mapHeader->players[i];
 
 		//neither computer nor human can play - no player
 		if(!(pinfo.canHumanPlay || pinfo.canComputerPlay))
 			continue;
 
-		PlayerSettings & pset = si.playerInfos[PlayerColor(i)];
+		PlayerSettings & pset = si->playerInfos[PlayerColor(i)];
 		pset.color = PlayerColor(i);
 		if(pinfo.canHumanPlay && namesIt != playerNames.cend())
 		{
@@ -545,7 +545,7 @@ void CVCMIServer::propagateNames()
 void CVCMIServer::propagateOptions()
 {
 	auto ups = new UpdateStartOptions();
-	ups->si = &si;
+	ups->startInfo = si.get();
 	addToAnnounceQueue(ups);
 }
 
@@ -563,10 +563,10 @@ void CVCMIServer::propagateOptions()
 
 void CVCMIServer::optionNextCastle(PlayerColor player, int dir)
 {
-	PlayerSettings & s = si.playerInfos[player];
+	PlayerSettings & s = si->playerInfos[player];
 	si16 & cur = s.castle;
-	auto & allowed = current->mapHeader->players[s.color.getNum()].allowedFactions;
-	const bool allowRandomTown = current->mapHeader->players[s.color.getNum()].isFactionRandom;
+	auto & allowed = mi->mapHeader->players[s.color.getNum()].allowedFactions;
+	const bool allowRandomTown = mi->mapHeader->players[s.color.getNum()].isFactionRandom;
 
 	if(cur == PlayerSettings::NONE) //no change
 		return;
@@ -604,7 +604,7 @@ void CVCMIServer::optionNextCastle(PlayerColor player, int dir)
 		}
 	}
 
-	if(s.hero >= 0 && !current->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
+	if(s.hero >= 0 && !mi->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
 	{
 		s.hero = PlayerSettings::RANDOM;
 	}
@@ -614,7 +614,7 @@ void CVCMIServer::optionNextCastle(PlayerColor player, int dir)
 
 void CVCMIServer::optionNextHero(PlayerColor player, int dir)
 {
-	PlayerSettings & s = si.playerInfos[player];
+	PlayerSettings & s = si->playerInfos[player];
 	if(s.castle < 0 || s.hero == PlayerSettings::NONE)
 		return;
 
@@ -652,11 +652,11 @@ int CVCMIServer::nextAllowedHero(PlayerColor player, int min, int max, int incl,
 
 void CVCMIServer::optionNextBonus(PlayerColor player, int dir)
 {
-	PlayerSettings & s = si.playerInfos[player];
+	PlayerSettings & s = si->playerInfos[player];
 	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
 
 	if(s.hero == PlayerSettings::NONE &&
-		!current->mapHeader->players[s.color.getNum()].heroesNames.size() &&
+		!mi->mapHeader->players[s.color.getNum()].heroesNames.size() &&
 		ret == PlayerSettings::ARTIFACT) //no hero - can't be artifact
 	{
 		if(dir < 0)
@@ -682,17 +682,17 @@ void CVCMIServer::optionNextBonus(PlayerColor player, int dir)
 bool CVCMIServer::canUseThisHero(PlayerColor player, int ID)
 {
 	return VLC->heroh->heroes.size() > ID
-		&& si.playerInfos[player].castle == VLC->heroh->heroes[ID]->heroClass->faction
+		&& si->playerInfos[player].castle == VLC->heroh->heroes[ID]->heroClass->faction
 		&& !vstd::contains(getUsedHeroes(), ID)
-		&& current->mapHeader->allowedHeroes[ID];
+		&& mi->mapHeader->allowedHeroes[ID];
 }
 
 std::vector<int> CVCMIServer::getUsedHeroes()
 {
 	std::vector<int> heroIds;
-	for(auto & p : si.playerInfos)
+	for(auto & p : si->playerInfos)
 	{
-		const auto & heroes = current->mapHeader->players[p.first.getNum()].heroesNames;
+		const auto & heroes = mi->mapHeader->players[p.first.getNum()].heroesNames;
 		for(auto & hero : heroes)
 			if(hero.heroId >= 0) //in VCMI map format heroId = -1 means random hero
 				heroIds.push_back(hero.heroId);
@@ -713,7 +713,7 @@ ui8 CVCMIServer::getIdOfFirstUnallocatedPlayer() //MPTODO: must be const
 {
 	for(auto i = playerNames.cbegin(); i != playerNames.cend(); i++)
 	{
-		if(!si.getPlayersSettings(i->first))
+		if(!si->getPlayersSettings(i->first))
 			return i->first;
 	}
 

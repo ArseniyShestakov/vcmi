@@ -143,7 +143,7 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
-	: c(nullptr), localServerThread(nullptr), shm(nullptr), verbose(true), host(false), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
+	: LobbyInfo(), c(nullptr), localServerThread(nullptr), shm(nullptr), verbose(true), host(false), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 }
@@ -240,7 +240,7 @@ bool CServerHandler::isServerLocal() const
 std::set<PlayerColor> CServerHandler::getPlayers()
 {
 	std::set<PlayerColor> players;
-	for(auto & elem : si.playerInfos)
+	for(auto & elem : si->playerInfos)
 	{
 		if(isHost() && elem.second.connectedPlayerID == PlayerSettings::PLAYER_AI || vstd::contains(getMyIds(), elem.second.connectedPlayerID))
 		{
@@ -256,7 +256,7 @@ std::set<PlayerColor> CServerHandler::getPlayers()
 std::set<PlayerColor> CServerHandler::getHumanColors()
 {
 	std::set<PlayerColor> players;
-	for(auto & elem : si.playerInfos)
+	for(auto & elem : si->playerInfos)
 	{
 		if(vstd::contains(getMyIds(), elem.second.connectedPlayerID))
 		{
@@ -280,7 +280,7 @@ bool CServerHandler::isGuest() const
 
 PlayerColor CServerHandler::myFirstColor() const
 {
-	for(auto & pair : si.playerInfos)
+	for(auto & pair : si->playerInfos)
 	{
 		if(isMyColor(pair.first))
 			return pair.first;
@@ -291,9 +291,9 @@ PlayerColor CServerHandler::myFirstColor() const
 
 bool CServerHandler::isMyColor(PlayerColor color) const
 {
-	if(si.playerInfos.find(color) != si.playerInfos.end())
+	if(si->playerInfos.find(color) != si->playerInfos.end())
 	{
-		ui8 id = si.playerInfos.find(color)->second.connectedPlayerID;
+		ui8 id = si->playerInfos.find(color)->second.connectedPlayerID;
 		if(c && playerNames.find(id) != playerNames.end())
 		{
 			if(playerNames.find(id)->second.connection == c->connectionID)
@@ -332,7 +332,7 @@ std::vector<ui8> CServerHandler::getMyIds() const
 	{
 		if(pair.second.connection == c->connectionID)
 		{
-			for(auto & elem : si.playerInfos)
+			for(auto & elem : si->playerInfos)
 			{
 				if(elem.second.connectedPlayerID == pair.first)
 					ids.push_back(elem.second.connectedPlayerID);
@@ -353,10 +353,13 @@ void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 
 void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
 {
+	if(si)
+		si.reset();
+	si = std::make_shared<StartInfo>();
 	playerNames.clear();
-	si.difficulty = 1;
-	si.mode = mode;
-	si.turnTime = 0;
+	si->difficulty = 1;
+	si->mode = mode;
+	si->turnTime = 0;
 	myNames.clear();
 	if(names && !names->empty()) //if have custom set of player names - use it
 		myNames = *names;
@@ -398,32 +401,32 @@ void CServerHandler::propagateGuiAction(PregameGuiAction & pga)
 
 void CServerHandler::startGame()
 {
-	if(!current)
+	if(!mi)
 		throw mapMissingException();
 
 	//there must be at least one human player before game can be started
 	std::map<PlayerColor, PlayerSettings>::const_iterator i;
-	for(i = si.playerInfos.cbegin(); i != si.playerInfos.cend(); i++)
+	for(i = si->playerInfos.cbegin(); i != si->playerInfos.cend(); i++)
 		if(i->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
 			break;
 
-	if(i == si.playerInfos.cend() && !settings["session"]["onlyai"].Bool())
+	if(i == si->playerInfos.cend() && !settings["session"]["onlyai"].Bool())
 		throw noHumanException();
 
-	if(si.mapGenOptions && si.mode == StartInfo::NEW_GAME)
+	if(si->mapGenOptions && si->mode == StartInfo::NEW_GAME)
 	{
 		// Update player settings for RMG
-		for(const auto & psetPair : si.playerInfos)
+		for(const auto & psetPair : si->playerInfos)
 		{
 			const auto & pset = psetPair.second;
-			si.mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
+			si->mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
 			if(pset.connectedPlayerID != PlayerSettings::PLAYER_AI)
 			{
-				si.mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
+				si->mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
 			}
 		}
 
-		if(!si.mapGenOptions->checkOptions())
+		if(!si->mapGenOptions->checkOptions())
 			throw noTemplateException();
 
 		//propagateOptions();
@@ -471,7 +474,7 @@ void CServerHandler::stopServer()
 
 PlayerInfo CServerHandler::getPlayerInfo(int color) const
 {
-	return current->mapHeader->players[color];
+	return mi->mapHeader->players[color];
 }
 
 
@@ -559,7 +562,7 @@ void CServerHandler::setTurnLength(int npos)
 
 void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
 {
-	if(isGuest() || !c || current == to)
+	if(isGuest() || !c || mi == to)
 		return;
 
 	SelectMap sm;

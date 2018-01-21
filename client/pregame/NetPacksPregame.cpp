@@ -54,9 +54,9 @@ void PlayerJoined::apply(CSelectionScreen * selScreen)
 void SelectMap::apply(CSelectionScreen * selScreen)
 {
 	if(mapInfo)
-		CSH->current = std::make_shared<CMapInfo>(*mapInfo);
+		CSH->mi = std::make_shared<CMapInfo>(*mapInfo);
 	else
-		CSH->current.reset();
+		CSH->mi.reset();
 	selScreen->card->changeSelection();
 	if(selScreen->screenType != CMenuScreen::campaignList)
 	{
@@ -66,16 +66,16 @@ void SelectMap::apply(CSelectionScreen * selScreen)
 
 void UpdateStartOptions::apply(CSelectionScreen * selScreen)
 {
-	CSH->si = *si;
-	if(CSH->current)
+	CSH->si = std::shared_ptr<StartInfo>(startInfo);
+	if(CSH->mi)
 		selScreen->tabOpt->recreate(); //will force to recreate using current sInfo
 
-	selScreen->card->difficulty->setSelected(si->difficulty);
+	selScreen->card->difficulty->setSelected(startInfo->difficulty);
 
 	// MPTODO: idea is to always apply any changes on guest as well as on host
 	// Though applying of randMapTab options cause crash if host just decide to open it
-	if(selScreen->curTab == selScreen->tabRand && si->mapGenOptions)
-		selScreen->tabRand->setMapGenOptions(si->mapGenOptions);
+	if(selScreen->curTab == selScreen->tabRand && startInfo->mapGenOptions)
+		selScreen->tabRand->setMapGenOptions(startInfo->mapGenOptions);
 
 	GH.totalRedraw();
 }

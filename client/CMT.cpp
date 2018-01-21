@@ -119,12 +119,13 @@ void endGame();
 
 void startTestMap(const std::string &mapname)
 {
+	/*//MPTODO
 	StartInfo si;
 	si.mapname = mapname;
 	si.mode = StartInfo::NEW_GAME;
 	for (int i = 0; i < 8; i++)
 	{
-		PlayerSettings &pset = si.playerInfos[PlayerColor(i)];
+		PlayerSettings &pset = si->playerInfos[PlayerColor(i)];
 		pset.color = PlayerColor(i);
 		pset.name = CGI->generaltexth->allTexts[468];//Computer
 		pset.connectedPlayerID = PlayerSettings::PLAYER_AI;
@@ -137,7 +138,8 @@ void startTestMap(const std::string &mapname)
 
 	while(GH.topInt())
 		GH.popIntTotally(GH.topInt());
-//MPTODO	startGame(&si);
+	startGame(&si);
+*/
 }
 
 void startGameFromFile(const bfs::path &fname)
@@ -1339,7 +1341,7 @@ void startGame()
 {
 	client = new CClient();
 	CPlayerInterface::howManyPeople = 0;
-	switch(CSH->si.mode) //new game
+	switch(CSH->si->mode) //new game
 	{
 	case StartInfo::NEW_GAME:
 		client->newGame();

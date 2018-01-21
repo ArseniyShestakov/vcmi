@@ -174,8 +174,9 @@ struct ServerCapabilities
 
 struct LobbyInfo
 {
-
-	StartInfo si;
-	std::shared_ptr<CMapInfo> current;
+	std::shared_ptr<StartInfo> si;
+	std::shared_ptr<CMapInfo> mi;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
+
+	LobbyInfo() : mi(nullptr), si(new StartInfo()) {}
 };

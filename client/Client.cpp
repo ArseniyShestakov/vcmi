@@ -141,7 +141,7 @@ void CClient::newGame()
 	gs = new CGameState();
 	logNetwork->info("\tCreating gamestate: %i", tmh.getDiff());
 	*CSH->c >> CSH->si;
-	gs->init(&CSH->si, settings["general"]["saveRandomMaps"].Bool());
+	gs->init(CSH->si.get(), settings["general"]["saveRandomMaps"].Bool());
 	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
 
 	initMapHandler();
@@ -155,12 +155,12 @@ void CClient::loadGame()
 	std::unique_ptr<CLoadFile> loader;
 	try
 	{
-		boost::filesystem::path clientSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(CSH->si.mapname, EResType::CLIENT_SAVEGAME));
+		boost::filesystem::path clientSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(CSH->si->mapname, EResType::CLIENT_SAVEGAME));
 		boost::filesystem::path controlServerSaveName;
 
-		if(CResourceHandler::get("local")->existsResource(ResourceID(CSH->si.mapname, EResType::SERVER_SAVEGAME)))
+		if(CResourceHandler::get("local")->existsResource(ResourceID(CSH->si->mapname, EResType::SERVER_SAVEGAME)))
 		{
-			controlServerSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(CSH->si.mapname, EResType::SERVER_SAVEGAME));
+			controlServerSaveName = *CResourceHandler::get("local")->getResourceName(ResourceID(CSH->si->mapname, EResType::SERVER_SAVEGAME));
 		}
 		else // create entry for server savegame. Triggered if save was made after launch and not yet present in res handler
 		{
@@ -169,9 +169,9 @@ void CClient::loadGame()
 		}
 
 		if(clientSaveName.empty())
-			throw std::runtime_error("Cannot open client part of " + CSH->si.mapname);
+			throw std::runtime_error("Cannot open client part of " + CSH->si->mapname);
 		if(controlServerSaveName.empty() || !boost::filesystem::exists(controlServerSaveName))
-			throw std::runtime_error("Cannot open server part of " + CSH->si.mapname);
+			throw std::runtime_error("Cannot open server part of " + CSH->si->mapname);
 
 		{
 			CLoadIntegrityValidator checkingLoader(clientSaveName, controlServerSaveName, MINIMAL_SERIALIZATION_VERSION);
@@ -182,7 +182,7 @@ void CClient::loadGame()
 	}
 	catch(std::exception & e)
 	{
-		logGlobal->error("Cannot load game %s. Error: %s", CSH->si.mapname, e.what());
+		logGlobal->error("Cannot load game %s. Error: %s", CSH->si->mapname, e.what());
 		throw; //obviously we cannot continue here
 	}
 
@@ -380,7 +380,7 @@ void CClient::initMapHandler()
 
 void CClient::initPlayerInterfaces()
 {
-	for(auto & elem : CSH->si.playerInfos) // MPTODO gs->scenarioOps->playerInfos
+	for(auto & elem : CSH->si->playerInfos) // MPTODO gs->scenarioOps->playerInfos
 	{
 		PlayerColor color = elem.first;
 		if(!vstd::contains(CSH->getPlayers(), color))

@@ -69,9 +69,6 @@ public:
 
 	TSocket * upcomingConnection;
 
-	const CMapInfo * curmap;
-	StartInfo * curStartInfo;
-
 	void startAsyncAccept();
 	void connectionAccepted(const boost::system::error_code & ec);
 	void startListeningThread(CConnection * pc);
