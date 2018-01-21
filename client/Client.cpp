@@ -140,7 +140,9 @@ void CClient::newGame()
 	logNetwork->info("\tSending/Getting info to/from the server: %d ms", tmh.getDiff());
 	gs = new CGameState();
 	logNetwork->info("\tCreating gamestate: %i", tmh.getDiff());
-	*CSH->c >> CSH->si;
+	StartInfo si;
+	*CSH->c >> si;
+	CSH->si = std::make_shared<StartInfo>(si);
 	gs->init(CSH->si.get(), settings["general"]["saveRandomMaps"].Bool());
 	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
 
