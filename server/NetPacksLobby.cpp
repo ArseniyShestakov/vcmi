@@ -28,6 +28,7 @@ bool WelcomeServer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	wc.capabilities = srv->capabilities;
 	if(srv->hostClient->connectionID == c->connectionID)
 	{
+		srv->si->mode = mode;
 		srv->hostClient = c;
 		wc.giveHost = true;
 	}

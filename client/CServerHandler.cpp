@@ -487,7 +487,10 @@ void CServerHandler::threadHandleConnection()
 
 	try
 	{
-		WelcomeServer ws(uuid, myNames);
+		WelcomeServer ws;
+		ws.uuid = uuid;
+		ws.names = myNames;
+		ws.mode = si->mode;
 		*c << &ws;
 
 		while(c)

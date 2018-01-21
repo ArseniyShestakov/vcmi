@@ -23,6 +23,8 @@
 
 #include "spells/ViewSpellInt.h"
 
+#include "StartInfo.h"
+
 class CClient;
 class CGameState;
 class CGameHandler;
@@ -2612,10 +2614,9 @@ struct WelcomeServer : public CLobbyPackToServer
 {
 	std::string uuid;
 	std::vector<std::string> names;
+	StartInfo::EMode mode;
 
-	WelcomeServer(){};
-	WelcomeServer(std::string & UUID, std::vector<std::string> Names)
-		: uuid(UUID), names(Names) {}
+	WelcomeServer() : mode(StartInfo::INVALID) {}
 
 	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
 
@@ -2623,6 +2624,7 @@ struct WelcomeServer : public CLobbyPackToServer
 	{
 		h & uuid;
 		h & names;
+		h & mode;
 	}
 };
 
