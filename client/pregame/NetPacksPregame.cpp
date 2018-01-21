@@ -26,61 +26,61 @@
 
 void startGame();
 
-void ChatMessage::apply(CSelectionScreen * selScreen)
+void ChatMessage::apply(CLobbyScreen * lobby)
 {
-	selScreen->card->chat->addNewMessage(playerName + ": " + message);
+	lobby->card->chat->addNewMessage(playerName + ": " + message);
 	GH.totalRedraw();
 }
 
-void QuitMenuWithoutStarting::apply(CSelectionScreen * selScreen)
+void QuitMenuWithoutStarting::apply(CLobbyScreen * lobby)
 {
 	if(!CSH->ongoingClosing)
 	{
 		*CSH->c << this; //resend to confirm
-		GH.popIntTotally(selScreen); //will wait with deleting us before this thread ends
+		GH.popIntTotally(lobby); //will wait with deleting us before this thread ends
 	}
 	CSH->stopConnection();
 }
 
-void PlayerJoined::apply(CSelectionScreen * selScreen)
+void PlayerJoined::apply(CLobbyScreen * lobby)
 {
-//	selScreen->toggleTab(selScreen->curTab);
+//	lobby->toggleTab(lobby->curTab);
 	if(connectionID != CSH->c->connectionID)
-		selScreen->card->setChat(true);
+		lobby->card->setChat(true);
 
 	GH.totalRedraw();
 }
 
-void SelectMap::apply(CSelectionScreen * selScreen)
+void SelectMap::apply(CLobbyScreen * lobby)
 {
 	if(mapInfo)
 		CSH->mi = std::make_shared<CMapInfo>(*mapInfo);
 	else
 		CSH->mi.reset();
-	selScreen->card->changeSelection();
-	if(selScreen->screenType != CMenuScreen::campaignList)
+	lobby->card->changeSelection();
+	if(lobby->screenType != CMenuScreen::campaignList)
 	{
-		selScreen->tabOpt->recreate();
+		lobby->tabOpt->recreate();
 	}
 }
 
-void UpdateStartOptions::apply(CSelectionScreen * selScreen)
+void UpdateStartOptions::apply(CLobbyScreen * lobby)
 {
 	CSH->si = std::shared_ptr<StartInfo>(startInfo);
 	if(CSH->mi)
-		selScreen->tabOpt->recreate(); //will force to recreate using current sInfo
+		lobby->tabOpt->recreate(); //will force to recreate using current sInfo
 
-	selScreen->card->difficulty->setSelected(startInfo->difficulty);
+	lobby->card->difficulty->setSelected(startInfo->difficulty);
 
 	// MPTODO: idea is to always apply any changes on guest as well as on host
 	// Though applying of randMapTab options cause crash if host just decide to open it
-	if(selScreen->curTab == selScreen->tabRand && startInfo->mapGenOptions)
-		selScreen->tabRand->setMapGenOptions(startInfo->mapGenOptions);
+	if(lobby->curTab == lobby->tabRand && startInfo->mapGenOptions)
+		lobby->tabRand->setMapGenOptions(startInfo->mapGenOptions);
 
 	GH.totalRedraw();
 }
 
-void PregameGuiAction::apply(CSelectionScreen * selScreen)
+void PregameGuiAction::apply(CLobbyScreen * lobby)
 {
 	if(!CSH->isGuest())
 		return;
@@ -88,30 +88,30 @@ void PregameGuiAction::apply(CSelectionScreen * selScreen)
 	switch(action)
 	{
 	case NO_TAB:
-		selScreen->toggleTab(selScreen->curTab);
+		lobby->toggleTab(lobby->curTab);
 		break;
 	case OPEN_OPTIONS:
-		selScreen->toggleTab(selScreen->tabOpt);
+		lobby->toggleTab(lobby->tabOpt);
 		break;
 	case OPEN_SCENARIO_LIST:
-		selScreen->toggleTab(selScreen->tabSel);
+		lobby->toggleTab(lobby->tabSel);
 		break;
 	case OPEN_RANDOM_MAP_OPTIONS:
-		selScreen->toggleTab(selScreen->tabRand);
+		lobby->toggleTab(lobby->tabRand);
 		break;
 	}
 }
 
-void PlayerLeft::apply(CSelectionScreen * selScreen)
+void PlayerLeft::apply(CLobbyScreen * lobby)
 {
 }
 
-void PlayersNames::apply(CSelectionScreen * selScreen)
+void PlayersNames::apply(CLobbyScreen * lobby)
 {
 	CSH->playerNames = playerNames;
 }
 
-void PassHost::apply(CSelectionScreen *selScreen)
+void PassHost::apply(CLobbyScreen * lobby)
 {
 	bool old = CSH->isHost();
 	if(CSH->c->connectionID == toConnection)
@@ -120,10 +120,10 @@ void PassHost::apply(CSelectionScreen *selScreen)
 		CSH->host = false;
 
 	if(old != CSH->isHost())
-		selScreen->toggleMode(CSH->host);
+		lobby->toggleMode(CSH->host);
 }
 
-void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
+void StartWithCurrentSettings::apply(CLobbyScreen * lobby)
 {
 	if(!CSH->ongoingClosing)
 	{
@@ -135,9 +135,9 @@ void StartWithCurrentSettings::apply(CSelectionScreen * selScreen)
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)
 }
 
-void WelcomeClient::apply(CSelectionScreen * selScreen)
+void WelcomeClient::apply(CLobbyScreen * lobby)
 {
 	CSH->c->connectionID = connectionId;
 	CSH->host = giveHost;
-	selScreen->toggleMode(giveHost);
+	lobby->toggleMode(giveHost);
 }

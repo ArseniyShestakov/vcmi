@@ -320,7 +320,7 @@ void CGPreGame::openSel(CMenuScreen::EState screenType, CMenuScreen::EGameMode g
 {
 	CSH->prepareForLobby(screenType == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME, names);
 
-	IShowActivatable * sel = new CSelectionScreen(screenType, gameMode);
+	IShowActivatable * sel = new CLobbyScreen(screenType, gameMode);
 	if(gameMode == CMenuScreen::MULTI_NETWORK_HOST && !settings["session"]["donotstartserver"].Bool())
 	{
 		CSH->startLocalServerAndConnect();

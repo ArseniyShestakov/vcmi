@@ -51,7 +51,7 @@ template<typename T> class CApplyOnLobby;
 class CBaseForLobbyApply
 {
 public:
-	virtual void applyOnLobby(CSelectionScreen * selScr, void * pack) const = 0;
+	virtual void applyOnLobby(CLobbyScreen * selScr, void * pack) const = 0;
 	virtual ~CBaseForLobbyApply(){};
 	template<typename U> static CBaseForLobbyApply * getApplier(const U * t = nullptr)
 	{
@@ -62,7 +62,7 @@ public:
 template<typename T> class CApplyOnLobby : public CBaseForLobbyApply
 {
 public:
-	void applyOnLobby(CSelectionScreen * selScr, void * pack) const override
+	void applyOnLobby(CLobbyScreen * selScr, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
 		ptr->apply(selScr);
@@ -72,7 +72,7 @@ public:
 template<> class CApplyOnLobby<CPack>: public CBaseForLobbyApply
 {
 public:
-	void applyOnLobby(CSelectionScreen * selScr, void * pack) const override
+	void applyOnLobby(CLobbyScreen * selScr, void * pack) const override
 	{
 		logGlobal->error("Cannot apply plain CPack!");
 		assert(0);
@@ -495,11 +495,11 @@ void CServerHandler::threadHandleConnection()
 			assert(pack);
 			if(QuitMenuWithoutStarting * endingPack = dynamic_cast<QuitMenuWithoutStarting *>(pack))
 			{
-				endingPack->apply(static_cast<CSelectionScreen *>(SEL));
+				endingPack->apply(static_cast<CLobbyScreen *>(SEL));
 			}
 			else if(StartWithCurrentSettings * endingPack = dynamic_cast<StartWithCurrentSettings *>(pack))
 			{
-				endingPack->apply(static_cast<CSelectionScreen *>(SEL));
+				endingPack->apply(static_cast<CLobbyScreen *>(SEL));
 			}
 			else
 			{
@@ -531,7 +531,7 @@ void CServerHandler::processPacks()
 		CPackForLobby * pack = upcomingPacks.front();
 		upcomingPacks.pop_front();
 		CBaseForLobbyApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
-		apply->applyOnLobby(static_cast<CSelectionScreen *>(SEL), pack);
+		apply->applyOnLobby(static_cast<CLobbyScreen *>(SEL), pack);
 		delete pack;
 	}
 }

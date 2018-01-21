@@ -30,7 +30,7 @@ class ISelectionScreenInfo
 public:
 	CMenuScreen::EState screenType;
 
-	ISelectionScreenInfo();
+	ISelectionScreenInfo(CMenuScreen::EState type = CMenuScreen::mainMenu);
 	virtual ~ISelectionScreenInfo();
 	virtual const CMapInfo * getMapInfo() = 0;
 	virtual const StartInfo * getStartInfo() = 0;
@@ -43,11 +43,11 @@ public:
 };
 
 /// The actual map selection screen which consists of the options and selection tab
-class CSelectionScreen : public CIntObject, public ISelectionScreenInfo
+class CSelectionBase : public CIntObject, public ISelectionScreenInfo
 {
+public:
 	bool bordered;
 
-public:
 	CPicture * bg; //general bg image
 	InfoCard * card;
 
@@ -62,26 +62,9 @@ public:
 	RandomMapTab * tabRand;
 	CIntObject * curTab;
 
-	CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST);
-	~CSelectionScreen();
+	CSelectionBase(CMenuScreen::EState type);
 	void showAll(SDL_Surface * to) override;
-	void toggleTab(CIntObject * tab);
-	void changeSelectionSave(std::shared_ptr<CMapInfo> to);
-	void startCampaign();
-	void startScenario();
-	void saveGame();
-	void toggleMode(bool host);
-
-	 const CMapInfo * getMapInfo() override;
-	 const StartInfo * getStartInfo() override;
-};
-
-/// Save game screen
-class CSavingScreen : public CSelectionScreen
-{
-public:
-	CSavingScreen();
-	~CSavingScreen();
+	virtual void toggleTab(CIntObject * tab);
 };
 
 class InfoCard : public CIntObject
@@ -121,6 +104,38 @@ public:
 	void keyPressed(const SDL_KeyboardEvent & key) override;
 
 	void addNewMessage(const std::string & text);
+};
+
+/// The actual map selection screen which consists of the options and selection tab
+class CLobbyScreen : public CSelectionBase
+{
+public:
+	CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST);
+	~CLobbyScreen();
+	void toggleTab(CIntObject * tab) override;
+	void startCampaign();
+	void startScenario();
+	void toggleMode(bool host);
+
+	 const CMapInfo * getMapInfo() override;
+	 const StartInfo * getStartInfo() override;
+};
+
+/// Save game screen
+class CSavingScreen : public CSelectionBase
+{
+public:
+	const StartInfo * localSi;
+	CMapInfo * localMi;
+
+	CSavingScreen();
+	~CSavingScreen();
+
+	void changeSelection(std::shared_ptr<CMapInfo> to);
+	void saveGame();
+
+	const CMapInfo * getMapInfo() override;
+	const StartInfo * getStartInfo() override;
 };
 
 /// Scenario information screen shown during the game (thus not really a "pre-game" but fits here anyway)

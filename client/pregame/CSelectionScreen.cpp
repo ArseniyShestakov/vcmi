@@ -44,9 +44,9 @@
 
 void startGame();
 
-ISelectionScreenInfo::ISelectionScreenInfo()
+ISelectionScreenInfo::ISelectionScreenInfo(CMenuScreen::EState type)
+	: screenType(type)
 {
-	screenType = CMenuScreen::mainMenu;
 	assert(!SEL);
 	SEL = this;
 }
@@ -83,23 +83,16 @@ PlayerInfo ISelectionScreenInfo::getPlayerInfo(int color)
 	return getMapInfo()->mapHeader->players[color];
 }
 
-CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode)
-	: ISelectionScreenInfo()
+CSelectionBase::CSelectionBase(CMenuScreen::EState type)
+	: ISelectionScreenInfo(type)
 {
 	CGPreGame::create(); //we depend on its graphics
-	screenType = Type;
 
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-
 	IShowActivatable::type = BLOCK_ADV_HOTKEYS;
 	pos.w = 762;
 	pos.h = 584;
-	if(Type == CMenuScreen::saveGame)
-	{
-		bordered = false;
-		center(pos);
-	}
-	else if(Type == CMenuScreen::campaignList)
+	if(screenType == CMenuScreen::campaignList)
 	{
 		bordered = false;
 		bg = new CPicture("CamCust.bmp", 0, 0);
@@ -115,25 +108,57 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	}
 	curTab = nullptr;
 	tabRand = nullptr;
-
+	tabOpt = nullptr;
 	card = new InfoCard(); //right info card
-	if(screenType == CMenuScreen::campaignList)
-	{
-		tabOpt = nullptr;
-	}
-	else
+	if(screenType != CMenuScreen::campaignList)
 	{
 		tabOpt = new OptionsTab(); //scenario options tab
 		tabOpt->recActions = DISPOSE;
 	}
+	buttonSelect = nullptr;
+	buttonRMG = nullptr;
+	buttonOptions = nullptr;
+	buttonStart = nullptr;
+	buttonBack = new CButton(Point(581, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
+}
+
+void CSelectionBase::showAll(SDL_Surface * to)
+{
+	CIntObject::showAll(to);
+	if(bordered && (pos.h != to->h || pos.w != to->w))
+		CMessage::drawBorder(PlayerColor(1), to, pos.w + 28, pos.h + 30, pos.x - 14, pos.y - 15);
+}
+
+void CSelectionBase::toggleTab(CIntObject * tab)
+{
+	if(curTab && curTab->active)
+	{
+		curTab->deactivate();
+		curTab->recActions = DISPOSE;
+	}
+
+	if(curTab != tab)
+	{
+		tab->recActions = 255;
+		tab->activate();
+		curTab = tab;
+	}
+	else
+	{
+		curTab = nullptr;
+	}
+	GH.totalRedraw();
+}
+
+CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode)
+	: CSelectionBase(type)
+{
+	OBJ_CONSTRUCTION_CAPTURING_ALL;
 	tabSel = new SelectionTab(screenType, gameMode); //scenario selection tab
 	tabSel->recActions = DISPOSE; // MPTODO
 	tabSel->recActions = 255;
 	curTab = tabSel;
 
-	buttonSelect = nullptr;
-	buttonRMG = nullptr;
-	buttonOptions = nullptr;
 
 	auto initLobby = [&]()
 	{
@@ -146,7 +171,7 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 			CSH->setMapInfo(tabSel->getSelectedMapInfo());
 		});
 
-		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CSelectionScreen::toggleTab, this, tabOpt), SDLK_a);
+		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CLobbyScreen::toggleTab, this, tabOpt), SDLK_a);
 
 		CButton * buttonChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
 		buttonChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
@@ -171,22 +196,18 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 		card->difficulty->addCallback(std::bind(&IServerAPI::setDifficulty, CSH, _1));
 		card->difficulty->setSelected(1);
 
-		buttonStart = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_b);
+		buttonStart = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CLobbyScreen::startScenario, this), SDLK_b);
 		initLobby();
 		break;
 	}
 	case CMenuScreen::loadGame:
 	{
-		buttonStart = new CButton(Point(411, 535), "SCNRLOD.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::startScenario, this), SDLK_l);
+		buttonStart = new CButton(Point(411, 535), "SCNRLOD.DEF", CGI->generaltexth->zelp[103], std::bind(&CLobbyScreen::startScenario, this), SDLK_l);
 		initLobby();
 		break;
 	}
-	case CMenuScreen::saveGame:
-		tabSel->onSelect = std::bind(&CSelectionScreen::changeSelectionSave, this, _1);
-		buttonStart = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSelectionScreen::saveGame, this), SDLK_s);
-		break;
 	case CMenuScreen::campaignList:
-		buttonStart = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CSelectionScreen::startCampaign, this), SDLK_b);
+		buttonStart = new CButton(Point(411, 535), "SCNRLOD.DEF", CButton::tooltip(), std::bind(&CLobbyScreen::startCampaign, this), SDLK_b);
 		break;
 	}
 
@@ -195,79 +216,33 @@ CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameM
 	buttonBack = new CButton(Point(581, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
 }
 
-CSelectionScreen::~CSelectionScreen()
+CLobbyScreen::~CLobbyScreen()
 {
 	CSH->stopServerConnection();
 }
 
-void CSelectionScreen::showAll(SDL_Surface * to)
+void CLobbyScreen::toggleTab(CIntObject * tab)
 {
-	CIntObject::showAll(to);
-	if(bordered && (pos.h != to->h || pos.w != to->w))
-		CMessage::drawBorder(PlayerColor(1), to, pos.w + 28, pos.h + 30, pos.x - 14, pos.y - 15);
+	PregameGuiAction pga;
+	if(tab == curTab)
+		pga.action = PregameGuiAction::NO_TAB;
+	else if(tab == tabOpt)
+		pga.action = PregameGuiAction::OPEN_OPTIONS;
+	else if(tab == tabSel)
+		pga.action = PregameGuiAction::OPEN_SCENARIO_LIST;
+	else if(tab == tabRand)
+		pga.action = PregameGuiAction::OPEN_RANDOM_MAP_OPTIONS;
+	CSH->propagateGuiAction(pga);
+	CSelectionBase::toggleTab(tab);
 }
 
-void CSelectionScreen::toggleTab(CIntObject * tab)
-{
-	if(screenType != CMenuScreen::saveGame)
-	{
-		PregameGuiAction pga;
-		if(tab == curTab)
-			pga.action = PregameGuiAction::NO_TAB;
-		else if(tab == tabOpt)
-			pga.action = PregameGuiAction::OPEN_OPTIONS;
-		else if(tab == tabSel)
-			pga.action = PregameGuiAction::OPEN_SCENARIO_LIST;
-		else if(tab == tabRand)
-			pga.action = PregameGuiAction::OPEN_RANDOM_MAP_OPTIONS;
-
-		CSH->propagateGuiAction(pga);
-	}
-
-	if(curTab && curTab->active)
-	{
-		curTab->deactivate();
-		curTab->recActions = DISPOSE;
-	}
-
-	if(curTab != tab)
-	{
-		tab->recActions = 255;
-		tab->activate();
-		curTab = tab;
-	}
-	else
-	{
-		curTab = nullptr;
-	}
-	GH.totalRedraw();
-}
-
-void CSelectionScreen::changeSelectionSave(std::shared_ptr<CMapInfo> to)
-{
-	if(CSH->mi == to)
-		return;
-
-	CSH->mi = to;
-
-	if(CSH->mi)
-		CSH->si->difficulty = CSH->mi->scenarioOpts->difficulty;
-/*
-	if(screenType != CMenuScreen::campaignList)
-	{
-		CSH->updateStartInfo();
-	}
-*/
-	card->changeSelection();
-}
-
-void CSelectionScreen::startCampaign()
+void CLobbyScreen::startCampaign()
 {
 	if(CSH->mi)
 		GH.pushInt(new CBonusSelection(CSH->mi->fileURI));
 }
 
-void CSelectionScreen::startScenario()
+void CLobbyScreen::startScenario()
 {
 	try
 	{
@@ -292,34 +267,7 @@ void CSelectionScreen::startScenario()
 	}
 }
 
-void CSelectionScreen::saveGame()
-{
-	if(!(tabSel && tabSel->txt && tabSel->txt->text.size()))
-		return;
-
-	std::string path = "Saves/" + tabSel->txt->text;
-
-	auto overWrite = [&]() -> void
-	{
-		Settings lastSave = settings.write["session"]["lastSave"];
-		lastSave->String() = path;
-		LOCPLINT->cb->save(path);
-		GH.popIntTotally(this);
-	};
-
-	if(CResourceHandler::get("local")->existsResource(ResourceID(path, EResType::CLIENT_SAVEGAME)))
-	{
-		std::string hlp = CGI->generaltexth->allTexts[493]; //%s exists. Overwrite?
-		boost::algorithm::replace_first(hlp, "%s", tabSel->txt->text);
-		LOCPLINT->showYesNoDialog(hlp, overWrite, 0, false);
-	}
-	else
-	{
-		overWrite();
-	}
-}
-
-void CSelectionScreen::toggleMode(bool host)
+void CLobbyScreen::toggleMode(bool host)
 {
 	auto getColor = [=]()
 	{
@@ -341,25 +289,14 @@ void CSelectionScreen::toggleMode(bool host)
 		tabOpt->recreate();
 }
 
-const StartInfo * CSelectionScreen::getStartInfo()
+const StartInfo * CLobbyScreen::getStartInfo()
 {
 	return CSH->si.get();
 }
 
-const CMapInfo * CSelectionScreen::getMapInfo()
+const CMapInfo * CLobbyScreen::getMapInfo()
 {
 	return CSH->mi.get();
-}
-
-CSavingScreen::CSavingScreen()
-	: CSelectionScreen(CMenuScreen::saveGame, (LOCPLINT->cb->getStartInfo()->mode == StartInfo::CAMPAIGN ? CMenuScreen::SINGLE_CAMPAIGN : CMenuScreen::MULTI_NETWORK_HOST))
-{
-//MPTODO	CSH->si = &(*LOCPLINT->cb->getStartInfo());
-}
-
-CSavingScreen::~CSavingScreen()
-{
-
 }
 
 InfoCard::InfoCard()
@@ -377,7 +314,7 @@ InfoCard::InfoCard()
 
 	if(SEL->screenType == CMenuScreen::campaignList)
 	{
-		CSelectionScreen * ss = static_cast<CSelectionScreen *>(parent);
+		CLobbyScreen * ss = static_cast<CLobbyScreen *>(parent);
 		mapDescription->addChild(new CPicture(*ss->bg, descriptionRect + Point(-393, 0)), true); //move subpicture bg to our description control (by default it's our (Infocard) child)
 	}
 	else
@@ -691,11 +628,92 @@ void CChatBox::addNewMessage(const std::string & text)
 		chatHistory->slider->moveToMax();
 }
 
+CSavingScreen::CSavingScreen()
+	: CSelectionBase(CMenuScreen::saveGame)
+{
+	OBJ_CONSTRUCTION_CAPTURING_ALL;
+	bordered = false;
+	center(pos);
+	// MPTODO: I doubt saving screen need any of it
+	localSi = LOCPLINT->cb->getStartInfo();
+	localMi = new CMapInfo();
+	localMi->mapHeader = std::unique_ptr<CMapHeader>(new CMapHeader(*LOCPLINT->cb->getMapHeader()));
+
+	tabSel = new SelectionTab(screenType); //scenario selection tab
+	tabSel->recActions = DISPOSE; // MPTODO
+	tabSel->recActions = 255;
+	curTab = tabSel;
+
+	tabSel->onSelect = std::bind(&CSavingScreen::changeSelection, this, _1);
+	buttonStart = new CButton(Point(411, 535), "SCNRSAV.DEF", CGI->generaltexth->zelp[103], std::bind(&CSavingScreen::saveGame, this), SDLK_s);
+	buttonStart->assignedKeys.insert(SDLK_RETURN);
+}
+
+CSavingScreen::~CSavingScreen()
+{
+	vstd::clear_pointer(localSi);
+	vstd::clear_pointer(localMi);
+}
+
+const CMapInfo * CSavingScreen::getMapInfo()
+{
+	return localMi;
+}
+
+const StartInfo * CSavingScreen::getStartInfo()
+{
+	return localSi;
+}
+
+void CSavingScreen::changeSelection(std::shared_ptr<CMapInfo> to)
+{
+	if(localMi == to.get())
+		return;
+
+	localMi = to.get();
+	localSi = localMi->scenarioOpts;
+
+	/*
+	if(CSH->mi)
+		CSH->si->difficulty = CSH->mi->scenarioOpts->difficulty;
+	if(screenType != CMenuScreen::campaignList)
+	{
+		CSH->updateStartInfo();
+	}
+*/
+	card->changeSelection();
+}
+
+void CSavingScreen::saveGame()
+{
+	if(!(tabSel && tabSel->txt && tabSel->txt->text.size()))
+		return;
+
+	std::string path = "Saves/" + tabSel->txt->text;
+
+	auto overWrite = [&]() -> void
+	{
+		Settings lastSave = settings.write["session"]["lastSave"];
+		lastSave->String() = path;
+		LOCPLINT->cb->save(path);
+		GH.popIntTotally(this);
+	};
+
+	if(CResourceHandler::get("local")->existsResource(ResourceID(path, EResType::CLIENT_SAVEGAME)))
+	{
+		std::string hlp = CGI->generaltexth->allTexts[493]; //%s exists. Overwrite?
+		boost::algorithm::replace_first(hlp, "%s", tabSel->txt->text);
+		LOCPLINT->showYesNoDialog(hlp, overWrite, 0, false);
+	}
+	else
+	{
+		overWrite();
+	}
+}
+
 CScenarioInfo::CScenarioInfo()
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-	pos.w = 762;
-	pos.h = 584;
 	center(pos);
 
 	assert(LOCPLINT);

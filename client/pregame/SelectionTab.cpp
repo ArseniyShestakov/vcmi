@@ -326,7 +326,7 @@ void SelectionTab::onDoubleClick()
 	if(getLine() != -1) //double clicked scenarios list
 	{
 		//act as if start button was pressed
-		(static_cast<CSelectionScreen *>(parent))->buttonStart->clickLeft(false, true);
+		(static_cast<CLobbyScreen *>(parent))->buttonStart->clickLeft(false, true);
 	}
 }
 
