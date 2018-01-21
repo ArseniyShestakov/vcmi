@@ -8,7 +8,7 @@
  *
  */
 #pragma once
-#include "CSelectionScreen.h"
+#include "CSelectionBase.h"
 
 /// The options tab which is shown at the map selection phase.
 class OptionsTab : public CIntObject

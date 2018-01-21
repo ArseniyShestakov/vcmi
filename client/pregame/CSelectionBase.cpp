@@ -1,5 +1,5 @@
 /*
- * CSelectionScreen.cpp, part of VCMI engine
+ * CSelectionBase.cpp, part of VCMI engine
  *
  * Authors: listed in file AUTHORS in main folder
  *
@@ -8,7 +8,7 @@
  *
  */
 #include "StdInc.h"
-#include "CSelectionScreen.h"
+#include "CSelectionBase.h"
 #include "CCampaignScreen.h"
 #include "CPreGame.h"
 #include "OptionsTab.h"

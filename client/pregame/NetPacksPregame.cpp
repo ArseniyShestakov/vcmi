@@ -10,7 +10,7 @@
 
 #include "StdInc.h"
 #include "CPreGame.h"
-#include "CSelectionScreen.h"
+#include "CSelectionBase.h"
 #include "OptionsTab.h"
 #include "../CServerHandler.h"
 #include "../CGameInfo.h"

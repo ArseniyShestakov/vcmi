@@ -38,7 +38,7 @@
 #include "../widgets/MiscWidgets.h"
 #include "../windows/InfoWindows.h"
 
-#include "../pregame/CSelectionScreen.h"
+#include "../pregame/CSelectionBase.h"
 
 #include "../../CCallback.h"
 

@@ -11,7 +11,7 @@
 #include "CPreGame.h"
 
 #include "CCampaignScreen.h"
-#include "CSelectionScreen.h"
+#include "CSelectionBase.h"
 
 #include "../../lib/filesystem/Filesystem.h"
 #include "../../lib/filesystem/CCompressedStream.h"

@@ -9,7 +9,7 @@
  */
 #pragma once
 
-#include "CSelectionScreen.h"
+#include "CSelectionBase.h"
 
 /// The random map tab shows options for generating a random map.
 class RandomMapTab : public CIntObject

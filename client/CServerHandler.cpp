@@ -44,7 +44,7 @@
 // Applier
 #include "../lib/registerTypes/RegisterTypes.h"
 #include "../lib/NetPacks.h"
-#include "pregame/CSelectionScreen.h"
+#include "pregame/CSelectionBase.h"
 
 template<typename T> class CApplyOnLobby;
 

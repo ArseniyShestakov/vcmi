@@ -24,7 +24,7 @@
 #include "../CPlayerInterface.h"
 #include "../pregame/CPreGame.h"
 #include "../pregame/CCampaignScreen.h"
-#include "../pregame/CSelectionScreen.h"
+#include "../pregame/CSelectionBase.h"
 #include "../Graphics.h"
 #include "../mapHandler.h"
 

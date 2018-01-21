@@ -9,7 +9,7 @@
  */
 #pragma once
 
-#include "CSelectionScreen.h"
+#include "CSelectionBase.h"
 
 enum ESortBy
 {

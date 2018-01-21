@@ -21,7 +21,7 @@
 #include "../lib/filesystem/Filesystem.h"
 #include "../lib/filesystem/FileStream.h"
 #include "pregame/CPreGame.h"
-#include "pregame/CSelectionScreen.h"
+#include "pregame/CSelectionBase.h"
 #include "windows/CCastleInterface.h"
 #include "../lib/CConsoleHandler.h"
 #include "gui/CCursorHandler.h"
