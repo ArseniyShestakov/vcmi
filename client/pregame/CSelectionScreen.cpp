@@ -57,15 +57,6 @@ ISelectionScreenInfo::~ISelectionScreenInfo()
 	SEL = nullptr;
 }
 
-/**
- * Stores the current name of the savegame.
- *
- * TODO better solution for auto-selection when saving already saved games.
- * -> CSelectionScreen should be divided into CLoadGameScreen, CSaveGameScreen,...
- * The name of the savegame can then be stored non-statically in CGameState and
- * passed separately to CSaveGameScreen.
- */
-
 CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode)
 	: ISelectionScreenInfo()
 {
