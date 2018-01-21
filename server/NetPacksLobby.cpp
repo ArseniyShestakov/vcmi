@@ -125,6 +125,7 @@ bool ChangePlayerOptions::applyServerBefore(CVCMIServer * srv, CConnection * c)
 		break;
 	}
 	srv->propagateOptions();
+	return true;
 }
 
 bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
@@ -189,16 +190,19 @@ bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 		}
 	}
 	srv->propagateOptions();
+	return true;
 }
 
 bool SetTurnTime::applyServerBefore(CVCMIServer * srv, CConnection * c)
 {
 	srv->si->turnTime = turnTime;
 	srv->propagateOptions();
+	return true;
 }
 
 bool SetDifficulty::applyServerBefore(CVCMIServer * srv, CConnection * c)
 {
 	srv->si->difficulty = difficulty;
 	srv->propagateOptions();
+	return true;
 }
