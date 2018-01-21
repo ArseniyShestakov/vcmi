@@ -37,7 +37,7 @@ OptionsTab::OptionsTab()
 	bg = new CPicture("ADVOPTBK", 0, 6);
 	pos = bg->pos;
 
-	if(SEL->screenType == CMenuScreen::newGame || SEL->screenType == CMenuScreen::loadGame)
+	if(SEL->screenType == CMenuScreen::newGame || SEL->screenType == CMenuScreen::loadGame || SEL->screenType == CMenuScreen::scenarioInfo)
 		turnDuration = new CSlider(Point(55, 551), 194, std::bind(&IServerAPI::setTurnLength, CSH, _1), 1, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), true, CSlider::BLUE);
 }
 
@@ -64,12 +64,13 @@ void OptionsTab::recreate()
 	entries.clear();
 
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-	for(auto it = CSH->si->playerInfos.begin(); it != CSH->si->playerInfos.end(); ++it)
+	for(auto it = SEL->getStartInfo()->playerInfos.begin(); it != SEL->getStartInfo()->playerInfos.end(); ++it)
 	{
 		entries.insert(std::make_pair(it->first, new PlayerOptionsEntry(this, it->second)));
 	}
 
-	turnDuration->moveTo(std::distance(GameConstants::POSSIBLE_TURNTIME, std::find(GameConstants::POSSIBLE_TURNTIME, GameConstants::POSSIBLE_TURNTIME + ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), CSH->si->turnTime)));
+	if(turnDuration)
+		turnDuration->moveTo(std::distance(GameConstants::POSSIBLE_TURNTIME, std::find(GameConstants::POSSIBLE_TURNTIME, GameConstants::POSSIBLE_TURNTIME + ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME), SEL->getStartInfo()->turnTime)));
 }
 
 size_t OptionsTab::CPlayerSettingsHelper::getImageIndex()
@@ -427,15 +428,15 @@ void OptionsTab::SelectedBox::clickRight(tribool down, bool previousState)
 		// cases when we do not need to display a message
 		if(settings.castle == -2 && CPlayerSettingsHelper::type == TOWN)
 			return;
-		if(settings.hero == -2 && !CSH->getPlayerInfo(settings.color.getNum()).hasCustomMainHero() && CPlayerSettingsHelper::type == HERO)
+		if(settings.hero == -2 && !SEL->getPlayerInfo(settings.color.getNum()).hasCustomMainHero() && CPlayerSettingsHelper::type == HERO)
 			return;
 
 		GH.pushInt(new CPregameTooltipBox(*this));
 	}
 }
 
-OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSettings & S)
-	: pi(CSH->getPlayerInfo(S.color.getNum())), s(S)
+OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, const PlayerSettings & S)
+	: pi(SEL->getPlayerInfo(S.color.getNum())), s(S)
 {
 	OBJ_CONSTRUCTION;
 	defActions |= SHARE_POS;
@@ -443,7 +444,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	int serial = 0;
 	for(int g = 0; g < s.color.getNum(); ++g)
 	{
-		auto itred = CSH->getPlayerInfo(g);
+		auto itred = SEL->getPlayerInfo(g);
 		if(itred.canComputerPlay || itred.canHumanPlay)
 			serial++;
 	}
@@ -479,7 +480,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	hideUnavailableButtons();
 
 	assert(CSH->mi && CSH->mi->mapHeader);
-	const PlayerInfo & p = CSH->getPlayerInfo(s.color.getNum());
+	const PlayerInfo & p = SEL->getPlayerInfo(s.color.getNum());
 	assert(p.canComputerPlay || p.canHumanPlay); //someone must be able to control this player
 	if(p.canHumanPlay && p.canComputerPlay)
 		whoCanPlay = HUMAN_OR_CPU;
@@ -488,7 +489,7 @@ OptionsTab::PlayerOptionsEntry::PlayerOptionsEntry(OptionsTab * owner, PlayerSet
 	else
 		whoCanPlay = HUMAN;
 
-	if(SEL->screenType != CMenuScreen::scenarioInfo && CSH->getPlayerInfo(s.color.getNum()).canHumanPlay)
+	if(SEL->screenType != CMenuScreen::scenarioInfo && SEL->getPlayerInfo(s.color.getNum()).canHumanPlay)
 	{
 		flag = new CButton(Point(-43, 2), flags[s.color.getNum()], CGI->generaltexth->zelp[180], std::bind(&IServerAPI::setPlayer, CSH, s.color));
 		flag->hoverable = true;

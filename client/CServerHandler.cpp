@@ -472,12 +472,6 @@ void CServerHandler::stopServer()
 	*c << &qmws;
 }
 
-PlayerInfo CServerHandler::getPlayerInfo(int color) const
-{
-	return mi->mapHeader->players[color];
-}
-
-
 void CServerHandler::threadHandleConnection()
 {
 	setThreadName("CServerHandler::threadHandleConnection");

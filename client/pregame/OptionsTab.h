@@ -76,7 +76,7 @@ public:
 		SelectedBox * bonus;
 		enum {HUMAN_OR_CPU, HUMAN, CPU} whoCanPlay;
 
-		PlayerOptionsEntry(OptionsTab * owner, PlayerSettings & S);
+		PlayerOptionsEntry(OptionsTab * owner, const PlayerSettings & S);
 		void showAll(SDL_Surface * to) override;
 		void hideUnavailableButtons();
 	};

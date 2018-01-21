@@ -57,6 +57,32 @@ ISelectionScreenInfo::~ISelectionScreenInfo()
 	SEL = nullptr;
 }
 
+std::string ISelectionScreenInfo::getMapName()
+{
+	if(screenType == CMenuScreen::campaignList)
+		return getMapInfo()->campaignHeader->name;
+	else
+		return getMapInfo()->mapHeader->name;
+}
+
+std::string ISelectionScreenInfo::getMapDescription()
+{
+	if(screenType == CMenuScreen::campaignList)
+		return getMapInfo()->campaignHeader->description;
+	else
+		return getMapInfo()->mapHeader->description;
+}
+
+int ISelectionScreenInfo::getCurrentDifficulty()
+{
+	return getStartInfo()->difficulty;
+}
+
+PlayerInfo ISelectionScreenInfo::getPlayerInfo(int color)
+{
+	return getMapInfo()->mapHeader->players[color];
+}
+
 CSelectionScreen::CSelectionScreen(CMenuScreen::EState Type, CMenuScreen::EGameMode gameMode)
 	: ISelectionScreenInfo()
 {
@@ -315,6 +341,16 @@ void CSelectionScreen::toggleMode(bool host)
 		tabOpt->recreate();
 }
 
+const StartInfo * CSelectionScreen::getStartInfo()
+{
+	return CSH->si.get();
+}
+
+const CMapInfo * CSelectionScreen::getMapInfo()
+{
+	return CSH->mi.get();
+}
+
 CSavingScreen::CSavingScreen()
 	: CSelectionScreen(CMenuScreen::saveGame, (LOCPLINT->cb->getStartInfo()->mode == StartInfo::CAMPAIGN ? CMenuScreen::SINGLE_CAMPAIGN : CMenuScreen::MULTI_NETWORK_HOST))
 {
@@ -430,13 +466,13 @@ void InfoCard::showAll(SDL_Surface * to)
 		}
 	}
 
-	if(CSH->mi)
+	if(SEL->getMapInfo())
 	{
 		if(SEL->screenType != CMenuScreen::campaignList)
 		{
 			if(!showChat)
 			{
-				CMapHeader * header = CSH->mi->mapHeader.get();
+				CMapHeader * header = SEL->getMapInfo()->mapHeader.get();
 				//victory conditions
 				printAtLoc(header->victoryMessage, 60, 307, FONT_SMALL, Colors::WHITE, to);
 				victory->setFrame(header->victoryIconIndex);
@@ -448,12 +484,12 @@ void InfoCard::showAll(SDL_Surface * to)
 			}
 
 			//difficulty
-			assert(CSH->mi->mapHeader->difficulty <= 4);
-			std::string & diff = CGI->generaltexth->arraytxt[142 + CSH->mi->mapHeader->difficulty];
+			assert(SEL->getMapInfo()->mapHeader->difficulty <= 4);
+			std::string & diff = CGI->generaltexth->arraytxt[142 + SEL->getMapInfo()->mapHeader->difficulty];
 			printAtMiddleLoc(diff, 62, 472, FONT_SMALL, Colors::WHITE, to);
 
 			//selecting size icon
-			switch(CSH->mi->mapHeader->width)
+			switch(SEL->getMapInfo()->mapHeader->width)
 			{
 			case 36:
 				sizes->setFrame(0);
@@ -474,7 +510,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			sizes->showAll(to);
 
 			if(SEL->screenType == CMenuScreen::loadGame)
-				printToLoc(CSH->mi->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
+				printToLoc(SEL->getMapInfo()->date, 308, 34, FONT_SMALL, Colors::WHITE, to);
 
 			//print flags
 			int fx = 34 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
@@ -483,13 +519,13 @@ void InfoCard::showAll(SDL_Surface * to)
 			TeamID myT;
 
 			if(CSH->myFirstColor() < PlayerColor::PLAYER_LIMIT)
-				myT = CSH->getPlayerInfo(CSH->myFirstColor().getNum()).team;
+				myT = SEL->getPlayerInfo(CSH->myFirstColor().getNum()).team;
 			else
 				myT = TeamID::NO_TEAM;
 
 			for(auto i = CSH->si->playerInfos.cbegin(); i != CSH->si->playerInfos.cend(); i++)
 			{
-				int * myx = ((i->first == CSH->myFirstColor() || CSH->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
+				int * myx = ((i->first == CSH->myFirstColor() || SEL->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
 				IImage * flag = sFlags->getImage(i->first.getNum(), 0);
 				flag->draw(to, pos.x + *myx, pos.y + 399);
 				*myx += flag->width();
@@ -497,7 +533,7 @@ void InfoCard::showAll(SDL_Surface * to)
 			}
 
 			std::string tob;
-			switch(CSH->si->difficulty)
+			switch(SEL->getCurrentDifficulty())
 			{
 			case 0:
 				tob = "80%";
@@ -519,16 +555,7 @@ void InfoCard::showAll(SDL_Surface * to)
 		}
 
 		//blit description
-		std::string name;
-
-		if(SEL->screenType == CMenuScreen::campaignList)
-		{
-			name = CSH->mi->campaignHeader->name;
-		}
-		else
-		{
-			name = CSH->mi->mapHeader->name;
-		}
+		std::string name = SEL->getMapName();
 
 		//name
 		if(name.length())
@@ -541,18 +568,15 @@ void InfoCard::showAll(SDL_Surface * to)
 void InfoCard::clickRight(tribool down, bool previousState)
 {
 	static const Rect flagArea(19, 397, 335, 23);
-	if(CSH->mi && down && CSH->mi && isItInLoc(flagArea, GH.current->motion.x, GH.current->motion.y))
+	if(SEL->getMapInfo() && down && SEL->getMapInfo() && isItInLoc(flagArea, GH.current->motion.x, GH.current->motion.y))
 		showTeamsPopup();
 }
 
 void InfoCard::changeSelection()
 {
-	if(CSH->mi && mapDescription)
+	if(SEL->getMapInfo() && mapDescription)
 	{
-		if(SEL->screenType == CMenuScreen::campaignList)
-			mapDescription->setText(CSH->mi->campaignHeader->description);
-		else
-			mapDescription->setText(CSH->mi->mapHeader->description);
+		mapDescription->setText(SEL->getMapDescription());
 
 		mapDescription->label->scrollTextTo(0);
 		if(mapDescription->slider)
@@ -561,7 +585,7 @@ void InfoCard::changeSelection()
 		if(SEL->screenType != CMenuScreen::newGame && SEL->screenType != CMenuScreen::campaignList)
 		{
 			//difficulty->block(true);
-			difficulty->setSelected(CSH->si->difficulty);
+			difficulty->setSelected(SEL->getCurrentDifficulty());
 		}
 	}
 	redraw();
@@ -569,11 +593,11 @@ void InfoCard::changeSelection()
 
 void InfoCard::showTeamsPopup()
 {
-	SDL_Surface * bmp = CMessage::drawDialogBox(256, 90 + 50 * CSH->mi->mapHeader->howManyTeams);
+	SDL_Surface * bmp = CMessage::drawDialogBox(256, 90 + 50 * SEL->getMapInfo()->mapHeader->howManyTeams);
 
 	graphics->fonts[FONT_MEDIUM]->renderTextCenter(bmp, CGI->generaltexth->allTexts[657], Colors::YELLOW, Point(128, 30));
 
-	for(int i = 0; i < CSH->mi->mapHeader->howManyTeams; i++)
+	for(int i = 0; i < SEL->getMapInfo()->mapHeader->howManyTeams; i++)
 	{
 		std::vector<ui8> flags;
 		std::string hlp = CGI->generaltexth->allTexts[656]; //Team %d
@@ -583,8 +607,8 @@ void InfoCard::showTeamsPopup()
 
 		for(int j = 0; j < PlayerColor::PLAYER_LIMIT_I; j++)
 		{
-			if((CSH->getPlayerInfo(j).canHumanPlay || CSH->getPlayerInfo(j).canComputerPlay)
-				&& CSH->getPlayerInfo(j).team == TeamID(i))
+			if((SEL->getPlayerInfo(j).canHumanPlay || SEL->getPlayerInfo(j).canComputerPlay)
+				&& SEL->getPlayerInfo(j).team == TeamID(i))
 			{
 				flags.push_back(j);
 			}
@@ -675,7 +699,9 @@ CScenarioInfo::CScenarioInfo()
 	center(pos);
 
 	assert(LOCPLINT);
-//MPTODO	CSH->si = &(*LOCPLINT->cb->getStartInfo());
+	localSi = LOCPLINT->cb->getStartInfo();
+	localMi = new CMapInfo();
+	localMi->mapHeader = std::unique_ptr<CMapHeader>(new CMapHeader(*LOCPLINT->cb->getMapHeader()));
 
 	screenType = CMenuScreen::scenarioInfo;
 
@@ -684,11 +710,22 @@ CScenarioInfo::CScenarioInfo()
 	opt->recreate();
 	card->changeSelection();
 
-	card->difficulty->setSelected(CSH->si->difficulty);
+	card->difficulty->setSelected(getCurrentDifficulty());
 	back = new CButton(Point(584, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
 }
 
 CScenarioInfo::~CScenarioInfo()
 {
-	CSH->mi.reset();
+	vstd::clear_pointer(localSi);
+	vstd::clear_pointer(localMi);
+}
+
+const CMapInfo * CScenarioInfo::getMapInfo()
+{
+	return localMi;
+}
+
+const StartInfo * CScenarioInfo::getStartInfo()
+{
+	return localSi;
 }

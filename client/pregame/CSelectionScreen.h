@@ -32,6 +32,13 @@ public:
 
 	ISelectionScreenInfo();
 	virtual ~ISelectionScreenInfo();
+	virtual const CMapInfo * getMapInfo() = 0;
+	virtual const StartInfo * getStartInfo() = 0;
+
+	virtual std::string getMapName();
+	virtual std::string getMapDescription();
+	virtual int getCurrentDifficulty();
+	virtual PlayerInfo getPlayerInfo(int color);
 
 };
 
@@ -64,6 +71,9 @@ public:
 	void startScenario();
 	void saveGame();
 	void toggleMode(bool host);
+
+	 const CMapInfo * getMapInfo() override;
+	 const StartInfo * getStartInfo() override;
 };
 
 /// Save game screen
@@ -121,8 +131,14 @@ public:
 	InfoCard * card;
 	OptionsTab * opt;
 
+	const StartInfo * localSi;
+	CMapInfo * localMi;
+
 	CScenarioInfo();
 	~CScenarioInfo();
+
+	const CMapInfo * getMapInfo() override;
+	const StartInfo * getStartInfo() override;
 };
 
 extern ISelectionScreenInfo * SEL;
