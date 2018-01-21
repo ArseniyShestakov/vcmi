@@ -252,7 +252,7 @@ void CClient::serialize(BinaryDeserializer & h, const int version)
 		nInt->loadGame(h, version);
 
 		// Client no longer handle this player at all
-		if(!vstd::contains(CSH->getPlayers(), pid))
+		if(!vstd::contains(CSH->getAllClientPlayers(CSH->c->connectionID), pid))
 		{
 			logGlobal->trace("Player %s is not belong to this client. Destroying interface", pid);
 		}
@@ -276,9 +276,6 @@ void CClient::serialize(BinaryDeserializer & h, const int version)
 void CClient::run()
 {
 	setThreadName("CClient::run");
-
-	*CSH->c << CSH->getPlayers(); // MPTODO: Server shouldn't need this
-
 	CSH->c->enableStackSendingByID();
 	CSH->c->disableSmartPointerSerialization();
 	CSH->c->addStdVecItems(gs);
@@ -385,7 +382,7 @@ void CClient::initPlayerInterfaces()
 	for(auto & elem : CSH->si->playerInfos) // MPTODO gs->scenarioOps->playerInfos
 	{
 		PlayerColor color = elem.first;
-		if(!vstd::contains(CSH->getPlayers(), color))
+		if(!vstd::contains(CSH->getAllClientPlayers(CSH->c->connectionID), color))
 			continue;
 
 		if(vstd::contains(playerint, color))
@@ -409,7 +406,7 @@ void CClient::initPlayerInterfaces()
 		installNewPlayerInterface(std::make_shared<CPlayerInterface>(PlayerColor::SPECTATOR), PlayerColor::SPECTATOR, true);
 	}
 
-	if(CSH->getPlayers().count(PlayerColor::NEUTRAL))
+	if(CSH->getAllClientPlayers(CSH->c->connectionID).count(PlayerColor::NEUTRAL))
 		installNewBattleInterface(CDynLibHandler::getNewBattleAI(settings["server"]["neutralAI"].String()), PlayerColor::NEUTRAL);
 }
 

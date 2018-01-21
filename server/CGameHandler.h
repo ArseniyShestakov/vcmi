@@ -282,7 +282,7 @@ public:
 
 	void battleAfterLevelUp(const BattleResult &result);
 
-	void run(bool resume);
+	void run(bool resume, CVCMIServer * srv);
 	void newTurn();
 	void handleAttackBeforeCasting(BattleAttack *bat);
 	void handleAfterAttackCasting (const BattleAttack & bat);

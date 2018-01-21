@@ -144,7 +144,7 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
-	: LobbyInfo(), c(nullptr), localServerThread(nullptr), shm(nullptr), verbose(true), host(false), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
+	: LobbyInfo(), c(nullptr), localServerThread(nullptr), shm(nullptr), verbose(true), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 }
@@ -238,28 +238,12 @@ bool CServerHandler::isServerLocal() const
 	return false;
 }
 
-std::set<PlayerColor> CServerHandler::getPlayers()
-{
-	std::set<PlayerColor> players;
-	for(auto & elem : si->playerInfos)
-	{
-		if(isHost() && elem.second.connectedPlayerID == PlayerSettings::PLAYER_AI || vstd::contains(getMyIds(), elem.second.connectedPlayerID))
-		{
-			players.insert(elem.first); //add player
-		}
-	}
-	if(isHost())
-		players.insert(PlayerColor::NEUTRAL);
-
-	return players;
-}
-
 std::set<PlayerColor> CServerHandler::getHumanColors()
 {
 	std::set<PlayerColor> players;
 	for(auto & elem : si->playerInfos)
 	{
-		if(vstd::contains(getMyIds(), elem.second.connectedPlayerID))
+		if(vstd::contains(getConnectedPlayerIdsForClient(c->connectionID), elem.second.connectedPlayerID))
 		{
 			players.insert(elem.first); //add player
 		}
@@ -270,12 +254,12 @@ std::set<PlayerColor> CServerHandler::getHumanColors()
 
 bool CServerHandler::isHost() const
 {
-	return host;
+	return c && hostConnectionId == c->connectionID;
 }
 
 bool CServerHandler::isGuest() const
 {
-	return !host;
+	return !c || hostConnectionId != c->connectionID;
 }
 
 
@@ -313,34 +297,6 @@ ui8 CServerHandler::myFirstId() const
 	}
 
 	return 0;
-}
-
-bool CServerHandler::isMyId(ui8 id) const
-{
-	for(auto & pair : playerNames)
-	{
-		if(pair.second.connection == c->connectionID && pair.second.color == id)
-			return true;
-	}
-	return false;
-}
-
-std::vector<ui8> CServerHandler::getMyIds() const
-{
-	std::vector<ui8> ids;
-
-	for(auto & pair : playerNames)
-	{
-		if(pair.second.connection == c->connectionID)
-		{
-			for(auto & elem : si->playerInfos)
-			{
-				if(elem.second.connectedPlayerID == pair.first)
-					ids.push_back(elem.second.connectedPlayerID);
-			}
-		}
-	}
-	return ids;
 }
 
 void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)

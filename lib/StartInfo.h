@@ -177,6 +177,46 @@ struct LobbyInfo
 	std::shared_ptr<StartInfo> si;
 	std::shared_ptr<CMapInfo> mi;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
+	bool hostConnectionId;
 
-	LobbyInfo() : mi(nullptr), si(new StartInfo()) {}
+	LobbyInfo() : mi(nullptr), si(new StartInfo()), hostConnectionId(-1) {}
+
+	bool isClientHost(int clientId)
+	{
+		return clientId == hostConnectionId;
+	}
+
+	std::set<PlayerColor> getAllClientPlayers(int clientId)
+	{
+		std::set<PlayerColor> players;
+		for(auto & elem : si->playerInfos)
+		{
+			if(isClientHost(clientId) && elem.second.connectedPlayerID == PlayerSettings::PLAYER_AI || vstd::contains(getConnectedPlayerIdsForClient(clientId), elem.second.connectedPlayerID))
+			{
+				players.insert(elem.first); //add player
+			}
+		}
+		if(isClientHost(clientId))
+			players.insert(PlayerColor::NEUTRAL);
+
+		return players;
+	}
+
+	std::vector<ui8> getConnectedPlayerIdsForClient(int clientId) const
+	{
+		std::vector<ui8> ids;
+
+		for(auto & pair : playerNames)
+		{
+			if(pair.second.connection == clientId)
+			{
+				for(auto & elem : si->playerInfos)
+				{
+					if(elem.second.connectedPlayerID == pair.first)
+						ids.push_back(elem.second.connectedPlayerID);
+				}
+			}
+		}
+		return ids;
+	}
 };

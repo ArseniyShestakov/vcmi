@@ -30,7 +30,7 @@ bool WelcomeServer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	{
 		srv->si->mode = mode;
 		srv->hostClient = c;
-		wc.giveHost = true;
+		wc.hostConnectionId = true;
 	}
 	srv->sendPack(c, wc);
 

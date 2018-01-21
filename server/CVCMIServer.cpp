@@ -219,6 +219,7 @@ void CVCMIServer::startGame()
 	{
 	case StartInfo::NEW_GAME:
 		gh.init(si.get());
+
 		break;
 
 	case StartInfo::LOAD_GAME:
@@ -231,8 +232,7 @@ void CVCMIServer::startGame()
 	for(CConnection * c : gh.conns) // MPTODO: should we need to do that if we sent gamestate?
 		c->addStdVecItems(gh.gs);
 
-//	gh.sendCommonState(*conn);
-	gh.run(si->mode == StartInfo::LOAD_GAME);
+	gh.run(si->mode == StartInfo::LOAD_GAME, this);
 }
 
 void CVCMIServer::startAsyncAccept()
@@ -262,7 +262,10 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 		// MPTODO: this shouldn't be needed
 		// But right now we need to set host connection before starting listening thread
 		if(pc->connectionID == 1)
+		{
 			hostClient = pc;
+			hostConnectionId = 1;
+		}
 		startListeningThread(pc);
 	}
 	catch(std::exception & e)
@@ -403,6 +406,7 @@ void CVCMIServer::passHost(int toConnectionId)
 			return;
 
 		hostClient = c;
+		hostConnectionId = c->connectionID;
 		announceTxt(boost::str(boost::format("Pass host to connection %d") % toConnectionId));
 		auto ph = new PassHost();
 		ph->toConnection = toConnectionId;

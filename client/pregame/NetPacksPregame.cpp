@@ -115,13 +115,9 @@ void PlayersNames::apply(CLobbyScreen * lobby)
 void PassHost::apply(CLobbyScreen * lobby)
 {
 	bool old = CSH->isHost();
-	if(CSH->c->connectionID == toConnection)
-		CSH->host = true;
-	else if(CSH->host)
-		CSH->host = false;
-
+	CSH->hostConnectionId = toConnection;
 	if(old != CSH->isHost())
-		lobby->toggleMode(CSH->host);
+		lobby->toggleMode(CSH->isHost());
 }
 
 void StartWithCurrentSettings::apply(CLobbyScreen * lobby)
@@ -139,6 +135,6 @@ void StartWithCurrentSettings::apply(CLobbyScreen * lobby)
 void WelcomeClient::apply(CLobbyScreen * lobby)
 {
 	CSH->c->connectionID = connectionId;
-	CSH->host = giveHost;
-	lobby->toggleMode(giveHost);
+	CSH->hostConnectionId = hostConnectionId;
+	lobby->toggleMode(CSH->isHost());
 }

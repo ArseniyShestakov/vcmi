@@ -59,16 +59,12 @@ public:
 	void prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names);
 
 	// Lobby state storage
-	bool host;
 	std::vector<std::string> myNames;
 	// Helpers for lobby state access
-	std::set<PlayerColor> getPlayers();
 	std::set<PlayerColor> getHumanColors();
 	PlayerColor myFirstColor() const;
 	bool isMyColor(PlayerColor color) const;
-	ui8 myFirstId() const;
-	bool isMyId(ui8 id) const;
-	std::vector<ui8> getMyIds() const;
+	ui8 myFirstId() const; // Used by chat only!
 
 	// Lobby server API for UI
 	void setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr) override;
