@@ -11,6 +11,7 @@
 #include "StdInc.h"
 #include "CPreGame.h"
 #include "CSelectionBase.h"
+#include "CLobbyScreen.h"
 #include "OptionsTab.h"
 #include "../CServerHandler.h"
 #include "../CGameInfo.h"

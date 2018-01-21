@@ -45,6 +45,7 @@
 #include "../lib/registerTypes/RegisterTypes.h"
 #include "../lib/NetPacks.h"
 #include "pregame/CSelectionBase.h"
+#include "pregame/CLobbyScreen.h"
 
 template<typename T> class CApplyOnLobby;
 

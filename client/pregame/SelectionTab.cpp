@@ -10,6 +10,7 @@
 
 #include "StdInc.h"
 #include "SelectionTab.h"
+#include "CLobbyScreen.h"
 
 
 #include "../CGameInfo.h"

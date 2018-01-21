@@ -46,6 +46,9 @@ set(client_SRCS
 		pregame/CPreGame.cpp
 		pregame/CCampaignScreen.cpp
 		pregame/CSelectionBase.cpp
+		pregame/CLobbyScreen.cpp
+		pregame/CSavingScreen.cpp
+		pregame/CScenarioInfoScreen.cpp
 		pregame/OptionsTab.cpp
 		pregame/RandomMapTab.cpp
 		pregame/SelectionTab.cpp
@@ -112,6 +115,9 @@ set(client_HEADERS
 		pregame/CPreGame.h
 		pregame/CCampaignScreen.h
 		pregame/CSelectionBase.h
+		pregame/CLobbyScreen.h
+		pregame/CSavingScreen.h
+		pregame/CScenarioInfoScreen.h
 		pregame/OptionsTab.h
 		pregame/RandomMapTab.h
 		pregame/SelectionTab.h

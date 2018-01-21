@@ -12,6 +12,7 @@
 
 #include "CCampaignScreen.h"
 #include "CSelectionBase.h"
+#include "CLobbyScreen.h"
 
 #include "../../lib/filesystem/Filesystem.h"
 #include "../../lib/filesystem/CCompressedStream.h"

@@ -4,7 +4,7 @@
  * Authors: listed in file AUTHORS in main folder
  *
  * License: GNU General Public License v2.0 or later
- * Full text of license available in license.txt file, in main folder
+ * Full text of license available in license.txt file, i main folder
  *
  */
 #include "StdInc.h"
@@ -24,7 +24,8 @@
 #include "../CPlayerInterface.h"
 #include "../pregame/CPreGame.h"
 #include "../pregame/CCampaignScreen.h"
-#include "../pregame/CSelectionBase.h"
+#include "../pregame/CSavingScreen.h"
+#include "../pregame/CScenarioInfoScreen.h"
 #include "../Graphics.h"
 #include "../mapHandler.h"
 
@@ -1949,7 +1950,7 @@ void CAdventureOptions::showScenarioInfo()
 	}
 	else
 	{
-		GH.pushInt(new CScenarioInfo());
+		GH.pushInt(new CScenarioInfoScreen());
 	}
 }
 
