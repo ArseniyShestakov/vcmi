@@ -60,13 +60,13 @@ bool LobbyClientConnected::applyOnServer(CVCMIServer * srv)
 	return true;
 }
 
-void LobbyClientConnected::applyOnServerAfter(CVCMIServer * srv)
+void LobbyClientConnected::applyOnServerAfterAnnounce(CVCMIServer * srv)
 {
 	for(auto & player : srv->playerNames)
 	{
 		int id = player.first;
 		if(player.second.connection == c->connectionID)
-			srv->announceTxt(boost::str(boost::format("%s (pid %d cid) joins the game") % player.second.name % id % c->connectionID));
+			srv->announceTxt(boost::str(boost::format("%s (pid %d cid %d) joins the game") % player.second.name % id % c->connectionID));
 	}
 	srv->updateAndPropagateLobbyState();
 }
@@ -124,12 +124,16 @@ bool LobbyClientDisconnected::applyOnServer(CVCMIServer * srv)
 		srv->passHost(newHost->connectionID);
 	}
 	srv->updateAndPropagateLobbyState();
-	return false;
+	return true;
 }
 
 void LobbyClientDisconnected::applyOnServerAfterAnnounce(CVCMIServer * srv)
 {
-	CVCMIServer::shuttingDown = true;
+	if(shutdownServer)
+	{
+		CVCMIServer::shuttingDown = shutdownServer;
+		srv->state = CVCMIServer::ENDING_WITHOUT_START;
+	}
 }
 
 bool LobbyChatMessage::checkClientPermissions(CVCMIServer * srv) const

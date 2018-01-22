@@ -492,10 +492,10 @@ void CServerHandler::threadHandleConnection()
 
 void CServerHandler::processPacks()
 {
+	boost::unique_lock<boost::recursive_mutex> lock(*mx);
 	if(!serverHandlingThread)
 		return;
 
-	boost::unique_lock<boost::recursive_mutex> lock(*mx);
 	while(!upcomingPacks.empty())
 	{
 		CPackForLobby * pack = upcomingPacks.front();

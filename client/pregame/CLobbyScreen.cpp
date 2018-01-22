@@ -87,7 +87,7 @@ CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode game
 
 	buttonStart->assignedKeys.insert(SDLK_RETURN);
 
-	buttonBack = new CButton(Point(581, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&CGuiHandler::popIntTotally, &GH, this), SDLK_ESCAPE);
+	buttonBack = new CButton(Point(581, 535), "SCNRBACK.DEF", CGI->generaltexth->zelp[105], std::bind(&IServerAPI::stopServer, CSH), SDLK_ESCAPE);
 }
 
 CLobbyScreen::~CLobbyScreen()
