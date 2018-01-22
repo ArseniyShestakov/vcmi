@@ -313,7 +313,7 @@ ui8 CServerHandler::myFirstId() const
 
 void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 {
-	ChangePlayerOptions roc;
+	LobbyChangePlayerOption roc;
 	roc.what = what;
 	roc.direction = dir;
 	roc.color = player;
@@ -388,7 +388,7 @@ void CServerHandler::startGame()
 			throw noTemplateException();
 	}
 	ongoingClosing = true;
-	StartWithCurrentSettings swcs;
+	LobbyStartGame swcs;
 	sendPackToServer(swcs);
 }
 
@@ -404,8 +404,8 @@ void CServerHandler::sendMessage(const std::string & txt)
 		readed >> id;
 		if(id.length())
 		{
-			PassHost ph;
-			ph.toConnection = boost::lexical_cast<int>(id);
+			LobbyChangeHost ph;
+			ph.newHostConnectionId = boost::lexical_cast<int>(id);
 			sendPackToServer(ph);
 		}
 	}
@@ -420,16 +420,16 @@ void CServerHandler::sendMessage(const std::string & txt)
 			auto color = PlayerColor(boost::lexical_cast<int>(playerColorId));
 			if(color.isValidPlayer() && playerNames.find(connected) != playerNames.end())
 			{
-				ForcePlayerForCoop ph;
-				ph.connectedId = connected;
-				ph.playerColorId = color;
+				LobbyForceSetPlayer ph;
+				ph.targetConnectedPlayer = connected;
+				ph.targetPlayerColor = color;
 				sendPackToServer(ph);
 			}
 		}
 	}
 	else
 	{
-		ChatMessage cm;
+		LobbyChatMessage cm;
 		cm.message = txt;
 		cm.playerName = playerNames[myFirstId()].name;
 		sendPackToServer(cm);
@@ -471,7 +471,7 @@ void CServerHandler::threadHandleConnection()
 			{
 				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
 			}
-			else if(StartWithCurrentSettings * endingPack = dynamic_cast<StartWithCurrentSettings *>(pack))
+			else if(LobbyStartGame * endingPack = dynamic_cast<LobbyStartGame *>(pack))
 			{
 				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
 			}
@@ -515,8 +515,8 @@ void CServerHandler::setPlayer(PlayerColor color)
 	if(isGuest() || !c)
 		return;
 
-	SetPlayer sp;
-	sp.color = color;
+	LobbySetPlayer sp;
+	sp.clickedColor = color;
 	sendPackToServer(sp);
 }
 
@@ -526,7 +526,7 @@ void CServerHandler::setTurnLength(int npos)
 		return;
 
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
-	SetTurnTime stt;
+	LobbySetTurnTime stt;
 	stt.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
 	sendPackToServer(stt);
 }
@@ -547,7 +547,7 @@ void CServerHandler::setDifficulty(int to)
 	if(isGuest() || !c)
 		return;
 
-	SetDifficulty sd;
+	LobbySetDifficulty sd;
 	sd.difficulty = to;
 	sendPackToServer(sd);
 }

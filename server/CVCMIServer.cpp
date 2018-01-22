@@ -353,7 +353,7 @@ void CVCMIServer::sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby 
 	{
 		pc->sendStop = true;
 	}
-	else if(dynamic_ptr_cast<StartWithCurrentSettings>(&pack))
+	else if(dynamic_ptr_cast<LobbyStartGame>(&pack))
 	{
 		pc->sendStop = true;
 	}
@@ -368,7 +368,7 @@ void CVCMIServer::announcePack(const CPackForLobby & pack)
 void CVCMIServer::announceTxt(const std::string & txt, const std::string & playerName)
 {
 	logNetwork->info("%s says: %s", playerName, txt);
-	auto cm = new ChatMessage();
+	auto cm = new LobbyChatMessage();
 	cm->playerName = playerName;
 	cm->message = txt;
 	addToAnnounceQueue(cm);
@@ -395,8 +395,8 @@ void CVCMIServer::passHost(int toConnectionId)
 		hostClient = c;
 		hostConnectionId = c->connectionID;
 		announceTxt(boost::str(boost::format("Pass host to connection %d") % toConnectionId));
-		auto ph = new PassHost();
-		ph->toConnection = toConnectionId;
+		auto ph = new LobbyChangeHost();
+		ph->newHostConnectionId = toConnectionId;
 		addToAnnounceQueue(ph);
 		return;
 	}
@@ -527,7 +527,7 @@ void CVCMIServer::propagateOptions()
 		}
 	}
 
-	auto ups = new UpdateStartOptions();
+	auto ups = new LobbyUpdateState();
 	ups->playerNames = playerNames;
 	ups->startInfo = si.get();
 	addToAnnounceQueue(ups);

@@ -106,7 +106,7 @@ bool QuitMenuWithoutStarting::checkClientPermissions(CVCMIServer * srv) const
 	return true;
 }
 
-bool ChatMessage::checkClientPermissions(CVCMIServer * srv) const
+bool LobbyChatMessage::checkClientPermissions(CVCMIServer * srv) const
 {
 	return true;
 }
@@ -161,12 +161,12 @@ bool LobbyGuiAction::checkClientPermissions(CVCMIServer * srv) const
 	return srv->isClientHost(c->connectionID);
 }
 
-bool StartWithCurrentSettings::checkClientPermissions(CVCMIServer * srv) const
+bool LobbyStartGame::checkClientPermissions(CVCMIServer * srv) const
 {
 	return srv->isClientHost(c->connectionID);
 }
 
-bool StartWithCurrentSettings::applyOnServer(CVCMIServer * srv)
+bool LobbyStartGame::applyOnServer(CVCMIServer * srv)
 {
 	c->receivedStop = true;
 	//MPTODO it's should work without it
@@ -180,7 +180,7 @@ bool StartWithCurrentSettings::applyOnServer(CVCMIServer * srv)
 		return false;
 }
 
-void StartWithCurrentSettings::applyServerAfter(CVCMIServer * srv)
+void LobbyStartGame::applyServerAfter(CVCMIServer * srv)
 {
 	//MOTODO: this need more thinking!
 	srv->state = CVCMIServer::ENDING_AND_STARTING_GAME;
@@ -189,18 +189,18 @@ void StartWithCurrentSettings::applyServerAfter(CVCMIServer * srv)
 		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
 }
 
-bool PassHost::checkClientPermissions(CVCMIServer * srv) const
+bool LobbyChangeHost::checkClientPermissions(CVCMIServer * srv) const
 {
 	return srv->isClientHost(c->connectionID);
 }
 
-bool PassHost::applyOnServer(CVCMIServer * srv)
+bool LobbyChangeHost::applyOnServer(CVCMIServer * srv)
 {
-	srv->passHost(toConnection);
+	srv->passHost(newHostConnectionId);
 	return true;
 }
 
-bool ChangePlayerOptions::checkClientPermissions(CVCMIServer * srv) const
+bool LobbyChangePlayerOption::checkClientPermissions(CVCMIServer * srv) const
 {
 	if(srv->isClientHost(c->connectionID))
 		return true;
@@ -211,7 +211,7 @@ bool ChangePlayerOptions::checkClientPermissions(CVCMIServer * srv) const
 	return false;
 }
 
-bool ChangePlayerOptions::applyOnServer(CVCMIServer * srv)
+bool LobbyChangePlayerOption::applyOnServer(CVCMIServer * srv)
 {
 	switch(what)
 	{
@@ -228,7 +228,7 @@ bool ChangePlayerOptions::applyOnServer(CVCMIServer * srv)
 	return true;
 }
 
-bool SetPlayer::applyOnServer(CVCMIServer * srv)
+bool LobbySetPlayer::applyOnServer(CVCMIServer * srv)
 {
 	struct PlayerToRestore
 	{
@@ -240,7 +240,7 @@ bool SetPlayer::applyOnServer(CVCMIServer * srv)
 
 	// MPTODO: this should use PlayerSettings::controlledByAI / controlledByHuman
 	// Though it's need to be done carefully and tested
-	PlayerSettings & clicked = srv->si->playerInfos[color];
+	PlayerSettings & clicked = srv->si->playerInfos[clickedColor];
 	PlayerSettings * old = nullptr;
 
 	//identify clicked player
@@ -280,7 +280,7 @@ bool SetPlayer::applyOnServer(CVCMIServer * srv)
 		for(auto i = srv->si->playerInfos.begin(); i != srv->si->playerInfos.end(); i++)
 		{
 			int curNameID = *(i->second.connectedPlayerIDs.begin());
-			if(i->first != color && curNameID == newPlayer)
+			if(i->first != clickedColor && curNameID == newPlayer)
 			{
 				assert(i->second.connectedPlayerIDs.size());
 				playerToRestore.color = i->first;
@@ -294,20 +294,20 @@ bool SetPlayer::applyOnServer(CVCMIServer * srv)
 	return true;
 }
 
-bool SetTurnTime::applyOnServer(CVCMIServer * srv)
+bool LobbySetTurnTime::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->turnTime = turnTime;
 	return true;
 }
 
-bool SetDifficulty::applyOnServer(CVCMIServer * srv)
+bool LobbySetDifficulty::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->difficulty = difficulty;
 	return true;
 }
 
-bool ForcePlayerForCoop::applyOnServer(CVCMIServer * srv)
+bool LobbyForceSetPlayer::applyOnServer(CVCMIServer * srv)
 {
-	srv->si->playerInfos[playerColorId].connectedPlayerIDs.insert(connectedId);
+	srv->si->playerInfos[targetPlayerColor].connectedPlayerIDs.insert(targetConnectedPlayer);
 	return true;
 }

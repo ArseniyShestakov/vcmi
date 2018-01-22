@@ -56,7 +56,7 @@ void QuitMenuWithoutStarting::applyOnLobby(CLobbyScreen * lobby)
 	CSH->stopConnection();
 }
 
-void ChatMessage::applyOnLobby(CLobbyScreen * lobby)
+void LobbyChatMessage::applyOnLobby(CLobbyScreen * lobby)
 {
 	lobby->card->chat->addNewMessage(playerName + ": " + message);
 	GH.totalRedraw();
@@ -97,7 +97,7 @@ void LobbyGuiAction::applyOnLobby(CLobbyScreen * lobby)
 	}
 }
 
-void StartWithCurrentSettings::applyOnLobby(CLobbyScreen * lobby)
+void LobbyStartGame::applyOnLobby(CLobbyScreen * lobby)
 {
 	if(!CSH->ongoingClosing)
 	{
@@ -109,15 +109,15 @@ void StartWithCurrentSettings::applyOnLobby(CLobbyScreen * lobby)
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)
 }
 
-void PassHost::applyOnLobby(CLobbyScreen * lobby)
+void LobbyChangeHost::applyOnLobby(CLobbyScreen * lobby)
 {
 	bool old = CSH->isHost();
-	CSH->hostConnectionId = toConnection;
+	CSH->hostConnectionId = newHostConnectionId;
 	if(old != CSH->isHost())
 		lobby->toggleMode(CSH->isHost());
 }
 
-void UpdateStartOptions::applyOnLobby(CLobbyScreen * lobby)
+void LobbyUpdateState::applyOnLobby(CLobbyScreen * lobby)
 {
 	CSH->playerNames = playerNames;
 	CSH->si = std::shared_ptr<StartInfo>(startInfo);
