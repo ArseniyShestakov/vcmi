@@ -40,7 +40,7 @@ struct PlayerSettings
 	TeamID team;
 
 	std::string name;
-	ui8 connectedPlayerID; //0 - AI, non-0 serves as player id
+	std::set<ui8> connectedPlayerIDs; //Empty - AI, or connectrd player ids
 	bool compOnly; //true if this player is a computer only player; required for RMG
 	template <typename Handler>
 	void serialize(Handler &h, const int version)
@@ -53,25 +53,37 @@ struct PlayerSettings
 		h & color;
 		h & handicap;
 		h & name;
-		h & connectedPlayerID;
+		if(version < 781 && !h.saving)
+		{
+			ui8 oldConnectedId = 0;
+			h & oldConnectedId;
+			if(oldConnectedId)
+			{
+				connectedPlayerIDs.insert(oldConnectedId);
+			}
+		}
+		else
+		{
+			h & connectedPlayerIDs;
+		}
 		h & team;
 		h & compOnly;
 	}
 
 	PlayerSettings() : bonus(RANDOM), castle(NONE), hero(RANDOM), heroPortrait(RANDOM),
-		color(0), handicap(NO_HANDICAP), team(0), connectedPlayerID(PLAYER_AI), compOnly(false)
+		color(0), handicap(NO_HANDICAP), team(0), compOnly(false)
 	{
 
 	}
 
 	bool isControlledByAI() const
 	{
-		return connectedPlayerID == PLAYER_AI;
+		return !connectedPlayerIDs.size();
 	}
 
 	bool isControlledByHuman() const
 	{
-		return connectedPlayerID != PLAYER_AI;
+		return connectedPlayerIDs.size();
 	}
 };
 
@@ -108,11 +120,11 @@ struct StartInfo
 		return const_cast<StartInfo&>(*this).getIthPlayersSettings(no);
 	}
 
-	PlayerSettings * getPlayersSettings(const ui8 connectedPlayerID)
+	PlayerSettings * getPlayersSettings(const ui8 connectedPlayerId)
 	{
 		for(auto & elem : playerInfos)
 		{
-			if(elem.second.connectedPlayerID == connectedPlayerID)
+			if(vstd::contains(elem.second.connectedPlayerIDs, connectedPlayerId))
 				return &elem.second;
 		}
 
@@ -196,14 +208,17 @@ struct LobbyInfo
 		return clientId == hostConnectionId;
 	}
 
-	std::set<PlayerColor> getAllClientPlayers(int clientId)
+	std::set<PlayerColor> getAllClientPlayers(int clientId) //MPTODO: this function has dupe i suppose
 	{
 		std::set<PlayerColor> players;
 		for(auto & elem : si->playerInfos)
 		{
-			if(isClientHost(clientId) && elem.second.isControlledByAI() || vstd::contains(getConnectedPlayerIdsForClient(clientId), elem.second.connectedPlayerID))
+			for(ui8 id : elem.second.connectedPlayerIDs)
 			{
-				players.insert(elem.first); //add player
+				if(isClientHost(clientId) && elem.second.isControlledByAI() || vstd::contains(getConnectedPlayerIdsForClient(clientId), id))
+				{
+					players.insert(elem.first);
+				}
 			}
 		}
 		if(isClientHost(clientId))
@@ -222,8 +237,8 @@ struct LobbyInfo
 			{
 				for(auto & elem : si->playerInfos)
 				{
-					if(elem.second.connectedPlayerID == pair.first)
-						ids.push_back(elem.second.connectedPlayerID);
+					if(vstd::contains(elem.second.connectedPlayerIDs, pair.first))
+						ids.push_back(pair.first);
 				}
 			}
 		}

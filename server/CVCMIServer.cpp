@@ -485,7 +485,9 @@ void CVCMIServer::setPlayerConnectedId(PlayerSettings & pset, ui8 player) const
 	else
 		pset.name = VLC->generaltexth->allTexts[468]; //Computer
 
-	pset.connectedPlayerID = player;
+	pset.connectedPlayerIDs.clear();
+	if(player != PlayerSettings::PLAYER_AI)
+		pset.connectedPlayerIDs.insert(player);
 }
 
 void CVCMIServer::updateStartInfo()
@@ -514,7 +516,7 @@ void CVCMIServer::updateStartInfo()
 		}
 		else
 		{
-			setPlayerConnectedId(pset, 0);
+			setPlayerConnectedId(pset, PlayerSettings::PLAYER_AI);
 			if(!pinfo.canHumanPlay)
 			{
 				pset.compOnly = true;

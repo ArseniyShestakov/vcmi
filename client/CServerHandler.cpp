@@ -243,9 +243,12 @@ std::set<PlayerColor> CServerHandler::getHumanColors()
 	std::set<PlayerColor> players;
 	for(auto & elem : si->playerInfos)
 	{
-		if(vstd::contains(getConnectedPlayerIdsForClient(c->connectionID), elem.second.connectedPlayerID))
+		for(ui8 id : elem.second.connectedPlayerIDs)
 		{
-			players.insert(elem.first); //add player
+			if(vstd::contains(getConnectedPlayerIdsForClient(c->connectionID), id))
+			{
+				players.insert(elem.first);
+			}
 		}
 	}
 
@@ -278,11 +281,13 @@ bool CServerHandler::isMyColor(PlayerColor color) const
 {
 	if(si->playerInfos.find(color) != si->playerInfos.end())
 	{
-		ui8 id = si->playerInfos.find(color)->second.connectedPlayerID;
-		if(c && playerNames.find(id) != playerNames.end())
+		for(ui8 id : si->playerInfos.find(color)->second.connectedPlayerIDs)
 		{
-			if(playerNames.find(id)->second.connection == c->connectionID)
-				return true;
+			if(c && playerNames.find(id) != playerNames.end())
+			{
+				if(playerNames.find(id)->second.connection == c->connectionID)
+					return true;
+			}
 		}
 	}
 	return false;

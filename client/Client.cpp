@@ -213,7 +213,7 @@ void CClient::serialize(BinarySerializer & h, const int version)
 void CClient::serialize(BinaryDeserializer & h, const int version)
 {
 	assert(!h.saving);
-	if(version < 780)
+	if(version < 781) //MPTODO: Make sure this is proper version
 	{
 		bool hotSeat = false;
 		h & hotSeat;

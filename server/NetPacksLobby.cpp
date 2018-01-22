@@ -144,7 +144,7 @@ bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	PlayerSettings * old = nullptr;
 
 	//identify clicked player
-	int clickedNameID = clicked.connectedPlayerID; //human is a number of player, zero means AI
+	int clickedNameID = *(clicked.connectedPlayerIDs.begin()); //human is a number of player, zero means AI
 	if(clickedNameID > 0 && playerToRestore.id == clickedNameID) //player to restore is about to being replaced -> put him back to the old place
 	{
 		PlayerSettings & restPos = srv->si->playerInfos[playerToRestore.color];
@@ -179,13 +179,13 @@ bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	{
 		for(auto i = srv->si->playerInfos.begin(); i != srv->si->playerInfos.end(); i++)
 		{
-			int curNameID = i->second.connectedPlayerID;
+			int curNameID = *(i->second.connectedPlayerIDs.begin());
 			if(i->first != color && curNameID == newPlayer)
 			{
-				assert(i->second.connectedPlayerID);
+				assert(i->second.connectedPlayerIDs.size());
 				playerToRestore.color = i->first;
 				playerToRestore.id = newPlayer;
-				srv->setPlayerConnectedId(i->second, 0); //set computer
+				srv->setPlayerConnectedId(i->second, PlayerSettings::PLAYER_AI); //set computer
 				old = &i->second;
 				break;
 			}
