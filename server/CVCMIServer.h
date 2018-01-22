@@ -95,12 +95,12 @@ public:
 	void addToAnnounceQueue(CPackForLobby * pack, bool front = false);
 
 	void setPlayerConnectedId(PlayerSettings & pset, ui8 player) const;
-	void updateStartInfo();
+	void updateStartInfoOnMapChange();
 
 	void clientConnected(std::shared_ptr<CConnection> c);
 	void clientDisconnected(std::shared_ptr<CConnection> c);
 
-	void propagateOptions(); //MPTODO: should be const;
+	void updateAndPropagateLobbyState();
 
 	// Code only called from internals and netpacks. Should be moved on server-side
 	void optionNextHero(PlayerColor player, int dir); //dir == -1 or +1

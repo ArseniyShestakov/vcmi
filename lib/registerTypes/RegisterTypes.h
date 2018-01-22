@@ -357,7 +357,6 @@ void registerTypesPregamePacks(Serializer &s)
 	s.template registerType<CLobbyPackToPropagate, QuitMenuWithoutStarting>();
 	s.template registerType<CLobbyPackToPropagate, LobbyChatMessage>();
 	// Only host client send
-	s.template registerType<CLobbyPackToPropagate, SelectMap>();
 	s.template registerType<CLobbyPackToPropagate, LobbyGuiAction>();
 	s.template registerType<CLobbyPackToPropagate, LobbyStartGame>();
 	s.template registerType<CLobbyPackToPropagate, LobbyChangeHost>();
@@ -367,6 +366,7 @@ void registerTypesPregamePacks(Serializer &s)
 	// For client with permissions
 	s.template registerType<CLobbyPackToServer, LobbyChangePlayerOption>();
 	// Only for host client
+	s.template registerType<CLobbyPackToServer, LobbySetMap>();
 	s.template registerType<CLobbyPackToServer, LobbySetPlayer>();
 	s.template registerType<CLobbyPackToServer, LobbySetTurnTime>();
 	s.template registerType<CLobbyPackToServer, LobbySetDifficulty>();

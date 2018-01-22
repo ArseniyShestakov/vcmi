@@ -2433,7 +2433,7 @@ struct CPackForLobby : public CPack
 
 struct CLobbyPackToPropagate : public CPackForLobby
 {
-	void applyOnLobby(CLobbyScreen * lobby) {}
+
 };
 
 struct CLobbyPackToServer : public CPackForLobby
@@ -2444,11 +2444,11 @@ struct CLobbyPackToServer : public CPackForLobby
 
 struct LobbyClientConnected : public CLobbyPackToPropagate
 {
-	// Set by client before sending pack
+	// Set by client before sending pack to server
 	std::string uuid;
 	std::vector<std::string> names;
 	StartInfo::EMode mode;
-	// Set by server before announcing pack
+	// Changed by server before announcing pack
 	int connectionId;
 	int hostConnectionId;
 	ServerCapabilities * capabilities;
@@ -2515,24 +2515,6 @@ struct LobbyChatMessage : public CLobbyPackToPropagate
 	}
 };
 
-struct SelectMap : public CLobbyPackToPropagate
-{
-	CMapInfo * mapInfo;
-	CMapGenOptions * mapGenOpts;
-
-	SelectMap() : mapInfo(nullptr), mapGenOpts(nullptr) {}
-
-	bool checkClientPermissions(CVCMIServer * srv) const;
-	void applyOnLobby(CLobbyScreen * lobby);
-	bool applyOnServer(CVCMIServer * srv);
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-		h & mapInfo;
-		h & mapGenOpts;
-	}
-};
-
 struct LobbyGuiAction : public CLobbyPackToPropagate
 {
 	enum {
@@ -2580,6 +2562,7 @@ struct LobbyChangeHost : public CLobbyPackToPropagate
 
 struct LobbyUpdateState : public CLobbyPackToPropagate
 {
+	CMapInfo * mapInfo;
 	StartInfo * startInfo;
 	std::map<ui8, ClientPlayer> playerNames;
 
@@ -2588,8 +2571,24 @@ struct LobbyUpdateState : public CLobbyPackToPropagate
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
+		h & mapInfo;
 		h & startInfo;
 		h & playerNames;
+	}
+};
+
+struct LobbySetMap : public CLobbyPackToServer
+{
+	CMapInfo * mapInfo;
+	CMapGenOptions * mapGenOpts;
+
+	LobbySetMap() : mapInfo(nullptr), mapGenOpts(nullptr) {}
+	bool applyOnServer(CVCMIServer * srv);
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & mapInfo;
+		h & mapGenOpts;
 	}
 };
 

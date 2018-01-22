@@ -463,7 +463,7 @@ void CVCMIServer::setPlayerConnectedId(PlayerSettings & pset, ui8 player) const
 		pset.connectedPlayerIDs.insert(player);
 }
 
-void CVCMIServer::updateStartInfo()
+void CVCMIServer::updateStartInfoOnMapChange()
 {
 	si->playerInfos.clear();
 	if(!mi)
@@ -510,7 +510,7 @@ void CVCMIServer::updateStartInfo()
 	}
 }
 
-void CVCMIServer::propagateOptions()
+void CVCMIServer::updateAndPropagateLobbyState()
 {
 	// Update player settings for RMG
 	// MPTODO: find appropriate location for this code
@@ -528,8 +528,9 @@ void CVCMIServer::propagateOptions()
 	}
 
 	auto ups = new LobbyUpdateState();
-	ups->playerNames = playerNames;
+	ups->mapInfo = mi.get();
 	ups->startInfo = si.get();
+	ups->playerNames = playerNames;
 	addToAnnounceQueue(ups);
 }
 

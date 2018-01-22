@@ -62,19 +62,6 @@ void LobbyChatMessage::applyOnLobby(CLobbyScreen * lobby)
 	GH.totalRedraw();
 }
 
-void SelectMap::applyOnLobby(CLobbyScreen * lobby)
-{
-	if(mapInfo)
-		CSH->mi = std::make_shared<CMapInfo>(*mapInfo);
-	else
-		CSH->mi.reset();
-	lobby->card->changeSelection();
-	if(lobby->screenType != CMenuScreen::campaignList)
-	{
-		lobby->tabOpt->recreate();
-	}
-}
-
 void LobbyGuiAction::applyOnLobby(CLobbyScreen * lobby)
 {
 	if(!CSH->isGuest())
@@ -119,6 +106,16 @@ void LobbyChangeHost::applyOnLobby(CLobbyScreen * lobby)
 
 void LobbyUpdateState::applyOnLobby(CLobbyScreen * lobby)
 {
+	if(mapInfo)
+		CSH->mi = std::make_shared<CMapInfo>(*mapInfo);
+	else
+		CSH->mi.reset();
+	lobby->card->changeSelection();
+	if(lobby->screenType != CMenuScreen::campaignList)
+	{
+		lobby->tabOpt->recreate();
+	}
+
 	CSH->playerNames = playerNames;
 	CSH->si = std::shared_ptr<StartInfo>(startInfo);
 	if(CSH->mi)

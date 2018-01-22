@@ -536,7 +536,7 @@ void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * m
 	if(isGuest() || !c || mi == to)
 		return;
 
-	SelectMap sm;
+	LobbySetMap sm;
 	sm.mapInfo = to.get();
 	sm.mapGenOpts = mapGenOpts;
 	sendPackToServer(sm);

@@ -25,7 +25,7 @@ bool CLobbyPackToServer::checkClientPermissions(CVCMIServer * srv) const
 void CLobbyPackToServer::applyServerAfter(CVCMIServer * srv)
 {
 	// Propogate options after every CLobbyPackToServer
-	srv->propagateOptions();
+	srv->updateAndPropagateLobbyState();
 }
 
 bool LobbyClientConnected::checkClientPermissions(CVCMIServer * srv) const
@@ -68,7 +68,7 @@ void LobbyClientConnected::applyOnServerAfter(CVCMIServer * srv)
 		if(player.second.connection == c->connectionID)
 			srv->announceTxt(boost::str(boost::format("%s (pid %d cid) joins the game") % player.second.name % id % c->connectionID));
 	}
-	srv->propagateOptions();
+	srv->updateAndPropagateLobbyState();
 }
 
 bool LobbyClientDisconnected::checkClientPermissions(CVCMIServer * srv) const
@@ -97,16 +97,11 @@ bool LobbyClientDisconnected::applyOnServer(CVCMIServer * srv)
 		auto newHost = *RandomGeneratorUtil::nextItem(srv->connections, CRandomGenerator::getDefault());
 		srv->passHost(newHost->connectionID);
 	}
-	srv->propagateOptions();
+	srv->updateAndPropagateLobbyState();
 	return true;
 }
 
 bool QuitMenuWithoutStarting::checkClientPermissions(CVCMIServer * srv) const
-{
-	return true;
-}
-
-bool LobbyChatMessage::checkClientPermissions(CVCMIServer * srv) const
 {
 	return true;
 }
@@ -128,19 +123,19 @@ void QuitMenuWithoutStarting::applyServerAfter(CVCMIServer * srv)
 	CVCMIServer::shuttingDown = true;
 }
 
-bool SelectMap::checkClientPermissions(CVCMIServer * srv) const
+bool LobbyChatMessage::checkClientPermissions(CVCMIServer * srv) const
 {
-	return srv->isClientHost(c->connectionID);
+	return true;
 }
 
-bool SelectMap::applyOnServer(CVCMIServer * srv)
+bool LobbySetMap::applyOnServer(CVCMIServer * srv)
 {
 	srv->mi = std::shared_ptr<CMapInfo>(mapInfo);
 
 	if(srv->mi && srv->si->mode == StartInfo::LOAD_GAME)
 		srv->si->difficulty = srv->mi->scenarioOpts->difficulty;
 
-	srv->updateStartInfo();
+	srv->updateStartInfoOnMapChange();
 	if(srv->si->mode == StartInfo::NEW_GAME)
 	{
 		if(srv->mi && srv->mi->isRandomMap)
@@ -152,7 +147,6 @@ bool SelectMap::applyOnServer(CVCMIServer * srv)
 			srv->si->mapGenOptions.reset();
 		}
 	}
-	srv->propagateOptions();
 	return true;
 }
 
