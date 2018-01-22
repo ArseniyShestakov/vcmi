@@ -22,7 +22,7 @@ bool CLobbyPackToServer::checkClientPermissions(CVCMIServer * srv) const
 	return srv->isClientHost(c->connectionID);
 }
 
-void CLobbyPackToServer::applyServerAfter(CVCMIServer * srv)
+void CLobbyPackToServer::applyOnServerAfterAnnounce(CVCMIServer * srv)
 {
 	// Propogate options after every CLobbyPackToServer
 	srv->updateAndPropagateLobbyState();
@@ -73,11 +73,32 @@ void LobbyClientConnected::applyOnServerAfter(CVCMIServer * srv)
 
 bool LobbyClientDisconnected::checkClientPermissions(CVCMIServer * srv) const
 {
-	return false;
+	if(shutdownServer)
+	{
+		if(!srv->cmdLineOptions.count("run-by-client"))
+			return false;
+
+		if(c->uuid != srv->cmdLineOptions["uuid"].as<std::string>())
+			return false;
+	}
+
+	return true;
 }
 
 bool LobbyClientDisconnected::applyOnServer(CVCMIServer * srv)
 {
+	if(c) // Only set when client actually sent this netpack
+	{
+		c->receivedStop = true;
+		if(!c->sendStop)
+			srv->sendPack(c, *this);
+
+		if(c == srv->hostClient)
+			return true;
+		else
+			return false;
+	}
+
 	srv->connections -= c;
 
 	//notify other players about leaving
@@ -91,6 +112,11 @@ bool LobbyClientDisconnected::applyOnServer(CVCMIServer * srv)
 		logNetwork->error("Last connection lost, server will close itself...");
 		boost::this_thread::sleep(boost::posix_time::seconds(2)); //we should never be hasty when networking
 		srv->state = CVCMIServer::ENDING_WITHOUT_START;
+		return true;
+	}
+	else if(shutdownServer)
+	{
+		return true;
 	}
 	else if(c == srv->hostClient)
 	{
@@ -98,27 +124,10 @@ bool LobbyClientDisconnected::applyOnServer(CVCMIServer * srv)
 		srv->passHost(newHost->connectionID);
 	}
 	srv->updateAndPropagateLobbyState();
-	return true;
+	return false;
 }
 
-bool QuitMenuWithoutStarting::checkClientPermissions(CVCMIServer * srv) const
-{
-	return true;
-}
-
-bool QuitMenuWithoutStarting::applyOnServer(CVCMIServer * srv)
-{
-	c->receivedStop = true;
-	if(!c->sendStop)
-		srv->sendPack(c, *this);
-
-	if(c == srv->hostClient)
-		return true;
-	else
-		return false;
-}
-
-void QuitMenuWithoutStarting::applyServerAfter(CVCMIServer * srv)
+void LobbyClientDisconnected::applyOnServerAfterAnnounce(CVCMIServer * srv)
 {
 	CVCMIServer::shuttingDown = true;
 }
@@ -174,7 +183,7 @@ bool LobbyStartGame::applyOnServer(CVCMIServer * srv)
 		return false;
 }
 
-void LobbyStartGame::applyServerAfter(CVCMIServer * srv)
+void LobbyStartGame::applyOnServerAfterAnnounce(CVCMIServer * srv)
 {
 	//MOTODO: this need more thinking!
 	srv->state = CVCMIServer::ENDING_AND_STARTING_GAME;

@@ -436,8 +436,10 @@ void CServerHandler::sendMessage(const std::string & txt)
 void CServerHandler::stopServer()
 {
 	ongoingClosing = true;
-	QuitMenuWithoutStarting qmws;
-	sendPackToServer(qmws);
+	LobbyClientDisconnected lcd;
+	lcd.connectionId = c->connectionID;
+	lcd.shutdownServer = isServerLocal();
+	sendPackToServer(lcd);
 }
 
 void CServerHandler::threadHandleConnection()
@@ -461,7 +463,7 @@ void CServerHandler::threadHandleConnection()
 			*c >> pack;
 			logNetwork->trace("Received a pack of type %s", typeid(*pack).name());
 			assert(pack);
-			if(QuitMenuWithoutStarting * endingPack = dynamic_cast<QuitMenuWithoutStarting *>(pack))
+			if(LobbyClientDisconnected * endingPack = dynamic_cast<LobbyClientDisconnected *>(pack))
 			{
 				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
 			}

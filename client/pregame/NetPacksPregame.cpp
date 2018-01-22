@@ -43,11 +43,6 @@ void LobbyClientConnected::applyOnLobby(CLobbyScreen * lobby)
 
 void LobbyClientDisconnected::applyOnLobby(CLobbyScreen * lobby)
 {
-
-}
-
-void QuitMenuWithoutStarting::applyOnLobby(CLobbyScreen * lobby)
-{
 	if(!CSH->ongoingClosing)
 	{
 		*CSH->c << this; //resend to confirm

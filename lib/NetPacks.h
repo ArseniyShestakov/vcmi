@@ -2426,7 +2426,7 @@ struct CPackForLobby : public CPack
 		return true;
 	}
 
-	void applyServerAfter(CVCMIServer * srv) {}
+	void applyOnServerAfterAnnounce(CVCMIServer * srv) {}
 
 	void applyOnLobby(CLobbyScreen * lobby) {}
 };
@@ -2439,7 +2439,7 @@ struct CLobbyPackToPropagate : public CPackForLobby
 struct CLobbyPackToServer : public CPackForLobby
 {
 	bool checkClientPermissions(CVCMIServer * srv) const;
-	void applyServerAfter(CVCMIServer * srv);
+	void applyOnServerAfterAnnounce(CVCMIServer * srv);
 };
 
 struct LobbyClientConnected : public CLobbyPackToPropagate
@@ -2476,28 +2476,19 @@ struct LobbyClientConnected : public CLobbyPackToPropagate
 
 struct LobbyClientDisconnected : public CLobbyPackToPropagate
 {
-	ui8 connectionID;
+	bool shutdownServer;
+	ui8 connectionId;
 
+	LobbyClientDisconnected() : shutdownServer(false), connectionId(-1) {}
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	bool applyOnServer(CVCMIServer * srv);
+	void applyOnServerAfterAnnounce(CVCMIServer * srv);
 	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & connectionID;
-	}
-};
-
-struct QuitMenuWithoutStarting : public CLobbyPackToPropagate
-{
-	bool checkClientPermissions(CVCMIServer * srv) const;
-	void applyOnLobby(CLobbyScreen * lobby);
-	bool applyOnServer(CVCMIServer * srv);
-	void applyServerAfter(CVCMIServer * srv);
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-
+		h & shutdownServer;
+		h & connectionId;
 	}
 };
 
@@ -2536,7 +2527,7 @@ struct LobbyStartGame : public CLobbyPackToPropagate
 	LobbyStartGame() {}
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	bool applyOnServer(CVCMIServer * srv);
-	void applyServerAfter(CVCMIServer * srv);
+	void applyOnServerAfterAnnounce(CVCMIServer * srv);
 	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)

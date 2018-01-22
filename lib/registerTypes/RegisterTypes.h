@@ -354,7 +354,6 @@ void registerTypesPregamePacks(Serializer &s)
 	// Any client can sent
 	s.template registerType<CLobbyPackToPropagate, LobbyClientConnected>();
 	s.template registerType<CLobbyPackToPropagate, LobbyClientDisconnected>();
-	s.template registerType<CLobbyPackToPropagate, QuitMenuWithoutStarting>();
 	s.template registerType<CLobbyPackToPropagate, LobbyChatMessage>();
 	// Only host client send
 	s.template registerType<CLobbyPackToPropagate, LobbyGuiAction>();

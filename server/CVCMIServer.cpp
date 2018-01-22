@@ -90,7 +90,7 @@ public:
 	{
 		T * ptr = static_cast<T *>(pack);
 		ptr->c = c;
-		ptr->applyServerAfter(srv);
+		ptr->applyOnServerAfterAnnounce(srv);
 	}
 };
 
@@ -349,7 +349,7 @@ void CVCMIServer::sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby 
 		*pc << &pack;
 	}
 
-	if(dynamic_ptr_cast<QuitMenuWithoutStarting>(&pack))
+	if(dynamic_ptr_cast<LobbyClientDisconnected>(&pack))
 	{
 		pc->sendStop = true;
 	}
