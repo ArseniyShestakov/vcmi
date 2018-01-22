@@ -362,6 +362,7 @@ void registerTypesPregamePacks(Serializer &s)
 	s.template registerType<CLobbyPackToPropagate, StartWithCurrentSettings>();
 	s.template registerType<CLobbyPackToPropagate, WelcomeClient>();
 	s.template registerType<CLobbyPackToPropagate, PassHost>();
+	s.template registerType<CLobbyPackToPropagate, ForcePlayerForCoop>();
 
 	s.template registerType<CLobbyPackToHost, PlayerJoined>();
 	s.template registerType<CLobbyPackToHost, ChangePlayerOptions>();

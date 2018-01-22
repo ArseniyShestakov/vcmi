@@ -210,3 +210,9 @@ bool SetDifficulty::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	srv->propagateOptions();
 	return true;
 }
+
+bool ForcePlayerForCoop::applyServerBefore(CVCMIServer * srv, CConnection * c)
+{
+	srv->si->playerInfos[playerColorId].connectedPlayerIDs.insert(connectedId);
+	srv->propagateOptions();
+}

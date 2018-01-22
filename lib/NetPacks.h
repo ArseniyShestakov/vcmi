@@ -2517,6 +2517,22 @@ struct PassHost : public CLobbyPackToPropagate
 	}
 };
 
+struct ForcePlayerForCoop : public CLobbyPackToPropagate
+{
+	ui8 connectedId;
+	PlayerColor playerColorId;
+
+	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+
+	ForcePlayerForCoop() : connectedId(-1), playerColorId(PlayerColor::CANNOT_DETERMINE) {}
+
+	template <typename Handler> void serialize(Handler & h, const int version)
+	{
+		h & connectedId;
+		h & playerColorId;
+	}
+};
+
 struct PregameGuiAction : public CLobbyPackToPropagate
 {
 	enum {NO_TAB, OPEN_OPTIONS, OPEN_SCENARIO_LIST, OPEN_RANDOM_MAP_OPTIONS}

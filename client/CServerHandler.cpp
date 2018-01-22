@@ -408,11 +408,29 @@ void CServerHandler::sendMessage(const std::string & txt)
 	{
 		std::string id;
 		readed >> id;
-		PassHost ph;
 		if(id.length())
 		{
+			PassHost ph;
 			ph.toConnection = boost::lexical_cast<int>(id);
 			*c << &ph;
+		}
+	}
+	else if(command == "!forcep")
+	{
+		std::string connectedId, playerColorId;
+		readed >> connectedId;
+		readed >> playerColorId;
+		if(connectedId.length(), playerColorId.length())
+		{
+			ui8 connected = boost::lexical_cast<int>(connectedId);
+			auto color = PlayerColor(boost::lexical_cast<int>(playerColorId));
+			if(color.isValidPlayer() && playerNames.find(connected) != playerNames.end())
+			{
+				ForcePlayerForCoop ph;
+				ph.connectedId = connected;
+				ph.playerColorId = color;
+				*c << &ph;
+			}
 		}
 	}
 	else
