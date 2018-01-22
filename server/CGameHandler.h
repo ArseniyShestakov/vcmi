@@ -80,7 +80,7 @@ public:
 	enum EVisitDest {VISIT_DEST, DONT_VISIT_DEST};
 	enum ELEaveTile {LEAVING_TILE, REMAINING_ON_TILE};
 
-	std::map<PlayerColor, CConnection*> connections; //player color -> connection to client with interface of that player
+	std::map<PlayerColor, std::set<CConnection*>> connections; //player color -> connection to client with interface of that player
 	PlayerStatuses states; //player color -> player state
 	std::set<CConnection*> conns;
 

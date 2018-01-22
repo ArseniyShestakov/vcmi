@@ -138,6 +138,8 @@ bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 		PlayerToRestore(){ reset(); }
 	} playerToRestore;
 
+	// MPTODO: this should use PlayerSettings::controlledByAI / controlledByHuman
+	// Though it's need to be done carefully and tested
 	PlayerSettings & clicked = srv->si->playerInfos[color];
 	PlayerSettings * old = nullptr;
 

@@ -389,7 +389,7 @@ void CClient::initPlayerInterfaces()
 			continue;
 
 		logNetwork->trace("Preparing interface for player %s", color.getStr());
-		if(elem.second.connectedPlayerID == PlayerSettings::PLAYER_AI)
+		if(elem.second.isControlledByAI())
 		{
 			auto AiToGive = aiNameForPlayer(elem.second, false);
 			logNetwork->info("Player %s will be lead by %s", color, AiToGive);

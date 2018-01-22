@@ -1033,15 +1033,21 @@ void CGameHandler::handleConnection(std::set<PlayerColor> players, CConnection &
 		assert(!c.connected); //make sure that connection has been marked as broken
 		logGlobal->error(e.what());
 		conns -= &c;
-		for(auto playerConn : connections)
+		for(auto & playerConns : connections)
 		{
-			if(!CVCMIServer::shuttingDown && playerConn.second == &c)
+			for(auto conn : playerConns.second)
 			{
-				PlayerCheated pc;
-				pc.player = playerConn.first;
-				pc.losingCheatCode = true;
-				sendAndApply(&pc);
-				checkVictoryLossConditionsForPlayer(playerConn.first);
+				if(!CVCMIServer::shuttingDown && conn == &c)
+				{
+					vstd::erase_if_present(playerConns.second, conn);
+					if(playerConns.second.size())
+						continue;
+					PlayerCheated pc;
+					pc.player = playerConns.first;
+					pc.losingCheatCode = true;
+					sendAndApply(&pc);
+					checkVictoryLossConditionsForPlayer(playerConns.first);
+				}
 			}
 		}
 	};
@@ -1833,7 +1839,7 @@ void CGameHandler::run(bool resume, CVCMIServer * srv)
 			{
 				boost::unique_lock<boost::recursive_mutex> lock(gsm);
 				if(!color.isSpectator()) // there can be more than one spectator
-					connections[color] = cc;
+					connections[color].insert(cc);
 			}
 		}
 		logGlobal->info(sbuffer.str());
@@ -1847,7 +1853,7 @@ void CGameHandler::run(bool resume, CVCMIServer * srv)
 	{
 		std::set<PlayerColor> pom;
 		for (auto j = connections.cbegin(); j!=connections.cend();j++)
-			if (j->second == elem)
+			if(vstd::contains(j->second, elem))
 				pom.insert(j->first);
 
 		boost::thread(std::bind(&CGameHandler::handleConnection,this,pom,std::ref(*elem)));
@@ -2843,7 +2849,7 @@ PlayerColor CGameHandler::getPlayerAt(CConnection *c) const
 {
 	std::set<PlayerColor> all;
 	for (auto i=connections.cbegin(); i!=connections.cend(); i++)
-		if (i->second == c)
+		if(vstd::contains(i->second, c))
 			all.insert(i->first);
 
 	switch(all.size())

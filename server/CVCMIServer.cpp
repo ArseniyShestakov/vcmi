@@ -219,7 +219,6 @@ void CVCMIServer::startGame()
 	{
 	case StartInfo::NEW_GAME:
 		gh.init(si.get());
-
 		break;
 
 	case StartInfo::LOAD_GAME:
@@ -436,7 +435,7 @@ void CVCMIServer::playerJoined(CConnection * c)
 		//put new player in first slot with AI
 		for(auto & elem : si->playerInfos)
 		{
-			if(!elem.second.connectedPlayerID && !elem.second.compOnly)
+			if(elem.second.isControlledByAI() && !elem.second.compOnly)
 			{
 				setPlayerConnectedId(elem.second, id);
 				break;

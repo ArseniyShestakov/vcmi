@@ -63,6 +63,16 @@ struct PlayerSettings
 	{
 
 	}
+
+	bool isControlledByAI() const
+	{
+		return connectedPlayerID == PLAYER_AI;
+	}
+
+	bool isControlledByHuman() const
+	{
+		return connectedPlayerID != PLAYER_AI;
+	}
 };
 
 /// Struct which describes the difficulty, the turn time,.. of a heroes match.
@@ -191,7 +201,7 @@ struct LobbyInfo
 		std::set<PlayerColor> players;
 		for(auto & elem : si->playerInfos)
 		{
-			if(isClientHost(clientId) && elem.second.connectedPlayerID == PlayerSettings::PLAYER_AI || vstd::contains(getConnectedPlayerIdsForClient(clientId), elem.second.connectedPlayerID))
+			if(isClientHost(clientId) && elem.second.isControlledByAI() || vstd::contains(getConnectedPlayerIdsForClient(clientId), elem.second.connectedPlayerID))
 			{
 				players.insert(elem.first); //add player
 			}

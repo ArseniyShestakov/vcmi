@@ -364,7 +364,7 @@ void CServerHandler::startGame()
 	//there must be at least one human player before game can be started
 	std::map<PlayerColor, PlayerSettings>::const_iterator i;
 	for(i = si->playerInfos.cbegin(); i != si->playerInfos.cend(); i++)
-		if(i->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
+		if(i->second.isControlledByHuman())
 			break;
 
 	if(i == si->playerInfos.cend() && !settings["session"]["onlyai"].Bool())
@@ -377,7 +377,7 @@ void CServerHandler::startGame()
 		{
 			const auto & pset = psetPair.second;
 			si->mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
-			if(pset.connectedPlayerID != PlayerSettings::PLAYER_AI)
+			if(pset.isControlledByHuman())
 			{
 				si->mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
 			}

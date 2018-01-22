@@ -823,7 +823,7 @@ void CGameState::initNewGame(bool allowSavingRandomMap)
 				playerSettings.compOnly = !playerInfo.canHumanPlay;
 				playerSettings.team = playerInfo.team;
 				playerSettings.castle = playerInfo.defaultCastle();
-				if(playerSettings.connectedPlayerID == PlayerSettings::PLAYER_AI && playerSettings.name.empty())
+				if(playerSettings.isControlledByAI() && playerSettings.name.empty())
 				{
 					playerSettings.name = VLC->generaltexth->allTexts[468];
 				}
@@ -972,7 +972,7 @@ void CGameState::initPlayerStates()
 		PlayerState & p = players[elem.first];
 		//std::pair<PlayerColor, PlayerState> ins(elem.first,PlayerState());
 		p.color=elem.first;
-		p.human = elem.second.connectedPlayerID;
+		p.human = elem.second.isControlledByHuman();
 		p.team = map->players[elem.first.getNum()].team;
 		teams[p.team].id = p.team;//init team
 		teams[p.team].players.insert(elem.first);//add player to team
@@ -1314,7 +1314,7 @@ void CGameState::initStartingResources()
 		for(auto it = scenarioOps->playerInfos.cbegin();
 			it != scenarioOps->playerInfos.cend(); ++it)
 		{
-			if(it->second.connectedPlayerID != PlayerSettings::PLAYER_AI)
+			if(it->second.isControlledByHuman())
 				ret.push_back(&it->second);
 		}
 
