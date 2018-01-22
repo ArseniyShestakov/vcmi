@@ -58,18 +58,20 @@ public:
 	TSocket * socket;
 	bool connected;
 	bool myEndianess, contactEndianess; //true if little endian, if endianness is different we'll have to revert received multi-byte vars
+	std::string contactUuid;
 	boost::asio::io_service *io_service;
 	std::vector<std::string> names;
-	std::string uuid; //who uses this connection
+	std::string name; //who uses this connection
+	std::string uuid;
 
 	int connectionID;
 	boost::thread *handler;
 
 	bool receivedStop, sendStop;
 
-	CConnection(std::string host, ui16 port, std::string Name);
-	CConnection(TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name);
-	CConnection(TSocket * Socket, std::string Name); //use immediately after accepting connection into socket
+	CConnection(std::string host, ui16 port, std::string Name, std::string UUID);
+	CConnection(TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name, std::string UUID);
+	CConnection(TSocket * Socket, std::string Name, std::string UUID); //use immediately after accepting connection into socket
 
 	void close();
 	bool isOpen() const;

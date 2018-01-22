@@ -48,7 +48,6 @@ public:
 	boost::thread * localServerThread; //thread that called system to run server
 	boost::thread * serverHandlingThread;
 	SharedMemory * shm;
-	std::string uuid;
 	std::shared_ptr<CConnection> c;
 	ServerCapabilities * cap;
 
@@ -91,7 +90,7 @@ public:
 	void processPacks();
 	void stopServerConnection();
 	void stopConnection();
-	void sendPack(CPackForLobby & pack);
+	void sendPackToServer(CPackForLobby & pack);
 
 	bool isHost() const;
 	bool isGuest() const;

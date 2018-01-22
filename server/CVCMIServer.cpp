@@ -47,6 +47,11 @@
 // for applier
 #include "../lib/registerTypes/RegisterTypes.h"
 
+// UUID generation
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+#include <boost/uuid/uuid_generators.hpp>
+
 #if defined(__GNUC__) && !defined(__MINGW32__) && !defined(VCMI_ANDROID)
 #include <execinfo.h>
 #endif
@@ -116,7 +121,8 @@ std::atomic<bool> CVCMIServer::shuttingDown;
 CVCMIServer::CVCMIServer(boost::program_options::variables_map & opts)
 	: LobbyInfo(), port(3030), io(new boost::asio::io_service()), shm(nullptr), listeningThreads(0), upcomingConnection(nullptr), state(RUNNING), cmdLineOptions(opts), currentPlayerId(1)
 {
-	logNetwork->trace("CVCMIServer created!");
+	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
+	logNetwork->trace("CVCMIServer created! UUID: %s", uuid);
 	applier = new CApplier<CBaseForServerApply>();
 	registerTypesPregamePacks(*applier);
 
@@ -261,7 +267,7 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 	try
 	{
 		logNetwork->info("We got a new connection! :)");
-		auto pc = std::make_shared<CConnection>(upcomingConnection, NAME);
+		auto pc = std::make_shared<CConnection>(upcomingConnection, NAME, uuid);
 		upcomingConnection = nullptr;
 		connections.insert(pc);
 		startListeningThread(pc);

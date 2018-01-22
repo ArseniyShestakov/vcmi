@@ -197,7 +197,7 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 			c = std::make_shared<CConnection>(
 					addr.size() ? addr : settings["server"]["server"].String(),
 					port ? port : getDefaultPort(),
-					NAME);
+					NAME, uuid);
 			c->connectionID = 1; // TODO: Refactoring for the server so IDs set outside of CConnection
 		}
 		catch(...)
@@ -215,9 +215,10 @@ void CServerHandler::stopConnection()
 	c.reset();
 }
 
-void CServerHandler::sendPack(CPackForLobby & pack)
+void CServerHandler::sendPackToServer(CPackForLobby & pack)
 {
-
+	logNetwork->trace("Sending a pack of type %s", typeid(pack).name());
+	*c << &pack;
 }
 
 void CServerHandler::stopServerConnection()
@@ -316,7 +317,7 @@ void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 	roc.what = what;
 	roc.direction = dir;
 	roc.color = player;
-	*c << &roc;
+	sendPackToServer(roc);
 }
 
 void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
@@ -364,7 +365,7 @@ void CServerHandler::propagateGuiAction(LobbyGuiAction & pga)
 	if(isGuest() || !c)
 		return;
 
-	*c << &pga;
+	sendPackToServer(pga);
 }
 
 void CServerHandler::startGame()
@@ -388,7 +389,7 @@ void CServerHandler::startGame()
 	}
 	ongoingClosing = true;
 	StartWithCurrentSettings swcs;
-	*c << &swcs;
+	sendPackToServer(swcs);
 }
 
 void CServerHandler::sendMessage(const std::string & txt)
@@ -405,7 +406,7 @@ void CServerHandler::sendMessage(const std::string & txt)
 		{
 			PassHost ph;
 			ph.toConnection = boost::lexical_cast<int>(id);
-			*c << &ph;
+			sendPackToServer(ph);
 		}
 	}
 	else if(command == "!forcep")
@@ -422,7 +423,7 @@ void CServerHandler::sendMessage(const std::string & txt)
 				ForcePlayerForCoop ph;
 				ph.connectedId = connected;
 				ph.playerColorId = color;
-				*c << &ph;
+				sendPackToServer(ph);
 			}
 		}
 	}
@@ -431,7 +432,7 @@ void CServerHandler::sendMessage(const std::string & txt)
 		ChatMessage cm;
 		cm.message = txt;
 		cm.playerName = playerNames[myFirstId()].name;
-		*c << &cm;
+		sendPackToServer(cm);
 	}
 }
 
@@ -442,7 +443,7 @@ void CServerHandler::stopServer()
 
 	ongoingClosing = true;
 	QuitMenuWithoutStarting qmws;
-	*c << &qmws;
+	sendPackToServer(qmws);
 }
 
 void CServerHandler::threadHandleConnection()
@@ -458,7 +459,7 @@ void CServerHandler::threadHandleConnection()
 		ws.uuid = uuid;
 		ws.names = myNames;
 		ws.mode = si->mode;
-		*c << &ws;
+		sendPackToServer(ws);
 
 		while(c)
 		{
@@ -516,7 +517,7 @@ void CServerHandler::setPlayer(PlayerColor color)
 
 	SetPlayer sp;
 	sp.color = color;
-	*c << &sp;
+	sendPackToServer(sp);
 }
 
 void CServerHandler::setTurnLength(int npos)
@@ -527,7 +528,7 @@ void CServerHandler::setTurnLength(int npos)
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
 	SetTurnTime stt;
 	stt.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
-	*c << &stt;
+	sendPackToServer(stt);
 }
 
 void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
@@ -538,7 +539,7 @@ void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * m
 	SelectMap sm;
 	sm.mapInfo = to.get();
 	sm.mapGenOpts = mapGenOpts;
-	*c << &sm;
+	sendPackToServer(sm);
 }
 
 void CServerHandler::setDifficulty(int to)
@@ -548,5 +549,5 @@ void CServerHandler::setDifficulty(int to)
 
 	SetDifficulty sd;
 	sd.difficulty = to;
-	*c << &sd;
+	sendPackToServer(sd);
 }

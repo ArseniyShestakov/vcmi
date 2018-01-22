@@ -48,9 +48,9 @@ void CConnection::init()
 	connected = true;
 	std::string pom;
 	//we got connection
-	oser & std::string("Aiya!\n") & uuid & myEndianess; //identify ourselves
-	iser & pom & pom & contactEndianess;
-	logNetwork->info("Established connection with %s", pom);
+	oser & std::string("Aiya!\n") & name & uuid & myEndianess; //identify ourselves
+	iser & pom & pom & contactUuid & contactEndianess;
+	logNetwork->info("Established connection with %s. UUID: %s", pom, contactUuid);
 	wmx = new boost::mutex();
 	rmx = new boost::mutex();
 
@@ -61,8 +61,8 @@ void CConnection::init()
 	iser.fileVersion = SERIALIZATION_VERSION;
 }
 
-CConnection::CConnection(std::string host, ui16 port, std::string Name)
-:iser(this), oser(this), io_service(new asio::io_service), uuid(Name)
+CConnection::CConnection(std::string host, ui16 port, std::string Name, std::string UUID)
+:iser(this), oser(this), io_service(new asio::io_service), name(Name), uuid(UUID)
 {
 	int i;
 	boost::system::error_code error = asio::error::host_not_found;
@@ -116,13 +116,13 @@ connerror1:
 	//delete socket;
 	throw std::runtime_error("Can't establish connection :(");
 }
-CConnection::CConnection(TSocket * Socket, std::string Name )
-	:iser(this), oser(this), socket(Socket),io_service(&Socket->get_io_service()), uuid(Name)//, send(this), rec(this)
+CConnection::CConnection(TSocket * Socket, std::string Name, std::string UUID)
+	:iser(this), oser(this), socket(Socket),io_service(&Socket->get_io_service()), name(Name), uuid(UUID)
 {
 	init();
 }
-CConnection::CConnection(TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name)
-: iser(this), oser(this), uuid(Name)//, send(this), rec(this)
+CConnection::CConnection(TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name, std::string UUID)
+: iser(this), oser(this), name(Name), uuid(UUID)
 {
 	boost::system::error_code error = asio::error::host_not_found;
 	socket = new tcp::socket(*io_service);
@@ -276,7 +276,7 @@ void CConnection::enableSmartVectorMemberSerializatoin()
 
 std::string CConnection::toString() const
 {
-	boost::format fmt("Connection with %s (ID: %d)");
-	fmt % uuid % connectionID;
+	boost::format fmt("Connection with %s (ID: %d UUID: %s)");
+	fmt % name % connectionID % uuid;
 	return fmt.str();
 }
