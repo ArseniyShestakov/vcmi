@@ -69,7 +69,6 @@ CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode game
 		});
 
 		card->difficulty->addCallback(std::bind(&IServerAPI::setDifficulty, CSH, _1));
-		card->difficulty->setSelected(1);
 
 		buttonStart = new CButton(Point(411, 535), "SCNRBEG.DEF", CGI->generaltexth->zelp[103], std::bind(&CLobbyScreen::startScenario, this), SDLK_b);
 		initLobby();
@@ -98,16 +97,16 @@ CLobbyScreen::~CLobbyScreen()
 
 void CLobbyScreen::toggleTab(CIntObject * tab)
 {
-	LobbyGuiAction pga;
+	LobbyGuiAction lga;
 	if(tab == curTab)
-		pga.action = LobbyGuiAction::NO_TAB;
+		lga.action = LobbyGuiAction::NO_TAB;
 	else if(tab == tabOpt)
-		pga.action = LobbyGuiAction::OPEN_OPTIONS;
+		lga.action = LobbyGuiAction::OPEN_OPTIONS;
 	else if(tab == tabSel)
-		pga.action = LobbyGuiAction::OPEN_SCENARIO_LIST;
+		lga.action = LobbyGuiAction::OPEN_SCENARIO_LIST;
 	else if(tab == tabRand)
-		pga.action = LobbyGuiAction::OPEN_RANDOM_MAP_OPTIONS;
-	CSH->propagateGuiAction(pga);
+		lga.action = LobbyGuiAction::OPEN_RANDOM_MAP_OPTIONS;
+	CSH->propagateGuiAction(lga);
 	CSelectionBase::toggleTab(tab);
 }
 

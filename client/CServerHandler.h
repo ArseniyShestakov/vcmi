@@ -76,7 +76,7 @@ public:
 	void stopServer() override;
 
 	// Some functions we need to get rid of since only server will propagate options
-	void propagateGuiAction(LobbyGuiAction & pga);
+	void propagateGuiAction(LobbyGuiAction & lga);
 
 	// Connection to exist server
 	boost::recursive_mutex * mx;

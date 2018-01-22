@@ -313,11 +313,11 @@ ui8 CServerHandler::myFirstId() const
 
 void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 {
-	LobbyChangePlayerOption roc;
-	roc.what = what;
-	roc.direction = dir;
-	roc.color = player;
-	sendPackToServer(roc);
+	LobbyChangePlayerOption lcpo;
+	lcpo.what = what;
+	lcpo.direction = dir;
+	lcpo.color = player;
+	sendPackToServer(lcpo);
 }
 
 void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
@@ -360,12 +360,9 @@ void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vec
 #endif
 }
 
-void CServerHandler::propagateGuiAction(LobbyGuiAction & pga)
+void CServerHandler::propagateGuiAction(LobbyGuiAction & lga)
 {
-	if(isGuest() || !c)
-		return;
-
-	sendPackToServer(pga);
+	sendPackToServer(lga);
 }
 
 void CServerHandler::startGame()
@@ -388,8 +385,8 @@ void CServerHandler::startGame()
 			throw noTemplateException();
 	}
 	ongoingClosing = true;
-	LobbyStartGame swcs;
-	sendPackToServer(swcs);
+	LobbyStartGame lsg;
+	sendPackToServer(lsg);
 }
 
 void CServerHandler::sendMessage(const std::string & txt)
@@ -404,9 +401,9 @@ void CServerHandler::sendMessage(const std::string & txt)
 		readed >> id;
 		if(id.length())
 		{
-			LobbyChangeHost ph;
-			ph.newHostConnectionId = boost::lexical_cast<int>(id);
-			sendPackToServer(ph);
+			LobbyChangeHost lch;
+			lch.newHostConnectionId = boost::lexical_cast<int>(id);
+			sendPackToServer(lch);
 		}
 	}
 	else if(command == "!forcep")
@@ -420,27 +417,24 @@ void CServerHandler::sendMessage(const std::string & txt)
 			auto color = PlayerColor(boost::lexical_cast<int>(playerColorId));
 			if(color.isValidPlayer() && playerNames.find(connected) != playerNames.end())
 			{
-				LobbyForceSetPlayer ph;
-				ph.targetConnectedPlayer = connected;
-				ph.targetPlayerColor = color;
-				sendPackToServer(ph);
+				LobbyForceSetPlayer lfsp;
+				lfsp.targetConnectedPlayer = connected;
+				lfsp.targetPlayerColor = color;
+				sendPackToServer(lfsp);
 			}
 		}
 	}
 	else
 	{
-		LobbyChatMessage cm;
-		cm.message = txt;
-		cm.playerName = playerNames[myFirstId()].name;
-		sendPackToServer(cm);
+		LobbyChatMessage lcm;
+		lcm.message = txt;
+		lcm.playerName = playerNames[myFirstId()].name;
+		sendPackToServer(lcm);
 	}
 }
 
 void CServerHandler::stopServer()
 {
-	if(isGuest() || !c)
-		return;
-
 	ongoingClosing = true;
 	QuitMenuWithoutStarting qmws;
 	sendPackToServer(qmws);
@@ -455,11 +449,11 @@ void CServerHandler::threadHandleConnection()
 
 	try
 	{
-		LobbyClientConnected ws;
-		ws.uuid = uuid;
-		ws.names = myNames;
-		ws.mode = si->mode;
-		sendPackToServer(ws);
+		LobbyClientConnected lcc;
+		lcc.uuid = uuid;
+		lcc.names = myNames;
+		lcc.mode = si->mode;
+		sendPackToServer(lcc);
 
 		while(c)
 		{
@@ -512,42 +506,30 @@ void CServerHandler::processPacks()
 
 void CServerHandler::setPlayer(PlayerColor color)
 {
-	if(isGuest() || !c)
-		return;
-
-	LobbySetPlayer sp;
-	sp.clickedColor = color;
-	sendPackToServer(sp);
+	LobbySetPlayer lsp;
+	lsp.clickedColor = color;
+	sendPackToServer(lsp);
 }
 
 void CServerHandler::setTurnLength(int npos)
 {
-	if(isGuest() || !c)
-		return;
-
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
-	LobbySetTurnTime stt;
-	stt.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
-	sendPackToServer(stt);
+	LobbySetTurnTime lstt;
+	lstt.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
+	sendPackToServer(lstt);
 }
 
 void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
 {
-	if(isGuest() || !c || mi == to)
-		return;
-
-	LobbySetMap sm;
-	sm.mapInfo = to.get();
-	sm.mapGenOpts = mapGenOpts;
-	sendPackToServer(sm);
+	LobbySetMap lsm;
+	lsm.mapInfo = to.get();
+	lsm.mapGenOpts = mapGenOpts;
+	sendPackToServer(lsm);
 }
 
 void CServerHandler::setDifficulty(int to)
 {
-	if(isGuest() || !c)
-		return;
-
-	LobbySetDifficulty sd;
-	sd.difficulty = to;
-	sendPackToServer(sd);
+	LobbySetDifficulty lsd;
+	lsd.difficulty = to;
+	sendPackToServer(lsd);
 }

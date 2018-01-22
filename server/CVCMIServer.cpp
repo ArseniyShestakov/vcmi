@@ -527,11 +527,11 @@ void CVCMIServer::updateAndPropagateLobbyState()
 		}
 	}
 
-	auto ups = new LobbyUpdateState();
-	ups->mapInfo = mi.get();
-	ups->startInfo = si.get();
-	ups->playerNames = playerNames;
-	addToAnnounceQueue(ups);
+	auto lus = new LobbyUpdateState();
+	lus->mapInfo = mi.get();
+	lus->startInfo = si.get();
+	lus->playerNames = playerNames;
+	addToAnnounceQueue(lus);
 }
 
 
