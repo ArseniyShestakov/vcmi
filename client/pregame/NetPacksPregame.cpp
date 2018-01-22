@@ -27,13 +27,26 @@
 
 void startGame();
 
-void ChatMessage::apply(CLobbyScreen * lobby)
+void LobbyClientConnected::applyOnLobby(CLobbyScreen * lobby)
 {
-	lobby->card->chat->addNewMessage(playerName + ": " + message);
+	if(uuid == CSH->c->uuid)
+	{
+		CSH->c->connectionID = connectionId;
+		CSH->hostConnectionId = hostConnectionId;
+	}
+	else
+	{
+		lobby->card->setChat(true);
+	}
 	GH.totalRedraw();
 }
 
-void QuitMenuWithoutStarting::apply(CLobbyScreen * lobby)
+void LobbyClientDisconnected::applyOnLobby(CLobbyScreen * lobby)
+{
+
+}
+
+void QuitMenuWithoutStarting::applyOnLobby(CLobbyScreen * lobby)
 {
 	if(!CSH->ongoingClosing)
 	{
@@ -43,16 +56,13 @@ void QuitMenuWithoutStarting::apply(CLobbyScreen * lobby)
 	CSH->stopConnection();
 }
 
-void PlayerJoined::apply(CLobbyScreen * lobby)
+void ChatMessage::applyOnLobby(CLobbyScreen * lobby)
 {
-//	lobby->toggleTab(lobby->curTab);
-	if(connectionID != CSH->c->connectionID)
-		lobby->card->setChat(true);
-
+	lobby->card->chat->addNewMessage(playerName + ": " + message);
 	GH.totalRedraw();
 }
 
-void SelectMap::apply(CLobbyScreen * lobby)
+void SelectMap::applyOnLobby(CLobbyScreen * lobby)
 {
 	if(mapInfo)
 		CSH->mi = std::make_shared<CMapInfo>(*mapInfo);
@@ -65,23 +75,7 @@ void SelectMap::apply(CLobbyScreen * lobby)
 	}
 }
 
-void UpdateStartOptions::apply(CLobbyScreen * lobby)
-{
-	CSH->si = std::shared_ptr<StartInfo>(startInfo);
-	if(CSH->mi)
-		lobby->tabOpt->recreate(); //will force to recreate using current sInfo
-
-	lobby->card->difficulty->setSelected(startInfo->difficulty);
-
-	// MPTODO: idea is to always apply any changes on guest as well as on host
-	// Though applying of randMapTab options cause crash if host just decide to open it
-	if(lobby->curTab == lobby->tabRand && startInfo->mapGenOptions)
-		lobby->tabRand->setMapGenOptions(startInfo->mapGenOptions);
-
-	GH.totalRedraw();
-}
-
-void PregameGuiAction::apply(CLobbyScreen * lobby)
+void LobbyGuiAction::applyOnLobby(CLobbyScreen * lobby)
 {
 	if(!CSH->isGuest())
 		return;
@@ -103,24 +97,7 @@ void PregameGuiAction::apply(CLobbyScreen * lobby)
 	}
 }
 
-void PlayerLeft::apply(CLobbyScreen * lobby)
-{
-}
-
-void PlayersNames::apply(CLobbyScreen * lobby)
-{
-	CSH->playerNames = playerNames;
-}
-
-void PassHost::apply(CLobbyScreen * lobby)
-{
-	bool old = CSH->isHost();
-	CSH->hostConnectionId = toConnection;
-	if(old != CSH->isHost())
-		lobby->toggleMode(CSH->isHost());
-}
-
-void StartWithCurrentSettings::apply(CLobbyScreen * lobby)
+void StartWithCurrentSettings::applyOnLobby(CLobbyScreen * lobby)
 {
 	if(!CSH->ongoingClosing)
 	{
@@ -132,9 +109,27 @@ void StartWithCurrentSettings::apply(CLobbyScreen * lobby)
 	throw 666; //EVIL, EVIL, EVIL workaround to kill thread (does "goto catch" outside listening loop)
 }
 
-void WelcomeClient::apply(CLobbyScreen * lobby)
+void PassHost::applyOnLobby(CLobbyScreen * lobby)
 {
-	CSH->c->connectionID = connectionId;
-	CSH->hostConnectionId = hostConnectionId;
-	lobby->toggleMode(CSH->isHost());
+	bool old = CSH->isHost();
+	CSH->hostConnectionId = toConnection;
+	if(old != CSH->isHost())
+		lobby->toggleMode(CSH->isHost());
+}
+
+void UpdateStartOptions::applyOnLobby(CLobbyScreen * lobby)
+{
+	CSH->playerNames = playerNames;
+	CSH->si = std::shared_ptr<StartInfo>(startInfo);
+	if(CSH->mi)
+		lobby->tabOpt->recreate(); //will force to recreate using current sInfo
+
+	lobby->card->difficulty->setSelected(startInfo->difficulty);
+
+	// MPTODO: idea is to always apply any changes on guest as well as on host
+	// Though applying of randMapTab options cause crash if host just decide to open it
+	if(lobby->curTab == lobby->tabRand && startInfo->mapGenOptions)
+		lobby->tabRand->setMapGenOptions(startInfo->mapGenOptions);
+
+	GH.totalRedraw();
 }

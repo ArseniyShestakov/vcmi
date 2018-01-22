@@ -353,7 +353,7 @@ void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vec
 #endif
 }
 
-void CServerHandler::propagateGuiAction(PregameGuiAction & pga)
+void CServerHandler::propagateGuiAction(LobbyGuiAction & pga)
 {
 	if(isGuest() || !c)
 		return;
@@ -448,7 +448,7 @@ void CServerHandler::threadHandleConnection()
 
 	try
 	{
-		WelcomeServer ws;
+		LobbyClientConnected ws;
 		ws.uuid = uuid;
 		ws.names = myNames;
 		ws.mode = si->mode;
@@ -462,11 +462,11 @@ void CServerHandler::threadHandleConnection()
 			assert(pack);
 			if(QuitMenuWithoutStarting * endingPack = dynamic_cast<QuitMenuWithoutStarting *>(pack))
 			{
-				endingPack->apply(static_cast<CLobbyScreen *>(SEL));
+				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
 			}
 			else if(StartWithCurrentSettings * endingPack = dynamic_cast<StartWithCurrentSettings *>(pack))
 			{
-				endingPack->apply(static_cast<CLobbyScreen *>(SEL));
+				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
 			}
 			else
 			{

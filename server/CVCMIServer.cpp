@@ -71,15 +71,21 @@ public:
 	bool applyOnServerBefore(CVCMIServer * srv, CConnection * c, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
-		ptr->c = c;
-		return ptr->applyServerBefore(srv, c);
+		ptr->applied = true;
+		if(!ptr->c)
+			ptr->c = c;
+
+		if(ptr->checkClientPermissions(srv))
+			return false;
+		else
+			return ptr->applyOnServer(srv);
 	}
 
 	void applyOnServerAfter(CVCMIServer * srv, CConnection * c, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
 		ptr->c = c;
-		ptr->applyServerAfter(srv, c);
+		ptr->applyServerAfter(srv);
 	}
 };
 
@@ -258,13 +264,6 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 		CConnection * pc = new CConnection(upcomingConnection, NAME);
 		upcomingConnection = nullptr;
 		connections.insert(pc);
-		// MPTODO: this shouldn't be needed
-		// But right now we need to set host connection before starting listening thread
-		if(pc->connectionID == 1)
-		{
-			hostClient = pc;
-			hostConnectionId = 1;
-		}
 		startListeningThread(pc);
 	}
 	catch(std::exception & e)
@@ -301,7 +300,6 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 			}
 			else
 				delete pack;
-
 		}
 	}
 	catch(const std::exception & e)
@@ -313,25 +311,9 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 	boost::unique_lock<boost::recursive_mutex> queueLock(mx);
 	if(state != ENDING_AND_STARTING_GAME)
 	{
-		connections -= cpc;
-
-		//notify other players about leaving
-		for(auto & name : cpc->names)
-			announceTxt(boost::str(boost::format("%s(%d) left the game") % name % cpc->connectionID));
-
-		playerLeft(cpc);
-
-		if(connections.empty())
-		{
-			logNetwork->error("Last connection lost, server will close itself...");
-			boost::this_thread::sleep(boost::posix_time::seconds(2)); //we should never be hasty when networking
-			state = ENDING_WITHOUT_START;
-		}
-		else if(cpc == hostClient)
-		{
-			auto newHost = *RandomGeneratorUtil::nextItem(connections, CRandomGenerator::getDefault());
-			passHost(newHost->connectionID);
-		}
+		auto lcd = new LobbyClientDisconnected();
+		lcd->c = cpc;
+		addToAnnounceQueue(lcd, true);
 	}
 
 	logNetwork->info("Thread listening for %s ended", cpc->toString());
@@ -341,15 +323,15 @@ void CVCMIServer::handleConnection(CConnection * cpc)
 
 void CVCMIServer::processPack(CPackForLobby * pack)
 {
-	// MPTODO: This was the first option, but something gone very wrong
-	// For some reason when I added PassHost netpack this started to crash.
-	if(dynamic_ptr_cast<CLobbyPackToHost>(pack))
+	if(!pack->applied)
 	{
-		sendPack(hostClient, *pack);
+		CBaseForServerApply * apply = applier->getApplier(typeList.getTypeID(pack));
+		if(apply->applyOnServerBefore(this, nullptr, pack))
+		{
+			apply->applyOnServerAfter(this, nullptr, pack);
+		}
 	}
-	else
-		announcePack(*pack);
-
+	announcePack(*pack);
 	delete pack;
 }
 
@@ -383,7 +365,7 @@ void CVCMIServer::announceTxt(const std::string & txt, const std::string & playe
 	auto cm = new ChatMessage();
 	cm->playerName = playerName;
 	cm->message = txt;
-	addToAnnounceQueue(cm, true);
+	addToAnnounceQueue(cm);
 }
 
 void CVCMIServer::addToAnnounceQueue(CPackForLobby * pack, bool front)
@@ -414,16 +396,11 @@ void CVCMIServer::passHost(int toConnectionId)
 	}
 }
 
-void CVCMIServer::playerJoined(CConnection * c)
+void CVCMIServer::clientConnected(CConnection * c)
 {
-	auto pj = new PlayerJoined();
-	pj->connectionID = c->connectionID;
-	addToAnnounceQueue(pj);
-
 	for(auto & name : c->names)
 	{
 		ui8 id = currentPlayerId++;
-		announceTxt(boost::str(boost::format("%s(%d) joins the game") % name % c->connectionID));
 
 		ClientPlayer cp;
 		cp.connection = c->connectionID;
@@ -442,17 +419,10 @@ void CVCMIServer::playerJoined(CConnection * c)
 			}
 		}
 	}
-
-	propagateNames();
-	propagateOptions();
 }
 
-void CVCMIServer::playerLeft(CConnection * c)
+void CVCMIServer::clientDisconnected(CConnection * c)
 {
-	auto pl = new PlayerLeft();
-	pl->connectionID = c->connectionID;
-	addToAnnounceQueue(pl);
-
 	for(auto & pair : playerNames)
 	{
 		if(pair.second.connection != c->connectionID)
@@ -466,9 +436,6 @@ void CVCMIServer::playerLeft(CConnection * c)
 			setPlayerConnectedId(*s, PlayerSettings::PLAYER_AI);
 		}
 	}
-
-	propagateNames();
-	propagateOptions();
 }
 
 
@@ -537,16 +504,6 @@ void CVCMIServer::updateStartInfo()
 	}
 }
 
-
-
-
-void CVCMIServer::propagateNames()
-{
-	auto pn = new PlayersNames();
-	pn->playerNames = playerNames;
-	addToAnnounceQueue(pn);
-}
-
 void CVCMIServer::propagateOptions()
 {
 	// Update player settings for RMG
@@ -565,6 +522,7 @@ void CVCMIServer::propagateOptions()
 	}
 
 	auto ups = new UpdateStartOptions();
+	ups->playerNames = playerNames;
 	ups->startInfo = si.get();
 	addToAnnounceQueue(ups);
 }

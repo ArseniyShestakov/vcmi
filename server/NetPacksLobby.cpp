@@ -17,62 +17,101 @@
 #include "../lib/mapping/CMapInfo.h"
 #include "../lib/rmg/CMapGenOptions.h"
 
+bool CLobbyPackToPropagate::checkClientPermissions(CVCMIServer * srv) const
+{
+	return false;
+}
 
-bool WelcomeServer::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool CLobbyPackToServer::checkClientPermissions(CVCMIServer * srv) const
+{
+	return srv->isClientHost(c->connectionID);
+}
+
+
+bool LobbyClientConnected::checkClientPermissions(CVCMIServer * srv) const
+{
+	return true;
+}
+
+bool LobbyClientConnected::applyOnServer(CVCMIServer * srv)
 {
 	c->names = names;
 	c->uuid = uuid;
 
-	WelcomeClient wc;
-	wc.connectionId = c->connectionID;
-	wc.capabilities = srv->capabilities;
-	if(srv->hostClient->connectionID == c->connectionID)
+	if(c->connectionID == 1)
 	{
-		srv->si->mode = mode;
 		srv->hostClient = c;
-		wc.hostConnectionId = true;
+		srv->hostConnectionId = 1;
+		srv->si->mode = mode;
 	}
-	srv->sendPack(c, wc);
+	else
+	{
+		mode = srv->si->mode;
+	}
+	connectionId = c->connectionID;
+	capabilities = srv->capabilities;
+	hostConnectionId = c->connectionID;
 
 	logNetwork->info("Connection with client %d established. UUID: %s", c->connectionID, c->uuid);
 	for(auto & name : c->names)
 		logNetwork->info("Client %d player: %s", c->connectionID, name);
 
-	srv->playerJoined(c);
+	srv->clientConnected(c);
 	return true;
 }
 
-bool PassHost::applyServerBefore(CVCMIServer * srv, CConnection * c)
+void LobbyClientConnected::applyOnServerAfter(CVCMIServer * srv)
 {
-	srv->passHost(toConnection);
+	for(auto & player : srv->playerNames)
+	{
+		int id = player.first;
+		if(player.second.connection == c->connectionID)
+			srv->announceTxt(boost::str(boost::format("%s (pid %d cid) joins the game") % player.second.name % id % c->connectionID));
+	}
+	srv->propagateOptions();
+}
+
+bool LobbyClientDisconnected::checkClientPermissions(CVCMIServer * srv) const
+{
+	return false;
+}
+
+bool LobbyClientDisconnected::applyOnServer(CVCMIServer * srv)
+{
+	srv->connections -= c;
+
+	//notify other players about leaving
+	for(auto & name : c->names)
+		srv->announceTxt(boost::str(boost::format("%s(%d) left the game") % name % c->connectionID));
+
+	srv->clientDisconnected(c);
+
+	if(srv->connections.empty())
+	{
+		logNetwork->error("Last connection lost, server will close itself...");
+		boost::this_thread::sleep(boost::posix_time::seconds(2)); //we should never be hasty when networking
+		srv->state = CVCMIServer::ENDING_WITHOUT_START;
+	}
+	else if(c == srv->hostClient)
+	{
+		auto newHost = *RandomGeneratorUtil::nextItem(srv->connections, CRandomGenerator::getDefault());
+		srv->passHost(newHost->connectionID);
+	}
+	srv->propagateOptions();
 	return true;
 }
 
-bool StartWithCurrentSettings::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool QuitMenuWithoutStarting::checkClientPermissions(CVCMIServer * srv) const
 {
-	c->receivedStop = true;
-	//MPTODO it's should work without it
-	// But for some reason not all guests get pack if it's not announced from there
-	if(!c->sendStop)
-		srv->announcePack(*this);
-
-	if(c == srv->hostClient)
-		return true;
-	else
-		return false;
+	return true;
 }
 
-void StartWithCurrentSettings::applyServerAfter(CVCMIServer * srv, CConnection * c)
+bool ChatMessage::checkClientPermissions(CVCMIServer * srv) const
 {
-	//MOTODO: this need more thinking!
-	srv->state = CVCMIServer::ENDING_AND_STARTING_GAME;
-	//wait for sending thread to announce start
-	while(srv->state == CVCMIServer::RUNNING)
-		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
-
+	return true;
 }
 
-bool QuitMenuWithoutStarting::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool QuitMenuWithoutStarting::applyOnServer(CVCMIServer * srv)
 {
 	c->receivedStop = true;
 	if(!c->sendStop)
@@ -84,12 +123,17 @@ bool QuitMenuWithoutStarting::applyServerBefore(CVCMIServer * srv, CConnection *
 		return false;
 }
 
-void QuitMenuWithoutStarting::applyServerAfter(CVCMIServer * srv, CConnection * c)
+void QuitMenuWithoutStarting::applyServerAfter(CVCMIServer * srv)
 {
 	CVCMIServer::shuttingDown = true;
 }
 
-bool SelectMap::applyServerBefore(CVCMIServer *srv, CConnection *c)
+bool SelectMap::checkClientPermissions(CVCMIServer * srv) const
+{
+	return srv->isClientHost(c->connectionID);
+}
+
+bool SelectMap::applyOnServer(CVCMIServer * srv)
 {
 	srv->mi = std::shared_ptr<CMapInfo>(mapInfo);
 
@@ -112,7 +156,56 @@ bool SelectMap::applyServerBefore(CVCMIServer *srv, CConnection *c)
 	return true;
 }
 
-bool ChangePlayerOptions::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool LobbyGuiAction::checkClientPermissions(CVCMIServer * srv) const
+{
+	return srv->isClientHost(c->connectionID);
+}
+
+bool StartWithCurrentSettings::checkClientPermissions(CVCMIServer * srv) const
+{
+	return srv->isClientHost(c->connectionID);
+}
+
+bool StartWithCurrentSettings::applyOnServer(CVCMIServer * srv)
+{
+	c->receivedStop = true;
+	//MPTODO it's should work without it
+	// But for some reason not all guests get pack if it's not announced from there
+	if(!c->sendStop)
+		srv->announcePack(*this);
+
+	if(c == srv->hostClient)
+		return true;
+	else
+		return false;
+}
+
+void StartWithCurrentSettings::applyServerAfter(CVCMIServer * srv)
+{
+	//MOTODO: this need more thinking!
+	srv->state = CVCMIServer::ENDING_AND_STARTING_GAME;
+	//wait for sending thread to announce start
+	while(srv->state == CVCMIServer::RUNNING)
+		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+}
+
+bool PassHost::checkClientPermissions(CVCMIServer * srv) const
+{
+	return srv->isClientHost(c->connectionID);
+}
+
+bool PassHost::applyOnServer(CVCMIServer * srv)
+{
+	srv->passHost(toConnection);
+	return true;
+}
+
+bool ChangePlayerOptions::checkClientPermissions(CVCMIServer * srv) const
+{
+	return vstd::contains(srv->getAllClientPlayers(c->connectionID), color);
+}
+
+bool ChangePlayerOptions::applyOnServer(CVCMIServer * srv)
 {
 	switch(what)
 	{
@@ -130,7 +223,7 @@ bool ChangePlayerOptions::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	return true;
 }
 
-bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool SetPlayer::applyOnServer(CVCMIServer * srv)
 {
 	struct PlayerToRestore
 	{
@@ -197,21 +290,21 @@ bool SetPlayer::applyServerBefore(CVCMIServer * srv, CConnection * c)
 	return true;
 }
 
-bool SetTurnTime::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool SetTurnTime::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->turnTime = turnTime;
 	srv->propagateOptions();
 	return true;
 }
 
-bool SetDifficulty::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool SetDifficulty::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->difficulty = difficulty;
 	srv->propagateOptions();
 	return true;
 }
 
-bool ForcePlayerForCoop::applyServerBefore(CVCMIServer * srv, CConnection * c)
+bool ForcePlayerForCoop::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->playerInfos[playerColorId].connectedPlayerIDs.insert(connectedId);
 	srv->propagateOptions();

@@ -98,15 +98,15 @@ CLobbyScreen::~CLobbyScreen()
 
 void CLobbyScreen::toggleTab(CIntObject * tab)
 {
-	PregameGuiAction pga;
+	LobbyGuiAction pga;
 	if(tab == curTab)
-		pga.action = PregameGuiAction::NO_TAB;
+		pga.action = LobbyGuiAction::NO_TAB;
 	else if(tab == tabOpt)
-		pga.action = PregameGuiAction::OPEN_OPTIONS;
+		pga.action = LobbyGuiAction::OPEN_OPTIONS;
 	else if(tab == tabSel)
-		pga.action = PregameGuiAction::OPEN_SCENARIO_LIST;
+		pga.action = LobbyGuiAction::OPEN_SCENARIO_LIST;
 	else if(tab == tabRand)
-		pga.action = PregameGuiAction::OPEN_RANDOM_MAP_OPTIONS;
+		pga.action = LobbyGuiAction::OPEN_RANDOM_MAP_OPTIONS;
 	CSH->propagateGuiAction(pga);
 	CSelectionBase::toggleTab(tab);
 }

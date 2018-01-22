@@ -2413,44 +2413,81 @@ struct CenterView : public CPackForClient
 
 struct CPackForLobby : public CPack
 {
-	CConnection * c; // MPTODO: should be only present in cpacks to server
-	void apply(CLobbyScreen * lobby) {}
+	CConnection * c;
+	bool applied; // MPTODO: Only used by server. Find better way handle this since it's only used for propogate netpacks
 
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c)
+	virtual bool checkClientPermissions(CVCMIServer * srv) const =0;
+	bool applyOnServer(CVCMIServer * srv)
 	{
 		return true;
 	}
 
-	void applyServerAfter(CVCMIServer * srv, CConnection * c) {}
+	void applyServerAfter(CVCMIServer * srv) {}
 };
 
-class CLobbyPackToPropagate  : public CPackForLobby
-{};
-
-class CLobbyPackToHost  : public CPackForLobby
-{};
-
-class CLobbyPackToServer  : public CPackForLobby
-{};
-
-struct ChatMessage : public CLobbyPackToPropagate
+struct CLobbyPackToPropagate : public CPackForLobby
 {
-	std::string playerName, message;
+	bool checkClientPermissions(CVCMIServer * srv) const override;
+	void applyOnLobby(CLobbyScreen * lobby) {}
+};
 
-	void apply(CLobbyScreen * lobby);
+struct CLobbyPackToServer : public CPackForLobby
+{
+	bool checkClientPermissions(CVCMIServer * srv) const override;
+};
+
+struct LobbyClientConnected : public CLobbyPackToPropagate
+{
+	// Set by client before sending pack
+	std::string uuid;
+	std::vector<std::string> names;
+	StartInfo::EMode mode;
+	// Set by server before announcing pack
+	int connectionId;
+	int hostConnectionId;
+	ServerCapabilities * capabilities;
+
+	LobbyClientConnected()
+		: mode(StartInfo::INVALID), connectionId(-1), hostConnectionId(-1), capabilities(nullptr)
+	{}
+
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	void applyOnLobby(CLobbyScreen * lobby);
+	bool applyOnServer(CVCMIServer * srv);
+	void applyOnServerAfter(CVCMIServer * srv);
+
+	template <typename Handler> void serialize(Handler & h, const int version)
+	{
+		h & uuid;
+		h & names;
+		h & mode;
+
+		h & connectionId;
+		h & hostConnectionId;
+		h & capabilities;
+	}
+};
+
+struct LobbyClientDisconnected : public CLobbyPackToPropagate
+{
+	ui8 connectionID;
+
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	bool applyOnServer(CVCMIServer * srv);
+	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & playerName;
-		h & message;
+		h & connectionID;
 	}
 };
 
 struct QuitMenuWithoutStarting : public CLobbyPackToPropagate
 {
-	void apply(CLobbyScreen * lobby);
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
-	void applyServerAfter(CVCMIServer * srv, CConnection * c);
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	void applyOnLobby(CLobbyScreen * lobby);
+	bool applyOnServer(CVCMIServer * srv);
+	void applyServerAfter(CVCMIServer * srv);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -2458,15 +2495,17 @@ struct QuitMenuWithoutStarting : public CLobbyPackToPropagate
 	}
 };
 
-struct PlayerJoined : public CLobbyPackToHost
+struct ChatMessage : public CLobbyPackToPropagate
 {
-	ui8 connectionID;
+	std::string playerName, message;
 
-	void apply(CLobbyScreen * lobby);
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-		h & connectionID;
+		h & playerName;
+		h & message;
 	}
 };
 
@@ -2477,69 +2516,25 @@ struct SelectMap : public CLobbyPackToPropagate
 
 	SelectMap() : mapInfo(nullptr), mapGenOpts(nullptr) {}
 
-	void apply(CLobbyScreen * lobby);
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	void applyOnLobby(CLobbyScreen * lobby);
+	bool applyOnServer(CVCMIServer * srv);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & mapInfo;
 		h & mapGenOpts;
 	}
-
 };
 
-struct UpdateStartOptions : public CLobbyPackToPropagate
+struct LobbyGuiAction : public CLobbyPackToPropagate
 {
-	StartInfo * startInfo;
+	enum {
+		NO_TAB, OPEN_OPTIONS, OPEN_SCENARIO_LIST, OPEN_RANDOM_MAP_OPTIONS
+	} action;
 
-	void apply(CLobbyScreen * lobby);
-
-	UpdateStartOptions() : startInfo(nullptr) {}
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-		h & startInfo;
-	}
-};
-
-struct PassHost : public CLobbyPackToPropagate
-{
-	int toConnection;
-
-	void apply(CLobbyScreen * lobby);
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
-
-	PassHost() : toConnection(-1) {}
-
-	template <typename Handler> void serialize(Handler & h, const int version)
-	{
-		h & toConnection;
-	}
-};
-
-struct ForcePlayerForCoop : public CLobbyPackToPropagate
-{
-	ui8 connectedId;
-	PlayerColor playerColorId;
-
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
-
-	ForcePlayerForCoop() : connectedId(-1), playerColorId(PlayerColor::CANNOT_DETERMINE) {}
-
-	template <typename Handler> void serialize(Handler & h, const int version)
-	{
-		h & connectedId;
-		h & playerColorId;
-	}
-};
-
-struct PregameGuiAction : public CLobbyPackToPropagate
-{
-	enum {NO_TAB, OPEN_OPTIONS, OPEN_SCENARIO_LIST, OPEN_RANDOM_MAP_OPTIONS}
-		action;
-
-	void apply(CLobbyScreen * lobby);
-
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -2547,7 +2542,52 @@ struct PregameGuiAction : public CLobbyPackToPropagate
 	}
 };
 
-struct ChangePlayerOptions : public CLobbyPackToHost
+struct StartWithCurrentSettings : public CLobbyPackToPropagate
+{
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	void applyOnLobby(CLobbyScreen * lobby);
+	bool applyOnServer(CVCMIServer * srv);
+	void applyServerAfter(CVCMIServer * srv);
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+
+	}
+};
+
+struct PassHost : public CLobbyPackToPropagate
+{
+	int toConnection;
+
+	PassHost() : toConnection(-1) {}
+
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	void applyOnLobby(CLobbyScreen * lobby);
+	bool applyOnServer(CVCMIServer * srv);
+
+	template <typename Handler> void serialize(Handler & h, const int version)
+	{
+		h & toConnection;
+	}
+};
+
+struct UpdateStartOptions : public CLobbyPackToPropagate
+{
+	StartInfo * startInfo;
+	std::map<ui8, ClientPlayer> playerNames;
+
+	void applyOnLobby(CLobbyScreen * lobby);
+
+	UpdateStartOptions() : startInfo(nullptr) {}
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & startInfo;
+		h & playerNames;
+	}
+};
+
+struct ChangePlayerOptions : public CLobbyPackToServer
 {
 	enum EWhat {TOWN, HERO, BONUS};
 	ui8 what;
@@ -2557,7 +2597,8 @@ struct ChangePlayerOptions : public CLobbyPackToHost
 		:what(0), direction(0), color(PlayerColor::CANNOT_DETERMINE)
 	{}
 
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+	bool checkClientPermissions(CVCMIServer * srv) const;
+	bool applyOnServer(CVCMIServer * srv);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -2567,89 +2608,12 @@ struct ChangePlayerOptions : public CLobbyPackToHost
 	}
 };
 
-struct PlayerLeft : public CLobbyPackToPropagate
-{
-	ui8 connectionID;
-
-	void apply(CLobbyScreen * lobby);
-
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-		h & connectionID;
-	}
-};
-
-struct PlayersNames : public CLobbyPackToPropagate
-{
-	std::map<ui8, ClientPlayer> playerNames;
-
-	void apply(CLobbyScreen * lobby);
-
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-		h & playerNames;
-	}
-};
-
-struct StartWithCurrentSettings : public CLobbyPackToPropagate
-{
-	void apply(CLobbyScreen * lobby);
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
-	void applyServerAfter(CVCMIServer * srv, CConnection * c);
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-
-	}
-};
-
-struct WelcomeClient : public CLobbyPackToPropagate
-{
-	int connectionId;
-	int hostConnectionId;
-	ServerCapabilities * capabilities;
-
-	WelcomeClient()
-		: connectionId(-1), hostConnectionId(-1), capabilities(nullptr)
-	{}
-
-	void apply(CLobbyScreen * lobby);
-
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-		h & connectionId;
-		h & hostConnectionId;
-		h & capabilities;
-	}
-};
-
-struct WelcomeServer : public CLobbyPackToServer
-{
-	std::string uuid;
-	std::vector<std::string> names;
-	StartInfo::EMode mode;
-
-	WelcomeServer() : mode(StartInfo::INVALID) {}
-
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
-
-	template <typename Handler> void serialize(Handler & h, const int version)
-	{
-		h & uuid;
-		h & names;
-		h & mode;
-	}
-};
-
-struct SetPlayer : public CLobbyPackToHost
+struct SetPlayer : public CLobbyPackToServer
 {
 	PlayerColor color;
 	SetPlayer() : color(PlayerColor::CANNOT_DETERMINE){}
 
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+	bool applyOnServer(CVCMIServer * srv);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -2657,12 +2621,12 @@ struct SetPlayer : public CLobbyPackToHost
 	}
 };
 
-struct SetTurnTime : public CLobbyPackToHost
+struct SetTurnTime : public CLobbyPackToServer
 {
 	ui8 turnTime;
 	SetTurnTime() : turnTime(0) {}
 
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+	bool applyOnServer(CVCMIServer * srv);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
@@ -2670,15 +2634,31 @@ struct SetTurnTime : public CLobbyPackToHost
 	}
 };
 
-struct SetDifficulty : public CLobbyPackToHost
+struct SetDifficulty : public CLobbyPackToServer
 {
 	ui8 difficulty;
 	SetDifficulty() : difficulty(0) {}
 
-	bool applyServerBefore(CVCMIServer * srv, CConnection * c);
+	bool applyOnServer(CVCMIServer * srv);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & difficulty;
+	}
+};
+
+struct ForcePlayerForCoop : public CLobbyPackToServer
+{
+	ui8 connectedId;
+	PlayerColor playerColorId;
+
+	bool applyOnServer(CVCMIServer * srv);
+
+	ForcePlayerForCoop() : connectedId(-1), playerColorId(PlayerColor::CANNOT_DETERMINE) {}
+
+	template <typename Handler> void serialize(Handler & h, const int version)
+	{
+		h & connectedId;
+		h & playerColorId;
 	}
 };

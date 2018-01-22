@@ -349,29 +349,28 @@ void registerTypesPregamePacks(Serializer &s)
 {
 	s.template registerType<CPack, CPackForLobby>();
 	s.template registerType<CPackForLobby, CLobbyPackToPropagate>();
-	s.template registerType<CPackForLobby, CLobbyPackToHost>();
 	s.template registerType<CPackForLobby, CLobbyPackToServer>();
 
-	s.template registerType<CLobbyPackToPropagate, ChatMessage>();
+	// Any client can sent
+	s.template registerType<CLobbyPackToPropagate, LobbyClientConnected>();
+	s.template registerType<CLobbyPackToPropagate, LobbyClientDisconnected>();
 	s.template registerType<CLobbyPackToPropagate, QuitMenuWithoutStarting>();
+	s.template registerType<CLobbyPackToPropagate, ChatMessage>();
+	// Only host client send
 	s.template registerType<CLobbyPackToPropagate, SelectMap>();
-	s.template registerType<CLobbyPackToPropagate, UpdateStartOptions>();
-	s.template registerType<CLobbyPackToPropagate, PregameGuiAction>();
-	s.template registerType<CLobbyPackToPropagate, PlayerLeft>();
-	s.template registerType<CLobbyPackToPropagate, PlayersNames>();
+	s.template registerType<CLobbyPackToPropagate, LobbyGuiAction>();
 	s.template registerType<CLobbyPackToPropagate, StartWithCurrentSettings>();
-	s.template registerType<CLobbyPackToPropagate, WelcomeClient>();
 	s.template registerType<CLobbyPackToPropagate, PassHost>();
-	s.template registerType<CLobbyPackToPropagate, ForcePlayerForCoop>();
+	// Only server send
+	s.template registerType<CLobbyPackToPropagate, UpdateStartOptions>();
 
-	s.template registerType<CLobbyPackToHost, PlayerJoined>();
-	s.template registerType<CLobbyPackToHost, ChangePlayerOptions>();
-	s.template registerType<CLobbyPackToHost, SetPlayer>();
-	s.template registerType<CLobbyPackToHost, SetTurnTime>();
-	s.template registerType<CLobbyPackToHost, SetDifficulty>();
-
-	s.template registerType<CLobbyPackToServer, WelcomeServer>();
-
+	// For client with permissions
+	s.template registerType<CLobbyPackToServer, ChangePlayerOptions>();
+	// Only for host client
+	s.template registerType<CLobbyPackToServer, SetPlayer>();
+	s.template registerType<CLobbyPackToServer, SetTurnTime>();
+	s.template registerType<CLobbyPackToServer, SetDifficulty>();
+	s.template registerType<CLobbyPackToServer, ForcePlayerForCoop>();
 }
 
 template<typename Serializer>

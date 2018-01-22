@@ -17,7 +17,7 @@ struct ServerCapabilities;
 class CMapInfo;
 struct ClientPlayer;
 class CMapHeader;
-struct PregameGuiAction;
+struct LobbyGuiAction;
 struct PlayerInfo;
 struct CPackForLobby;
 
@@ -77,7 +77,7 @@ public:
 	void stopServer() override;
 
 	// Some functions we need to get rid of since only server will propagate options
-	void propagateGuiAction(PregameGuiAction & pga);
+	void propagateGuiAction(LobbyGuiAction & pga);
 
 	// Connection to exist server
 	boost::recursive_mutex * mx;

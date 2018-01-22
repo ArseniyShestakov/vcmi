@@ -97,10 +97,9 @@ public:
 	void setPlayerConnectedId(PlayerSettings & pset, ui8 player) const;
 	void updateStartInfo();
 
-	void playerJoined(CConnection * c);
-	void playerLeft(CConnection * c);
+	void clientConnected(CConnection * c);
+	void clientDisconnected(CConnection * c);
 
-	void propagateNames();
 	void propagateOptions(); //MPTODO: should be const;
 
 	// Code only called from internals and netpacks. Should be moved on server-side
