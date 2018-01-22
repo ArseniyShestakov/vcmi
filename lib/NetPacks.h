@@ -2562,11 +2562,11 @@ struct LobbyChangeHost : public CLobbyPackToPropagate
 
 struct LobbyUpdateState : public CLobbyPackToPropagate
 {
-	CMapInfo * mapInfo;
-	StartInfo * startInfo;
+	std::shared_ptr<CMapInfo> mapInfo;
+	std::shared_ptr<StartInfo> startInfo;
 	std::map<ui8, ClientPlayer> playerNames;
 
-	LobbyUpdateState() : startInfo(nullptr) {}
+	LobbyUpdateState() {}
 	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
@@ -2579,7 +2579,7 @@ struct LobbyUpdateState : public CLobbyPackToPropagate
 
 struct LobbySetMap : public CLobbyPackToServer
 {
-	CMapInfo * mapInfo;
+	std::shared_ptr<CMapInfo> mapInfo;
 	CMapGenOptions * mapGenOpts;
 
 	LobbySetMap() : mapInfo(nullptr), mapGenOpts(nullptr) {}

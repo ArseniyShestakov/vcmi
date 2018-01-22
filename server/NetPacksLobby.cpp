@@ -130,7 +130,7 @@ bool LobbyChatMessage::checkClientPermissions(CVCMIServer * srv) const
 
 bool LobbySetMap::applyOnServer(CVCMIServer * srv)
 {
-	srv->mi = std::shared_ptr<CMapInfo>(mapInfo);
+	srv->mi = mapInfo;
 
 	if(srv->mi && srv->si->mode == StartInfo::LOAD_GAME)
 		srv->si->difficulty = srv->mi->scenarioOpts->difficulty;

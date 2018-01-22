@@ -522,7 +522,7 @@ void CServerHandler::setTurnLength(int npos)
 void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
 {
 	LobbySetMap lsm;
-	lsm.mapInfo = to.get();
+	lsm.mapInfo = to;
 	lsm.mapGenOpts = mapGenOpts;
 	sendPackToServer(lsm);
 }

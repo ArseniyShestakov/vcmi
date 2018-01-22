@@ -107,7 +107,7 @@ void LobbyChangeHost::applyOnLobby(CLobbyScreen * lobby)
 void LobbyUpdateState::applyOnLobby(CLobbyScreen * lobby)
 {
 	if(mapInfo)
-		CSH->mi = std::make_shared<CMapInfo>(*mapInfo);
+		CSH->mi = mapInfo;
 	else
 		CSH->mi.reset();
 	lobby->card->changeSelection();
@@ -117,7 +117,7 @@ void LobbyUpdateState::applyOnLobby(CLobbyScreen * lobby)
 	}
 
 	CSH->playerNames = playerNames;
-	CSH->si = std::shared_ptr<StartInfo>(startInfo);
+	CSH->si = startInfo;
 	if(CSH->mi)
 		lobby->tabOpt->recreate(); //will force to recreate using current sInfo
 
