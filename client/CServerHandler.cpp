@@ -226,15 +226,17 @@ void CServerHandler::stopServerConnection()
 	ongoingClosing = true;
 	if(serverHandlingThread)
 	{
-		stopServer();
-		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
-			processPacks();
-		serverHandlingThread->join();
-		delete serverHandlingThread;
+		c.reset();
+//		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
+//			processPacks();
+//		serverHandlingThread->join();
+//		delete serverHandlingThread;
+
+		vstd::clear_pointer(serverHandlingThread);
 	}
 
 	vstd::clear_pointer(applier);
-	delete mx;
+//	delete mx;
 }
 
 bool CServerHandler::isServerLocal() const
@@ -463,11 +465,8 @@ void CServerHandler::threadHandleConnection()
 			*c >> pack;
 			logNetwork->trace("Received a pack of type %s", typeid(*pack).name());
 			assert(pack);
-			if(LobbyClientDisconnected * endingPack = dynamic_cast<LobbyClientDisconnected *>(pack))
-			{
-				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
-			}
-			else if(LobbyStartGame * endingPack = dynamic_cast<LobbyStartGame *>(pack))
+
+			if(LobbyStartGame * endingPack = dynamic_cast<LobbyStartGame *>(pack))
 			{
 				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
 			}
@@ -483,6 +482,10 @@ void CServerHandler::threadHandleConnection()
 		if(i != 666)
 			throw;
 	}
+	catch(const std::exception & e)
+	{
+		logNetwork->error("What happened: %s", e.what());
+	}
 	catch(...)
 	{
 		handleException();
@@ -492,10 +495,10 @@ void CServerHandler::threadHandleConnection()
 
 void CServerHandler::processPacks()
 {
+	boost::unique_lock<boost::recursive_mutex> lock(*mx);
 	if(!serverHandlingThread)
 		return;
 
-	boost::unique_lock<boost::recursive_mutex> lock(*mx);
 	while(!upcomingPacks.empty())
 	{
 		CPackForLobby * pack = upcomingPacks.front();

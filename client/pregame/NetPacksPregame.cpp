@@ -48,7 +48,8 @@ void LobbyClientDisconnected::applyOnLobby(CLobbyScreen * lobby)
 		*CSH->c << this; //resend to confirm
 		GH.popIntTotally(lobby); //will wait with deleting us before this thread ends
 	}
-	CSH->stopConnection();
+	CSH->stopServerConnection();
+//	GH.popIntTotally(lobby);
 }
 
 void LobbyChatMessage::applyOnLobby(CLobbyScreen * lobby)

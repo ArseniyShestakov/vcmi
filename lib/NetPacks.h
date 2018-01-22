@@ -2449,7 +2449,7 @@ struct LobbyClientConnected : public CLobbyPackToPropagate
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	void applyOnLobby(CLobbyScreen * lobby);
 	bool applyOnServer(CVCMIServer * srv);
-	void applyOnServerAfter(CVCMIServer * srv);
+	void applyOnServerAfterAnnounce(CVCMIServer * srv);
 
 	template <typename Handler> void serialize(Handler & h, const int version)
 	{
