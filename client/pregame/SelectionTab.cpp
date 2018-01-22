@@ -366,7 +366,8 @@ void SelectionTab::filter(int size, bool selectFirst)
 	else
 	{
 		slider->block(true);
-		onSelect(nullptr);
+		if(onSelect) // MPTODO: Find why host doesn't crash on it
+			onSelect(nullptr);
 	}
 }
 
