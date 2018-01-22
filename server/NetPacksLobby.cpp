@@ -22,6 +22,12 @@ bool CLobbyPackToServer::checkClientPermissions(CVCMIServer * srv) const
 	return srv->isClientHost(c->connectionID);
 }
 
+void CLobbyPackToServer::applyServerAfter(CVCMIServer * srv)
+{
+	// Propogate options after every CLobbyPackToServer
+	srv->propagateOptions();
+}
+
 bool LobbyClientConnected::checkClientPermissions(CVCMIServer * srv) const
 {
 	return true;
@@ -196,7 +202,13 @@ bool PassHost::applyOnServer(CVCMIServer * srv)
 
 bool ChangePlayerOptions::checkClientPermissions(CVCMIServer * srv) const
 {
-	return vstd::contains(srv->getAllClientPlayers(c->connectionID), color);
+	if(srv->isClientHost(c->connectionID))
+		return true;
+
+	if(vstd::contains(srv->getAllClientPlayers(c->connectionID), color))
+		return true;
+
+	return false;
 }
 
 bool ChangePlayerOptions::applyOnServer(CVCMIServer * srv)
@@ -213,7 +225,6 @@ bool ChangePlayerOptions::applyOnServer(CVCMIServer * srv)
 		srv->optionNextBonus(color, direction);
 		break;
 	}
-	srv->propagateOptions();
 	return true;
 }
 
@@ -280,26 +291,23 @@ bool SetPlayer::applyOnServer(CVCMIServer * srv)
 			}
 		}
 	}
-	srv->propagateOptions();
 	return true;
 }
 
 bool SetTurnTime::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->turnTime = turnTime;
-	srv->propagateOptions();
 	return true;
 }
 
 bool SetDifficulty::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->difficulty = difficulty;
-	srv->propagateOptions();
 	return true;
 }
 
 bool ForcePlayerForCoop::applyOnServer(CVCMIServer * srv)
 {
 	srv->si->playerInfos[playerColorId].connectedPlayerIDs.insert(connectedId);
-	srv->propagateOptions();
+	return true;
 }
