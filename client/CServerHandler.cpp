@@ -377,21 +377,8 @@ void CServerHandler::startGame()
 
 	if(si->mapGenOptions && si->mode == StartInfo::NEW_GAME)
 	{
-		// Update player settings for RMG
-		for(const auto & psetPair : si->playerInfos)
-		{
-			const auto & pset = psetPair.second;
-			si->mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
-			if(pset.isControlledByHuman())
-			{
-				si->mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
-			}
-		}
-
 		if(!si->mapGenOptions->checkOptions())
 			throw noTemplateException();
-
-		//propagateOptions();
 	}
 	ongoingClosing = true;
 	StartWithCurrentSettings swcs;

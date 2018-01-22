@@ -549,6 +549,21 @@ void CVCMIServer::propagateNames()
 
 void CVCMIServer::propagateOptions()
 {
+	// Update player settings for RMG
+	// MPTODO: find appropriate location for this code
+	if(si->mapGenOptions && si->mode == StartInfo::NEW_GAME)
+	{
+		for(const auto & psetPair : si->playerInfos)
+		{
+			const auto & pset = psetPair.second;
+			si->mapGenOptions->setStartingTownForPlayer(pset.color, pset.castle);
+			if(pset.isControlledByHuman())
+			{
+				si->mapGenOptions->setPlayerTypeForStandardPlayer(pset.color, EPlayerType::HUMAN);
+			}
+		}
+	}
+
 	auto ups = new UpdateStartOptions();
 	ups->startInfo = si.get();
 	addToAnnounceQueue(ups);
