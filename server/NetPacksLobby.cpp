@@ -51,8 +51,10 @@ bool PassHost::applyServerBefore(CVCMIServer * srv, CConnection * c)
 bool StartWithCurrentSettings::applyServerBefore(CVCMIServer * srv, CConnection * c)
 {
 	c->receivedStop = true;
+	//MPTODO it's should work without it
+	// But for some reason not all guests get pack if it's not announced from there
 	if(!c->sendStop)
-		srv->sendPack(c, *this);
+		srv->announcePack(*this);
 
 	if(c == srv->hostClient)
 		return true;
