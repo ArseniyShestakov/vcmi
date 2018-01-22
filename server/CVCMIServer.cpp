@@ -56,8 +56,8 @@ template<typename T> class CApplyOnServer;
 class CBaseForServerApply
 {
 public:
-	virtual bool applyOnServerBefore(CVCMIServer * srv, CConnection * c, void * pack) const =0;
-	virtual void applyOnServerAfter(CVCMIServer * srv, CConnection * c, void * pack) const =0;
+	virtual bool applyOnServerBefore(CVCMIServer * srv, std::shared_ptr<CConnection> c, void * pack) const =0;
+	virtual void applyOnServerAfter(CVCMIServer * srv, std::shared_ptr<CConnection> c, void * pack) const =0;
 	virtual ~CBaseForServerApply() {}
 	template<typename U> static CBaseForServerApply * getApplier(const U * t = nullptr)
 	{
@@ -68,20 +68,20 @@ public:
 template <typename T> class CApplyOnServer : public CBaseForServerApply
 {
 public:
-	bool applyOnServerBefore(CVCMIServer * srv, CConnection * c, void * pack) const override
+	bool applyOnServerBefore(CVCMIServer * srv, std::shared_ptr<CConnection> c, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
 		ptr->applied = true;
-		if(!ptr->c)
-			ptr->c = c;
+		if(!ptr->c && c)
+			ptr->c = std::shared_ptr<CConnection>(c);
 
 		if(ptr->checkClientPermissions(srv))
-			return false;
-		else
 			return ptr->applyOnServer(srv);
+		else
+			return false;
 	}
 
-	void applyOnServerAfter(CVCMIServer * srv, CConnection * c, void * pack) const override
+	void applyOnServerAfter(CVCMIServer * srv, std::shared_ptr<CConnection> c, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
 		ptr->c = c;
@@ -93,13 +93,13 @@ template <>
 class CApplyOnServer<CPack> : public CBaseForServerApply
 {
 public:
-	bool applyOnServerBefore(CVCMIServer * srv, CConnection * c, void * pack) const override
+	bool applyOnServerBefore(CVCMIServer * srv, std::shared_ptr<CConnection> c, void * pack) const override
 	{
 		logGlobal->error("Cannot apply plain CPack!");
 		assert(0);
 		return false;
 	}
-	void applyOnServerAfter(CVCMIServer * srv, CConnection * c, void * pack) const override
+	void applyOnServerAfter(CVCMIServer * srv, std::shared_ptr<CConnection> c, void * pack) const override
 	{
 		logGlobal->error("Cannot apply plain CPack!");
 		assert(0);
@@ -234,7 +234,7 @@ void CVCMIServer::startGame()
 		break;
 	}
 	gh.conns = connections;
-	for(CConnection * c : gh.conns) // MPTODO: should we need to do that if we sent gamestate?
+	for(auto c : gh.conns) // MPTODO: should we need to do that if we sent gamestate?
 		c->addStdVecItems(gh.gs);
 
 	gh.run(si->mode == StartInfo::LOAD_GAME, this);
@@ -261,7 +261,7 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 	try
 	{
 		logNetwork->info("We got a new connection! :)");
-		CConnection * pc = new CConnection(upcomingConnection, NAME);
+		auto pc = std::make_shared<CConnection>(upcomingConnection, NAME);
 		upcomingConnection = nullptr;
 		connections.insert(pc);
 		startListeningThread(pc);
@@ -275,14 +275,14 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 	startAsyncAccept();
 }
 
-void CVCMIServer::startListeningThread(CConnection * pc)
+void CVCMIServer::startListeningThread(std::shared_ptr<CConnection> pc)
 {
 	listeningThreads++;
 	pc->enterPregameConnectionMode();
 	pc->handler = new boost::thread(&CVCMIServer::handleConnection, this, pc);
 }
 
-void CVCMIServer::handleConnection(CConnection * cpc)
+void CVCMIServer::handleConnection(std::shared_ptr<CConnection> cpc)
 {
 	setThreadName("CVCMIServer::handleConnection");
 	try
@@ -335,7 +335,7 @@ void CVCMIServer::processPack(CPackForLobby * pack)
 	delete pack;
 }
 
-void CVCMIServer::sendPack(CConnection * pc, const CPackForLobby & pack)
+void CVCMIServer::sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby & pack)
 {
 	if(!pc->sendStop)
 	{
@@ -355,7 +355,7 @@ void CVCMIServer::sendPack(CConnection * pc, const CPackForLobby & pack)
 
 void CVCMIServer::announcePack(const CPackForLobby & pack)
 {
-	for(CConnection * pc : connections)
+	for(auto pc : connections)
 		sendPack(pc, pack);
 }
 
@@ -396,7 +396,7 @@ void CVCMIServer::passHost(int toConnectionId)
 	}
 }
 
-void CVCMIServer::clientConnected(CConnection * c)
+void CVCMIServer::clientConnected(std::shared_ptr<CConnection> c)
 {
 	for(auto & name : c->names)
 	{
@@ -421,7 +421,7 @@ void CVCMIServer::clientConnected(CConnection * c)
 	}
 }
 
-void CVCMIServer::clientDisconnected(CConnection * c)
+void CVCMIServer::clientDisconnected(std::shared_ptr<CConnection> c)
 {
 	for(auto & pair : playerNames)
 	{

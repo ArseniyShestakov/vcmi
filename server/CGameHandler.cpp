@@ -81,7 +81,7 @@ template <typename T> class CApplyOnGH;
 class CBaseForGHApply
 {
 public:
-	virtual bool applyOnGH(CGameHandler *gh, CConnection *c, void *pack, PlayerColor player) const =0;
+	virtual bool applyOnGH(CGameHandler * gh, std::shared_ptr<CConnection> c, void * pack, PlayerColor player) const =0;
 	virtual ~CBaseForGHApply(){}
 	template<typename U> static CBaseForGHApply *getApplier(const U * t=nullptr)
 	{
@@ -92,7 +92,7 @@ public:
 template <typename T> class CApplyOnGH : public CBaseForGHApply
 {
 public:
-	bool applyOnGH(CGameHandler *gh, CConnection *c, void *pack, PlayerColor player) const override
+	bool applyOnGH(CGameHandler * gh, std::shared_ptr<CConnection> c, void * pack, PlayerColor player) const override
 	{
 		T *ptr = static_cast<T*>(pack);
 		ptr->c = c;
@@ -116,7 +116,7 @@ template <>
 class CApplyOnGH<CPack> : public CBaseForGHApply
 {
 public:
-	bool applyOnGH(CGameHandler *gh, CConnection *c, void *pack, PlayerColor player) const override
+	bool applyOnGH(CGameHandler * gh, std::shared_ptr<CConnection> c, void * pack, PlayerColor player) const override
 	{
 		logGlobal->error("Cannot apply on GH plain CPack!");
 		assert(0);
@@ -1023,21 +1023,21 @@ void CGameHandler::applyBattleEffects(BattleAttack &bat, const CStack *att, cons
 		bat.bsa.push_back(bsa2);
 	}
 }
-void CGameHandler::handleConnection(std::set<PlayerColor> players, CConnection &c)
+void CGameHandler::handleConnection(std::set<PlayerColor> players, std::shared_ptr<CConnection> c)
 {
 	setThreadName("CGameHandler::handleConnection");
 
 	auto handleDisconnection = [&](const std::exception & e)
 	{
-		boost::unique_lock<boost::mutex> lock(*c.wmx);
-		assert(!c.connected); //make sure that connection has been marked as broken
+		boost::unique_lock<boost::mutex> lock(*c->wmx);
+		assert(!c->connected); //make sure that connection has been marked as broken
 		logGlobal->error(e.what());
-		conns -= &c;
-		for(auto & playerConns : connections)
+		conns -= c;
+		for(auto playerConns : connections)
 		{
 			for(auto conn : playerConns.second)
 			{
-				if(!CVCMIServer::shuttingDown && conn == &c)
+				if(!CVCMIServer::shuttingDown && conn == c)
 				{
 					vstd::erase_if_present(playerConns.second, conn);
 					if(playerConns.second.size())
@@ -1062,10 +1062,10 @@ void CGameHandler::handleConnection(std::set<PlayerColor> players, CConnection &
 			int packType = 0;
 
 			{
-				boost::unique_lock<boost::mutex> lock(*c.rmx);
-				if(!c.connected)
+				boost::unique_lock<boost::mutex> lock(*c->rmx);
+				if(!c->connected)
 					throw clientDisconnectedException();
-				c >> player >> requestID >> pack; //get the package
+				*(c.get()) >> player >> requestID >> pack; //get the package
 
 				if (!pack)
 				{
@@ -1093,8 +1093,8 @@ void CGameHandler::handleConnection(std::set<PlayerColor> players, CConnection &
 				applied.result = succesfullyApplied;
 				applied.packType = packType;
 				applied.requestID = requestID;
-				boost::unique_lock<boost::mutex> lock(*c.wmx);
-				c << &applied;
+				boost::unique_lock<boost::mutex> lock(*c->wmx);
+				*(c.get()) << &applied;
 			};
 			CBaseForGHApply *apply = applier->getApplier(packType); //and appropriate applier object
 			if(isBlockedByQueries(pack, player))
@@ -1103,7 +1103,7 @@ void CGameHandler::handleConnection(std::set<PlayerColor> players, CConnection &
 			}
 			else if (apply)
 			{
-				const bool result = apply->applyOnGH(this, &c, pack, player);
+				const bool result = apply->applyOnGH(this, c, pack, player);
 				if (result)
 					logGlobal->trace("Message %s successfully applied!", typeid(*pack).name());
 				else
@@ -1823,7 +1823,7 @@ void CGameHandler::run(bool resume, CVCMIServer * srv)
 	LOG_TRACE_PARAMS(logGlobal, "resume=%d", resume);
 
 	using namespace boost::posix_time;
-	for (CConnection *cc : conns)
+	for (auto cc : conns)
 	{
 		if (!resume)
 		{
@@ -1849,14 +1849,14 @@ void CGameHandler::run(bool resume, CVCMIServer * srv)
 		cc->disableSmartPointerSerialization();
 	}
 
-	for (auto & elem : conns)
+	for (auto elem : conns)
 	{
 		std::set<PlayerColor> pom;
 		for (auto j = connections.cbegin(); j!=connections.cend();j++)
 			if(vstd::contains(j->second, elem))
 				pom.insert(j->first);
 
-		boost::thread(std::bind(&CGameHandler::handleConnection,this,pom,std::ref(*elem)));
+		boost::thread(std::bind(&CGameHandler::handleConnection,this,pom,elem));
 	}
 
 	auto playerTurnOrder = generatePlayerTurnOrder();
@@ -2452,12 +2452,12 @@ void CGameHandler::changeSpells(const CGHeroInstance * hero, bool give, const st
 	sendAndApply(&cs);
 }
 
-void CGameHandler::sendMessageTo(CConnection &c, const std::string &message)
+void CGameHandler::sendMessageTo(std::shared_ptr<CConnection> c, const std::string &message)
 {
 	SystemMessage sm;
 	sm.text = message;
-	boost::unique_lock<boost::mutex> lock(*c.wmx);
-	c << &sm;
+	boost::unique_lock<boost::mutex> lock(*c->wmx);
+	*(c.get()) << &sm;
 }
 
 void CGameHandler::giveHeroBonus(GiveBonus * bonus)
@@ -2845,7 +2845,7 @@ bool CGameHandler::arrangeStacks(ObjectInstanceID id1, ObjectInstanceID id2, ui8
 	return true;
 }
 
-PlayerColor CGameHandler::getPlayerAt(CConnection *c) const
+PlayerColor CGameHandler::getPlayerAt(std::shared_ptr<CConnection> c) const
 {
 	std::set<PlayerColor> all;
 	for (auto i=connections.cbegin(); i!=connections.cend(); i++)

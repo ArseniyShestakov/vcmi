@@ -17,16 +17,10 @@
 #include "../lib/mapping/CMapInfo.h"
 #include "../lib/rmg/CMapGenOptions.h"
 
-bool CLobbyPackToPropagate::checkClientPermissions(CVCMIServer * srv) const
-{
-	return false;
-}
-
 bool CLobbyPackToServer::checkClientPermissions(CVCMIServer * srv) const
 {
 	return srv->isClientHost(c->connectionID);
 }
-
 
 bool LobbyClientConnected::checkClientPermissions(CVCMIServer * srv) const
 {

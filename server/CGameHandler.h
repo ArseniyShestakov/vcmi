@@ -80,9 +80,9 @@ public:
 	enum EVisitDest {VISIT_DEST, DONT_VISIT_DEST};
 	enum ELEaveTile {LEAVING_TILE, REMAINING_ON_TILE};
 
-	std::map<PlayerColor, std::set<CConnection*>> connections; //player color -> connection to client with interface of that player
+	std::map<PlayerColor, std::set<std::shared_ptr<CConnection>>> connections; //player color -> connection to client with interface of that player
 	PlayerStatuses states; //player color -> player state
-	std::set<CConnection*> conns;
+	std::set<std::shared_ptr<CConnection>> conns;
 
 	//queries stuff
 	boost::recursive_mutex gsm;
@@ -186,8 +186,8 @@ public:
 	void commitPackage(CPackForClient *pack) override;
 
 	void init(StartInfo *si);
-	void handleConnection(std::set<PlayerColor> players, CConnection &c);
-	PlayerColor getPlayerAt(CConnection *c) const;
+	void handleConnection(std::set<PlayerColor> players, std::shared_ptr<CConnection> c);
+	PlayerColor getPlayerAt(std::shared_ptr<CConnection> c) const;
 
 	void playerMessage(PlayerColor player, const std::string &message, ObjectInstanceID currObj);
 	void updateGateState();
@@ -245,7 +245,7 @@ public:
 	}
 
 	void sendMessageToAll(const std::string &message);
-	void sendMessageTo(CConnection &c, const std::string &message);
+	void sendMessageTo(std::shared_ptr<CConnection> c, const std::string &message);
 	void sendToAllClients(CPackForClient * info);
 	void sendAndApply(CPackForClient * info) override;
 	void applyAndSend(CPackForClient * info);

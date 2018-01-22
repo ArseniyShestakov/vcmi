@@ -66,7 +66,7 @@ public:
 	void applyOnLobby(CLobbyScreen * selScr, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
-		ptr->apply(selScr);
+		ptr->applyOnLobby(selScr);
 	}
 };
 
@@ -144,7 +144,7 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
-	: LobbyInfo(), c(nullptr), localServerThread(nullptr), shm(nullptr), verbose(true), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
+	: LobbyInfo(), localServerThread(nullptr), shm(nullptr), verbose(true), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 }
@@ -194,9 +194,10 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 		try
 		{
 			logNetwork->info("Establishing connection...");
-			c = new CConnection(	addr.size() ? addr : settings["server"]["server"].String(),
-									port ? port : getDefaultPort(),
-									NAME);
+			c = std::make_shared<CConnection>(
+					addr.size() ? addr : settings["server"]["server"].String(),
+					port ? port : getDefaultPort(),
+					NAME);
 			c->connectionID = 1; // TODO: Refactoring for the server so IDs set outside of CConnection
 		}
 		catch(...)
@@ -211,7 +212,12 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 
 void CServerHandler::stopConnection()
 {
-	vstd::clear_pointer(c);
+	c.reset();
+}
+
+void CServerHandler::sendPack(CPackForLobby & pack)
+{
+
 }
 
 void CServerHandler::stopServerConnection()

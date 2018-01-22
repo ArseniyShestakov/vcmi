@@ -49,7 +49,7 @@ public:
 	boost::thread * serverHandlingThread;
 	SharedMemory * shm;
 	std::string uuid;
-	CConnection * c;
+	std::shared_ptr<CConnection> c;
 	ServerCapabilities * cap;
 
 	CServerHandler();
@@ -91,6 +91,7 @@ public:
 	void processPacks();
 	void stopServerConnection();
 	void stopConnection();
+	void sendPack(CPackForLobby & pack);
 
 	bool isHost() const;
 	bool isGuest() const;

@@ -63,7 +63,7 @@ public:
 	boost::program_options::variables_map cmdLineOptions;
 
 	int listeningThreads;
-	std::set<CConnection *> connections;
+	std::set<std::shared_ptr<CConnection>> connections;
 	std::list<CPackForLobby *> announceQueue;
 	boost::recursive_mutex mx;
 
@@ -71,8 +71,8 @@ public:
 
 	void startAsyncAccept();
 	void connectionAccepted(const boost::system::error_code & ec);
-	void startListeningThread(CConnection * pc);
-	void handleConnection(CConnection * cpc);
+	void startListeningThread(std::shared_ptr<CConnection> pc);
+	void handleConnection(std::shared_ptr<CConnection> cpc);
 
 	void processPack(CPackForLobby * pack);
 	void announcePack(const CPackForLobby & pack);
@@ -88,17 +88,17 @@ public:
 	void start();
 	void startGame();
 
-	CConnection * hostClient;
+	std::shared_ptr<CConnection> hostClient;
 	ServerCapabilities * capabilities;
-	void sendPack(CConnection * pc, const CPackForLobby & pack);
+	void sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby & pack);
 	void announceTxt(const std::string & txt, const std::string & playerName = "system");
 	void addToAnnounceQueue(CPackForLobby * pack, bool front = false);
 
 	void setPlayerConnectedId(PlayerSettings & pset, ui8 player) const;
 	void updateStartInfo();
 
-	void clientConnected(CConnection * c);
-	void clientDisconnected(CConnection * c);
+	void clientConnected(std::shared_ptr<CConnection> c);
+	void clientDisconnected(std::shared_ptr<CConnection> c);
 
 	void propagateOptions(); //MPTODO: should be const;
 

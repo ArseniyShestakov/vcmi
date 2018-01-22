@@ -536,7 +536,7 @@ void CClient::stopConnection()
 	if(CSH->c) //and delete connection
 	{
 		CSH->c->close();
-		vstd::clear_pointer(CSH->c);
+		CSH->c.reset();
 		logNetwork->warn("Our socket has been closed.");
 	}
 }

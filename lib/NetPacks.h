@@ -58,7 +58,7 @@ struct CPackForClient : public CPack
 struct CPackForServer : public CPack
 {
 	PlayerColor player;
-	CConnection *c;
+	std::shared_ptr<CConnection> c;
 	CGameState* GS(CGameHandler *gh);
 	CPackForServer():
 		player(PlayerColor::NEUTRAL),
@@ -2413,27 +2413,32 @@ struct CenterView : public CPackForClient
 
 struct CPackForLobby : public CPack
 {
-	CConnection * c;
+	std::shared_ptr<CConnection> c;
 	bool applied; // MPTODO: Only used by server. Find better way handle this since it's only used for propogate netpacks
 
-	virtual bool checkClientPermissions(CVCMIServer * srv) const =0;
+	bool checkClientPermissions(CVCMIServer * srv) const
+	{
+		return false;
+	}
+
 	bool applyOnServer(CVCMIServer * srv)
 	{
 		return true;
 	}
 
 	void applyServerAfter(CVCMIServer * srv) {}
+
+	void applyOnLobby(CLobbyScreen * lobby) {}
 };
 
 struct CLobbyPackToPropagate : public CPackForLobby
 {
-	bool checkClientPermissions(CVCMIServer * srv) const override;
 	void applyOnLobby(CLobbyScreen * lobby) {}
 };
 
 struct CLobbyPackToServer : public CPackForLobby
 {
-	bool checkClientPermissions(CVCMIServer * srv) const override;
+	bool checkClientPermissions(CVCMIServer * srv) const;
 };
 
 struct LobbyClientConnected : public CLobbyPackToPropagate
@@ -2530,8 +2535,10 @@ struct SelectMap : public CLobbyPackToPropagate
 struct LobbyGuiAction : public CLobbyPackToPropagate
 {
 	enum {
-		NO_TAB, OPEN_OPTIONS, OPEN_SCENARIO_LIST, OPEN_RANDOM_MAP_OPTIONS
+		NONE, NO_TAB, OPEN_OPTIONS, OPEN_SCENARIO_LIST, OPEN_RANDOM_MAP_OPTIONS
 	} action;
+
+	LobbyGuiAction() : action(NONE) {}
 
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	void applyOnLobby(CLobbyScreen * lobby);

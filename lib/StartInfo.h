@@ -199,7 +199,7 @@ struct LobbyInfo
 	std::shared_ptr<StartInfo> si;
 	std::shared_ptr<CMapInfo> mi;
 	std::map<ui8, ClientPlayer> playerNames; // id of player <-> player name; 0 is reserved as ID of AI "players"
-	bool hostConnectionId;
+	int hostConnectionId;
 
 	LobbyInfo() : mi(nullptr), si(new StartInfo()), hostConnectionId(-1) {}
 
