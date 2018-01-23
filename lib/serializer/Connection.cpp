@@ -15,6 +15,7 @@
 #include "../CGameState.h"
 
 #include <boost/asio.hpp>
+#include <atomic>
 
 using namespace boost;
 using namespace boost::asio::ip;
@@ -47,9 +48,44 @@ void CConnection::init()
 #endif
 	connected = true;
 	std::string pom;
-	//we got connection
-	oser & std::string("Aiya!\n") & name & uuid & myEndianess; //identify ourselves
-	iser & pom & pom & contactUuid & contactEndianess;
+	if(server)
+	{
+		//we got connection
+		oser & std::string("Aiya!\n");
+		logNetwork->error("Step 1...");
+		oser & name;
+		logNetwork->error("Step 2...");
+		oser & uuid;
+		logNetwork->error("Step 3...");
+		oser & myEndianess; //identify ourselves
+		logNetwork->error("Step 4...");
+		iser & pom;
+		logNetwork->error("Step 5...");
+		iser & pom;
+		logNetwork->error("Step 6...");
+		iser & contactUuid;
+		logNetwork->error("Step 7...");
+		iser & contactEndianess;
+	}
+	else
+	{
+		//we got connection
+		logNetwork->error("Step 4...");
+		iser & pom;
+		logNetwork->error("Step 5...");
+		iser & pom;
+		logNetwork->error("Step 6...");
+		iser & contactUuid;
+		logNetwork->error("Step 7...");
+		iser & contactEndianess;
+		oser & std::string("Aiya!\n");
+		logNetwork->error("Step 1...");
+		oser & name;
+		logNetwork->error("Step 2...");
+		oser & uuid;
+		logNetwork->error("Step 3...");
+		oser & myEndianess; //identify ourselves
+	}
 	logNetwork->info("Established connection with %s. UUID: %s", pom, contactUuid);
 	wmx = new boost::mutex();
 	rmx = new boost::mutex();
@@ -61,8 +97,8 @@ void CConnection::init()
 	iser.fileVersion = SERIALIZATION_VERSION;
 }
 
-CConnection::CConnection(std::string host, ui16 port, std::string Name, std::string UUID)
-:iser(this), oser(this), io_service(new asio::io_service), name(Name), uuid(UUID)
+CConnection::CConnection(bool Server, std::string host, ui16 port, std::string Name, std::string UUID)
+:  server(Server), iser(this), oser(this), io_service(new asio::io_service), name(Name), uuid(UUID)
 {
 	int i;
 	boost::system::error_code error = asio::error::host_not_found;
@@ -116,13 +152,13 @@ connerror1:
 	//delete socket;
 	throw std::runtime_error("Can't establish connection :(");
 }
-CConnection::CConnection(TSocket * Socket, std::string Name, std::string UUID)
-	:iser(this), oser(this), socket(Socket),io_service(&Socket->get_io_service()), name(Name), uuid(UUID)
+CConnection::CConnection(bool Server, TSocket * Socket, std::string Name, std::string UUID)
+	: server(Server), iser(this), oser(this), socket(Socket),io_service(&Socket->get_io_service()), name(Name), uuid(UUID)
 {
 	init();
 }
-CConnection::CConnection(TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name, std::string UUID)
-: iser(this), oser(this), name(Name), uuid(UUID)
+CConnection::CConnection(bool Server, TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name, std::string UUID)
+: server(Server), iser(this), oser(this), name(Name), uuid(UUID)
 {
 	boost::system::error_code error = asio::error::host_not_found;
 	socket = new tcp::socket(*io_service);
@@ -139,9 +175,24 @@ int CConnection::write(const void * data, unsigned size)
 {
 	try
 	{
-		int ret;
-		ret = asio::write(*socket,asio::const_buffers_1(asio::const_buffer(data,size)));
-		return ret;
+		boost::optional<boost::system::error_code> result;
+		auto lam = [&](const boost::system::error_code& error, size_t size)
+		{
+			logNetwork->error("Writed %d bytes", size);
+			rstatus = true;
+			result.reset(error);
+		};
+		rstatus = false;
+		logNetwork->error("Start async writing of %d bytes", size);
+		boost::asio::async_write(*socket, boost::asio::buffer(data,size), lam);
+		socket->get_io_service().run_one();
+		while(!rstatus)
+		{
+			//logNetwork->error("Writing...");
+		}
+		socket->get_io_service().reset();
+		rstatus = false;
+		return 0;
 	}
 	catch(...)
 	{
@@ -150,12 +201,30 @@ int CConnection::write(const void * data, unsigned size)
 		throw;
 	}
 }
+
 int CConnection::read(void * data, unsigned size)
 {
 	try
 	{
-		int ret = asio::read(*socket,asio::mutable_buffers_1(asio::mutable_buffer(data,size)));
-		return ret;
+		boost::optional<boost::system::error_code> result;
+		auto lam = [&](const boost::system::error_code& error, size_t size)
+		{
+			logNetwork->error("Readed %d bytes", size);
+			rstatus = true;
+			result.reset(error);
+		};
+		rstatus = false;
+		logNetwork->error("Start async read of %d bytes", size);
+		boost::asio::async_read(*socket, boost::asio::buffer(data,size), lam);
+		socket->get_io_service().run_one();
+		while(!rstatus)
+		{
+			//logNetwork->error("Writing...");
+		}
+		socket->get_io_service().reset();
+		rstatus = false;
+
+		return 0;
 	}
 	catch(...)
 	{

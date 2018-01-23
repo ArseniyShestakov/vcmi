@@ -43,6 +43,8 @@ typedef boost::asio::basic_socket_acceptor<boost::asio::ip::tcp, boost::asio::so
 class DLL_LINKAGE CConnection
 	: public IBinaryReader, public IBinaryWriter
 {
+	bool server;
+	std::atomic<bool> rstatus;
 	CConnection();
 
 	void init();
@@ -69,9 +71,9 @@ public:
 
 	bool receivedStop, sendStop;
 
-	CConnection(std::string host, ui16 port, std::string Name, std::string UUID);
-	CConnection(TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name, std::string UUID);
-	CConnection(TSocket * Socket, std::string Name, std::string UUID); //use immediately after accepting connection into socket
+	CConnection(bool Server, std::string host, ui16 port, std::string Name, std::string UUID);
+	CConnection(bool Server, TAcceptor * acceptor, boost::asio::io_service *Io_service, std::string Name, std::string UUID);
+	CConnection(bool Server, TSocket * Socket, std::string Name, std::string UUID); //use immediately after accepting connection into socket
 
 	void close();
 	bool isOpen() const;

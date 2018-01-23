@@ -194,7 +194,7 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 		try
 		{
 			logNetwork->info("Establishing connection...");
-			c = std::make_shared<CConnection>(
+			c = std::make_shared<CConnection>(false,
 					addr.size() ? addr : settings["server"]["server"].String(),
 					port ? port : getDefaultPort(),
 					NAME, uuid);

@@ -267,7 +267,7 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 	try
 	{
 		logNetwork->info("We got a new connection! :)");
-		auto pc = std::make_shared<CConnection>(upcomingConnection, NAME, uuid);
+		auto pc = std::make_shared<CConnection>(true, upcomingConnection, NAME, uuid);
 		upcomingConnection = nullptr;
 		connections.insert(pc);
 		startListeningThread(pc);
