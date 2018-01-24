@@ -214,12 +214,13 @@ struct LobbyInfo
 		std::set<PlayerColor> players;
 		for(auto & elem : si->playerInfos)
 		{
+			if(isClientHost(clientId) && elem.second.isControlledByAI())
+				players.insert(elem.first);
+
 			for(ui8 id : elem.second.connectedPlayerIDs)
 			{
-				if(isClientHost(clientId) && elem.second.isControlledByAI() || vstd::contains(getConnectedPlayerIdsForClient(clientId), id))
-				{
+				if(vstd::contains(getConnectedPlayerIdsForClient(clientId), id))
 					players.insert(elem.first);
-				}
 			}
 		}
 		if(isClientHost(clientId))
