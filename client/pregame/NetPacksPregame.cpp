@@ -44,7 +44,7 @@ void LobbyClientConnected::applyOnLobby(CLobbyScreen * lobby)
 bool LobbyClientDisconnected::applyOnLobbyImmidiately(CLobbyScreen * lobby)
 {
 	CSH->ongoingClosing = true;
-	vstd::clear_pointer(CSH->serverHandlingThread);
+	vstd::clear_pointer(CSH->threadConnectionToServer);
 	return true;
 }
 
@@ -87,13 +87,13 @@ void LobbyGuiAction::applyOnLobby(CLobbyScreen * lobby)
 bool LobbyStartGame::applyOnLobbyImmidiately(CLobbyScreen * lobby)
 {
 	CSH->ongoingClosing = true;
-	vstd::clear_pointer(CSH->serverHandlingThread);
+	vstd::clear_pointer(CSH->threadConnectionToServer);
 	return true;
 }
 
 void LobbyStartGame::applyOnLobby(CLobbyScreen * lobby)
 {
-	vstd::clear_pointer(CSH->serverHandlingThread);
+	vstd::clear_pointer(CSH->threadConnectionToServer);
 	CGP->showLoadingScreen(std::bind(&startGame));
 }
 

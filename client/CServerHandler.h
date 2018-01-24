@@ -45,8 +45,8 @@ public:
 	CStopWatch th;
 	bool verbose; //whether to print log msgs
 
-	boost::thread * localServerThread; //thread that called system to run server
-	boost::thread * serverHandlingThread;
+	boost::thread * threadRunLocalServer;
+	boost::thread * threadConnectionToServer;
 	SharedMemory * shm;
 	std::shared_ptr<CConnection> c;
 	ServerCapabilities * cap;

@@ -100,8 +100,8 @@ extern std::string NAME;
 
 void CServerHandler::startLocalServerAndConnect()
 {
-	if(localServerThread)
-		localServerThread->join();
+	if(threadRunLocalServer)
+		threadRunLocalServer->join();
 
 	th.update();
 
@@ -109,7 +109,7 @@ void CServerHandler::startLocalServerAndConnect()
 	CAndroidVMHelper envHelper;
 	envHelper.callStaticVoidMethod(CAndroidVMHelper::NATIVE_METHODS_DEFAULT_CLASS, "startServer", true);
 #else
-	localServerThread = new boost::thread(&CServerHandler::threadRunServer, this); //runs server executable;
+	threadRunLocalServer = new boost::thread(&CServerHandler::threadRunServer, this); //runs server executable;
 #endif
 	if(verbose)
 		logNetwork->info("Setting up thread calling server: %d ms", th.getDiff());
@@ -158,16 +158,19 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
-	: LobbyInfo(), localServerThread(nullptr), shm(nullptr), verbose(true), serverHandlingThread(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
+	: LobbyInfo(), threadRunLocalServer(nullptr), shm(nullptr), verbose(true), threadConnectionToServer(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
+	applier = new CApplier<CBaseForLobbyApply>();
+	registerTypesPregamePacks(*applier);
 }
 
 CServerHandler::~CServerHandler()
 {
 	vstd::clear_pointer(shm);
-	vstd::clear_pointer(localServerThread);
-	vstd::clear_pointer(serverHandlingThread);
+	vstd::clear_pointer(threadRunLocalServer);
+	vstd::clear_pointer(threadConnectionToServer);
+	vstd::clear_pointer(applier);
 }
 
 void CServerHandler::threadRunServer()
@@ -222,7 +225,7 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 			SDL_Delay(2000);
 		}
 	}
-	serverHandlingThread = new boost::thread(&CServerHandler::threadHandleConnection, this);
+	threadConnectionToServer = new boost::thread(&CServerHandler::threadHandleConnection, this);
 }
 
 void CServerHandler::stopConnection()
@@ -238,22 +241,21 @@ void CServerHandler::sendPackToServer(CPackForLobby & pack)
 
 void CServerHandler::stopServerConnection()
 {
-	if(serverHandlingThread)
+	if(threadConnectionToServer)
 	{
 		stopServer();
-		while(!serverHandlingThread->timed_join(boost::posix_time::milliseconds(50)))
+		while(!threadConnectionToServer->timed_join(boost::posix_time::milliseconds(50)))
 			processPacks();
-		serverHandlingThread->join();
-		delete serverHandlingThread;
+		threadConnectionToServer->join();
+		delete threadConnectionToServer;
 	}
 
-	vstd::clear_pointer(applier);
 	delete mx;
 }
 
 bool CServerHandler::isServerLocal() const
 {
-	if(localServerThread)
+	if(threadRunLocalServer)
 		return true;
 
 	return false;
@@ -464,7 +466,7 @@ void CServerHandler::threadHandleConnection()
 		lcc.mode = si->mode;
 		sendPackToServer(lcc);
 
-		while(c && ongoingClosing)
+		while(c && !ongoingClosing)
 		{
 			CPackForLobby * pack = nullptr;
 			*c >> pack;
@@ -489,7 +491,7 @@ void CServerHandler::threadHandleConnection()
 
 void CServerHandler::processPacks()
 {
-	if(!serverHandlingThread || !ongoingClosing)
+	if(!threadConnectionToServer || !ongoingClosing)
 		return;
 
 	boost::unique_lock<boost::recursive_mutex> lock(*mx);
