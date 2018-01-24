@@ -89,10 +89,6 @@ bool LobbyClientDisconnected::applyOnServer(CVCMIServer * srv)
 {
 	if(c) // Only set when client actually sent this netpack
 	{
-		c->receivedStop = true;
-		if(!c->sendStop)
-			srv->sendPack(c, *this);
-
 		if(c == srv->hostClient)
 			return true;
 		else
@@ -175,16 +171,7 @@ bool LobbyStartGame::checkClientPermissions(CVCMIServer * srv) const
 
 bool LobbyStartGame::applyOnServer(CVCMIServer * srv)
 {
-	c->receivedStop = true;
-	//MPTODO it's should work without it
-	// But for some reason not all guests get pack if it's not announced from there
-	if(!c->sendStop)
-		srv->announcePack(*this);
-
-	if(c == srv->hostClient)
-		return true;
-	else
-		return false;
+	return true;
 }
 
 void LobbyStartGame::applyOnServerAfterAnnounce(CVCMIServer * srv)

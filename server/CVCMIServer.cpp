@@ -293,7 +293,7 @@ void CVCMIServer::handleConnection(std::shared_ptr<CConnection> cpc)
 	setThreadName("CVCMIServer::handleConnection");
 	try
 	{
-		while(!cpc->receivedStop)
+		while(!cpc->stopHandling)
 		{
 			CPackForLobby * pack = nullptr;
 			*cpc >> pack;
@@ -343,7 +343,7 @@ void CVCMIServer::processPack(CPackForLobby * pack)
 
 void CVCMIServer::sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby & pack)
 {
-	if(!pc->sendStop)
+	if(!pc->stopHandling)
 	{
 		logNetwork->info("\tSending pack of type %s to %s", typeid(pack).name(), pc->toString());
 		*pc << &pack;
@@ -351,11 +351,11 @@ void CVCMIServer::sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby 
 
 	if(dynamic_ptr_cast<LobbyClientDisconnected>(&pack))
 	{
-		pc->sendStop = true;
+		pc->stopHandling = true;
 	}
 	else if(dynamic_ptr_cast<LobbyStartGame>(&pack))
 	{
-		pc->sendStop = true;
+		pc->stopHandling = true;
 	}
 }
 

@@ -81,7 +81,6 @@ public:
 	// Connection to exist server
 	boost::recursive_mutex * mx;
 	std::list<CPackForLobby *> upcomingPacks; //protected by mx
-	std::atomic<bool> ongoingClosing;
 
 	void justConnectToServer(const std::string &addr = "", const ui16 port = 0); //connects to given host without taking any other actions (like setting up server)
 	static ui16 getDefaultPort();

@@ -55,7 +55,7 @@ void CConnection::init()
 	rmx = new boost::mutex();
 
 	handler = nullptr;
-	receivedStop = sendStop = false;
+	stopHandling = false;
 	static int cid = 1;
 	connectionID = cid++;
 	iser.fileVersion = SERIALIZATION_VERSION;

@@ -158,7 +158,7 @@ std::string CServerHandler::getDefaultPortStr()
 }
 
 CServerHandler::CServerHandler()
-	: LobbyInfo(), threadRunLocalServer(nullptr), shm(nullptr), verbose(true), threadConnectionToServer(nullptr), mx(new boost::recursive_mutex), ongoingClosing(false)
+	: LobbyInfo(), threadRunLocalServer(nullptr), shm(nullptr), verbose(true), threadConnectionToServer(nullptr), mx(new boost::recursive_mutex)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 	applier = new CApplier<CBaseForLobbyApply>();
@@ -466,7 +466,7 @@ void CServerHandler::threadHandleConnection()
 		lcc.mode = si->mode;
 		sendPackToServer(lcc);
 
-		while(c && !ongoingClosing)
+		while(c && !c->stopHandling)
 		{
 			CPackForLobby * pack = nullptr;
 			*c >> pack;
@@ -489,9 +489,10 @@ void CServerHandler::threadHandleConnection()
 	}
 }
 
-void CServerHandler::processPacks()
+void
+CServerHandler::processPacks()
 {
-	if(!threadConnectionToServer || !ongoingClosing)
+	if(!threadConnectionToServer || c->stopHandling)
 		return;
 
 	boost::unique_lock<boost::recursive_mutex> lock(*mx);

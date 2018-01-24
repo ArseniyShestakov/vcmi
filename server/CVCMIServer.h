@@ -62,7 +62,7 @@ public:
 
 	boost::program_options::variables_map cmdLineOptions;
 
-	int listeningThreads;
+	std::atomic<int> listeningThreads;
 	std::set<std::shared_ptr<CConnection>> connections;
 	std::list<CPackForLobby *> announceQueue;
 	boost::recursive_mutex mx;
