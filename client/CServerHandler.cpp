@@ -165,8 +165,9 @@ CServerHandler::CServerHandler()
 
 CServerHandler::~CServerHandler()
 {
-	delete shm;
-	delete localServerThread;
+	vstd::clear_pointer(shm);
+	vstd::clear_pointer(localServerThread);
+	vstd::clear_pointer(serverHandlingThread);
 }
 
 void CServerHandler::threadRunServer()
@@ -335,13 +336,10 @@ void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 
 void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
 {
-	if(si)
-		si.reset();
-	si = std::make_shared<StartInfo>();
+	si.reset(new StartInfo());
 	playerNames.clear();
 	si->difficulty = 1;
 	si->mode = mode;
-	si->turnTime = 0;
 	myNames.clear();
 	if(names && !names->empty()) //if have custom set of player names - use it
 		myNames = *names;
