@@ -2428,6 +2428,11 @@ struct CPackForLobby : public CPack
 
 	void applyOnServerAfterAnnounce(CVCMIServer * srv) {}
 
+	bool applyOnLobbyImmidiately(CLobbyScreen * lobby)
+	{
+		return true;
+	}
+
 	void applyOnLobby(CLobbyScreen * lobby) {}
 };
 
@@ -2483,6 +2488,7 @@ struct LobbyClientDisconnected : public CLobbyPackToPropagate
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	bool applyOnServer(CVCMIServer * srv);
 	void applyOnServerAfterAnnounce(CVCMIServer * srv);
+	bool applyOnLobbyImmidiately(CLobbyScreen * lobby);
 	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)
@@ -2528,6 +2534,7 @@ struct LobbyStartGame : public CLobbyPackToPropagate
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	bool applyOnServer(CVCMIServer * srv);
 	void applyOnServerAfterAnnounce(CVCMIServer * srv);
+	bool applyOnLobbyImmidiately(CLobbyScreen * lobby);
 	void applyOnLobby(CLobbyScreen * lobby);
 
 	template <typename Handler> void serialize(Handler &h, const int version)

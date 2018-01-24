@@ -52,6 +52,7 @@ template<typename T> class CApplyOnLobby;
 class CBaseForLobbyApply
 {
 public:
+	virtual bool applyImmidiately(CLobbyScreen * selScr, void * pack) const = 0;
 	virtual void applyOnLobby(CLobbyScreen * selScr, void * pack) const = 0;
 	virtual ~CBaseForLobbyApply(){};
 	template<typename U> static CBaseForLobbyApply * getApplier(const U * t = nullptr)
@@ -63,6 +64,12 @@ public:
 template<typename T> class CApplyOnLobby : public CBaseForLobbyApply
 {
 public:
+	bool applyImmidiately(CLobbyScreen * selScr, void * pack) const override
+	{
+		T * ptr = static_cast<T *>(pack);
+		return ptr->applyOnLobbyImmidiately(selScr);
+	}
+
 	void applyOnLobby(CLobbyScreen * selScr, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
@@ -73,6 +80,13 @@ public:
 template<> class CApplyOnLobby<CPack>: public CBaseForLobbyApply
 {
 public:
+	bool applyImmidiately(CLobbyScreen * selScr, void * pack) const override
+	{
+		logGlobal->error("Cannot apply plain CPack!");
+		assert(0);
+		return false;
+	}
+
 	void applyOnLobby(CLobbyScreen * selScr, void * pack) const override
 	{
 		logGlobal->error("Cannot apply plain CPack!");
@@ -152,7 +166,7 @@ CServerHandler::CServerHandler()
 CServerHandler::~CServerHandler()
 {
 	delete shm;
-	delete localServerThread; //detaches, not kills thread
+	delete localServerThread;
 }
 
 void CServerHandler::threadRunServer()
@@ -223,7 +237,6 @@ void CServerHandler::sendPackToServer(CPackForLobby & pack)
 
 void CServerHandler::stopServerConnection()
 {
-	ongoingClosing = true;
 	if(serverHandlingThread)
 	{
 		stopServer();
@@ -384,7 +397,6 @@ void CServerHandler::startGame()
 		if(!si->mapGenOptions->checkOptions())
 			throw noTemplateException();
 	}
-	ongoingClosing = true;
 	LobbyStartGame lsg;
 	sendPackToServer(lsg);
 }
@@ -435,7 +447,6 @@ void CServerHandler::sendMessage(const std::string & txt)
 
 void CServerHandler::stopServer()
 {
-	ongoingClosing = true;
 	LobbyClientDisconnected lcd;
 	lcd.connectionId = c->connectionID;
 	lcd.shutdownServer = isServerLocal();
@@ -446,8 +457,6 @@ void CServerHandler::threadHandleConnection()
 {
 	setThreadName("CServerHandler::threadHandleConnection");
 	c->enterPregameConnectionMode();
-	applier = new CApplier<CBaseForLobbyApply>();
-	registerTypesPregamePacks(*applier);
 
 	try
 	{
@@ -457,31 +466,21 @@ void CServerHandler::threadHandleConnection()
 		lcc.mode = si->mode;
 		sendPackToServer(lcc);
 
-		while(c)
+		while(c && ongoingClosing)
 		{
 			CPackForLobby * pack = nullptr;
 			*c >> pack;
 			logNetwork->trace("Received a pack of type %s", typeid(*pack).name());
 			assert(pack);
-			if(LobbyClientDisconnected * endingPack = dynamic_cast<LobbyClientDisconnected *>(pack))
-			{
-				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
-			}
-			else if(LobbyStartGame * endingPack = dynamic_cast<LobbyStartGame *>(pack))
-			{
-				endingPack->applyOnLobby(static_cast<CLobbyScreen *>(SEL));
-			}
-			else
+
+			// TODO: this should be replaced with asynchronious boost::asio usage
+			// Then we can cancel read and join thread instead of breaking out of loop
+			if(applier->getApplier(typeList.getTypeID(pack))->applyImmidiately(static_cast<CLobbyScreen *>(SEL), pack))
 			{
 				boost::unique_lock<boost::recursive_mutex> lock(*mx);
 				upcomingPacks.push_back(pack);
 			}
 		}
-	}
-	catch(int i)
-	{
-		if(i != 666)
-			throw;
 	}
 	catch(...)
 	{
@@ -492,10 +491,10 @@ void CServerHandler::threadHandleConnection()
 
 void CServerHandler::processPacks()
 {
-	boost::unique_lock<boost::recursive_mutex> lock(*mx);
-	if(!serverHandlingThread)
+	if(!serverHandlingThread || !ongoingClosing)
 		return;
 
+	boost::unique_lock<boost::recursive_mutex> lock(*mx);
 	while(!upcomingPacks.empty())
 	{
 		CPackForLobby * pack = upcomingPacks.front();
