@@ -66,6 +66,16 @@ struct CPackForServer : public CPack
 		logGlobal->error("Should not happen... applying plain CPackForServer");
 		return false;
 	}
+
+protected:
+	void throwNotAllowedAction();
+	void throwOnWrongOwner(CGameHandler * gh, ObjectInstanceID id);
+	void throwOnWrongPlayer(CGameHandler * gh, PlayerColor player);
+	void throwAndCompain(CGameHandler * gh, std::string txt);
+	bool isPlayerOwns(CGameHandler * gh, ObjectInstanceID id);
+
+private:
+	void wrongPlayerMessage(CGameHandler * gh, PlayerColor expectedplayer);
 };
 
 struct Query : public CPackForClient
@@ -2354,6 +2364,7 @@ struct SaveGame : public CPackForClient, public CPackForServer
 	}
 };
 
+// MPTODO: this need fixing since we don't need this announce hell
 struct PlayerMessage : public CPackForClient, public CPackForServer
 {
 	PlayerMessage(){};
