@@ -42,7 +42,7 @@ public:
 	void loadCommonState(Loader &in); //loads GS and VLC
 
 	template<typename Loader>
-	void recieveCommonState(Loader &conn);
+	void receiveCommonState(Loader &conn);
 
 	template<typename Loader>
 	void sendCommonState(Loader &conn);

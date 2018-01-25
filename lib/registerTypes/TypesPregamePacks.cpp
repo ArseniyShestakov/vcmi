@@ -31,7 +31,7 @@
 #include "../serializer/BinarySerializer.h"
 #include "../serializer/CTypeList.h"
 
-template void registerTypesPregamePacks<BinaryDeserializer>(BinaryDeserializer & s);
-template void registerTypesPregamePacks<BinarySerializer>(BinarySerializer & s);
-template void registerTypesPregamePacks<CTypeList>(CTypeList & s);
+template void registerTypesLobbyPacks<BinaryDeserializer>(BinaryDeserializer & s);
+template void registerTypesLobbyPacks<BinarySerializer>(BinarySerializer & s);
+template void registerTypesLobbyPacks<CTypeList>(CTypeList & s);
 

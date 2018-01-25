@@ -8,6 +8,10 @@
  *
  */
 
+#include "../lib/CStopWatch.h"
+
+#include "../lib/StartInfo.h"
+
 struct SharedMemory;
 class CConnection;
 class PlayerColor;
@@ -21,9 +25,8 @@ struct LobbyGuiAction;
 struct PlayerInfo;
 struct CPackForLobby;
 
-#include "../lib/CStopWatch.h"
-
-#include "../lib/StartInfo.h"
+template<typename T> class CApplier;
+class CBaseForLobbyApply;
 
 class IServerAPI
 {
@@ -38,10 +41,13 @@ public:
 	virtual void stopServer() =0;
 };
 
+class CClient; //MPTODO: rework
 /// structure to handle running server and connecting to it
 class CServerHandler : public IServerAPI, public LobbyInfo
 {
+	CApplier<CBaseForLobbyApply> * applier;
 public:
+	CClient * client; //MPTODO: rework
 	CStopWatch th;
 	bool verbose; //whether to print log msgs
 
@@ -89,7 +95,6 @@ public:
 	void processPacks();
 	void stopServerConnection();
 	void stopConnection();
-	void sendPackToServer(CPackForLobby & pack);
 
 	bool isHost() const;
 	bool isGuest() const;

@@ -48,8 +48,16 @@ struct ServerCapabilities;
 struct LobbyInfo;
 class PlayerSettings;
 class PlayerColor;
+
+template<typename T> class CApplier;
+class CBaseForServerApply;
+class CBaseForGHApply;
+
 class CVCMIServer : public LobbyInfo
 {
+	std::unique_ptr<CGameHandler> gh;
+	CApplier<CBaseForServerApply> * applier;
+
 public:
 	enum
 	{
@@ -71,8 +79,8 @@ public:
 
 	void startAsyncAccept();
 	void connectionAccepted(const boost::system::error_code & ec);
-	void startListeningThread(std::shared_ptr<CConnection> pc);
-	void handleConnection(std::shared_ptr<CConnection> cpc);
+	void startListeningThread(std::shared_ptr<CConnection> c);
+	void handleConnection(std::shared_ptr<CConnection> c);
 
 	void processPack(CPackForLobby * pack);
 	void announcePack(const CPackForLobby & pack);
@@ -90,7 +98,7 @@ public:
 
 	std::shared_ptr<CConnection> hostClient;
 	ServerCapabilities * capabilities;
-	void sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby & pack);
+	void sendPack(std::shared_ptr<CConnection> c, const CPackForLobby & pack);
 	void announceTxt(const std::string & txt, const std::string & playerName = "system");
 	void addToAnnounceQueue(CPackForLobby * pack, bool front = false);
 

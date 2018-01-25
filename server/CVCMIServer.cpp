@@ -111,8 +111,6 @@ public:
 	}
 };
 
-static CApplier<CBaseForServerApply> * applier = nullptr;
-
 std::string NAME_AFFIX = "server";
 std::string NAME = GameConstants::VCMI_VERSION + std::string(" (") + NAME_AFFIX + ')';
 
@@ -124,7 +122,7 @@ CVCMIServer::CVCMIServer(boost::program_options::variables_map & opts)
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 	logNetwork->trace("CVCMIServer created! UUID: %s", uuid);
 	applier = new CApplier<CBaseForServerApply>();
-	registerTypesPregamePacks(*applier);
+	registerTypesLobbyPacks(*applier);
 
 	if(cmdLineOptions.count("port"))
 		port = cmdLineOptions["port"].as<ui16>();
@@ -281,50 +279,73 @@ void CVCMIServer::connectionAccepted(const boost::system::error_code & ec)
 	startAsyncAccept();
 }
 
-void CVCMIServer::startListeningThread(std::shared_ptr<CConnection> pc)
+void CVCMIServer::startListeningThread(std::shared_ptr<CConnection> c)
 {
 	listeningThreads++;
-	pc->enterPregameConnectionMode();
-	pc->handler = new boost::thread(&CVCMIServer::handleConnection, this, pc);
+	c->enterPregameConnectionMode();
+	c->handler = new boost::thread(&CVCMIServer::handleConnection, this, c);
 }
 
-void CVCMIServer::handleConnection(std::shared_ptr<CConnection> cpc)
+void CVCMIServer::handleConnection(std::shared_ptr<CConnection> c)
 {
 	setThreadName("CVCMIServer::handleConnection");
 	try
 	{
-		while(!cpc->stopHandling)
+		while(!c->stopHandling)
 		{
-			CPackForLobby * pack = nullptr;
-			*cpc >> pack;
-			logNetwork->info("Got package to announce %s from %s", typeid(*pack).name(), cpc->toString());
-			CBaseForServerApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
-			if(apply->applyOnServerBefore(this, cpc, pack))
+			if(!c->connected)
+				throw clientDisconnectedException();
+
+			CPack * pack = c->retreivePack(c);
+			logNetwork->info("Got package to announce %s from %s", typeid(*pack).name(), c->toString());
+			if(auto lobbyPack = dynamic_ptr_cast<CPackForLobby>(pack))
 			{
-				addToAnnounceQueue(pack);
-				apply->applyOnServerAfter(this, cpc, pack);
+				CBaseForServerApply * apply = applier->getApplier(pack->type);
+				if(apply->applyOnServerBefore(this, c, lobbyPack))
+				{
+					addToAnnounceQueue(lobbyPack);
+					apply->applyOnServerAfter(this, c, lobbyPack);
+				}
+				else
+					delete pack;
 			}
-			else
-				delete pack;
+			else if(auto serverPack = dynamic_ptr_cast<CPackForServer>(pack))
+			{
+				gh->handlePack(serverPack);
+			}
 		}
 	}
 	catch(const std::exception & e)
 	{
 		boost::unique_lock<boost::recursive_mutex> queueLock(mx);
-		logNetwork->error("%s dies... \nWhat happened: %s", cpc->toString(), e.what());
+		logNetwork->error("%s dies... \nWhat happened: %s", c->toString(), e.what());
+	}
+	catch(boost::system::system_error &e) //for boost errors just log, not crash - probably client shut down connection
+	{
+//		handleDisconnection(e);
+	}
+	catch(clientDisconnectedException & e)
+	{
+//		handleDisconnection(e);
+	}
+	catch(...)
+	{
+		CVCMIServer::shuttingDown = true;
+		handleException();
+		throw;
 	}
 
 	boost::unique_lock<boost::recursive_mutex> queueLock(mx);
 	if(state != ENDING_AND_STARTING_GAME)
 	{
 		auto lcd = new LobbyClientDisconnected();
-		lcd->c = cpc;
+		lcd->c = c;
 		addToAnnounceQueue(lcd, true);
 	}
 
-	logNetwork->info("Thread listening for %s ended", cpc->toString());
+	logNetwork->info("Thread listening for %s ended", c->toString());
 	listeningThreads--;
-	vstd::clear_pointer(cpc->handler);
+	vstd::clear_pointer(c->handler);
 }
 
 void CVCMIServer::processPack(CPackForLobby * pack)
@@ -341,28 +362,28 @@ void CVCMIServer::processPack(CPackForLobby * pack)
 	delete pack;
 }
 
-void CVCMIServer::sendPack(std::shared_ptr<CConnection> pc, const CPackForLobby & pack)
+void CVCMIServer::sendPack(std::shared_ptr<CConnection> c, const CPackForLobby & pack)
 {
-	if(!pc->stopHandling)
+	if(!c->stopHandling)
 	{
-		logNetwork->info("\tSending pack of type %s to %s", typeid(pack).name(), pc->toString());
-		*pc << &pack;
+		logNetwork->info("\tSending pack of type %s to %s", typeid(pack).name(), c->toString());
+		c->sendPack(&pack);
 	}
 
 	if(dynamic_ptr_cast<LobbyClientDisconnected>(&pack))
 	{
-		pc->stopHandling = true;
+		c->stopHandling = true;
 	}
 	else if(dynamic_ptr_cast<LobbyStartGame>(&pack))
 	{
-		pc->stopHandling = true;
+		c->stopHandling = true;
 	}
 }
 
 void CVCMIServer::announcePack(const CPackForLobby & pack)
 {
-	for(auto pc : connections)
-		sendPack(pc, pack);
+	for(auto c : connections)
+		sendPack(c, pack);
 }
 
 void CVCMIServer::announceTxt(const std::string & txt, const std::string & playerName)

@@ -210,21 +210,34 @@ void CConnection::reportState(vstd::CLoggerBase * out)
 	}
 }
 
-CPack * CConnection::retreivePack()
+CPack * CConnection::retreivePack(std::shared_ptr<CConnection> thisConnection)
 {
-	CPack *ret = nullptr;
+	CPack * pack = nullptr;
 	boost::unique_lock<boost::mutex> lock(*rmx);
 	logNetwork->trace("Listening... ");
-	iser & ret;
-	logNetwork->trace("\treceived server message of type %s", (ret? typeid(*ret).name() : "nullptr"));
-	return ret;
+	iser & pack;
+	logNetwork->trace("\treceived CPack of type %s", (pack ? typeid(*pack).name() : "nullptr"));
+	if(!pack)
+	{
+		// MPTODO: Throw from here on nullptr packs
+//		logGlobal->error("Received a null package marked as request %d from player %d", requestID, player);
+	}
+//	if(pack == nullptr)
+//	{
+//		logNetwork->error("Dropping nullptr CPack! You should check whether client and server ABI matches.");
+//		return;
+//	}
+
+	pack->type = typeList.getTypeID(pack);
+	pack->c = thisConnection;
+	return pack;
 }
 
-void CConnection::sendPackToServer(const CPack &pack, PlayerColor player, ui32 requestID)
+void CConnection::sendPack(const CPack * pack)
 {
 	boost::unique_lock<boost::mutex> lock(*wmx);
-	logNetwork->trace("Sending to server a pack of type %s", typeid(pack).name());
-	oser & player & requestID & &pack; //packs has to be sent as polymorphic pointers!
+	logNetwork->trace("Sending a pack of type %s", typeid(pack).name());
+	oser & pack; //packs has to be sent as polymorphic pointers!
 }
 
 void CConnection::disableStackSendingByID()

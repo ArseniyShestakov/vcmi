@@ -30,6 +30,9 @@ class IMarket;
 
 class SpellCastEnvironment;
 
+template<typename T> class CApplier;
+class CBaseForGHApply;
+
 struct PlayerStatus
 {
 	bool makingTurn;
@@ -74,6 +77,7 @@ struct CasualtiesAfterBattle
 
 class CGameHandler : public IGameCallback, CBattleInfoCallback
 {
+	CApplier<CBaseForGHApply> * applier;
 public:
 	//use enums as parameters, because doMove(sth, true, false, true) is not readable
 	enum EGuardLook {CHECK_FOR_GUARDS, IGNORE_GUARDS};
@@ -186,7 +190,8 @@ public:
 	void commitPackage(CPackForClient *pack) override;
 
 	void init(StartInfo *si);
-	void handleConnection(std::set<PlayerColor> players, std::shared_ptr<CConnection> c);
+	void handleClientDisconnection(std::shared_ptr<CConnection> c);
+	void handlePack(CPackForServer * pack);
 	PlayerColor getPlayerAt(std::shared_ptr<CConnection> c) const;
 
 	void playerMessage(PlayerColor player, const std::string &message, ObjectInstanceID currObj);

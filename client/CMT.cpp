@@ -80,7 +80,7 @@ namespace bfs = boost::filesystem;
 std::string NAME_AFFIX = "client";
 std::string NAME = GameConstants::VCMI_VERSION + std::string(" (") + NAME_AFFIX + ')'; //application name
 CGuiHandler GH;
-static CClient *client = nullptr;
+static CClient * client = nullptr;
 
 int preferredDriverIndex = -1;
 SDL_Window * mainWindow = nullptr;
@@ -1340,6 +1340,7 @@ static void mainLoop()
 void startGame()
 {
 	client = new CClient();
+	CSH->client = client;
 	CPlayerInterface::howManyPeople = 0;
 	switch(CSH->si->mode) //new game
 	{

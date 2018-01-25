@@ -81,7 +81,7 @@ template <typename T> class CApplyOnGH;
 class CBaseForGHApply
 {
 public:
-	virtual bool applyOnGH(CGameHandler * gh, std::shared_ptr<CConnection> c, void * pack, PlayerColor player) const =0;
+	virtual bool applyOnGH(CGameHandler * gh, void * pack) const =0;
 	virtual ~CBaseForGHApply(){}
 	template<typename U> static CBaseForGHApply *getApplier(const U * t=nullptr)
 	{
@@ -92,11 +92,9 @@ public:
 template <typename T> class CApplyOnGH : public CBaseForGHApply
 {
 public:
-	bool applyOnGH(CGameHandler * gh, std::shared_ptr<CConnection> c, void * pack, PlayerColor player) const override
+	bool applyOnGH(CGameHandler * gh, void * pack) const override
 	{
 		T *ptr = static_cast<T*>(pack);
-		ptr->c = c;
-		ptr->player = player;
 		try
 		{
 			return ptr->applyGh(gh);
@@ -116,15 +114,13 @@ template <>
 class CApplyOnGH<CPack> : public CBaseForGHApply
 {
 public:
-	bool applyOnGH(CGameHandler * gh, std::shared_ptr<CConnection> c, void * pack, PlayerColor player) const override
+	bool applyOnGH(CGameHandler * gh, void * pack) const override
 	{
 		logGlobal->error("Cannot apply on GH plain CPack!");
 		assert(0);
 		return false;
 	}
 };
-
-static CApplier<CBaseForGHApply> *applier = nullptr;
 
 CMP_stack cmpst ;
 
@@ -1023,120 +1019,73 @@ void CGameHandler::applyBattleEffects(BattleAttack &bat, const CStack *att, cons
 		bat.bsa.push_back(bsa2);
 	}
 }
-void CGameHandler::handleConnection(std::set<PlayerColor> players, std::shared_ptr<CConnection> c)
-{
-	setThreadName("CGameHandler::handleConnection");
 
-	auto handleDisconnection = [&](const std::exception & e)
+void CGameHandler::handleClientDisconnection(std::shared_ptr<CConnection> c)
+{
+//	boost::unique_lock<boost::mutex> lock(*c->wmx);
+//	assert(!c->connected); //make sure that connection has been marked as broken
+//		logGlobal->error(e.what());
+	conns -= c;
+	for(auto playerConns : connections)
 	{
-		boost::unique_lock<boost::mutex> lock(*c->wmx);
-		assert(!c->connected); //make sure that connection has been marked as broken
-		logGlobal->error(e.what());
-		conns -= c;
-		for(auto playerConns : connections)
+		for(auto conn : playerConns.second)
 		{
-			for(auto conn : playerConns.second)
+			if(!CVCMIServer::shuttingDown && conn == c)
 			{
-				if(!CVCMIServer::shuttingDown && conn == c)
-				{
-					vstd::erase_if_present(playerConns.second, conn);
-					if(playerConns.second.size())
-						continue;
-					PlayerCheated pc;
-					pc.player = playerConns.first;
-					pc.losingCheatCode = true;
-					sendAndApply(&pc);
-					checkVictoryLossConditionsForPlayer(playerConns.first);
-				}
+				vstd::erase_if_present(playerConns.second, conn);
+				if(playerConns.second.size())
+					continue;
+				PlayerCheated pc;
+				pc.player = playerConns.first;
+				pc.losingCheatCode = true;
+				sendAndApply(&pc);
+				checkVictoryLossConditionsForPlayer(playerConns.first);
 			}
 		}
+	}
+}
+
+void CGameHandler::handlePack(CPackForServer * pack)
+{
+	//prepare struct informing that action was applied
+	auto sendPackageResponse = [&](bool succesfullyApplied)
+	{
+		//dont reply to disconnected client
+		//TODO: this must be implemented as option of CPackForServer
+		if(dynamic_cast<LeaveGame *>(pack) || dynamic_cast<CloseServer *>(pack))
+			return;
+
+		PackageApplied applied;
+		applied.player = pack->player;
+		applied.result = succesfullyApplied;
+		applied.packType = pack->type;
+		applied.requestID = pack->requestID;
+		pack->c->sendPack(&applied);
 	};
 
-	try
+	CBaseForGHApply * apply = applier->getApplier(pack->type); //and appropriate applier object
+	if(isBlockedByQueries(pack, pack->player))
 	{
-		while(1)//server should never shut connection first //was: while(!end2)
-		{
-			CPack *pack = nullptr;
-			PlayerColor player = PlayerColor::NEUTRAL;
-			si32 requestID = -999;
-			int packType = 0;
-
-			{
-				boost::unique_lock<boost::mutex> lock(*c->rmx);
-				if(!c->connected)
-					throw clientDisconnectedException();
-				*(c.get()) >> player >> requestID >> pack; //get the package
-
-				if (!pack)
-				{
-					logGlobal->error("Received a null package marked as request %d from player %d", requestID, player);
-				}
-				else
-				{
-					packType = typeList.getTypeID(pack); //get the id of type
-
-					logGlobal->trace("Received client message (request %d by player %d (%s)) of type with ID=%d (%s).\n",
-									 requestID, player, player.getStr(), packType, typeid(*pack).name());
-				}
-			}
-
-			//prepare struct informing that action was applied
-			auto sendPackageResponse = [&](bool succesfullyApplied)
-			{
-				//dont reply to disconnected client
-				//TODO: this must be implemented as option of CPackForServer
-				if(dynamic_cast<LeaveGame *>(pack) || dynamic_cast<CloseServer *>(pack))
-					return;
-
-				PackageApplied applied;
-				applied.player = player;
-				applied.result = succesfullyApplied;
-				applied.packType = packType;
-				applied.requestID = requestID;
-				boost::unique_lock<boost::mutex> lock(*c->wmx);
-				*(c.get()) << &applied;
-			};
-			CBaseForGHApply *apply = applier->getApplier(packType); //and appropriate applier object
-			if(isBlockedByQueries(pack, player))
-			{
-				sendPackageResponse(false);
-			}
-			else if (apply)
-			{
-				const bool result = apply->applyOnGH(this, c, pack, player);
-				if (result)
-					logGlobal->trace("Message %s successfully applied!", typeid(*pack).name());
-				else
-					complain((boost::format("Got false in applying %s... that request must have been fishy!")
-						% typeid(*pack).name()).str());
-
-				sendPackageResponse(true);
-			}
-			else
-			{
-				logGlobal->error("Message cannot be applied, cannot find applier (unregistered type)!");
-				sendPackageResponse(false);
-			}
-
-			vstd::clear_pointer(pack);
-		}
+		sendPackageResponse(false);
 	}
-	catch(boost::system::system_error &e) //for boost errors just log, not crash - probably client shut down connection
+	else if(apply)
 	{
-		handleDisconnection(e);
+		const bool result = apply->applyOnGH(this, pack);
+		if(result)
+			logGlobal->trace("Message %s successfully applied!", typeid(*pack).name());
+		else
+			complain((boost::format("Got false in applying %s... that request must have been fishy!")
+				% typeid(*pack).name()).str());
+
+		sendPackageResponse(true);
 	}
-	catch(clientDisconnectedException & e)
+	else
 	{
-		handleDisconnection(e);
-	}
-	catch(...)
-	{
-		CVCMIServer::shuttingDown = true;
-		handleException();
-		throw;
+		logGlobal->error("Message cannot be applied, cannot find applier (unregistered type)!");
+		sendPackageResponse(false);
 	}
 
-	logGlobal->error("Ended handling connection");
+	vstd::clear_pointer(pack);
 }
 
 int CGameHandler::moveStack(int stack, BattleHex dest)
@@ -1419,8 +1368,6 @@ CGameHandler::CGameHandler()
 CGameHandler::~CGameHandler()
 {
 	delete spellEnv;
-	delete applier;
-	applier = nullptr;
 	delete gs;
 }
 
@@ -1856,7 +1803,7 @@ void CGameHandler::run(bool resume, CVCMIServer * srv)
 			if(vstd::contains(j->second, elem))
 				pom.insert(j->first);
 
-		boost::thread(std::bind(&CGameHandler::handleConnection,this,pom,elem));
+// 		boost::thread(std::bind(&CGameHandler::handleConnection,this,pom,elem));
 	}
 
 	auto playerTurnOrder = generatePlayerTurnOrder();

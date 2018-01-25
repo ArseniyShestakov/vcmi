@@ -78,12 +78,12 @@ public:
 	virtual void buildBoat(const IShipyard *obj) = 0;
 };
 
-struct CPack;
+struct CPackForServer;
 
 class CBattleCallback : public IBattleCallback, public CPlayerBattleCallback
 {
 protected:
-	int sendRequest(const CPack *request); //returns requestID (that'll be matched to requestID in PackageApplied)
+	int sendRequest(const CPackForServer * request); //returns requestID (that'll be matched to requestID in PackageApplied)
 	CClient *cl;
 	//virtual bool hasAccess(int playerId) const;
 

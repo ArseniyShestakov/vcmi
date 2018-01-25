@@ -17,13 +17,18 @@ class CArmedInstance;
 class CArtifactSet;
 class CBonusSystemNode;
 struct ArtSlotInfo;
+class CConnection;
 
 #include "ConstTransitivePtr.h"
 #include "GameConstants.h"
 
 struct DLL_LINKAGE CPack
 {
-	CPack() {};
+	// Not serialized. Set in CConnection::retreivePack
+	ui16 type;
+	std::shared_ptr<CConnection> c; // Pointer to connection that pack received from
+
+	CPack() : c(nullptr), type(0) {};
 	virtual ~CPack() {};
 
 	template <typename Handler> void serialize(Handler &h, const int version)

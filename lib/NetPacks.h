@@ -57,12 +57,11 @@ struct CPackForClient : public CPack
 
 struct CPackForServer : public CPack
 {
-	PlayerColor player;
-	std::shared_ptr<CConnection> c;
+	mutable PlayerColor player;
+	mutable si32 requestID;
 	CGameState* GS(CGameHandler *gh);
 	CPackForServer():
-		player(PlayerColor::NEUTRAL),
-		c(nullptr)
+		player(PlayerColor::NEUTRAL)
 	{
 	}
 
@@ -70,6 +69,12 @@ struct CPackForServer : public CPack
 	{
 		logGlobal->error("Should not happen... applying plain CPackForServer");
 		return false;
+	}
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & player;
+		h & requestID;
 	}
 
 protected:
@@ -2413,7 +2418,6 @@ struct CenterView : public CPackForClient
 
 struct CPackForLobby : public CPack
 {
-	std::shared_ptr<CConnection> c;
 	bool applied; // MPTODO: Only used by server. Find better way handle this since it's only used for propogate netpacks
 
 	bool checkClientPermissions(CVCMIServer * srv) const

@@ -104,9 +104,6 @@ public:
 };
 
 
-static CApplier<CBaseForCLApply> * applier = nullptr;
-
-
 CClient::CClient()
 {
 	init();
@@ -284,15 +281,15 @@ void CClient::run()
 	{
 		while(!terminate)
 		{
-			CPack * pack = CSH->c->retreivePack(); //get the package from the server
+//			CPack * pack = CSH->c->retreivePack(); //get the package from the server
 
 			if(terminate)
 			{
-				vstd::clear_pointer(pack);
+//				vstd::clear_pointer(pack);
 				break;
 			}
 
-			handlePack(pack);
+//			handlePack(pack);
 		}
 	}
 	//catch only asio exceptions
@@ -316,8 +313,9 @@ void CClient::save(const std::string & fname)
 		return;
 	}
 
-	SaveGame save_game(fname);
-	sendRequest((CPackForClient *)&save_game, PlayerColor::NEUTRAL);
+	//MPTODO: this need more work since sendRequest now only accept CPackForServer
+//	SaveGame save_game(fname);
+//	sendRequest((CPackForClient *)&save_game, PlayerColor::NEUTRAL);
 }
 
 void CClient::endGame(bool closeConnection)
@@ -475,11 +473,6 @@ void CClient::installNewBattleInterface(std::shared_ptr<CBattleGameInterface> ba
 
 void CClient::handlePack(CPack * pack)
 {
-	if(pack == nullptr)
-	{
-		logNetwork->error("Dropping nullptr CPack! You should check whether client and server ABI matches.");
-		return;
-	}
 	CBaseForCLApply * apply = applier->getApplier(typeList.getTypeID(pack)); //find the applier
 	if(apply)
 	{
@@ -549,7 +542,7 @@ void CClient::commitPackage(CPackForClient * pack)
 	sendRequest(&cp, PlayerColor::NEUTRAL);
 }
 
-int CClient::sendRequest(const CPack * request, PlayerColor player)
+int CClient::sendRequest(const CPackForServer * request, PlayerColor player)
 {
 	static ui32 requestCounter = 0;
 
@@ -557,9 +550,11 @@ int CClient::sendRequest(const CPack * request, PlayerColor player)
 	logNetwork->trace("Sending a request \"%s\". It'll have an ID=%d.", typeid(*request).name(), requestID);
 
 	waitingRequest.pushBack(requestID);
-	CSH->c->sendPackToServer(*request, player, requestID);
+	request->requestID = requestID;
+	request->player = player;
+	CSH->c->sendPack(request);
 	if(vstd::contains(playerint, player))
-		playerint[player]->requestSent(dynamic_cast<const CPackForServer *>(request), requestID);
+		playerint[player]->requestSent(request, requestID);
 
 	return requestID;
 }

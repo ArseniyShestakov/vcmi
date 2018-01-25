@@ -345,7 +345,7 @@ void registerTypesServerPacks(Serializer &s)
 }
 
 template<typename Serializer>
-void registerTypesPregamePacks(Serializer &s)
+void registerTypesLobbyPacks(Serializer &s)
 {
 	s.template registerType<CPack, CPackForLobby>();
 	s.template registerType<CPackForLobby, CLobbyPackToPropagate>();
@@ -381,7 +381,7 @@ void registerTypes(Serializer &s)
 	registerTypesClientPacks1(s);
 	registerTypesClientPacks2(s);
 	registerTypesServerPacks(s);
-	registerTypesPregamePacks(s);
+	registerTypesLobbyPacks(s);
 }
 
 #ifndef INSTANTIATE_REGISTER_TYPES_HERE

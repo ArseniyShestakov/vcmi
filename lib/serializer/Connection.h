@@ -79,8 +79,10 @@ public:
 	CConnection &operator&(const T&);
 	virtual ~CConnection();
 
-	CPack *retreivePack(); //gets from server next pack (allocates it with new)
-	void sendPackToServer(const CPack &pack, PlayerColor player, ui32 requestID);
+	// MPTODO: we need to assign shared_ptr to CConnection on CPack, but how to do this properly?
+	// Using weak_ptr inside CConnetion itself seems like even worse idea
+	CPack * retreivePack(std::shared_ptr<CConnection> thisConnection);
+	void sendPack(const CPack * pack);
 
 	void disableStackSendingByID();
 	void enableStackSendingByID();

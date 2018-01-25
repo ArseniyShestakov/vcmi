@@ -31,7 +31,7 @@ void CPackForServer::throwNotAllowedAction()
 	if(c)
 	{
 		SystemMessage temp_message("You are not allowed to perform this action!");
-		*c << &temp_message;
+		c->sendPack(&temp_message);
 	}
 	logNetwork->error("Player is not allowed to perform this action!");
 	throw notAllowedActionException();
@@ -45,7 +45,7 @@ void CPackForServer::wrongPlayerMessage(CGameHandler * gh, PlayerColor expectedp
 	if(c)
 	{
 		SystemMessage temp_message(oss.str());
-		*c << &temp_message;
+		c->sendPack(&temp_message);
 	}
 }
 
@@ -362,8 +362,9 @@ bool PlayerMessage::applyGh(CGameHandler * gh)
 	if(!player.isSpectator()) // TODO: clearly not a great way to verify permissions
 	{
 		throwOnWrongPlayer(gh, player);
-		if(gh->getPlayerAt(c) != player)
-			throwNotAllowedAction();
+// MPTODO: Solve multi-inheritance mess
+// 		if(gh->getPlayerAt(this->c) != player)
+//			throwNotAllowedAction();
 	}
 	gh->playerMessage(player, text, currObj);
 	return true;

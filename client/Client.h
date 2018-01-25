@@ -16,6 +16,7 @@
 #include "../lib/CondSh.h"
 
 struct CPack;
+struct CPackForServer;
 class CCampaignState;
 class CBattleCallback;
 class IGameEventsReceiver;
@@ -32,6 +33,9 @@ class BinaryDeserializer;
 class BinarySerializer;
 namespace boost { class thread; }
 struct ServerCapabilities;
+
+template<typename T> class CApplier;
+class CBaseForCLApply;
 
 template<typename T>
 class ThreadSafeVector
@@ -94,6 +98,7 @@ public:
 /// Class which handles client - server logic
 class CClient : public IGameCallback
 {
+	CApplier<CBaseForCLApply> * applier;
 	std::unique_ptr<CPathsInfo> pathInfo;
 
 	std::map<PlayerColor, std::shared_ptr<boost::thread>> playerActionThreads;
@@ -142,7 +147,7 @@ public:
 	void handlePack(CPack * pack); //applies the given pack and deletes it
 	void stopConnection();
 	void commitPackage(CPackForClient * pack) override;
-	int sendRequest(const CPack * request, PlayerColor player); //returns ID given to that request
+	int sendRequest(const CPackForServer * request, PlayerColor player); //returns ID given to that request
 
 	void battleStarted(const BattleInfo * info);
 	void commenceTacticPhaseForInt(std::shared_ptr<CBattleGameInterface> battleInt); //will be called as separate thread

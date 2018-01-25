@@ -184,7 +184,7 @@ void CPrivilagedInfoCallback::sendCommonState(Loader &conn)
 }
 
 template<typename Loader>
-void CPrivilagedInfoCallback::recieveCommonState(Loader &conn)
+void CPrivilagedInfoCallback::receiveCommonState(Loader &conn)
 {
 	logGlobal->info("\tRecieving handlers");
 	conn >> *VLC;
@@ -213,7 +213,7 @@ template DLL_LINKAGE void CPrivilagedInfoCallback::loadCommonState<CLoadIntegrit
 template DLL_LINKAGE void CPrivilagedInfoCallback::loadCommonState<CLoadFile>(CLoadFile&);
 template DLL_LINKAGE void CPrivilagedInfoCallback::saveCommonState<CSaveFile>(CSaveFile&) const;
 template DLL_LINKAGE void CPrivilagedInfoCallback::sendCommonState<CConnection>(CConnection&);
-template DLL_LINKAGE void CPrivilagedInfoCallback::recieveCommonState<CConnection>(CConnection&);
+template DLL_LINKAGE void CPrivilagedInfoCallback::receiveCommonState<CConnection>(CConnection&);
 
 TerrainTile * CNonConstInfoCallback::getTile( int3 pos )
 {

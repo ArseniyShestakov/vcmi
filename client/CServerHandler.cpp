@@ -47,6 +47,9 @@
 #include "pregame/CSelectionBase.h"
 #include "pregame/CLobbyScreen.h"
 
+// To sent netpacks to client
+#include "Client.h"
+
 template<typename T> class CApplyOnLobby;
 
 class CBaseForLobbyApply
@@ -93,8 +96,6 @@ public:
 		assert(0);
 	}
 };
-
-static CApplier<CBaseForLobbyApply> * applier = nullptr;
 
 extern std::string NAME;
 
@@ -162,7 +163,7 @@ CServerHandler::CServerHandler()
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 	applier = new CApplier<CBaseForLobbyApply>();
-	registerTypesPregamePacks(*applier);
+	registerTypesLobbyPacks(*applier);
 }
 
 CServerHandler::~CServerHandler()
@@ -231,12 +232,6 @@ void CServerHandler::justConnectToServer(const std::string & addr, const ui16 po
 void CServerHandler::stopConnection()
 {
 	c.reset();
-}
-
-void CServerHandler::sendPackToServer(CPackForLobby & pack)
-{
-	logNetwork->trace("Sending a pack of type %s", typeid(pack).name());
-	*c << &pack;
 }
 
 void CServerHandler::stopServerConnection()
@@ -333,7 +328,7 @@ void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player)
 	lcpo.what = what;
 	lcpo.direction = dir;
 	lcpo.color = player;
-	sendPackToServer(lcpo);
+	c->sendPack(&lcpo);
 }
 
 void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
@@ -375,7 +370,7 @@ void CServerHandler::prepareForLobby(const StartInfo::EMode mode, const std::vec
 
 void CServerHandler::propagateGuiAction(LobbyGuiAction & lga)
 {
-	sendPackToServer(lga);
+	c->sendPack(&lga);
 }
 
 void CServerHandler::startGame()
@@ -398,7 +393,7 @@ void CServerHandler::startGame()
 			throw noTemplateException();
 	}
 	LobbyStartGame lsg;
-	sendPackToServer(lsg);
+	c->sendPack(&lsg);
 }
 
 void CServerHandler::sendMessage(const std::string & txt)
@@ -415,7 +410,7 @@ void CServerHandler::sendMessage(const std::string & txt)
 		{
 			LobbyChangeHost lch;
 			lch.newHostConnectionId = boost::lexical_cast<int>(id);
-			sendPackToServer(lch);
+			c->sendPack(&lch);
 		}
 	}
 	else if(command == "!forcep")
@@ -432,7 +427,7 @@ void CServerHandler::sendMessage(const std::string & txt)
 				LobbyForceSetPlayer lfsp;
 				lfsp.targetConnectedPlayer = connected;
 				lfsp.targetPlayerColor = color;
-				sendPackToServer(lfsp);
+				c->sendPack(&lfsp);
 			}
 		}
 	}
@@ -441,7 +436,7 @@ void CServerHandler::sendMessage(const std::string & txt)
 		LobbyChatMessage lcm;
 		lcm.message = txt;
 		lcm.playerName = playerNames[myFirstId()].name;
-		sendPackToServer(lcm);
+		c->sendPack(&lcm);
 	}
 }
 
@@ -450,7 +445,7 @@ void CServerHandler::stopServer()
 	LobbyClientDisconnected lcd;
 	lcd.connectionId = c->connectionID;
 	lcd.shutdownServer = isServerLocal();
-	sendPackToServer(lcd);
+	c->sendPack(&lcd);
 }
 
 void CServerHandler::threadHandleConnection()
@@ -464,22 +459,39 @@ void CServerHandler::threadHandleConnection()
 		lcc.uuid = uuid;
 		lcc.names = myNames;
 		lcc.mode = si->mode;
-		sendPackToServer(lcc);
+		c->sendPack(&lcc);
 
 		while(c && !c->stopHandling)
 		{
-			CPackForLobby * pack = nullptr;
-			*c >> pack;
-			logNetwork->trace("Received a pack of type %s", typeid(*pack).name());
-			assert(pack);
+			CPack * pack = c->retreivePack(c);
+//trace("Received a pack of type %s", typeid(*pack).name());
+//			assert(pack);
 
-			// TODO: this should be replaced with asynchronious boost::asio usage
-			// Then we can cancel read and join thread instead of breaking out of loop
-			if(applier->getApplier(typeList.getTypeID(pack))->applyImmidiately(static_cast<CLobbyScreen *>(SEL), pack))
+			if(auto lobbyPack = dynamic_cast<CPackForLobby *>(pack))
 			{
-				boost::unique_lock<boost::recursive_mutex> lock(*mx);
-				upcomingPacks.push_back(pack);
+				// TODO: this should be replaced with asynchronious boost::asio usage
+				// Then we can cancel read and join thread instead of breaking out of loop
+				if(applier->getApplier(typeList.getTypeID(pack))->applyImmidiately(static_cast<CLobbyScreen *>(SEL), pack))
+				{
+					boost::unique_lock<boost::recursive_mutex> lock(*mx);
+					upcomingPacks.push_back(lobbyPack);
+				}
 			}
+			else if(auto clientPack = dynamic_cast<CPackForClient *>(pack))
+			{
+				client->handlePack(clientPack);
+			}
+		}
+	}
+	//catch only asio exceptions
+	catch(const boost::system::system_error & e)
+	{
+		logNetwork->error("Lost connection to server, ending listening thread!");
+		logNetwork->error(e.what());
+//		if(!terminate) //rethrow (-> boom!) only if closing connection was unexpected
+		{
+			logNetwork->error("Something wrong, lost connection while game is still ongoing...");
+			throw;
 		}
 	}
 	catch(...)
@@ -489,8 +501,7 @@ void CServerHandler::threadHandleConnection()
 	}
 }
 
-void
-CServerHandler::processPacks()
+void CServerHandler::processPacks()
 {
 	if(!threadConnectionToServer || c->stopHandling)
 		return;
@@ -510,7 +521,7 @@ void CServerHandler::setPlayer(PlayerColor color)
 {
 	LobbySetPlayer lsp;
 	lsp.clickedColor = color;
-	sendPackToServer(lsp);
+	c->sendPack(&lsp);
 }
 
 void CServerHandler::setTurnLength(int npos)
@@ -518,7 +529,7 @@ void CServerHandler::setTurnLength(int npos)
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
 	LobbySetTurnTime lstt;
 	lstt.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
-	sendPackToServer(lstt);
+	c->sendPack(&lstt);
 }
 
 void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts)
@@ -526,12 +537,12 @@ void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * m
 	LobbySetMap lsm;
 	lsm.mapInfo = to;
 	lsm.mapGenOpts = mapGenOpts;
-	sendPackToServer(lsm);
+	c->sendPack(&lsm);
 }
 
 void CServerHandler::setDifficulty(int to)
 {
 	LobbySetDifficulty lsd;
 	lsd.difficulty = to;
-	sendPackToServer(lsd);
+	c->sendPack(&lsd);
 }
