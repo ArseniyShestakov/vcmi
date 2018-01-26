@@ -238,7 +238,7 @@ void CServerHandler::stopServerConnection()
 {
 	if(threadConnectionToServer)
 	{
-		stopServer();
+		clientDisconnecting();
 		while(!threadConnectionToServer->timed_join(boost::posix_time::milliseconds(50)))
 			processPacks();
 		threadConnectionToServer->join();
@@ -440,7 +440,16 @@ void CServerHandler::sendMessage(const std::string & txt)
 	}
 }
 
-void CServerHandler::stopServer()
+void CServerHandler::clientConnecting()
+{
+	LobbyClientConnected lcc;
+	lcc.uuid = uuid;
+	lcc.names = myNames;
+	lcc.mode = si->mode;
+	c->sendPack(&lcc);
+}
+
+void CServerHandler::clientDisconnecting()
 {
 	LobbyClientDisconnected lcd;
 	lcd.connectionId = c->connectionID;
@@ -455,12 +464,7 @@ void CServerHandler::threadHandleConnection()
 
 	try
 	{
-		LobbyClientConnected lcc;
-		lcc.uuid = uuid;
-		lcc.names = myNames;
-		lcc.mode = si->mode;
-		c->sendPack(&lcc);
-
+		clientConnecting();
 		while(c && !c->stopHandling)
 		{
 			CPack * pack = c->retreivePack(c);

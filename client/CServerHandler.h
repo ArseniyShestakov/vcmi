@@ -31,6 +31,8 @@ class CBaseForLobbyApply;
 class IServerAPI
 {
 public:
+	virtual void clientConnecting() =0;
+	virtual void clientDisconnecting() =0;
 	virtual void setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr) =0;
 	virtual void setPlayerOption(ui8 what, ui8 dir, PlayerColor player) =0;
 	virtual void setPlayer(PlayerColor color) =0;
@@ -38,7 +40,6 @@ public:
 	virtual void setDifficulty(int to) =0;
 	virtual void sendMessage(const std::string & txt) =0;
 	virtual void startGame() =0;
-	virtual void stopServer() =0;
 };
 
 class CClient; //MPTODO: rework
@@ -72,6 +73,8 @@ public:
 	ui8 myFirstId() const; // Used by chat only!
 
 	// Lobby server API for UI
+	void clientConnecting() override;
+	void clientDisconnecting() override;
 	void setMapInfo(std::shared_ptr<CMapInfo> to, CMapGenOptions * mapGenOpts = nullptr) override;
 	void setPlayer(PlayerColor color) override;
 	void setPlayerOption(ui8 what, ui8 dir, PlayerColor player) override;
@@ -79,7 +82,6 @@ public:
 	void setDifficulty(int to) override;
 	void sendMessage(const std::string & txt) override;
 	void startGame() override;
-	void stopServer() override;
 
 	// Some functions we need to get rid of since only server will propagate options
 	void propagateGuiAction(LobbyGuiAction & lga);
