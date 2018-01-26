@@ -1772,11 +1772,6 @@ void CGameHandler::run(bool resume, CVCMIServer * srv)
 	using namespace boost::posix_time;
 	for (auto cc : conns)
 	{
-		if (!resume)
-		{
-			(*cc) << *gs->initialOpts; // gs->scenarioOps
-		}
-
 		auto players = srv->getAllClientPlayers(cc->connectionID);
 		std::stringstream sbuffer;
 		sbuffer << "Connection " << cc->connectionID << " will handle " << players.size() << " player: ";

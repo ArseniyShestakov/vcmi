@@ -238,7 +238,6 @@ void CServerHandler::stopServerConnection()
 {
 	if(threadConnectionToServer)
 	{
-		clientDisconnecting();
 		while(!threadConnectionToServer->timed_join(boost::posix_time::milliseconds(50)))
 			processPacks();
 		threadConnectionToServer->join();
@@ -452,7 +451,6 @@ void CServerHandler::clientConnecting()
 void CServerHandler::clientDisconnecting()
 {
 	LobbyClientDisconnected lcd;
-	lcd.connectionId = c->connectionID;
 	lcd.shutdownServer = isServerLocal();
 	c->sendPack(&lcd);
 }
@@ -465,8 +463,17 @@ void CServerHandler::threadHandleConnection()
 	try
 	{
 		clientConnecting();
-		while(c && !c->stopHandling)
+		while(c)
 		{
+			if(c->stopHandling)
+			{
+				while(c->stopHandling)
+					boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+
+				CSH->c->enableStackSendingByID();
+				CSH->c->disableSmartPointerSerialization();
+				CSH->c->addStdVecItems(client->gameState());
+			}
 			CPack * pack = c->retreivePack(c);
 //trace("Received a pack of type %s", typeid(*pack).name());
 //			assert(pack);
@@ -507,7 +514,7 @@ void CServerHandler::threadHandleConnection()
 
 void CServerHandler::processPacks()
 {
-	if(!threadConnectionToServer || c->stopHandling)
+	if(!threadConnectionToServer)// || c->stopHandling)
 		return;
 
 	boost::unique_lock<boost::recursive_mutex> lock(*mx);

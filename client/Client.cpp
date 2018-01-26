@@ -117,10 +117,11 @@ CClient::~CClient()
 void CClient::init()
 {
 	waitingRequest.clear();
+/* MPTODO remove
 	{
 		TLockGuard _(connectionHandlerMutex);
 		connectionHandler.reset();
-	}
+	}*/
 	pathInfo = nullptr;
 	applier = new CApplier<CBaseForCLApply>();
 	registerTypesClientPacks1(*applier);
@@ -137,9 +138,6 @@ void CClient::newGame()
 	logNetwork->info("\tSending/Getting info to/from the server: %d ms", tmh.getDiff());
 	gs = new CGameState();
 	logNetwork->info("\tCreating gamestate: %i", tmh.getDiff());
-	StartInfo si;
-	*CSH->c >> si;
-	CSH->si = std::make_shared<StartInfo>(si);
 	gs->init(CSH->si.get(), settings["general"]["saveRandomMaps"].Bool());
 	logNetwork->info("Initializing GameState (together): %d ms", tmh.getDiff());
 
@@ -270,26 +268,24 @@ void CClient::serialize(BinaryDeserializer & h, const int version)
 	}
 }
 
+// MPTODO: Remove
+/*
 void CClient::run()
 {
-	setThreadName("CClient::run");
-	CSH->c->enableStackSendingByID();
-	CSH->c->disableSmartPointerSerialization();
-	CSH->c->addStdVecItems(gs);
 
 	try
 	{
 		while(!terminate)
 		{
-//			CPack * pack = CSH->c->retreivePack(); //get the package from the server
+			CPack * pack = CSH->c->retreivePack(); //get the package from the server
 
 			if(terminate)
 			{
-//				vstd::clear_pointer(pack);
+				vstd::clear_pointer(pack);
 				break;
 			}
 
-//			handlePack(pack);
+			handlePack(pack);
 		}
 	}
 	//catch only asio exceptions
@@ -304,6 +300,7 @@ void CClient::run()
 		}
 	}
 }
+*/
 
 void CClient::save(const std::string & fname)
 {
@@ -513,6 +510,7 @@ void CClient::stopConnection()
 		}
 	}
 
+	/* MPTODO remove
 	{
 		TLockGuard _(connectionHandlerMutex);
 		if(connectionHandler) //end connection handler
@@ -532,6 +530,7 @@ void CClient::stopConnection()
 		CSH->c.reset();
 		logNetwork->warn("Our socket has been closed.");
 	}
+	*/
 }
 
 void CClient::commitPackage(CPackForClient * pack)

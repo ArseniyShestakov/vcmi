@@ -2486,9 +2486,8 @@ struct LobbyClientConnected : public CLobbyPackToPropagate
 struct LobbyClientDisconnected : public CLobbyPackToPropagate
 {
 	bool shutdownServer;
-	ui8 connectionId;
 
-	LobbyClientDisconnected() : shutdownServer(false), connectionId(-1) {}
+	LobbyClientDisconnected() : shutdownServer(false) {}
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	bool applyOnServer(CVCMIServer * srv);
 	void applyOnServerAfterAnnounce(CVCMIServer * srv);
@@ -2498,7 +2497,6 @@ struct LobbyClientDisconnected : public CLobbyPackToPropagate
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & shutdownServer;
-		h & connectionId;
 	}
 };
 
@@ -2534,7 +2532,10 @@ struct LobbyGuiAction : public CLobbyPackToPropagate
 
 struct LobbyStartGame : public CLobbyPackToPropagate
 {
-	LobbyStartGame() {}
+	// Set by server
+	StartInfo * initializedStartInfo;
+
+	LobbyStartGame() : initializedStartInfo(nullptr) {}
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	bool applyOnServer(CVCMIServer * srv);
 	void applyOnServerAfterAnnounce(CVCMIServer * srv);
@@ -2543,7 +2544,7 @@ struct LobbyStartGame : public CLobbyPackToPropagate
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
-
+		h & initializedStartInfo;
 	}
 };
 

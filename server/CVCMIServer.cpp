@@ -212,36 +212,34 @@ void CVCMIServer::start()
 
 	if(state == ENDING_AND_STARTING_GAME)
 	{
+/* MPTODO restart
 		logNetwork->info("Waiting for listening thread to finish...");
 		while(listeningThreads)
 			boost::this_thread::sleep(boost::posix_time::milliseconds(50));
-
-		startGame();
+*/
+		gh->run(si->mode == StartInfo::LOAD_GAME, this);
 	}
 }
 
 void CVCMIServer::startGame()
 {
 	logNetwork->info("Preparing new game");
-	CGameHandler gh;
-
+	gh = make_unique<CGameHandler>();
 	switch(si->mode)
 	{
 	case StartInfo::NEW_GAME:
-		gh.init(si.get());
+		gh->init(si.get());
 		break;
 
 	case StartInfo::LOAD_GAME:
 		CLoadFile lf(*CResourceHandler::get("local")->getResourceName(ResourceID(si->mapname, EResType::SERVER_SAVEGAME)), MINIMAL_SERIALIZATION_VERSION);
-		gh.loadCommonState(lf);
-		lf >> gh;
+		gh->loadCommonState(lf);
+		lf >> gh; // MPTODO: not pointer loading? Will crash loading?
 		break;
 	}
-	gh.conns = connections;
-	for(auto c : gh.conns) // MPTODO: should we need to do that if we sent gamestate?
-		c->addStdVecItems(gh.gs);
-
-	gh.run(si->mode == StartInfo::LOAD_GAME, this);
+	gh->conns = connections;
+	for(auto c : gh->conns) // MPTODO: should we need to do that if we sent gamestate?
+		c->addStdVecItems(gh->gs);
 }
 
 void CVCMIServer::startAsyncAccept()
@@ -369,7 +367,7 @@ void CVCMIServer::sendPack(std::shared_ptr<CConnection> c, const CPackForLobby &
 		logNetwork->info("\tSending pack of type %s to %s", typeid(pack).name(), c->toString());
 		c->sendPack(&pack);
 	}
-
+/*
 	if(dynamic_ptr_cast<LobbyClientDisconnected>(&pack))
 	{
 		c->stopHandling = true;
@@ -378,6 +376,7 @@ void CVCMIServer::sendPack(std::shared_ptr<CConnection> c, const CPackForLobby &
 	{
 		c->stopHandling = true;
 	}
+*/
 }
 
 void CVCMIServer::announcePack(const CPackForLobby & pack)

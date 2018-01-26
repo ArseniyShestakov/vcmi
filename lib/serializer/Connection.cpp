@@ -214,7 +214,7 @@ CPack * CConnection::retreivePack(std::shared_ptr<CConnection> thisConnection)
 {
 	CPack * pack = nullptr;
 	boost::unique_lock<boost::mutex> lock(*rmx);
-	logNetwork->trace("Listening... ");
+//	logNetwork->trace("Listening... ");
 	iser & pack;
 	logNetwork->trace("\treceived CPack of type %s", (pack ? typeid(*pack).name() : "nullptr"));
 	if(!pack)

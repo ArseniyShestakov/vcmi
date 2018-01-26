@@ -17,6 +17,10 @@
 #include "../lib/mapping/CMapInfo.h"
 #include "../lib/rmg/CMapGenOptions.h"
 
+// MPTODO: ONLY FOR INITIALIZED START INFO, WE CAN AVOID IT!
+#include "CGameHandler.h"
+#include "../lib/CGameState.h"
+
 bool CLobbyPackToServer::checkClientPermissions(CVCMIServer * srv) const
 {
 	return srv->isClientHost(c->connectionID);
@@ -171,16 +175,29 @@ bool LobbyStartGame::checkClientPermissions(CVCMIServer * srv) const
 
 bool LobbyStartGame::applyOnServer(CVCMIServer * srv)
 {
+	srv->startGame();
+	initializedStartInfo = srv->gh->gameState()->initialOpts;
+
 	return true;
 }
 
 void LobbyStartGame::applyOnServerAfterAnnounce(CVCMIServer * srv)
 {
+	while(true)
+	{
+		{
+			boost::unique_lock<boost::recursive_mutex> queueLock(srv->mx);
+			if(srv->announceQueue.empty())
+				break;
+		}
+		boost::this_thread::sleep(boost::posix_time::milliseconds(10));
+	}
+//	srv->gh->run(srv->si->mode == StartInfo::LOAD_GAME, srv);
 	//MOTODO: this need more thinking!
 	srv->state = CVCMIServer::ENDING_AND_STARTING_GAME;
 	//wait for sending thread to announce start
-	while(srv->state == CVCMIServer::RUNNING)
-		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+//	while(srv->state == CVCMIServer::RUNNING)
+//		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
 }
 
 bool LobbyChangeHost::checkClientPermissions(CVCMIServer * srv) const

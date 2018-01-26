@@ -43,8 +43,6 @@
 #include "../../lib/filesystem/Filesystem.h"
 #include "../../lib/serializer/Connection.h"
 
-void startGame();
-
 ISelectionScreenInfo::ISelectionScreenInfo(CMenuScreen::EState type)
 	: screenType(type)
 {

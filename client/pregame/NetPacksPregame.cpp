@@ -52,7 +52,6 @@ void LobbyClientDisconnected::applyOnLobby(CLobbyScreen * lobby)
 {
 	GH.popIntTotally(lobby);
 	CSH->stopServerConnection();
-	CSH->stopServerConnection();
 //	GH.popIntTotally(lobby);
 }
 
@@ -86,8 +85,9 @@ void LobbyGuiAction::applyOnLobby(CLobbyScreen * lobby)
 
 bool LobbyStartGame::applyOnLobbyImmidiately(CLobbyScreen * lobby)
 {
+	CSH->si = std::shared_ptr<StartInfo>(initializedStartInfo);
 	CSH->c->stopHandling = true;
-	vstd::clear_pointer(CSH->threadConnectionToServer);
+//	vstd::clear_pointer(CSH->threadConnectionToServer);
 	return true;
 }
 

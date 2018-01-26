@@ -92,7 +92,8 @@ CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode game
 
 CLobbyScreen::~CLobbyScreen()
 {
-	CSH->stopServerConnection();
+//	MPTODO what to do? Client should only destroy lobby after disconect CPack received
+//	CSH->stopServerConnection();
 }
 
 void CLobbyScreen::toggleTab(CIntObject * tab)
