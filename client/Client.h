@@ -32,7 +32,6 @@ struct CPathsInfo;
 class BinaryDeserializer;
 class BinarySerializer;
 namespace boost { class thread; }
-struct ServerCapabilities;
 
 template<typename T> class CApplier;
 class CBaseForCLApply;

@@ -173,26 +173,6 @@ void CPrivilagedInfoCallback::loadCommonState(Loader &in)
 	in.serializer & gs;
 }
 
-template<typename Loader>
-void CPrivilagedInfoCallback::sendCommonState(Loader &conn)
-{
-	logGlobal->info("\tSending handlers");
-	conn << *VLC;
-
-	logGlobal->info("\tSending gamestate");
-	conn << gs;
-}
-
-template<typename Loader>
-void CPrivilagedInfoCallback::receiveCommonState(Loader &conn)
-{
-	logGlobal->info("\tRecieving handlers");
-	conn >> *VLC;
-
-	logGlobal->info("\tRecieving gamestate");
-	conn >> gs;
-}
-
 template<typename Saver>
 void CPrivilagedInfoCallback::saveCommonState(Saver &out) const
 {
@@ -212,8 +192,6 @@ void CPrivilagedInfoCallback::saveCommonState(Saver &out) const
 template DLL_LINKAGE void CPrivilagedInfoCallback::loadCommonState<CLoadIntegrityValidator>(CLoadIntegrityValidator&);
 template DLL_LINKAGE void CPrivilagedInfoCallback::loadCommonState<CLoadFile>(CLoadFile&);
 template DLL_LINKAGE void CPrivilagedInfoCallback::saveCommonState<CSaveFile>(CSaveFile&) const;
-template DLL_LINKAGE void CPrivilagedInfoCallback::sendCommonState<CConnection>(CConnection&);
-template DLL_LINKAGE void CPrivilagedInfoCallback::receiveCommonState<CConnection>(CConnection&);
 
 TerrainTile * CNonConstInfoCallback::getTile( int3 pos )
 {

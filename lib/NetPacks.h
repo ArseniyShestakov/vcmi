@@ -39,7 +39,6 @@ struct ArtSlotInfo;
 struct QuestInfo;
 class CMapInfo;
 struct StartInfo;
-struct ServerCapabilities;
 class CMapGenOptions;
 struct ClientPlayer;
 class CVCMIServer;
@@ -2490,10 +2489,9 @@ struct LobbyClientConnected : public CLobbyPackToPropagate
 	// Changed by server before announcing pack
 	int clientId;
 	int hostClientId;
-	ServerCapabilities * capabilities;
 
 	LobbyClientConnected()
-		: mode(StartInfo::INVALID), clientId(-1), hostClientId(-1), capabilities(nullptr)
+		: mode(StartInfo::INVALID), clientId(-1), hostClientId(-1)
 	{}
 
 	bool checkClientPermissions(CVCMIServer * srv) const;
@@ -2509,7 +2507,6 @@ struct LobbyClientConnected : public CLobbyPackToPropagate
 
 		h & clientId;
 		h & hostClientId;
-		h & capabilities;
 	}
 };
 

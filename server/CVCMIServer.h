@@ -44,7 +44,6 @@ typedef boost::asio::basic_socket_acceptor<boost::asio::ip::tcp, boost::asio::so
 typedef boost::asio::basic_stream_socket<boost::asio::ip::tcp, boost::asio::stream_socket_service<boost::asio::ip::tcp>> TSocket;
 
 struct StartInfo;
-struct ServerCapabilities;
 struct LobbyInfo;
 class PlayerSettings;
 class PlayerColor;
@@ -77,7 +76,6 @@ public:
 	std::atomic<int> currentClientId;
 	std::atomic<ui8> currentPlayerId;
 	std::shared_ptr<CConnection> hostClient;
-	ServerCapabilities * capabilities;
 
 	CVCMIServer(boost::program_options::variables_map & opts);
 	~CVCMIServer();

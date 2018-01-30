@@ -17,7 +17,6 @@ class CConnection;
 class PlayerColor;
 struct StartInfo;
 
-struct ServerCapabilities;
 class CMapInfo;
 struct ClientPlayer;
 class CMapHeader;
@@ -57,7 +56,6 @@ class CServerHandler : public IServerAPI, public LobbyInfo
 	CStopWatch th;
 	bool verbose; //whether to print log msgs
 	std::vector<std::string> myNames;
-	ServerCapabilities * cap;
 
 	void threadHandleConnection();
 	void threadRunServer();

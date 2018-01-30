@@ -38,7 +38,6 @@ bool LobbyClientConnected::applyOnServer(CVCMIServer * srv)
 	// Server need to pass some data to newly connected client
 	clientId = c->connectionID;
 	mode = srv->si->mode;
-	capabilities = srv->capabilities;
 	hostClientId = srv->hostClientId;
 	return true;
 }
