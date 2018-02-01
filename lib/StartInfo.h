@@ -125,13 +125,11 @@ struct DLL_LINKAGE StartInfo
 struct ClientPlayer
 {
 	int connection;
-	ui8 color;
 	std::string name;
 
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & connection;
-		h & color;
 		h & name;
 	}
 };

@@ -213,7 +213,7 @@ void SelectionTab::toggleMode(CMenuScreen::EGameMode mode)
 
 		case CMenuScreen::loadGame:
 		case CMenuScreen::saveGame:
-			parseGames(getFiles("Saves/", EResType::CLIENT_SAVEGAME), mode);
+			parseSaves(getFiles("Saves/", EResType::CLIENT_SAVEGAME), mode);
 			if(tabType == CMenuScreen::loadGame)
 			{
 				positionsToShow = 18;
@@ -633,7 +633,7 @@ void SelectionTab::parseMaps(const std::unordered_set<ResourceID> & files)
 	}
 }
 
-void SelectionTab::parseGames(const std::unordered_set<ResourceID> & files, CMenuScreen::EGameMode gameMode)
+void SelectionTab::parseSaves(const std::unordered_set<ResourceID> & files, CMenuScreen::EGameMode gameMode)
 {
 	for(auto & file : files)
 	{

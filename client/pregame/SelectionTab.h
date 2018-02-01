@@ -68,7 +68,7 @@ private:
 	CMenuScreen::EState tabType;
 
 	void parseMaps(const std::unordered_set<ResourceID> & files);
-	void parseGames(const std::unordered_set<ResourceID> & files, CMenuScreen::EGameMode gameMode);
+	void parseSaves(const std::unordered_set<ResourceID> & files, CMenuScreen::EGameMode gameMode);
 	void parseCampaigns(const std::unordered_set<ResourceID> & files);
 	std::unordered_set<ResourceID> getFiles(std::string dirURI, int resType);
 };

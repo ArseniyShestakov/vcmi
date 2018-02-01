@@ -405,7 +405,6 @@ void CVCMIServer::clientConnected(std::shared_ptr<CConnection> c, std::vector<st
 		ClientPlayer cp;
 		cp.connection = c->connectionID;
 		cp.name = name;
-		cp.color = 255;
 		playerNames.insert(std::make_pair(id, cp));
 		announceTxt(boost::str(boost::format("%s (pid %d cid %d) joins the game") % name % id % c->connectionID));
 
