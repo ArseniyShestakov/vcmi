@@ -120,21 +120,23 @@ void CBonusSelection::show(SDL_Surface * to)
 	}
 	mapSizeIcons->showAll(to);
 
-	//flags
+	//MPTODO: reuse lobby flags code
 	int fx = 496 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
 	int ex = 629 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[391]);
 	TeamID myT;
-	/*myT = getHeader()->players[myFirstColor().getNum()].team;
-	for(auto i = startIno.playerInfos.cbegin(); i != startInfo.playerInfos.cend(); i++)
-	{
-		int * myx = ((i->first == myFirstColor() || getHeader()->players[i->first.getNum()].team == myT) ? &fx : &ex);
+	if(CSH->myFirstColor() < PlayerColor::PLAYER_LIMIT)
+		myT = SEL->getPlayerInfo(CSH->myFirstColor().getNum()).team;
+	else
+		myT = TeamID::NO_TEAM;
 
+	for(auto i = CSH->si->playerInfos.cbegin(); i != CSH->si->playerInfos.cend(); i++)
+	{
+		int * myx = ((i->first == CSH->myFirstColor() || SEL->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
 		IImage * flag = sFlags->getImage(i->first.getNum(), 0);
 		flag->draw(to, pos.x + *myx, pos.y + 405);
 		*myx += flag->width();
 		flag->decreaseRef();
 	}
-	*/
 
 	//difficulty
 	difficultyIcons[CSH->si->difficulty]->showAll(to);

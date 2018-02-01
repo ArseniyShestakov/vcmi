@@ -35,6 +35,8 @@ void LobbyClientConnected::applyOnLobby(CLobbyScreen * lobby)
 	{
 		CSH->c->connectionID = clientId;
 		CSH->hostClientId = hostClientId;
+
+		lobby->tabSel->restoreLastSelection();
 	}
 	else
 	{

@@ -62,6 +62,8 @@ public:
 	int getLine();
 	void selectFileName(std::string fname);
 	std::shared_ptr<CMapInfo> getSelectedMapInfo() const;
+	void rememberCurrentSelection();
+	void restoreLastSelection();
 
 private:
 	std::shared_ptr<CAnimation> formatIcons;

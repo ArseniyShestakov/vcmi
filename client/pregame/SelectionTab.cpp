@@ -178,18 +178,6 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, CMenuScreen::EGameMode Game
 	ascending = true;
 	filter(0);
 	//select(0);
-	switch(tabType)
-	{
-	case CMenuScreen::newGame:
-		selectFileName(settings["session"]["lastMap"].String());
-		break;
-	case CMenuScreen::campaignList:
-		selectFileName(settings["session"]["lastCampaign"].String());
-		break;
-	case CMenuScreen::loadGame:
-	case CMenuScreen::saveGame:
-		selectFileName(settings["session"]["lastSave"].String());
-	}
 }
 
 void SelectionTab::toggleMode(CMenuScreen::EGameMode mode)
@@ -418,22 +406,7 @@ void SelectionTab::select(int position)
 	else if(position >= positionsToShow)
 		slider->moveBy(position - positionsToShow + 1);
 
-	// TODO: this can be more elegant
-	if(tabType == CMenuScreen::newGame)
-	{
-		Settings lastMap = settings.write["session"]["lastMap"];
-		lastMap->String() = getSelectedMapInfo()->fileURI;
-	}
-	else if(tabType == CMenuScreen::loadGame)
-	{
-		Settings lastSave = settings.write["session"]["lastSave"];
-		lastSave->String() = getSelectedMapInfo()->fileURI;
-	}
-	else if(tabType == CMenuScreen::campaignList)
-	{
-		Settings lastCampaign = settings.write["session"]["lastCampaign"];
-		lastCampaign->String() = getSelectedMapInfo()->fileURI;
-	}
+	rememberCurrentSelection();
 
 	if(txt)
 	{
@@ -608,6 +581,42 @@ void SelectionTab::selectFileName(std::string fname)
 std::shared_ptr<CMapInfo> SelectionTab::getSelectedMapInfo() const
 {
 	return curItems.empty() ? nullptr : curItems[selectionPos];
+}
+
+void SelectionTab::rememberCurrentSelection()
+{
+	// TODO: this can be more elegant
+	if(tabType == CMenuScreen::newGame)
+	{
+		Settings lastMap = settings.write["session"]["lastMap"];
+		lastMap->String() = getSelectedMapInfo()->fileURI;
+	}
+	else if(tabType == CMenuScreen::loadGame)
+	{
+		Settings lastSave = settings.write["session"]["lastSave"];
+		lastSave->String() = getSelectedMapInfo()->fileURI;
+	}
+	else if(tabType == CMenuScreen::campaignList)
+	{
+		Settings lastCampaign = settings.write["session"]["lastCampaign"];
+		lastCampaign->String() = getSelectedMapInfo()->fileURI;
+	}
+}
+
+void SelectionTab::restoreLastSelection()
+{
+	switch(tabType)
+	{
+	case CMenuScreen::newGame:
+		selectFileName(settings["session"]["lastMap"].String());
+		break;
+	case CMenuScreen::campaignList:
+		selectFileName(settings["session"]["lastCampaign"].String());
+		break;
+	case CMenuScreen::loadGame:
+	case CMenuScreen::saveGame:
+		selectFileName(settings["session"]["lastSave"].String());
+	}
 }
 
 void SelectionTab::parseMaps(const std::unordered_set<ResourceID> & files)
