@@ -5036,8 +5036,7 @@ void CGameHandler::checkVictoryLossConditionsForPlayer(PlayerColor player)
 
 			if (p->human)
 			{
-				CVCMIServer::shuttingDown = true;
-
+				// TODO: this campaign code can certainly live outside of server
 				if (gs->scenarioOps->campState)
 				{
 					std::vector<CGHeroInstance *> crossoverHeroes;
@@ -5079,6 +5078,7 @@ void CGameHandler::checkVictoryLossConditionsForPlayer(PlayerColor player)
 					ucs.camp = gs->scenarioOps->campState;
 					sendAndApply(&ucs);
 				}
+				CVCMIServer::shuttingDown = true;
 			}
 		}
 		else

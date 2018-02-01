@@ -37,7 +37,7 @@ void LobbyClientConnected::applyOnLobby(CLobbyScreen * lobby)
 		CSH->hostClientId = hostClientId;
 
 		// MPTODO: campaigns screen startup hack
-		if(!lobby->campaignFromFile)
+		if(!lobby->campaignPassed)
 			lobby->tabSel->restoreLastSelection();
 	}
 	else

@@ -336,9 +336,15 @@ void CGPreGame::openLobby(CMenuScreen::EState screenType, CMenuScreen::EGameMode
 
 void CGPreGame::openCampaignLobby(const std::string & campaignFileName)
 {
+	auto ourCampaign = std::make_shared<CCampaignState>(CCampaignHandler::getCampaign(campaignFileName));
+	openCampaignLobby(ourCampaign);
+}
+
+void CGPreGame::openCampaignLobby(std::shared_ptr<CCampaignState> campaign)
+{
 	CSH->resetStateForLobby(StartInfo::CAMPAIGN);
 
-	IShowActivatable * sel = new CLobbyScreen(CMenuScreen::campaignList, CMenuScreen::MULTI_NETWORK_HOST, campaignFileName);
+	IShowActivatable * sel = new CLobbyScreen(CMenuScreen::campaignList, CMenuScreen::MULTI_NETWORK_HOST, campaign);
 	if(!settings["session"]["donotstartserver"].Bool())
 	{
 		CSH->startLocalServerAndConnect();

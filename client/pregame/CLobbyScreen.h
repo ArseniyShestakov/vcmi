@@ -16,7 +16,7 @@ class CBonusSelection;
 class CLobbyScreen : public CSelectionBase
 {
 public:
-	CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST, const std::string CampaignFileName = "");
+	CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST, std::shared_ptr<CCampaignState> campaign = {});
 	~CLobbyScreen();
 	void toggleTab(CIntObject * tab) override;
 	void startCampaign();
@@ -30,6 +30,7 @@ public:
 	const StartInfo * getStartInfo() override;
 
 	CBonusSelection * bonusSel;
-	bool campaignFromFile;
-	std::string campaignFileName;
+	bool campaignSent;
+	bool campaignPassed;
+	std::shared_ptr<CCampaignState> campaignState;
 };

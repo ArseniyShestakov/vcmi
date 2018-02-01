@@ -450,7 +450,13 @@ void CServerHandler::threadHandleConnection()
 				boost::this_thread::sleep(boost::posix_time::milliseconds(10));
 
 			CPack * pack = c->retreivePack();
-			if(auto lobbyPack = dynamic_cast<CPackForLobby *>(pack))
+			if(disconnecting)
+			{
+				// MPTODO: workaround to drop PackageApplied
+				// For whatever reason it's appear after other netpacks on campaign scenario win
+				vstd::clear_pointer(pack);
+			}
+			else if(auto lobbyPack = dynamic_cast<CPackForLobby *>(pack))
 			{
 				if(applier->getApplier(typeList.getTypeID(pack))->applyImmidiately(static_cast<CLobbyScreen *>(SEL), pack))
 				{
@@ -477,7 +483,7 @@ void CServerHandler::threadHandleConnection()
 			logNetwork->error(e.what());
 			if(client)
 			{
-				CGuiHandler::pushSDLEvent(SDL_USEREVENT, EUserEvent::RETURN_TO_MAIN_MENU);
+//				CGuiHandler::pushSDLEvent(SDL_USEREVENT, EUserEvent::RETURN_TO_MAIN_MENU);
 			}
 			else
 			{

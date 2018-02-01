@@ -440,11 +440,11 @@ void CClient::handlePack(CPack * pack)
 	{
 		boost::unique_lock<boost::recursive_mutex> guiLock(*CPlayerInterface::pim);
 		apply->applyOnClBefore(this, pack);
-		logNetwork->trace("\tMade first apply on cl");
+		logNetwork->trace("\tMade first apply on cl: %s", typeList.getTypeInfo(pack)->name());
 		gs->apply(pack);
-		logNetwork->trace("\tApplied on gs");
+		logNetwork->trace("\tApplied on gs: %s", typeList.getTypeInfo(pack)->name());
 		apply->applyOnClAfter(this, pack);
-		logNetwork->trace("\tMade second apply on cl");
+		logNetwork->trace("\tMade second apply on cl: %s", typeList.getTypeInfo(pack)->name());
 	}
 	else
 	{
@@ -659,8 +659,7 @@ void CClient::finishCampaign(std::shared_ptr<CCampaignState> camp)
 
 void CClient::proposeNextMission(std::shared_ptr<CCampaignState> camp)
 {
-	// MPTODO campaign
-	//GH.pushInt(new CBonusSelection(camp));
+	CGPreGame::openCampaignLobby(camp);
 }
 
 void CClient::waitForMoveAndSend(PlayerColor color)

@@ -151,6 +151,7 @@ public:
 	void update() override;
 	static void openLobby(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST, const std::vector<std::string> * names = nullptr);
 	static void openCampaignLobby(const std::string & campaignFileName);
+	static void openCampaignLobby(std::shared_ptr<CCampaignState> campaign);
 	void openCampaignScreen(std::string name);
 
 	static CGPreGame * create();

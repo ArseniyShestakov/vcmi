@@ -28,12 +28,12 @@
 // campaigns
 #include "CBonusSelection.h"
 
-CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode, const std::string CampaignFileName)
-	: CSelectionBase(type), bonusSel(nullptr), campaignFileName(CampaignFileName), campaignFromFile(false)
+CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode, std::shared_ptr<CCampaignState> campaign)
+	: CSelectionBase(type), bonusSel(nullptr), campaignState(campaign), campaignPassed(false), campaignSent(false)
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-	if(campaignFileName.length())
-		campaignFromFile = true;
+	if(campaignState)
+		campaignPassed = true;
 
 	tabSel = new SelectionTab(screenType, gameMode); //scenario selection tab
 	tabSel->recActions = 255;
@@ -170,12 +170,10 @@ void CLobbyScreen::activate()
 	CIntObject::activate();
 
 	// MPTODO: campaigns screen startup hack
-	if(campaignFileName.length())
+	if(campaignState && !campaignSent)
 	{
-		// FIXME: this is very ugly way to run campaigns
-		auto ourCampaign = std::make_shared<CCampaignState>(CCampaignHandler::getCampaign(campaignFileName));
-		CSH->setCampaignState(ourCampaign);
-		campaignFileName.clear();
+		CSH->setCampaignState(campaignState);
+		campaignSent = true;
 	}
 }
 
