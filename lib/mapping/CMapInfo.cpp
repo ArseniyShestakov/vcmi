@@ -74,9 +74,16 @@ std::string CMapInfo::getName() const
 std::string CMapInfo::getNameForList() const
 {
 	if(isSaveGame)
-		return fileURI;
+	{
+		// TODO: this could be handled differently
+		std::vector<std::string> path;
+		boost::split(path, fileURI, boost::is_any_of("\\/"));
+		return path[path.size()-1];
+	}
 	else
+	{
 		return getName();
+	}
 }
 
 std::string CMapInfo::getDescription() const
