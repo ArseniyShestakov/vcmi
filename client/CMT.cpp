@@ -332,6 +332,7 @@ int main(int argc, char * argv[])
 	// MPTODO: probably last items should be saved between client restart and not just in session
 	session["lastMap"].String() = "Maps/Arrogance";
 	session["lastSave"].String() = "NEWGAME";
+	session["lastCampaign"].String() = "";
 
 	// Initialize logging based on settings
 	logConfig.configure();

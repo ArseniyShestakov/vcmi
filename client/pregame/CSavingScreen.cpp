@@ -66,15 +66,6 @@ void CSavingScreen::changeSelection(std::shared_ptr<CMapInfo> to)
 
 	localMi = to.get();
 	localSi = localMi->scenarioOpts;
-
-	/*
-	if(CSH->mi)
-		CSH->si->difficulty = CSH->mi->scenarioOpts->difficulty;
-	if(screenType != CMenuScreen::campaignList)
-	{
-		CSH->updateStartInfo();
-	}
-*/
 	card->changeSelection();
 }
 

@@ -190,7 +190,7 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, CMenuScreen::EGameMode Game
 		selectFileName(settings["session"]["lastMap"].String());
 		break;
 	case CMenuScreen::campaignList:
-		select(0);
+		selectFileName(settings["session"]["lastCampaign"].String());
 		break;
 	case CMenuScreen::loadGame:
 	case CMenuScreen::saveGame:
@@ -434,6 +434,11 @@ void SelectionTab::select(int position)
 	{
 		Settings lastSave = settings.write["session"]["lastSave"];
 		lastSave->String() = getSelectedMapInfo()->fileURI;
+	}
+	else if(tabType == CMenuScreen::campaignList)
+	{
+		Settings lastCampaign = settings.write["session"]["lastCampaign"];
+		lastCampaign->String() = getSelectedMapInfo()->fileURI;
 	}
 
 	if(txt)

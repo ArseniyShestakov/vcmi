@@ -55,7 +55,7 @@ public:
 	std::vector<std::string> menuNameToEntry;
 
 	enum EState {
-		mainMenu, newGame, loadGame, campaignMain, saveGame, scenarioInfo, campaignList
+		mainMenu, newGame, loadGame, saveGame, scenarioInfo, campaignList
 	};
 
 	enum EGameMode //MPTODO
