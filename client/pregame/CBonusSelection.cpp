@@ -56,105 +56,12 @@ std::shared_ptr<CCampaignState> CBonusSelection::getCampaign()
 	return CSH->si->campState;
 }
 
-CBonusSelection::CBonusSelection(std::shared_ptr<CCampaignState> ourCampaign)
-{
-	init(ourCampaign);
-}
-
-CBonusSelection::CBonusSelection(const std::string & campaignFName)
-{
-	//MPTODO
-	auto ourCampaign = std::make_shared<CCampaignState>(CCampaignHandler::getCampaign(campaignFName));
-	init(ourCampaign);
-}
-
-CBonusSelection::~CBonusSelection()
-{
-	SDL_FreeSurface(background);
-	sFlags->unload();
-}
-
-void CBonusSelection::showAll(SDL_Surface * to)
-{
-	blitAt(background, pos.x, pos.y, to);
-	CIntObject::showAll(to);
-
-	show(to);
-	if(pos.h != to->h || pos.w != to->w)
-		CMessage::drawBorder(PlayerColor(1), to, pos.w + 28, pos.h + 30, pos.x - 14, pos.y - 15);
-}
-
-void CBonusSelection::show(SDL_Surface * to)
-{
-	if(!getCampaign()) //MPTODO
-		return;
-
-	std::string mapName = CSH->mi->mapHeader->name;
-	if(mapName.length())
-		printAtLoc(mapName, 481, 219, FONT_BIG, Colors::YELLOW, to);
-	else
-		printAtLoc("Unnamed", 481, 219, FONT_BIG, Colors::YELLOW, to);
-
-	//map description
-	printAtLoc(CGI->generaltexth->allTexts[496], 481, 253, FONT_SMALL, Colors::YELLOW, to);
-
-	mapDescription->showAll(to); //showAll because CTextBox has no show()
-
-	//map size icon
-	switch(CSH->mi->mapHeader->width)
-	{
-	case 36:
-		mapSizeIcons->setFrame(0);
-		break;
-	case 72:
-		mapSizeIcons->setFrame(1);
-		break;
-	case 108:
-		mapSizeIcons->setFrame(2);
-		break;
-	case 144:
-		mapSizeIcons->setFrame(3);
-		break;
-	default:
-		mapSizeIcons->setFrame(4);
-		break;
-	}
-	mapSizeIcons->showAll(to);
-
-	//MPTODO: reuse lobby flags code
-	int fx = 496 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
-	int ex = 629 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[391]);
-	TeamID myT;
-	if(CSH->myFirstColor() < PlayerColor::PLAYER_LIMIT)
-		myT = SEL->getPlayerInfo(CSH->myFirstColor().getNum()).team;
-	else
-		myT = TeamID::NO_TEAM;
-
-	for(auto i = CSH->si->playerInfos.cbegin(); i != CSH->si->playerInfos.cend(); i++)
-	{
-		int * myx = ((i->first == CSH->myFirstColor() || SEL->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
-		IImage * flag = sFlags->getImage(i->first.getNum(), 0);
-		flag->draw(to, pos.x + *myx, pos.y + 405);
-		*myx += flag->width();
-		flag->decreaseRef();
-	}
-
-	//difficulty
-	difficultyIcons[CSH->si->difficulty]->showAll(to);
-
-	CIntObject::show(to);
-}
-
-void CBonusSelection::init(std::shared_ptr<CCampaignState> ourCampaign)
+CBonusSelection::CBonusSelection()
 {
 	highlightedRegion = nullptr;
 	buttonDifficultyLeft = nullptr;
 	buttonDifficultyRight = nullptr;
 	bonuses = nullptr;
-
-	// Initialize start info
-	if(!getCampaign()) //MPTODO
-		return;
 
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
 	static const std::string bgNames[] =
@@ -253,6 +160,80 @@ void CBonusSelection::init(std::shared_ptr<CCampaignState> ourCampaign)
 	//load miniflags
 	sFlags = std::make_shared<CAnimation>("ITGFLAGS.DEF");
 	sFlags->load();
+}
+
+CBonusSelection::~CBonusSelection()
+{
+	SDL_FreeSurface(background);
+	sFlags->unload();
+}
+
+void CBonusSelection::showAll(SDL_Surface * to)
+{
+	blitAt(background, pos.x, pos.y, to);
+	CIntObject::showAll(to);
+
+	show(to);
+	if(pos.h != to->h || pos.w != to->w)
+		CMessage::drawBorder(PlayerColor(1), to, pos.w + 28, pos.h + 30, pos.x - 14, pos.y - 15);
+}
+
+void CBonusSelection::show(SDL_Surface * to)
+{
+	std::string mapName = CSH->mi->mapHeader->name;
+	if(mapName.length())
+		printAtLoc(mapName, 481, 219, FONT_BIG, Colors::YELLOW, to);
+	else
+		printAtLoc("Unnamed", 481, 219, FONT_BIG, Colors::YELLOW, to);
+
+	//map description
+	printAtLoc(CGI->generaltexth->allTexts[496], 481, 253, FONT_SMALL, Colors::YELLOW, to);
+
+	mapDescription->showAll(to); //showAll because CTextBox has no show()
+
+	//map size icon
+	switch(CSH->mi->mapHeader->width)
+	{
+	case 36:
+		mapSizeIcons->setFrame(0);
+		break;
+	case 72:
+		mapSizeIcons->setFrame(1);
+		break;
+	case 108:
+		mapSizeIcons->setFrame(2);
+		break;
+	case 144:
+		mapSizeIcons->setFrame(3);
+		break;
+	default:
+		mapSizeIcons->setFrame(4);
+		break;
+	}
+	mapSizeIcons->showAll(to);
+
+	//MPTODO: reuse lobby flags code
+	int fx = 496 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[390]);
+	int ex = 629 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[391]);
+	TeamID myT;
+	if(CSH->myFirstColor() < PlayerColor::PLAYER_LIMIT)
+		myT = SEL->getPlayerInfo(CSH->myFirstColor().getNum()).team;
+	else
+		myT = TeamID::NO_TEAM;
+
+	for(auto i = CSH->si->playerInfos.cbegin(); i != CSH->si->playerInfos.cend(); i++)
+	{
+		int * myx = ((i->first == CSH->myFirstColor() || SEL->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
+		IImage * flag = sFlags->getImage(i->first.getNum(), 0);
+		flag->draw(to, pos.x + *myx, pos.y + 405);
+		*myx += flag->width();
+		flag->decreaseRef();
+	}
+
+	//difficulty
+	difficultyIcons[CSH->si->difficulty]->showAll(to);
+
+	CIntObject::show(to);
 }
 
 void CBonusSelection::loadPositionsOfGraphics()
@@ -502,11 +483,31 @@ void CBonusSelection::updateBonusSelection()
 	}
 }
 
-void CBonusSelection::updateCampaignState()
+void CBonusSelection::updateAfterStateChange()
 {
-	getCampaign()->currentMap = boost::make_optional(CSH->campaignMap);
-	if(CSH->campaignBonus)
-		getCampaign()->chosenCampaignBonuses[CSH->campaignMap] = CSH->campaignBonus;
+	// initialize restart / start button
+	if(!getCampaign()->currentMap || *getCampaign()->currentMap != CSH->campaignMap)
+	{
+		// draw start button
+		buttonRestart->disable();
+		buttonStart->enable();
+		if(!getCampaign()->mapsConquered.empty())
+			buttonBack->block(true);
+		else
+			buttonBack->block(false);
+	}
+	else
+	{
+		// draw restart button
+		buttonStart->disable();
+		buttonRestart->enable();
+		buttonBack->block(false);
+	}
+
+	mapDescription->setText(CSH->mi->mapHeader->description);
+	updateBonusSelection();
+
+	updateStartButtonState(CSH->campaignBonus);
 }
 
 void CBonusSelection::goBack()
@@ -541,14 +542,12 @@ void CBonusSelection::startMap()
 		GH.popInt(this);
 		LOCPLINT->showYesNoDialog(CGI->generaltexth->allTexts[67], [=]()
 		{
-			updateCampaignState();
 			GH.curInt = CGPreGame::create();
 			showPrologVideo();
 		}, 0);
 	}
 	else
 	{
-		updateCampaignState();
 		showPrologVideo();
 	}
 }

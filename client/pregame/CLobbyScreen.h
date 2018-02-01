@@ -23,7 +23,10 @@ public:
 	void startScenario();
 	void toggleMode(bool host);
 
-	 const CMapInfo * getMapInfo() override;
-	 const StartInfo * getStartInfo() override;
-	 CBonusSelection * bonusSel; // MPTODO
+	void updateAfterStateChange();
+
+	const CMapInfo * getMapInfo() override;
+	const StartInfo * getStartInfo() override;
+
+	CBonusSelection * bonusSel;
 };

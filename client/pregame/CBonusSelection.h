@@ -24,8 +24,7 @@ class CBonusSelection : public CIntObject
 {
 public:
 	std::shared_ptr<CCampaignState> getCampaign();
-	CBonusSelection(const std::string & campaignFName);
-	CBonusSelection(std::shared_ptr<CCampaignState> ourCampaign);
+	CBonusSelection();
 	~CBonusSelection();
 
 	void showAll(SDL_Surface * to) override;
@@ -65,11 +64,10 @@ public:
 		void clickRight(tribool down, bool previousState) override;
 	};
 
-	void init(std::shared_ptr<CCampaignState> ourCampaign);
 	void loadPositionsOfGraphics();
 	void updateStartButtonState(int selected = -1); //-1 -- no bonus is selected
 	void updateBonusSelection();
-	void updateCampaignState();
+	void updateAfterStateChange();
 
 	// Event handlers
 	void goBack();

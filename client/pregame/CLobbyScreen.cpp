@@ -164,6 +164,19 @@ void CLobbyScreen::toggleMode(bool host)
 		tabOpt->recreate();
 }
 
+void CLobbyScreen::updateAfterStateChange()
+{
+	if(CSH->mi && tabOpt)
+		tabOpt->recreate();
+
+	card->changeSelection();
+	if(card->difficulty)
+		card->difficulty->setSelected(CSH->si->difficulty);
+
+	if(curTab == tabRand && CSH->si->mapGenOptions)
+		tabRand->setMapGenOptions(CSH->si->mapGenOptions);
+}
+
 const StartInfo * CLobbyScreen::getStartInfo()
 {
 	return CSH->si.get();

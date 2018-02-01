@@ -113,56 +113,16 @@ void LobbyChangeHost::applyOnLobby(CLobbyScreen * lobby)
 
 void LobbyUpdateState::applyOnLobby(CLobbyScreen * lobby)
 {
-	bool campaign = false;
-	if(CSH->si->campState)
-		campaign = true;
 	static_cast<LobbyState &>(*CSH) = state;
-
-	if(!campaign && CSH->si->campState)
+	if(!lobby->bonusSel && CSH->si->campState)
 	{
-		lobby->bonusSel = new CBonusSelection(CSH->mi->fileURI);
+		lobby->bonusSel = new CBonusSelection();
 		GH.pushInt(lobby->bonusSel);
 	}
 
 	if(lobby->bonusSel)
-	{
-		// From ::selectMap
-		// initialize restart / start button
-		if(!lobby->bonusSel->getCampaign()->currentMap || *lobby->bonusSel->getCampaign()->currentMap != CSH->campaignMap)
-		{
-			// draw start button
-			lobby->bonusSel->buttonRestart->disable();
-			lobby->bonusSel->buttonStart->enable();
-			if(!lobby->bonusSel->getCampaign()->mapsConquered.empty())
-				lobby->bonusSel->buttonBack->block(true);
-			else
-				lobby->bonusSel->buttonBack->block(false);
-		}
-		else
-		{
-			// draw restart button
-			lobby->bonusSel->buttonStart->disable();
-			lobby->bonusSel->buttonRestart->enable();
-			lobby->bonusSel->buttonBack->block(false);
-		}
-
-		lobby->bonusSel->mapDescription->setText(CSH->mi->mapHeader->description);
-		lobby->bonusSel->updateBonusSelection();
-
-		// From ::selectBonus
-		lobby->bonusSel->updateStartButtonState(CSH->campaignBonus);
-	}
+		lobby->bonusSel->updateAfterStateChange();
 	else
-	{
-		if(CSH->mi && lobby->screenType != CMenuScreen::campaignList)
-			lobby->tabOpt->recreate();
-
-		lobby->card->changeSelection();
-		if(lobby->card->difficulty)
-			lobby->card->difficulty->setSelected(CSH->si->difficulty);
-
-		if(lobby->curTab == lobby->tabRand && CSH->si->mapGenOptions)
-			lobby->tabRand->setMapGenOptions(CSH->si->mapGenOptions);
-	}
+		lobby->updateAfterStateChange();
 	GH.totalRedraw();
 }
