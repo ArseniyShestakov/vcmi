@@ -11,6 +11,7 @@
 #include "CPreGame.h"
 #include "CCampaignScreen.h"
 #include "CBonusSelection.h"
+#include "CSelectionBase.h"
 
 #include "../CGameInfo.h"
 #include "../CMessage.h"
