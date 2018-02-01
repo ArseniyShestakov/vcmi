@@ -364,9 +364,8 @@ bool PlayerMessage::applyGh(CGameHandler * gh)
 	if(!player.isSpectator()) // TODO: clearly not a great way to verify permissions
 	{
 		throwOnWrongPlayer(gh, player);
-// MPTODO: Solve multi-inheritance mess
-// 		if(gh->getPlayerAt(this->c) != player)
-//			throwNotAllowedAction();
+		if(gh->getPlayerAt(this->c) != player)
+			throwNotAllowedAction();
 	}
 	gh->playerMessage(player, text, currObj);
 	return true;

@@ -825,7 +825,7 @@ void SaveGame::applyCl(CClient *cl)
 	}
 }
 
-void PlayerMessage::applyCl(CClient *cl)
+void PlayerMessageClient::applyCl(CClient *cl)
 {
 	logNetwork->debug("Player %s sends a message: %s", player.getStr(), text);
 

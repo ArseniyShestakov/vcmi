@@ -2402,18 +2402,16 @@ struct SaveGame : public CPackForClient, public CPackForServer
 	}
 };
 
-// MPTODO: this need fixing since we don't need this announce hell
-struct PlayerMessage : public CPackForClient, public CPackForServer
+struct PlayerMessage : public CPackForServer
 {
 	PlayerMessage(){};
-	PlayerMessage(PlayerColor Player, const std::string &Text, ObjectInstanceID obj)
-		:player(Player),text(Text), currObj(obj)
+	PlayerMessage(const std::string &Text, ObjectInstanceID obj)
+		: text(Text), currObj(obj)
 	{};
 	void applyCl(CClient *cl);
 	void applyGs(CGameState *gs){};
 	bool applyGh(CGameHandler *gh);
 
-	PlayerColor player;
 	std::string text;
 	ObjectInstanceID currObj; // optional parameter that specifies current object. For cheats :)
 
@@ -2421,8 +2419,25 @@ struct PlayerMessage : public CPackForClient, public CPackForServer
 	{
 		h & static_cast<CPackForServer &>(*this);
 		h & text;
-		h & player;
 		h & currObj;
+	}
+};
+
+struct PlayerMessageClient : public CPackForClient
+{
+	PlayerMessageClient(){};
+	PlayerMessageClient(PlayerColor Player, const std::string &Text)
+		: player(Player), text(Text)
+	{}
+	void applyCl(CClient *cl);
+
+	PlayerColor player;
+	std::string text;
+
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
+		h & player;
+		h & text;
 	}
 };
 
