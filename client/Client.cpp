@@ -272,9 +272,8 @@ void CClient::save(const std::string & fname)
 		return;
 	}
 
-	//MPTODO: this need more work since sendRequest now only accept CPackForServer
-//	SaveGame save_game(fname);
-//	sendRequest((CPackForClient *)&save_game, PlayerColor::NEUTRAL);
+	SaveGame save_game(fname);
+	sendRequest(&save_game, PlayerColor::NEUTRAL);
 }
 
 void CClient::endGame(bool closeConnection)

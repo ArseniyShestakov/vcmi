@@ -2386,18 +2386,31 @@ struct CastAdvSpell : public CPackForServer
 
 /***********************************************************************************************************/
 
-struct SaveGame : public CPackForClient, public CPackForServer
+struct SaveGame : public CPackForServer
 {
 	SaveGame(){};
 	SaveGame(const std::string &Fname) :fname(Fname){};
 	std::string fname;
 
-	void applyCl(CClient *cl);
 	void applyGs(CGameState *gs){};
 	bool applyGh(CGameHandler *gh);
 	template <typename Handler> void serialize(Handler &h, const int version)
 	{
 		h & static_cast<CPackForServer &>(*this);
+		h & fname;
+	}
+};
+
+// TODO: Eventually we should re-merge both SaveGame and PlayerMessage
+struct SaveGameClient : public CPackForClient
+{
+	SaveGameClient(){};
+	SaveGameClient(const std::string &Fname) :fname(Fname){};
+	std::string fname;
+
+	void applyCl(CClient *cl);
+	template <typename Handler> void serialize(Handler &h, const int version)
+	{
 		h & fname;
 	}
 };
@@ -2408,7 +2421,6 @@ struct PlayerMessage : public CPackForServer
 	PlayerMessage(const std::string &Text, ObjectInstanceID obj)
 		: text(Text), currObj(obj)
 	{};
-	void applyCl(CClient *cl);
 	void applyGs(CGameState *gs){};
 	bool applyGh(CGameHandler *gh);
 

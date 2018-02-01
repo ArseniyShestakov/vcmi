@@ -2581,7 +2581,7 @@ void CGameHandler::save(const std::string & filename)
 
 	{
 		logGlobal->info("Ordering clients to serialize...");
-		SaveGame sg(savefname);
+		SaveGameClient sg(savefname);
 		sendToAllClients(&sg);
 	}
 

@@ -808,7 +808,7 @@ void YourTurn::applyCl(CClient *cl)
 	CALL_ONLY_THAT_INTERFACE(player,yourTurn);
 }
 
-void SaveGame::applyCl(CClient *cl)
+void SaveGameClient::applyCl(CClient *cl)
 {
 	const auto stem = FileInfo::GetPathStem(fname);
 	CResourceHandler::get("local")->createResource(stem.to_string() + ".vcgm1");
