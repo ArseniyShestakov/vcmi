@@ -176,11 +176,10 @@ InfoCard::InfoCard()
 					button->block(true);
 			}
 		}
-
-		playerListBg = new CPicture("CHATPLUG.bmp", 16, 276);
-		chat = new CChatBox(Rect(26, 132, 340, 132));
-		setChat(false); // FIXME: This shouln't be needed if chat / description wouldn't overlay each other on init
 	}
+	playerListBg = new CPicture("CHATPLUG.bmp", 16, 276);
+	chat = new CChatBox(Rect(26, 132, 340, 132));
+	setChat(false); // FIXME: This shouln't be needed if chat / description wouldn't overlay each other on init
 
 	victory = new CAnimImage("SCNRVICT", 0, 0, 24, 302);
 	victory->recActions &= ~(SHOWALL | UPDATE); //explicit draw
@@ -207,30 +206,38 @@ void InfoCard::showAll(SDL_Surface * to)
 		printAtLoc(CGI->generaltexth->allTexts[492] + ":", 133, 430, FONT_SMALL, Colors::YELLOW, to); //player difficulty
 		printAtLoc(CGI->generaltexth->allTexts[218] + ":", 290, 430, FONT_SMALL, Colors::YELLOW, to); //"Rating:"
 		printAtLoc(CGI->generaltexth->allTexts[495], 26, 22, FONT_SMALL, Colors::YELLOW, to); //Scenario Name:
+
 		if(!showChat)
 		{
 			printAtLoc(CGI->generaltexth->allTexts[496], 26, 132, FONT_SMALL, Colors::YELLOW, to); //Scenario Description:
 			printAtLoc(CGI->generaltexth->allTexts[497], 26, 283, FONT_SMALL, Colors::YELLOW, to); //Victory Condition:
-			printAtLoc(CGI->generaltexth->allTexts[498], 26, 339, FONT_SMALL, Colors::YELLOW, to); //Loss Condition:
 		}
-		else
+	}
+	else
+	{
+		if(!showChat)
 		{
-			int playerLeft = 0; // Players with assigned colors
-			int playersRight = 0;
-			for(auto & p : CSH->playerNames)
+			printAtLoc(CGI->generaltexth->allTexts[38], 26, 132, FONT_SMALL, Colors::YELLOW, to); //Campaign Description:
+		}
+	}
+
+	if(showChat)
+	{
+		int playerLeft = 0; // Players with assigned colors
+		int playersRight = 0;
+		for(auto & p : CSH->playerNames)
+		{
+			const auto pset = CSH->si->getPlayersSettings(p.first);
+			int pid = p.first;
+			if(pset)
 			{
-				const auto pset = CSH->si->getPlayersSettings(p.first);
-				int pid = p.first;
-				if(pset)
-				{
-					auto name = boost::str(boost::format("%s (%d-%d %s)") % p.second.name % p.second.connection % pid % pset->color.getStr());
-					printAtLoc(name, 24, 285 + playerLeft++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
-				}
-				else
-				{
-					auto name = boost::str(boost::format("%s (%d-%d)") % p.second.name % p.second.connection % pid);
-					printAtLoc(name, 193, 285 + playersRight++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
-				}
+				auto name = boost::str(boost::format("%s (%d-%d %s)") % p.second.name % p.second.connection % pid % pset->color.getStr());
+				printAtLoc(name, 24, 285 + playerLeft++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
+			}
+			else
+			{
+				auto name = boost::str(boost::format("%s (%d-%d)") % p.second.name % p.second.connection % pid);
+				printAtLoc(name, 193, 285 + playersRight++ *graphics->fonts[FONT_SMALL]->getLineHeight(), FONT_SMALL, Colors::WHITE, to);
 			}
 		}
 	}

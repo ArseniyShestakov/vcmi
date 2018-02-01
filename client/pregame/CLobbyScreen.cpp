@@ -49,12 +49,12 @@ CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode game
 		});
 
 		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CLobbyScreen::toggleTab, this, tabOpt), SDLK_a);
-
-		CButton * buttonChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
-		buttonChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
-
 		toggleMode(gameMode == CMenuScreen::MULTI_NETWORK_HOST);
 	};
+
+
+	CButton * buttonChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
+	buttonChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
 
 	switch(screenType)
 	{
