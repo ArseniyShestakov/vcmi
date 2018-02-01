@@ -218,7 +218,7 @@ void CVCMIServer::prepareToStartGame()
 	{
 	case StartInfo::CAMPAIGN:
 		logNetwork->info("Preparing to start new campaign");
-		si->campState->currentMap = campaignMap;
+		si->campState->currentMap = boost::make_optional(campaignMap);
 		si->campState->chosenCampaignBonuses[campaignMap] = campaignBonus;
 		gh->init(si.get());
 		break;
@@ -231,6 +231,10 @@ void CVCMIServer::prepareToStartGame()
 	case StartInfo::LOAD_GAME:
 		logNetwork->info("Preparing to start loaded game");
 		gh->load(si->mapname);
+		break;
+	default:
+		logNetwork->error("Wrong mode in StartInfo!");
+		assert(0);
 		break;
 	}
 	gh->conns = connections;

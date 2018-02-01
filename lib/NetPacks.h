@@ -2564,7 +2564,7 @@ struct LobbyStartGame : public CLobbyPackToPropagate
 	// Set by server
 	std::shared_ptr<StartInfo> initializedStartInfo;
 
-	LobbyStartGame() : initializedStartInfo(nullptr) {}
+	LobbyStartGame() {}
 	bool checkClientPermissions(CVCMIServer * srv) const;
 	bool applyOnServer(CVCMIServer * srv);
 	void applyOnServerAfterAnnounce(CVCMIServer * srv);

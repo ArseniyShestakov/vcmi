@@ -92,7 +92,7 @@ void LobbyGuiAction::applyOnLobby(CLobbyScreen * lobby)
 bool LobbyStartGame::applyOnLobbyImmidiately(CLobbyScreen * lobby)
 {
 	CSH->pauseNetpackRetrieving = true;
-	if(CSH->si->mode == StartInfo::NEW_GAME)
+	if(CSH->si->mode != StartInfo::LOAD_GAME)
 	{
 		CSH->si = initializedStartInfo;
 	}
