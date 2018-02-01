@@ -149,7 +149,7 @@ public:
 
 	~CGPreGame();
 	void update() override;
-	static void openSel(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST, const std::vector<std::string> * names = nullptr);
+	static void openLobby(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST, const std::vector<std::string> * names = nullptr);
 
 	void openCampaignScreen(std::string name);
 

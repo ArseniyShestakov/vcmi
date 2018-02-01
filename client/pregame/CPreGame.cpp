@@ -173,11 +173,11 @@ static std::function<void()> genCommand(CMenuScreen * menu, std::vector<std::str
 				switch(std::find(gameType.begin(), gameType.end(), commands.front()) - gameType.begin())
 				{
 				case 0:
-					return std::bind(CGPreGame::openSel, CMenuScreen::newGame, CMenuScreen::MULTI_NETWORK_HOST, nullptr);
+					return std::bind(CGPreGame::openLobby, CMenuScreen::newGame, CMenuScreen::MULTI_NETWORK_HOST, nullptr);
 				case 1:
 					return []() { GH.pushInt(new CMultiMode(CMenuScreen::newGame)); };
 				case 2:
-					return std::bind(CGPreGame::openSel, CMenuScreen::campaignList, CMenuScreen::MULTI_NETWORK_HOST, nullptr);
+					return std::bind(CGPreGame::openLobby, CMenuScreen::campaignList, CMenuScreen::MULTI_NETWORK_HOST, nullptr);
 				case 3:
 					return std::bind(CInfoWindow::showInfoDialog, "Sorry, tutorial is not implemented yet\n", (const std::vector<CComponent *> *)nullptr, false, PlayerColor(1));
 				}
@@ -188,11 +188,11 @@ static std::function<void()> genCommand(CMenuScreen * menu, std::vector<std::str
 				switch(std::find(gameType.begin(), gameType.end(), commands.front()) - gameType.begin())
 				{
 				case 0:
-					return std::bind(CGPreGame::openSel, CMenuScreen::loadGame, CMenuScreen::MULTI_NETWORK_HOST, nullptr);
+					return std::bind(CGPreGame::openLobby, CMenuScreen::loadGame, CMenuScreen::MULTI_NETWORK_HOST, nullptr);
 				case 1:
 					return []()     { GH.pushInt(new CMultiMode(CMenuScreen::loadGame)); };
 				case 2:
-					return std::bind(CGPreGame::openSel, CMenuScreen::loadGame, CMenuScreen::SINGLE_CAMPAIGN, nullptr);
+					return std::bind(CGPreGame::openLobby, CMenuScreen::loadGame, CMenuScreen::SINGLE_CAMPAIGN, nullptr);
 				case 3:
 					return std::bind(CInfoWindow::showInfoDialog, "Sorry, tutorial is not implemented yet\n", (const std::vector<CComponent *> *)nullptr, false, PlayerColor(1));
 				}
@@ -318,7 +318,7 @@ void CGPreGame::update()
 		GH.topInt()->show(screen);
 }
 
-void CGPreGame::openSel(CMenuScreen::EState screenType, CMenuScreen::EGameMode gameMode, const std::vector<std::string> * names)
+void CGPreGame::openLobby(CMenuScreen::EState screenType, CMenuScreen::EGameMode gameMode, const std::vector<std::string> * names)
 {
 	CSH->resetStateForLobby(screenType == CMenuScreen::newGame ? StartInfo::NEW_GAME : StartInfo::LOAD_GAME, names);
 
@@ -474,7 +474,7 @@ void CMultiPlayers::enterSelectionScreen()
 	Settings name = settings.write["general"]["playerName"];
 	name->String() = names[0];
 
-	CGPreGame::openSel(state, mode, &names);
+	CGPreGame::openLobby(state, mode, &names);
 }
 
 CSimpleJoinScreen::CSimpleJoinScreen(IShowActivatable * sel)
