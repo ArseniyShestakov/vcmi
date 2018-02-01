@@ -188,7 +188,6 @@ void SelectionTab::toggleMode(CMenuScreen::EGameMode mode)
 		curItems.clear();
 		if(slider)
 			slider->block(true);
-		positionsToShow = 18;
 	}
 	else
 	{
@@ -200,21 +199,15 @@ void SelectionTab::toggleMode(CMenuScreen::EGameMode mode)
 			break;
 
 		case CMenuScreen::loadGame:
+			parseSaves(getFiles("Saves/", EResType::CLIENT_SAVEGAME), mode);
+			positionsToShow = 18;
+			break;
+
 		case CMenuScreen::saveGame:
 			parseSaves(getFiles("Saves/", EResType::CLIENT_SAVEGAME), mode);
-			if(tabType == CMenuScreen::loadGame)
-			{
-				positionsToShow = 18;
-			}
-			else
-			{
-				positionsToShow = 16;
-			}
-			if(tabType == CMenuScreen::saveGame)
-			{
-				txt = new CTextInput(Rect(32, 539, 350, 20), Point(-32, -25), "GSSTRIP.bmp", 0);
-				txt->filters += CTextInput::filenameFilter;
-			}
+			positionsToShow = 16;
+			txt = new CTextInput(Rect(32, 539, 350, 20), Point(-32, -25), "GSSTRIP.bmp", 0);
+			txt->filters += CTextInput::filenameFilter;
 			break;
 
 		case CMenuScreen::campaignList:
@@ -231,7 +224,6 @@ void SelectionTab::toggleMode(CMenuScreen::EGameMode mode)
 			slider->block(false);
 			filter(0);
 		}
-		positionsToShow = 18;
 	}
 
 	redraw();
