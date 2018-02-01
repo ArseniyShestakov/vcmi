@@ -28,14 +28,16 @@
 // campaigns
 #include "CBonusSelection.h"
 
-CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode)
-	: CSelectionBase(type), bonusSel(nullptr)
+CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode, const std::string CampaignFileName)
+	: CSelectionBase(type), bonusSel(nullptr), campaignFileName(CampaignFileName), campaignFromFile(false)
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
+	if(campaignFileName.length())
+		campaignFromFile = true;
+
 	tabSel = new SelectionTab(screenType, gameMode); //scenario selection tab
 	tabSel->recActions = 255;
 	curTab = tabSel;
-
 
 	auto initLobby = [&]()
 	{
@@ -51,7 +53,6 @@ CLobbyScreen::CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode game
 		buttonOptions = new CButton(Point(411, 510), "GSPBUTT.DEF", CGI->generaltexth->zelp[46], std::bind(&CLobbyScreen::toggleTab, this, tabOpt), SDLK_a);
 		toggleMode(gameMode == CMenuScreen::MULTI_NETWORK_HOST);
 	};
-
 
 	CButton * buttonChat = new CButton(Point(619, 83), "GSPBUT2.DEF", CGI->generaltexth->zelp[48], std::bind(&InfoCard::toggleChat, card), SDLK_h);
 	buttonChat->addTextOverlay(CGI->generaltexth->allTexts[531], FONT_SMALL);
@@ -162,6 +163,20 @@ void CLobbyScreen::toggleMode(bool host)
 	tabSel->toggleMode(host ? CMenuScreen::MULTI_NETWORK_HOST : CMenuScreen::MULTI_NETWORK_GUEST);
 	if(CSH->mi)
 		tabOpt->recreate();
+}
+
+void CLobbyScreen::activate()
+{
+	CIntObject::activate();
+
+	// MPTODO: campaigns screen startup hack
+	if(campaignFileName.length())
+	{
+		// FIXME: this is very ugly way to run campaigns
+		auto ourCampaign = std::make_shared<CCampaignState>(CCampaignHandler::getCampaign(campaignFileName));
+		CSH->setCampaignState(ourCampaign);
+		campaignFileName.clear();
+	}
 }
 
 void CLobbyScreen::updateAfterStateChange()

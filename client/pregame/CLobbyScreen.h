@@ -16,17 +16,20 @@ class CBonusSelection;
 class CLobbyScreen : public CSelectionBase
 {
 public:
-	CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST);
+	CLobbyScreen(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST, const std::string CampaignFileName = "");
 	~CLobbyScreen();
 	void toggleTab(CIntObject * tab) override;
 	void startCampaign();
 	void startScenario();
 	void toggleMode(bool host);
 
+	void activate() override;
 	void updateAfterStateChange();
 
 	const CMapInfo * getMapInfo() override;
 	const StartInfo * getStartInfo() override;
 
 	CBonusSelection * bonusSel;
+	bool campaignFromFile;
+	std::string campaignFileName;
 };

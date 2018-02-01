@@ -148,13 +148,7 @@ void CCampaignScreen::CCampaignButton::clickLeft(tribool down, bool previousStat
 	{
 		// Close running video and open the selected campaign
 		CCS->videoh->close();
-		std::vector<std::string> names;
-		std::string lol = "lol";
-		names.push_back(lol);
-		CSH->resetStateForLobby(StartInfo::NEW_GAME, &names);
-		CSH->startLocalServerAndConnect();
-		// MPTODO campaign
-		// GH.pushInt(new CBonusSelection(campFile));
+		CGPreGame::openCampaignLobby(campFile);
 	}
 }
 

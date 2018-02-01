@@ -150,7 +150,7 @@ public:
 	~CGPreGame();
 	void update() override;
 	static void openLobby(CMenuScreen::EState type, CMenuScreen::EGameMode gameMode = CMenuScreen::MULTI_NETWORK_HOST, const std::vector<std::string> * names = nullptr);
-
+	static void openCampaignLobby(const std::string & campaignFileName);
 	void openCampaignScreen(std::string name);
 
 	static CGPreGame * create();
@@ -158,6 +158,7 @@ public:
 	static void showLoadingScreen(std::function<void()> loader);
 
 	static CPicture * createPicture(const JsonNode & config);
+
 };
 
 /// Simple window to enter the server's address.

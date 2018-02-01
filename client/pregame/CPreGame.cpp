@@ -334,6 +334,22 @@ void CGPreGame::openLobby(CMenuScreen::EState screenType, CMenuScreen::EGameMode
 	}
 }
 
+void CGPreGame::openCampaignLobby(const std::string & campaignFileName)
+{
+	CSH->resetStateForLobby(StartInfo::CAMPAIGN);
+
+	IShowActivatable * sel = new CLobbyScreen(CMenuScreen::campaignList, CMenuScreen::MULTI_NETWORK_HOST, campaignFileName);
+	if(!settings["session"]["donotstartserver"].Bool())
+	{
+		CSH->startLocalServerAndConnect();
+		GH.pushInt(sel);
+	}
+	else
+	{
+		GH.pushInt(new CSimpleJoinScreen(sel));
+	}
+}
+
 void CGPreGame::openCampaignScreen(std::string name)
 {
 	if(vstd::contains(CGPreGameConfig::get().getCampaigns().Struct(), name))

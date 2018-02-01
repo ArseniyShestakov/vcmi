@@ -79,7 +79,10 @@ public:
 	{
 		T * ptr = static_cast<T *>(pack);
 		if(ptr->checkClientPermissions(srv))
+		{
+			boost::unique_lock<boost::mutex> stateLock(srv->stateMutex);
 			return ptr->applyOnServer(srv);
+		}
 		else
 			return false;
 	}
@@ -523,6 +526,7 @@ void CVCMIServer::updateStartInfoOnMapChange(std::shared_ptr<CMapInfo> mapInfo, 
 
 void CVCMIServer::updateAndPropagateLobbyState()
 {
+	boost::unique_lock<boost::mutex> stateLock(stateMutex);
 	// Update player settings for RMG
 	// MPTODO: find appropriate location for this code
 	if(si->mapGenOptions && si->mode == StartInfo::NEW_GAME)
