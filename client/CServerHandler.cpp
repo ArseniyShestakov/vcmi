@@ -431,23 +431,7 @@ void CServerHandler::sendGuiAction(ui8 action)
 
 void CServerHandler::sendStartGame()
 {
-	if(!mi)
-		throw mapMissingException();
-
-	//there must be at least one human player before game can be started
-	std::map<PlayerColor, PlayerSettings>::const_iterator i;
-	for(i = si->playerInfos.cbegin(); i != si->playerInfos.cend(); i++)
-		if(i->second.isControlledByHuman())
-			break;
-
-	if(i == si->playerInfos.cend() && !settings["session"]["onlyai"].Bool())
-		throw noHumanException();
-
-	if(si->mapGenOptions && si->mode == StartInfo::NEW_GAME)
-	{
-		if(!si->mapGenOptions->checkOptions())
-			throw noTemplateException();
-	}
+	verifyStateBeforeStart(settings["session"]["onlyai"].Bool());
 	LobbyStartGame lsg;
 	c->sendPack(&lsg);
 }

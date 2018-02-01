@@ -146,6 +146,14 @@ bool LobbyStartGame::checkClientPermissions(CVCMIServer * srv) const
 
 bool LobbyStartGame::applyOnServer(CVCMIServer * srv)
 {
+	try
+	{
+		srv->verifyStateBeforeStart(true);
+	}
+	catch(...)
+	{
+		return false;
+	}
 	// Server will prepare gamestate and we announce StartInfo to clients
 	srv->prepareToStartGame();
 	initializedStartInfo = std::make_shared<StartInfo>(*srv->gh->getStartInfo(true));

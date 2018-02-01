@@ -165,6 +165,8 @@ struct DLL_LINKAGE LobbyInfo : public LobbyState
 
 	LobbyInfo() : LobbyState() {}
 
+	void verifyStateBeforeStart(bool ignoreNoHuman = false) const;
+
 	bool isClientHost(int clientId) const;
 	//MPTODO: this function has dupe i suppose
 	std::set<PlayerColor> getAllClientPlayers(int clientId);
@@ -176,3 +178,7 @@ struct DLL_LINKAGE LobbyInfo : public LobbyState
 	bool isClientColor(int clientId, PlayerColor color) const;
 	ui8 clientFirstId(int clientId) const; // Used by chat only!
 };
+
+class ExceptionMapMissing : public std::exception {};
+class ExceptionNoHuman : public std::exception {};
+class ExceptionNoTemplate : public std::exception {};

@@ -107,8 +107,4 @@ public:
 	void sendStartGame() override;
 };
 
-class mapMissingException : public std::exception {};
-class noHumanException : public std::exception {};
-class noTemplateException : public std::exception {};
-
 extern CServerHandler * CSH;

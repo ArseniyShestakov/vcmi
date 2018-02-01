@@ -10,6 +10,7 @@
 #include "StdInc.h"
 #include "StartInfo.h"
 
+#include "rmg/CMapGenOptions.h"
 
 PlayerSettings::PlayerSettings()
 	: bonus(RANDOM), castle(NONE), hero(RANDOM), heroPortrait(RANDOM), color(0), handicap(NO_HANDICAP), team(0), compOnly(false)
@@ -50,6 +51,27 @@ PlayerSettings * StartInfo::getPlayersSettings(const ui8 connectedPlayerId)
 	return nullptr;
 }
 
+
+void LobbyInfo::verifyStateBeforeStart(bool ignoreNoHuman) const
+{
+	if(!mi)
+		throw ExceptionMapMissing();
+
+	//there must be at least one human player before game can be started
+	std::map<PlayerColor, PlayerSettings>::const_iterator i;
+	for(i = si->playerInfos.cbegin(); i != si->playerInfos.cend(); i++)
+		if(i->second.isControlledByHuman())
+			break;
+
+	if(i == si->playerInfos.cend() && !ignoreNoHuman)
+		throw ExceptionNoHuman();
+
+	if(si->mapGenOptions && si->mode == StartInfo::NEW_GAME)
+	{
+		if(!si->mapGenOptions->checkOptions())
+			throw ExceptionNoTemplate();
+	}
+}
 
 bool LobbyInfo::isClientHost(int clientId) const
 {

@@ -128,15 +128,15 @@ void CLobbyScreen::startScenario()
 		CSH->sendStartGame();
 		buttonStart->block(true);
 	}
-	catch(mapMissingException & e)
+	catch(ExceptionMapMissing & e)
 	{
 
 	}
-	catch(noHumanException & e) //for boost errors just log, not crash - probably client shut down connection
+	catch(ExceptionNoHuman & e)
 	{
 		GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[530])); // You must position yourself prior to starting the game.
 	}
-	catch(noTemplateException & e)
+	catch(ExceptionNoTemplate & e)
 	{
 		GH.pushInt(CInfoWindow::create(CGI->generaltexth->allTexts[751]));
 	}
