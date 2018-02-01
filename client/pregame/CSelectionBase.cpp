@@ -57,27 +57,6 @@ ISelectionScreenInfo::~ISelectionScreenInfo()
 	SEL = nullptr;
 }
 
-std::string ISelectionScreenInfo::getMapName()
-{
-	if(screenType == CMenuScreen::campaignList)
-	{
-		if(getMapInfo()->campaignHeader)
-			return getMapInfo()->campaignHeader->name;
-		else
-			return "MPTODO";
-	}
-	else
-		return getMapInfo()->mapHeader->name;
-}
-
-std::string ISelectionScreenInfo::getMapDescription()
-{
-	if(screenType == CMenuScreen::campaignList)
-		return getMapInfo()->campaignHeader->description;
-	else
-		return getMapInfo()->mapHeader->description;
-}
-
 int ISelectionScreenInfo::getCurrentDifficulty()
 {
 	return getStartInfo()->difficulty;
@@ -97,6 +76,9 @@ CSelectionBase::CSelectionBase(CMenuScreen::EState type)
 	IShowActivatable::type = BLOCK_ADV_HOTKEYS;
 	pos.w = 762;
 	pos.h = 584;
+	curTab = nullptr;
+	tabRand = nullptr;
+	tabOpt = nullptr;
 	if(screenType == CMenuScreen::campaignList)
 	{
 		bordered = false;
@@ -110,16 +92,10 @@ CSelectionBase::CSelectionBase(CMenuScreen::EState type)
 		const JsonVector & bgNames = CGPreGameConfig::get().getConfig()["game-select"].Vector();
 		background = new CPicture(RandomGeneratorUtil::nextItem(bgNames, CRandomGenerator::getDefault())->String(), 0, 0);
 		pos = background->center();
-	}
-	curTab = nullptr;
-	tabRand = nullptr;
-	tabOpt = nullptr;
-	card = new InfoCard(); //right info card
-	if(screenType != CMenuScreen::campaignList)
-	{
-		tabOpt = new OptionsTab(); //scenario options tab
+		tabOpt = new OptionsTab();
 		tabOpt->recActions = DISPOSE;
 	}
+	card = new InfoCard();
 	buttonSelect = nullptr;
 	buttonRMG = nullptr;
 	buttonOptions = nullptr;
@@ -347,14 +323,8 @@ void InfoCard::showAll(SDL_Surface * to)
 			printAtMiddleLoc(tob, 311, 472, FONT_SMALL, Colors::WHITE, to);
 		}
 
-		//blit description
-		std::string name = SEL->getMapName();
-
 		//name
-		if(name.length())
-			printAtLoc(name, 26, 39, FONT_BIG, Colors::YELLOW, to);
-		else
-			printAtLoc("Unnamed", 26, 39, FONT_BIG, Colors::YELLOW, to);
+		printAtLoc(SEL->getMapInfo()->getName(), 26, 39, FONT_BIG, Colors::YELLOW, to);
 	}
 }
 
@@ -369,7 +339,7 @@ void InfoCard::changeSelection()
 {
 	if(SEL->getMapInfo() && mapDescription)
 	{
-		mapDescription->setText(SEL->getMapDescription());
+		mapDescription->setText(SEL->getMapInfo()->getDescription());
 
 		mapDescription->label->scrollTextTo(0);
 		if(mapDescription->slider)

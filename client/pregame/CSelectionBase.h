@@ -35,8 +35,6 @@ public:
 	virtual const CMapInfo * getMapInfo() = 0;
 	virtual const StartInfo * getStartInfo() = 0;
 
-	virtual std::string getMapName();
-	virtual std::string getMapDescription();
 	virtual int getCurrentDifficulty();
 	virtual PlayerInfo getPlayerInfo(int color);
 

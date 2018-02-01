@@ -123,12 +123,7 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, CMenuScreen::EGameMode Game
 	txt = nullptr;
 	tabType = Type;
 
-	if(Type != CMenuScreen::campaignList)
-	{
-		background = new CPicture("SCSELBCK.bmp", 0, 6);
-		pos = background->pos;
-	}
-	else
+	if(Type == CMenuScreen::campaignList)
 	{
 		background = nullptr; //use background from parent
 		type |= REDRAW_PARENT; // we use parent background so we need to make sure it's will be redrawn too
@@ -136,14 +131,15 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, CMenuScreen::EGameMode Game
 		pos.h = parent->pos.h;
 		pos.x += 3;
 		pos.y += 6;
+
+		//sort by buttons
+		new CButton(Point(23, 86), "CamCusM.DEF", CButton::tooltip(), std::bind(&SelectionTab::sortBy, this, _numOfMaps)); //by num of maps
+		new CButton(Point(55, 86), "CamCusL.DEF", CButton::tooltip(), std::bind(&SelectionTab::sortBy, this, _name)); //by name
 	}
-
-	generalSortingBy = (tabType == CMenuScreen::loadGame || tabType == CMenuScreen::saveGame) ? _fileName : _name;
-
-	toggleMode(GameMode);
-
-	if(tabType != CMenuScreen::campaignList)
+	else
 	{
+		background = new CPicture("SCSELBCK.bmp", 0, 6);
+		pos = background->pos;
 		//size filter buttons
 		{
 			int sizes[] = {36, 72, 108, 144, 0};
@@ -167,12 +163,10 @@ SelectionTab::SelectionTab(CMenuScreen::EState Type, CMenuScreen::EGameMode Game
 			}
 		}
 	}
-	else
-	{
-		//sort by buttons
-		new CButton(Point(23, 86), "CamCusM.DEF", CButton::tooltip(), std::bind(&SelectionTab::sortBy, this, _numOfMaps)); //by num of maps
-		new CButton(Point(55, 86), "CamCusL.DEF", CButton::tooltip(), std::bind(&SelectionTab::sortBy, this, _name)); //by name
-	}
+
+	generalSortingBy = (tabType == CMenuScreen::loadGame || tabType == CMenuScreen::saveGame) ? _fileName : _name;
+
+	toggleMode(GameMode);
 
 	slider = new CSlider(Point(372, 86), tabType != CMenuScreen::saveGame ? 480 : 430, std::bind(&SelectionTab::sliderMove, this, _1), positionsToShow, curItems.size(), 0, false, CSlider::BLUE);
 	slider->addUsedEvents(WHEEL);
@@ -569,24 +563,8 @@ void SelectionTab::printMaps(SDL_Surface * to)
 			printAtLoc(ostr.str(), 29, 120 + line * 25, FONT_SMALL, itemColor, to);
 		}
 
-		std::string name;
-		if(tabType == CMenuScreen::newGame)
-		{
-			if(!currentItem->mapHeader->name.length())
-				currentItem->mapHeader->name = "Unnamed";
-			name = currentItem->mapHeader->name;
-		}
-		else if(tabType == CMenuScreen::campaignList)
-		{
-			name = currentItem->campaignHeader->name;
-		}
-		else
-		{
-			name = CResourceHandler::get("local")->getResourceName(ResourceID(currentItem->fileURI, EResType::CLIENT_SAVEGAME))->stem().string();
-		}
-
 		//print name
-		printAtMiddleLoc(name, 213, 128 + line * 25, FONT_SMALL, itemColor, to);
+		printAtMiddleLoc(currentItem->getNameForList(), 213, 128 + line * 25, FONT_SMALL, itemColor, to);
 	}
 }
 
@@ -673,6 +651,7 @@ void SelectionTab::parseGames(const std::unordered_set<ResourceID> & files, CMen
 			mapInfo->countPlayers();
 			std::time_t time = boost::filesystem::last_write_time(*CResourceHandler::get()->getResourceName(file));
 			mapInfo->date = std::asctime(std::localtime(&time));
+			mapInfo->isSaveGame = true;
 
 			// Filter out other game modes
 			bool isCampaign = mapInfo->scenarioOpts->mode == StartInfo::CAMPAIGN;

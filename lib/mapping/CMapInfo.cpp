@@ -15,6 +15,29 @@
 #include "../GameConstants.h"
 #include "CMapService.h"
 
+CMapInfo::CMapInfo() : scenarioOpts(nullptr), playerAmnt(0), humanPlayers(0),
+	actualHumanPlayers(0), isRandomMap(false), isSaveGame(false)
+{
+
+}
+
+CMapInfo::~CMapInfo()
+{
+	vstd::clear_pointer(scenarioOpts);
+}
+
+void CMapInfo::mapInit(const std::string & fname)
+{
+	fileURI = fname;
+	mapHeader = CMapService::loadMapHeader(ResourceID(fname, EResType::MAP));
+	countPlayers();
+}
+
+void CMapInfo::campaignInit()
+{
+	campaignHeader = std::unique_ptr<CCampaignHeader>(new CCampaignHeader(CCampaignHandler::getHeader(fileURI)));
+}
+
 void CMapInfo::countPlayers()
 {
 	actualHumanPlayers = playerAmnt = humanPlayers = 0;
@@ -37,27 +60,29 @@ void CMapInfo::countPlayers()
 				actualHumanPlayers++;
 }
 
-CMapInfo::CMapInfo() : scenarioOpts(nullptr), playerAmnt(0), humanPlayers(0),
-	actualHumanPlayers(0), isRandomMap(false)
+std::string CMapInfo::getName() const
 {
+	std::string name;
+	if(campaignHeader)
+		name = campaignHeader->name;
+	else
+		name = mapHeader->name;
 
+	return name.length() ? name : "Unnamed";
 }
 
-CMapInfo::~CMapInfo()
+std::string CMapInfo::getNameForList() const
 {
-	vstd::clear_pointer(scenarioOpts);
+	if(isSaveGame)
+		return fileURI;
+	else
+		return getName();
 }
 
-void CMapInfo::mapInit(const std::string & fname)
+std::string CMapInfo::getDescription() const
 {
-	fileURI = fname;
-	mapHeader = CMapService::loadMapHeader(ResourceID(fname, EResType::MAP));
-	countPlayers();
+	if(campaignHeader)
+		return campaignHeader->description;
+	else
+		return mapHeader->description;
 }
-
-void CMapInfo::campaignInit()
-{
-	campaignHeader = std::unique_ptr<CCampaignHeader>(new CCampaignHeader(CCampaignHandler::getHeader(fileURI)));
-}
-
-#undef STEAL
