@@ -102,7 +102,7 @@ bool LobbyStartGame::applyOnLobbyImmidiately(CLobbyScreen * lobby)
 
 void LobbyStartGame::applyOnLobby(CLobbyScreen * lobby)
 {
-	CGP->showLoadingScreen(std::bind(&startGame));
+	CGP->showLoadingScreen(std::bind(&CServerHandler::startGameplay, CSH));
 }
 
 void LobbyChangeHost::applyOnLobby(CLobbyScreen * lobby)

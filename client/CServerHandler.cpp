@@ -51,6 +51,9 @@
 // FIXME: For pushing events
 #include "gui/CGuiHandler.h"
 
+// For startGame
+#include "CPlayerInterface.h"
+
 template<typename T> class CApplyOnLobby;
 
 class CBaseForLobbyApply
@@ -434,6 +437,34 @@ void CServerHandler::sendStartGame()
 	verifyStateBeforeStart(settings["session"]["onlyai"].Bool());
 	LobbyStartGame lsg;
 	c->sendPack(&lsg);
+}
+
+void CServerHandler::startGameplay()
+{
+	client = new CClient();
+	CPlayerInterface::howManyPeople = 0;
+
+	switch(si->mode)
+	{
+	case StartInfo::NEW_GAME:
+		client->newGame();
+		break;
+	case StartInfo::CAMPAIGN: //MPTODO
+		client->newGame();
+		break;
+	case StartInfo::LOAD_GAME:
+		client->loadGame();
+		break;
+	}
+	// After everything initialized we can accept CPackToClient netpacks
+	c->enterGameplayConnectionMode(client->gameState());
+	pauseNetpackRetrieving = false;
+}
+
+void CServerHandler::endGameplay()
+{
+	client->endGame();
+	vstd::clear_pointer(client);
 }
 
 void CServerHandler::threadHandleConnection()

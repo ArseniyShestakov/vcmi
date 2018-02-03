@@ -80,7 +80,6 @@ namespace bfs = boost::filesystem;
 std::string NAME_AFFIX = "client";
 std::string NAME = GameConstants::VCMI_VERSION + std::string(" (") + NAME_AFFIX + ')'; //application name
 CGuiHandler GH;
-static CClient * client = nullptr;
 
 int preferredDriverIndex = -1;
 SDL_Window * mainWindow = nullptr;
@@ -106,9 +105,6 @@ static void setScreenRes(int w, int h, int bpp, bool fullscreen, int displayInde
 void dispose();
 void playIntro();
 static void mainLoop();
-//void requestChangingResolution();
-void startGame();
-void endGame();
 
 #ifndef VCMI_WINDOWS
 #ifndef _GNU_SOURCE
@@ -116,56 +112,6 @@ void endGame();
 #endif
 #include <getopt.h>
 #endif
-
-void startTestMap(const std::string &mapname)
-{
-	/*//MPTODO
-	StartInfo si;
-	si.mapname = mapname;
-	si.mode = StartInfo::NEW_GAME;
-	for (int i = 0; i < 8; i++)
-	{
-		PlayerSettings &pset = si->playerInfos[PlayerColor(i)];
-		pset.color = PlayerColor(i);
-		pset.name = CGI->generaltexth->allTexts[468];//Computer
-		pset.connectedPlayerID = PlayerSettings::PLAYER_AI;
-		pset.compOnly = true;
-		pset.castle = 0;
-		pset.hero = -1;
-		pset.heroPortrait = -1;
-		pset.handicap = PlayerSettings::NO_HANDICAP;
-	}
-
-	while(GH.topInt())
-		GH.popIntTotally(GH.topInt());
-	startGame(&si);
-*/
-}
-
-void startGameFromFile(const bfs::path &fname)
-{
-	StartInfo si;
-	try //attempt retrieving start info from given file
-	{
-		if(fname.empty() || !bfs::exists(fname))
-			throw std::runtime_error("Startfile \"" + fname.string() + "\" does not exist!");
-
-		CLoadFile out(fname);
-		if (!out.sfile || !*out.sfile)
-			throw std::runtime_error("Cannot read from startfile \"" + fname.string() +"\"!");
-		out >> si;
-	}
-	catch(std::exception &e)
-	{
-		logGlobal->error("Failed to start from the file: %s. Error: %s. Falling back to main menu.", fname, e.what());
-		GH.curInt = CGPreGame::create();
-		return;
-	}
-
-	while(GH.topInt())
-		GH.popIntTotally(GH.topInt());
-//MPTODO	startGame(&si);
-}
 
 void init()
 {
@@ -529,20 +475,22 @@ int main(int argc, char * argv[])
 	}
 	if(!session["testmap"].isNull())
 	{
-		startTestMap(session["testmap"].String());
+// MPTODO
+//		startTestMap(session["testmap"].String());
 	}
 	else
 	{
-		if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
+	/* MPTODO
+	 *  	if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
 			startGameFromFile(fileToStartFrom); //ommit pregame and start the game using settings from file
 		else
 		{
 			if(!fileToStartFrom.empty())
 			{
 				logGlobal->warn("Warning: cannot find given file to start from (%s). Falling back to main menu.", fileToStartFrom.string());
-			}
+			} */
 			GH.curInt = CGPreGame::create(); //will set CGP pointer to itself
-		}
+//		}
 	}
 
 	if(!settings["session"]["headless"].Bool())
@@ -622,8 +570,8 @@ void processCommand(const std::string &message)
 		}
 		else
 		{
-			if(client && client->erm)
-				client->erm->executeUserCommand(message);
+			if(CSH->client && CSH->client->erm)
+				CSH->client->erm->executeUserCommand(message);
 			std::cout << "erm>";
 		}
 	}
@@ -673,21 +621,21 @@ void processCommand(const std::string &message)
 	}
 	else if(cn=="save")
 	{
-		if(!client)
+		if(!CSH->client)
 		{
 			std::cout << "Game in not active";
 			return;
 		}
 		std::string fname;
 		readed >> fname;
-		client->save(fname);
+		CSH->client->save(fname);
 	}
 //	else if(cn=="load")
 //	{
 //		// TODO: this code should end the running game and manage to call startGame instead
 //		std::string fname;
 //		readed >> fname;
-//		client->loadGame(fname);
+//		CSH->client->loadGame(fname);
 //	}
 	else if(message=="convert txt")
 	{
@@ -834,7 +782,7 @@ void processCommand(const std::string &message)
 	{
 		std::string fname;
 		readed >> fname;
-		startGameFromFile(fname);
+//		startGameFromFile(fname);
 	}
 	else if(cn == "unlock")
 	{
@@ -894,8 +842,8 @@ void processCommand(const std::string &message)
 	{
 		YourTurn yt;
 		yt.player = player;
-		yt.daysWithoutCastle = client->getPlayer(player)->daysWithoutCastle;
-		yt.applyCl(client);
+		yt.daysWithoutCastle = CSH->client->getPlayer(player)->daysWithoutCastle;
+		yt.applyCl(CSH->client);
 	};
 
 	Settings session = settings.write["session"];
@@ -906,7 +854,7 @@ void processCommand(const std::string &message)
 	else if(cn == "gosolo")
 	{
 		boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
-		if(!client)
+		if(!CSH->client)
 		{
 			std::cout << "Game in not active";
 			return;
@@ -914,23 +862,23 @@ void processCommand(const std::string &message)
 		PlayerColor color;
 		if(session["aiSolo"].Bool())
 		{
-			for(auto & elem : client->gameState()->players)
+			for(auto & elem : CSH->client->gameState()->players)
 			{
 				if(elem.second.human)
-					client->installNewPlayerInterface(std::make_shared<CPlayerInterface>(elem.first), elem.first);
+					CSH->client->installNewPlayerInterface(std::make_shared<CPlayerInterface>(elem.first), elem.first);
 			}
 		}
 		else
 		{
 			color = LOCPLINT->playerID;
 			removeGUI();
-			for(auto & elem : client->gameState()->players)
+			for(auto & elem : CSH->client->gameState()->players)
 			{
 				if(elem.second.human)
 				{
-					auto AiToGive = client->aiNameForPlayer(*client->getPlayerSettings(elem.first), false);
+					auto AiToGive = CSH->client->aiNameForPlayer(*CSH->client->getPlayerSettings(elem.first), false);
 					logNetwork->info("Player %s will be lead by %s", elem.first, AiToGive);
-					client->installNewPlayerInterface(CDynLibHandler::getNewAI(AiToGive), elem.first);
+					CSH->client->installNewPlayerInterface(CDynLibHandler::getNewAI(AiToGive), elem.first);
 				}
 			}
 			GH.totalRedraw();
@@ -945,7 +893,7 @@ void processCommand(const std::string &message)
 		boost::to_lower(colorName);
 
 		boost::unique_lock<boost::recursive_mutex> un(*CPlayerInterface::pim);
-		if(!client)
+		if(!CSH->client)
 		{
 			std::cout << "Game in not active";
 			return;
@@ -953,7 +901,7 @@ void processCommand(const std::string &message)
 		PlayerColor color;
 		if(LOCPLINT)
 			color = LOCPLINT->playerID;
-		for(auto & elem : client->gameState()->players)
+		for(auto & elem : CSH->client->gameState()->players)
 		{
 			if(elem.second.human || (colorName.length() &&
 				elem.first.getNum() != vstd::find_pos(GameConstants::PLAYER_COLOR_NAMES, colorName)))
@@ -962,7 +910,7 @@ void processCommand(const std::string &message)
 			}
 
 			removeGUI();
-			client->installNewPlayerInterface(std::make_shared<CPlayerInterface>(elem.first), elem.first);
+			CSH->client->installNewPlayerInterface(std::make_shared<CPlayerInterface>(elem.first), elem.first);
 		}
 		GH.totalRedraw();
 		if(color != PlayerColor::NEUTRAL)
@@ -1257,28 +1205,28 @@ static void handleEvent(SDL_Event & ev)
 		    break;
 		case EUserEvent::RETURN_TO_MAIN_MENU:
 			{
-				endGame();
+				CSH->endGameplay();
 				GH.curInt = CGPreGame::create();
 				GH.defActionsDef = 63;
 			}
 			break;
 		case EUserEvent::RESTART_GAME:
 			{
-				StartInfo si = *client->getStartInfo(true);
+				StartInfo si = *CSH->client->getStartInfo(true);
 				si.seedToBeUsed = 0; //server gives new random generator seed if 0
-				endGame();
+				CSH->endGameplay();
 //MPTODO				startGame(&si);
 			}
 			break;
 		case EUserEvent::PREPARE_RESTART_CAMPAIGN:
 			{
 				auto si = reinterpret_cast<StartInfo *>(ev.user.data1);
-				endGame();
+				CSH->endGameplay();
 //MPTODO				startGame(si);
 			}
 			break;
 		case EUserEvent::RETURN_TO_MENU_LOAD:
-			endGame();
+			CSH->endGameplay();
 			CGPreGame::create();
 			GH.defActionsDef = 63;
 			CGP->update();
@@ -1338,41 +1286,12 @@ static void mainLoop()
 	}
 }
 
-void startGame()
-{
-	client = new CClient();
-	CSH->client = client;
-	CPlayerInterface::howManyPeople = 0;
-
-	switch(CSH->si->mode)
-	{
-	case StartInfo::NEW_GAME:
-		client->newGame();
-		break;
-	case StartInfo::CAMPAIGN: //MPTODO
-		client->newGame();
-		break;
-	case StartInfo::LOAD_GAME:
-		client->loadGame();
-		break;
-	}
-	// After everything initialized we can accept CPackToClient netpacks
-	CSH->c->enterGameplayConnectionMode(client->gameState());
-	CSH->pauseNetpackRetrieving = false;
-}
-
-void endGame()
-{
-	client->endGame();
-	vstd::clear_pointer(client);
-}
-
 void handleQuit(bool ask)
 {
 	auto quitApplication = []()
 	{
-		if(client)
-			endGame();
+		if(CSH->client)
+			CSH->endGameplay();
 		dispose();
 		vstd::clear_pointer(console);
 		boost::this_thread::sleep(boost::posix_time::milliseconds(750));
@@ -1386,7 +1305,7 @@ void handleQuit(bool ask)
 		exit(0);
 	};
 
-	if(client && LOCPLINT && ask)
+	if(CSH->client && LOCPLINT && ask)
 	{
 		CCS->curh->changeGraphic(ECursor::ADVENTURE, 0);
 		LOCPLINT->showYesNoDialog(CGI->generaltexth->allTexts[69], quitApplication, 0);

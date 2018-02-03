@@ -49,8 +49,6 @@
 
 #include "../../lib/mapObjects/CGHeroInstance.h"
 
-void startGame();
-
 std::shared_ptr<CCampaignState> CBonusSelection::getCampaign()
 {
 	return CSH->si->campState;
@@ -521,7 +519,6 @@ void CBonusSelection::startMap()
 		{
 			logGlobal->info("Starting scenario %d", CSH->campaignMap);
 			CSH->sendStartGame();
-//			CGP->showLoadingScreen(std::bind(&startGame));
 		};
 
 		const CCampaignScenario & scenario = getCampaign()->camp->scenarios[CSH->campaignMap];

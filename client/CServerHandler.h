@@ -105,6 +105,9 @@ public:
 	void sendMessage(const std::string & txt) override;
 	void sendGuiAction(ui8 action) override;
 	void sendStartGame() override;
+
+	void startGameplay();
+	void endGameplay();
 };
 
 extern CServerHandler * CSH;
