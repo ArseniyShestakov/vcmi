@@ -160,6 +160,8 @@ CBonusSelection::CBonusSelection()
 	//load miniflags
 	sFlags = std::make_shared<CAnimation>("ITGFLAGS.DEF");
 	sFlags->load();
+
+	updateAfterStateChange();
 }
 
 CBonusSelection::~CBonusSelection()
@@ -500,7 +502,7 @@ void CBonusSelection::updateAfterStateChange()
 		buttonBack->block(false);
 	}
 
-	mapDescription->setText(CSH->mi->mapHeader->description);
+	mapDescription->setText(CSH->mi->getDescription());
 	updateBonusSelection();
 
 	updateStartButtonState(CSH->campaignBonus);
