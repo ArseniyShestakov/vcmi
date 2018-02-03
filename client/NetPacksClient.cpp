@@ -44,6 +44,7 @@
 
 //macros to avoid code duplication - calls given method with given arguments if interface for specific player is present
 //awaiting variadic templates...
+/*
 #define CALL_IN_PRIVILAGED_INTS(function, ...)										\
 	do																				\
 	{																				\
@@ -102,6 +103,8 @@
 	} while(0)
 
 
+//calls all normal interfaces and privilaged ones, playerints may be updated when iterating over it, so we need a copy
+
 #define BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(function,...) 				\
 	CALL_ONLY_THAT_BATTLE_INTERFACE(GS(cl)->curB->sides[0].color, function, __VA_ARGS__)	\
 	CALL_ONLY_THAT_BATTLE_INTERFACE(GS(cl)->curB->sides[1].color, function, __VA_ARGS__)	\
@@ -110,11 +113,83 @@
 		CALL_ONLY_THAT_BATTLE_INTERFACE(PlayerColor::SPECTATOR, function, __VA_ARGS__)	\
 	}																					\
 	BATTLE_INTERFACE_CALL_RECEIVERS(function, __VA_ARGS__)
+*/
+
+template<typename ... Args>
+void CALL_IN_PRIVILAGED_INTS(CClient * cl, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	for(auto &ger : cl->privilagedGameEventReceivers)
+		ger->*ptr(std::forward<Args>(args)...);
+}
+
+template<typename ... Args>
+void CALL_ONLY_THAT_INTERFACE(CClient * cl, PlayerColor player, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	if(vstd::contains(cl->playerint, player))
+		cl->playerint[player]->*ptr(std::forward<Args>(args)...);
+}
+
+template<typename ... Args>
+void INTERFACE_CALL_IF_PRESENT(CClient * cl, PlayerColor player, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	CALL_ONLY_THAT_INTERFACE(cl, player, ptr, std::forward<Args>(args)...);
+	CALL_IN_PRIVILAGED_INTS(cl, ptr, std::forward<Args>(args)...);
+}
+
+template<typename ... Args>
+void CALL_ONLY_THAT_BATTLE_INTERFACE(CClient * cl, PlayerColor player, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	if(vstd::contains(cl->battleints,player))
+		cl->battleints[player]->*ptr(std::forward<Args>(args)...);
+
+	if(cl->additionalBattleInts.count(player))
+	{
+		for(auto bInt : cl->additionalBattleInts[player])
+			bInt->*ptr(std::forward<Args>(args)...);
+	}
+}
+
+template<typename ... Args>
+void BATTLE_INTERFACE_CALL_RECEIVERS(CClient * cl, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	for(auto & ber : cl->privilagedBattleEventReceivers)
+		ber->*ptr(std::forward<Args>(args)...);
+}
+
+template<typename ... Args>
+void BATTLE_INTERFACE_CALL_IF_PRESENT(CClient * cl, PlayerColor player, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	CALL_ONLY_THAT_INTERFACE(cl, player, ptr, std::forward<Args>(args)...);
+	BATTLE_INTERFACE_CALL_RECEIVERS(cl, ptr, std::forward<Args>(args)...);
+}
+
+//calls all normal interfaces and privilaged ones, playerints may be updated when iterating over it, so we need a copy
+template<typename ... Args>
+void CALL_IN_ALL_INTERFACES(CClient * cl, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	auto ints = cl->playerint;
+	for(auto i = ints.begin(); i != ints.end(); i++)
+		CALL_ONLY_THAT_INTERFACE(cl, i->first, ptr, std::forward<Args>(args)...);
+}
+
+//calls all normal interfaces and privilaged ones, playerints may be updated when iterating over it, so we need a copy
+template<typename ... Args>
+void BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(CClient * cl, void (IGameEventsReceiver::*ptr)(Args...), Args && ...args)
+{
+	CALL_ONLY_THAT_BATTLE_INTERFACE(cl, cl->gs->curB->sides[0].color, ptr, std::forward<Args>(args)...);
+	CALL_ONLY_THAT_BATTLE_INTERFACE(cl, cl->gs->curB->sides[1].color, ptr, std::forward<Args>(args)...);
+	if(settings["session"]["spectate"].Bool() && !settings["session"]["spectate-skip-battle"].Bool() && LOCPLINT->battleInt)
+	{
+		CALL_ONLY_THAT_BATTLE_INTERFACE(cl, PlayerColor::SPECTATOR, ptr, std::forward<Args>(args)...);
+	}
+	BATTLE_INTERFACE_CALL_RECEIVERS(cl, ptr, std::forward<Args>(args)...);
+}
+
 
 void SetResources::applyCl(CClient *cl)
 {
 	//todo: inform on actual resource set transfered
-	INTERFACE_CALL_IF_PRESENT(player,receivedResource);
+	INTERFACE_CALL_IF_PRESENT(cl, player, &IGameEventsReceiver::receivedResource);
 }
 
 void SetPrimSkill::applyCl(CClient *cl)
@@ -125,7 +200,7 @@ void SetPrimSkill::applyCl(CClient *cl)
 		logNetwork->error("Cannot find hero with ID %d", id.getNum());
 		return;
 	}
-	INTERFACE_CALL_IF_PRESENT(h->tempOwner,heroPrimarySkillChanged,h,which,val);
+	INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, &IGameEventsReceiver::heroPrimarySkillChanged,h,which,val);
 }
 
 void SetSecSkill::applyCl(CClient *cl)
@@ -136,7 +211,7 @@ void SetSecSkill::applyCl(CClient *cl)
 		logNetwork->error("Cannot find hero with ID %d", id.getNum());
 		return;
 	}
-	INTERFACE_CALL_IF_PRESENT(h->tempOwner,heroSecondarySkillChanged,h,which,val);
+	INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, &IGameEventsReceiver::heroSecondarySkillChanged,h,which,val);
 }
 
 void HeroVisitCastle::applyCl(CClient *cl)
@@ -145,7 +220,7 @@ void HeroVisitCastle::applyCl(CClient *cl)
 
 	if(start())
 	{
-		INTERFACE_CALL_IF_PRESENT(h->tempOwner, heroVisitsTown, h, GS(cl)->getTown(tid));
+		INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, &IGameEventsReceiver::heroVisitsTown, h, GS(cl)->getTown(tid));
 	}
 }
 
@@ -157,14 +232,14 @@ void ChangeSpells::applyCl(CClient *cl)
 void SetMana::applyCl(CClient *cl)
 {
 	const CGHeroInstance *h = cl->getHero(hid);
-	INTERFACE_CALL_IF_PRESENT(h->tempOwner, heroManaPointsChanged, h);
+	INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, &IGameEventsReceiver::heroManaPointsChanged, h);
 }
 
 void SetMovePoints::applyCl(CClient *cl)
 {
 	const CGHeroInstance *h = cl->getHero(hid);
 	cl->invalidatePaths();
-	INTERFACE_CALL_IF_PRESENT(h->tempOwner, heroMovePointsChanged, h);
+	INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, &IGameEventsReceiver::heroMovePointsChanged, h);
 }
 
 void FoWChange::applyCl(CClient *cl)
@@ -193,69 +268,69 @@ void SetAvailableHeroes::applyCl(CClient *cl)
 
 void ChangeStackCount::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(sl.army->tempOwner, stackChagedCount, sl, count, absoluteValue);
+	INTERFACE_CALL_IF_PRESENT(cl, sl.army->tempOwner, &IGameEventsReceiver::stackChagedCount, sl, count, absoluteValue);
 }
 
 void SetStackType::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(sl.army->tempOwner, stackChangedType, sl, *type);
+	INTERFACE_CALL_IF_PRESENT(cl, sl.army->tempOwner, &IGameEventsReceiver::stackChangedType, sl, *type);
 }
 
 void EraseStack::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(sl.army->tempOwner, stacksErased, sl);
+	INTERFACE_CALL_IF_PRESENT(cl, sl.army->tempOwner, &IGameEventsReceiver::stacksErased, sl);
 }
 
 void SwapStacks::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(sl1.army->tempOwner, stacksSwapped, sl1, sl2);
+	INTERFACE_CALL_IF_PRESENT(cl, sl1.army->tempOwner, &IGameEventsReceiver::stacksSwapped, sl1, sl2);
 	if(sl1.army->tempOwner != sl2.army->tempOwner)
-		INTERFACE_CALL_IF_PRESENT(sl2.army->tempOwner, stacksSwapped, sl1, sl2);
+		INTERFACE_CALL_IF_PRESENT(cl, sl2.army->tempOwner, &IGameEventsReceiver::stacksSwapped, sl1, sl2);
 }
 
 void InsertNewStack::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(sl.army->tempOwner,newStackInserted,sl, *sl.getStack());
+	INTERFACE_CALL_IF_PRESENT(cl, sl.army->tempOwner, &IGameEventsReceiver::newStackInserted,sl, *sl.getStack());
 }
 
 void RebalanceStacks::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(src.army->tempOwner, stacksRebalanced, src, dst, count);
+	INTERFACE_CALL_IF_PRESENT(cl, src.army->tempOwner, &IGameEventsReceiver::stacksRebalanced, src, dst, count);
 	if(src.army->tempOwner != dst.army->tempOwner)
-		INTERFACE_CALL_IF_PRESENT(dst.army->tempOwner,stacksRebalanced, src, dst, count);
+		INTERFACE_CALL_IF_PRESENT(cl, dst.army->tempOwner, &IGameEventsReceiver::stacksRebalanced, src, dst, count);
 }
 
 void PutArtifact::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(al.owningPlayer(), artifactPut, al);
+	INTERFACE_CALL_IF_PRESENT(cl, al.owningPlayer(), &IGameEventsReceiver::artifactPut, al);
 }
 
 void EraseArtifact::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(al.owningPlayer(), artifactRemoved, al);
+	INTERFACE_CALL_IF_PRESENT(cl, al.owningPlayer(), &IGameEventsReceiver::artifactRemoved, al);
 }
 
 void MoveArtifact::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(src.owningPlayer(), artifactMoved, src, dst);
+	INTERFACE_CALL_IF_PRESENT(cl, src.owningPlayer(), &IGameEventsReceiver::artifactMoved, src, dst);
 	if(src.owningPlayer() != dst.owningPlayer())
-		INTERFACE_CALL_IF_PRESENT(dst.owningPlayer(), artifactMoved, src, dst);
+		INTERFACE_CALL_IF_PRESENT(cl, dst.owningPlayer(), &IGameEventsReceiver::artifactMoved, src, dst);
 }
 
 void AssembledArtifact::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(al.owningPlayer(), artifactAssembled, al);
+	INTERFACE_CALL_IF_PRESENT(cl, al.owningPlayer(), &IGameEventsReceiver::artifactAssembled, al);
 }
 
 void DisassembledArtifact::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(al.owningPlayer(), artifactDisassembled, al);
+	INTERFACE_CALL_IF_PRESENT(cl, al.owningPlayer(), &IGameEventsReceiver::artifactDisassembled, al);
 }
 
 void HeroVisit::applyCl(CClient *cl)
 {
 	assert(hero);
-	INTERFACE_CALL_IF_PRESENT(player, heroVisit, hero, obj, starting);
+	INTERFACE_CALL_IF_PRESENT(cl, player, &IGameEventsReceiver::heroVisit, hero, obj, starting);
 }
 
 void NewTurn::applyCl(CClient *cl)
@@ -272,13 +347,13 @@ void GiveBonus::applyCl(CClient *cl)
 	case HERO:
 		{
 			const CGHeroInstance *h = GS(cl)->getHero(ObjectInstanceID(id));
-			INTERFACE_CALL_IF_PRESENT(h->tempOwner, heroBonusChanged, h, *h->getBonusList().back(),true);
+			INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, &IGameEventsReceiver::heroBonusChanged, h, *h->getBonusList().back(),true);
 		}
 		break;
 	case PLAYER:
 		{
 			const PlayerState *p = GS(cl)->getPlayer(PlayerColor(id));
-			INTERFACE_CALL_IF_PRESENT(PlayerColor(id), playerBonusChanged, *p->getBonusList().back(), true);
+			INTERFACE_CALL_IF_PRESENT(cl, PlayerColor(id), &IGameEventsReceiver::playerBonusChanged, *p->getBonusList().back(), true);
 		}
 		break;
 	}
@@ -301,7 +376,7 @@ void ChangeObjPos::applyCl(CClient *cl)
 
 void PlayerEndsGame::applyCl(CClient *cl)
 {
-	CALL_IN_ALL_INTERFACES(gameOver, player, victoryLossCheckResult);
+	CALL_IN_ALL_INTERFACES(cl, &IGameEventsReceiver::gameOver, player, victoryLossCheckResult);
 
 	// In auto testing mode we always close client if red player won or lose
 	if(!settings["session"]["testmap"].isNull() && player == PlayerColor(0))
@@ -316,13 +391,13 @@ void RemoveBonus::applyCl(CClient *cl)
 	case HERO:
 		{
 			const CGHeroInstance *h = GS(cl)->getHero(ObjectInstanceID(id));
-			INTERFACE_CALL_IF_PRESENT(h->tempOwner, heroBonusChanged, h, bonus,false);
+			INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, &IGameEventsReceiver::heroBonusChanged, h, bonus,false);
 		}
 		break;
 	case PLAYER:
 		{
 			//const PlayerState *p = GS(cl)->getPlayer(id);
-			INTERFACE_CALL_IF_PRESENT(PlayerColor(id), playerBonusChanged, bonus, false);
+			INTERFACE_CALL_IF_PRESENT(cl, PlayerColor(id), &IGameEventsReceiver::playerBonusChanged, bonus, false);
 		}
 		break;
 	}
@@ -456,7 +531,7 @@ void SetAvailableCreatures::applyCl(CClient *cl)
 	else
 		p = dw->tempOwner;
 
-	INTERFACE_CALL_IF_PRESENT(p, availableCreaturesChanged, dw);
+	INTERFACE_CALL_IF_PRESENT(cl, p, &IGameEventsReceiver::availableCreaturesChanged, dw);
 }
 
 void SetHeroesInTown::applyCl(CClient *cl)
@@ -538,13 +613,13 @@ void SetObjectProperty::applyCl(CClient *cl)
 	for(auto it = cl->playerint.cbegin(); it != cl->playerint.cend(); ++it)
 	{
 		if(GS(cl)->isVisible(GS(cl)->getObjInstance(id), it->first))
-			INTERFACE_CALL_IF_PRESENT(it->first, objectPropertyChanged, this);
+			INTERFACE_CALL_IF_PRESENT(cl, it->first, &IGameEventsReceiver::objectPropertyChanged, this);
 	}
 }
 
 void HeroLevelUp::applyCl(CClient *cl)
 {
-	//INTERFACE_CALL_IF_PRESENT(h->tempOwner, heroGotLevel, h, primskill, skills, id);
+	//INTERFACE_CALL_IF_PRESENT(cl, h->tempOwner, heroGotLevel, h, primskill, skills, id);
 	if(vstd::contains(cl->playerint,hero->tempOwner))
 	{
 		cl->playerint[hero->tempOwner]->heroGotLevel(hero, primskill, skills, queryID);
@@ -589,29 +664,29 @@ void GarrisonDialog::applyCl(CClient *cl)
 void ExchangeDialog::applyCl(CClient *cl)
 {
 	assert(heroes[0] && heroes[1]);
-	INTERFACE_CALL_IF_PRESENT(heroes[0]->tempOwner, heroExchangeStarted, heroes[0]->id, heroes[1]->id, queryID);
+	INTERFACE_CALL_IF_PRESENT(cl, heroes[0]->tempOwner, &IGameEventsReceiver::heroExchangeStarted, heroes[0]->id, heroes[1]->id, queryID);
 }
 
 void TeleportDialog::applyCl(CClient *cl)
 {
-	CALL_ONLY_THAT_INTERFACE(hero->tempOwner,showTeleportDialog,channel,exits,impassable,queryID);
+	CALL_ONLY_THAT_INTERFACE(cl, hero->tempOwner, &IGameEventsReceiver::showTeleportDialog,channel,exits,impassable,queryID);
 }
 
 void MapObjectSelectDialog::applyCl(CClient * cl)
 {
-	CALL_ONLY_THAT_INTERFACE(player, showMapObjectSelectDialog, queryID, icon, title, description, objects);
+	CALL_ONLY_THAT_INTERFACE(cl, player, &IGameEventsReceiver::showMapObjectSelectDialog, queryID, icon, title, description, objects);
 }
 
 void BattleStart::applyFirstCl(CClient *cl)
 {
 	//Cannot use the usual macro because curB is not set yet
-	CALL_ONLY_THAT_BATTLE_INTERFACE(info->sides[0].color, battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
+	CALL_ONLY_THAT_BATTLE_INTERFACE(info->sides[0].color, &IGameEventsReceiver::battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
 		info->tile, info->sides[0].hero, info->sides[1].hero);
-	CALL_ONLY_THAT_BATTLE_INTERFACE(info->sides[1].color, battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
+	CALL_ONLY_THAT_BATTLE_INTERFACE(info->sides[1].color, &IGameEventsReceiver::battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
 		info->tile, info->sides[0].hero, info->sides[1].hero);
-	CALL_ONLY_THAT_BATTLE_INTERFACE(PlayerColor::SPECTATOR, battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
+	CALL_ONLY_THAT_BATTLE_INTERFACE(PlayerColor::SPECTATOR, &IGameEventsReceiver::battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
 		info->tile, info->sides[0].hero, info->sides[1].hero);
-	BATTLE_INTERFACE_CALL_RECEIVERS(battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
+	BATTLE_INTERFACE_CALL_RECEIVERS(cl, &IGameEventsReceiver::battleStartBefore, info->sides[0].armyObject, info->sides[1].armyObject,
 		info->tile, info->sides[0].hero, info->sides[1].hero);
 }
 
@@ -622,12 +697,12 @@ void BattleStart::applyCl(CClient *cl)
 
 void BattleNextRound::applyFirstCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleNewRoundFirst,round);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleNewRoundFirst,round);
 }
 
 void BattleNextRound::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleNewRound,round);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleNewRound,round);
 }
 
 void BattleSetActiveStack::applyCl(CClient *cl)
@@ -653,29 +728,29 @@ void BattleSetActiveStack::applyCl(CClient *cl)
 
 void BattleTriggerEffect::applyCl(CClient * cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleTriggerEffect, *this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleTriggerEffect, *this);
 }
 
 void BattleObstaclePlaced::applyCl(CClient * cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleObstaclePlaced, *obstacle);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleObstaclePlaced, *obstacle);
 }
 
 void BattleUpdateGateState::applyFirstCl(CClient * cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleGateStateChanged, state);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleGateStateChanged, state);
 }
 
 void BattleResult::applyFirstCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleEnd,this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleEnd,this);
 	cl->battleFinished();
 }
 
 void BattleStackMoved::applyFirstCl(CClient *cl)
 {
 	const CStack * movedStack = GS(cl)->curB->battleGetStackByID(stack);
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStackMoved,movedStack,tilesToMove,distance);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleStackMoved,movedStack,tilesToMove,distance);
 }
 
 //void BattleStackAttacked::(CClient *cl)
@@ -684,12 +759,12 @@ void BattleStackAttacked::applyFirstCl(CClient *cl)
 	std::vector<BattleStackAttacked> bsa;
 	bsa.push_back(*this);
 
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked,bsa);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleStacksAttacked,bsa);
 }
 
 void BattleAttack::applyFirstCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleAttack,this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleAttack,this);
 	for (auto & elem : bsa)
 	{
 		for (int z=0; z<elem.healedStacks.size(); ++z)
@@ -701,36 +776,36 @@ void BattleAttack::applyFirstCl(CClient *cl)
 
 void BattleAttack::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked,bsa);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleStacksAttacked,bsa);
 }
 
 void StartAction::applyFirstCl(CClient *cl)
 {
 	cl->curbaction = boost::make_optional(ba);
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(actionStarted, ba);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::actionStarted, ba);
 }
 
 void BattleSpellCast::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleSpellCast,this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleSpellCast,this);
 }
 
 void SetStackEffect::applyCl(CClient *cl)
 {
 	//informing about effects
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksEffectsSet,*this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleStacksEffectsSet,*this);
 }
 
 void StacksInjured::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksAttacked,stacks);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleStacksAttacked,stacks);
 }
 
 void BattleResultsApplied::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(player1, battleResultsApplied);
-	INTERFACE_CALL_IF_PRESENT(player2, battleResultsApplied);
-	INTERFACE_CALL_IF_PRESENT(PlayerColor::SPECTATOR, battleResultsApplied);
+	INTERFACE_CALL_IF_PRESENT(cl, player1, &IGameEventsReceiver::battleResultsApplied);
+	INTERFACE_CALL_IF_PRESENT(cl, player2, &IGameEventsReceiver::battleResultsApplied);
+	INTERFACE_CALL_IF_PRESENT(cl, PlayerColor::SPECTATOR, &IGameEventsReceiver::battleResultsApplied);
 }
 
 void StacksHealedOrResurrected::applyCl(CClient * cl)
@@ -740,30 +815,30 @@ void StacksHealedOrResurrected::applyCl(CClient * cl)
 	{
 		shiftedHealed.push_back(std::make_pair(elem.stackId, (ui32)elem.delta));
 	}
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksHealedRes, shiftedHealed, lifeDrain, tentHealing, drainedFrom);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleStacksHealedRes, shiftedHealed, lifeDrain, tentHealing, drainedFrom);
 }
 
 void ObstaclesRemoved::applyCl(CClient *cl)
 {
 	//inform interfaces about removed obstacles
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleObstaclesRemoved, obstacles);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleObstaclesRemoved, obstacles);
 }
 
 void CatapultAttack::applyCl(CClient *cl)
 {
 	//inform interfaces about catapult attack
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleCatapultAttacked, *this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleCatapultAttacked, *this);
 }
 
 void BattleStacksRemoved::applyFirstCl(CClient * cl)
 {
 	//inform interfaces about removed stacks
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleStacksRemoved, *this);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleStacksRemoved, *this);
 }
 
 void BattleStackAdded::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(battleNewStackAppeared, GS(cl)->curB->stacks.back());
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::battleNewStackAppeared, GS(cl)->curB->stacks.back());
 }
 
 CGameState* CPackForClient::GS(CClient *cl)
@@ -773,13 +848,13 @@ CGameState* CPackForClient::GS(CClient *cl)
 
 void EndAction::applyCl(CClient *cl)
 {
-	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(actionFinished, *cl->curbaction);
+	BATTLE_INTERFACE_CALL_IF_PRESENT_FOR_BOTH_SIDES(&IGameEventsReceiver::actionFinished, *cl->curbaction);
 	cl->curbaction.reset();
 }
 
 void PackageApplied::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(player, requestRealized, this);
+	INTERFACE_CALL_IF_PRESENT(cl, player, requestRealized, this);
 	if(!CClient::waitingRequest.tryRemovingElement(requestID))
 		logNetwork->warn("Surprising server message!");
 }
@@ -796,13 +871,13 @@ void SystemMessage::applyCl(CClient *cl)
 
 void PlayerBlocked::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(player,playerBlocked,reason, startOrEnd==BLOCKADE_STARTED);
+	INTERFACE_CALL_IF_PRESENT(cl, player, &IGameEventsReceiver::playerBlocked,reason, startOrEnd==BLOCKADE_STARTED);
 }
 
 void YourTurn::applyCl(CClient *cl)
 {
-	CALL_IN_ALL_INTERFACES(playerStartsTurn, player);
-	CALL_ONLY_THAT_INTERFACE(player,yourTurn);
+	CALL_IN_ALL_INTERFACES(cl, &IGameEventsReceiver::playerStartsTurn, player);
+	CALL_ONLY_THAT_INTERFACE(cl, player, &IGameEventsReceiver::yourTurn);
 }
 
 void SaveGame::applyCl(CClient *cl)
@@ -837,19 +912,19 @@ void PlayerMessage::applyCl(CClient *cl)
 
 void ShowInInfobox::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT(player,showComp, c, text.toString());
+	INTERFACE_CALL_IF_PRESENT(cl, player, &IGameEventsReceiver::showComp, c, text.toString());
 }
 
 void AdvmapSpellCast::applyCl(CClient *cl)
 {
 	cl->invalidatePaths();
 	//consider notifying other interfaces that see hero?
-	INTERFACE_CALL_IF_PRESENT(caster->getOwner(),advmapSpellCast, caster, spellID);
+	INTERFACE_CALL_IF_PRESENT(cl, caster->getOwner(), &IGameEventsReceiver::advmapSpellCast, caster, spellID);
 }
 
 void ShowWorldViewEx::applyCl(CClient * cl)
 {
-	CALL_ONLY_THAT_INTERFACE(player, showWorldViewEx, objectPositions);
+	CALL_ONLY_THAT_INTERFACE(cl, player, &IGameEventsReceiver::showWorldViewEx, objectPositions);
 }
 
 void OpenWindow::applyCl(CClient *cl)
@@ -861,20 +936,20 @@ void OpenWindow::applyCl(CClient *cl)
 		{
 			const CGDwelling *dw = dynamic_cast<const CGDwelling*>(cl->getObj(ObjectInstanceID(id1)));
 			const CArmedInstance *dst = dynamic_cast<const CArmedInstance*>(cl->getObj(ObjectInstanceID(id2)));
-			INTERFACE_CALL_IF_PRESENT(dst->tempOwner,showRecruitmentDialog, dw, dst, window == RECRUITMENT_FIRST ? 0 : -1);
+			INTERFACE_CALL_IF_PRESENT(cl, dst->tempOwner,&IGameEventsReceiver::showRecruitmentDialog, dw, dst, window == RECRUITMENT_FIRST ? 0 : -1);
 		}
 		break;
 	case SHIPYARD_WINDOW:
 		{
 			const IShipyard *sy = IShipyard::castFrom(cl->getObj(ObjectInstanceID(id1)));
-			INTERFACE_CALL_IF_PRESENT(sy->o->tempOwner, showShipyardDialog, sy);
+			INTERFACE_CALL_IF_PRESENT(cl, sy->o->tempOwner, &IGameEventsReceiver::showShipyardDialog, sy);
 		}
 		break;
 	case THIEVES_GUILD:
 		{
 			//displays Thieves' Guild window (when hero enters Den of Thieves)
 			const CGObjectInstance *obj = cl->getObj(ObjectInstanceID(id2));
-			INTERFACE_CALL_IF_PRESENT(PlayerColor(id1), showThievesGuildWindow, obj);
+			INTERFACE_CALL_IF_PRESENT(cl, PlayerColor(id1), &IGameEventsReceiver::showThievesGuildWindow, obj);
 		}
 		break;
 	case UNIVERSITY_WINDOW:
@@ -882,7 +957,7 @@ void OpenWindow::applyCl(CClient *cl)
 			//displays University window (when hero enters University on adventure map)
 			const IMarket *market = IMarket::castFrom(cl->getObj(ObjectInstanceID(id1)));
 			const CGHeroInstance *hero = cl->getHero(ObjectInstanceID(id2));
-			INTERFACE_CALL_IF_PRESENT(hero->tempOwner,showUniversityWindow, market, hero);
+			INTERFACE_CALL_IF_PRESENT(cl, hero->tempOwner,&IGameEventsReceiver::showUniversityWindow, market, hero);
 		}
 		break;
 	case MARKET_WINDOW:
@@ -891,7 +966,7 @@ void OpenWindow::applyCl(CClient *cl)
 			const CGObjectInstance *obj = cl->getObj(ObjectInstanceID(id1));
 			const CGHeroInstance *hero = cl->getHero(ObjectInstanceID(id2));
 			const IMarket *market = IMarket::castFrom(obj);
-			INTERFACE_CALL_IF_PRESENT(cl->getTile(obj->visitablePos())->visitableObjects.back()->tempOwner, showMarketWindow, market, hero);
+			INTERFACE_CALL_IF_PRESENT(cl, cl->getTile(obj->visitablePos())->visitableObjects.back()->tempOwner, &IGameEventsReceiver::showMarketWindow, market, hero);
 		}
 		break;
 	case HILL_FORT_WINDOW:
@@ -899,18 +974,18 @@ void OpenWindow::applyCl(CClient *cl)
 			//displays Hill fort window
 			const CGObjectInstance *obj = cl->getObj(ObjectInstanceID(id1));
 			const CGHeroInstance *hero = cl->getHero(ObjectInstanceID(id2));
-			INTERFACE_CALL_IF_PRESENT(cl->getTile(obj->visitablePos())->visitableObjects.back()->tempOwner, showHillFortWindow, obj, hero);
+			INTERFACE_CALL_IF_PRESENT(cl, cl->getTile(obj->visitablePos())->visitableObjects.back()->tempOwner, &IGameEventsReceiver::showHillFortWindow, obj, hero);
 		}
 		break;
 	case PUZZLE_MAP:
 		{
-			INTERFACE_CALL_IF_PRESENT(PlayerColor(id1), showPuzzleMap);
+			INTERFACE_CALL_IF_PRESENT(cl, PlayerColor(id1), &IGameEventsReceiver::showPuzzleMap);
 		}
 		break;
 	case TAVERN_WINDOW:
 		const CGObjectInstance *obj1 = cl->getObj(ObjectInstanceID(id1)),
 								*obj2 = cl->getObj(ObjectInstanceID(id2));
-		INTERFACE_CALL_IF_PRESENT(obj1->tempOwner, showTavernWindow, obj2);
+		INTERFACE_CALL_IF_PRESENT(cl, obj1->tempOwner, &IGameEventsReceiver::showTavernWindow, obj2);
 		break;
 	}
 
@@ -918,7 +993,7 @@ void OpenWindow::applyCl(CClient *cl)
 
 void CenterView::applyCl(CClient *cl)
 {
-	INTERFACE_CALL_IF_PRESENT (player, centerView, pos, focusTime);
+	INTERFACE_CALL_IF_PRESENT(cl, player, &IGameEventsReceiver::centerView, pos, focusTime);
 }
 
 void NewObject::applyCl(CClient *cl)
@@ -947,6 +1022,6 @@ void SetAvailableArtifacts::applyCl(CClient *cl)
 	{
 		const CGBlackMarket *bm = dynamic_cast<const CGBlackMarket *>(cl->getObj(ObjectInstanceID(id)));
 		assert(bm);
-		INTERFACE_CALL_IF_PRESENT(cl->getTile(bm->visitablePos())->visitableObjects.back()->tempOwner, availableArtifactsChanged, bm);
+		INTERFACE_CALL_IF_PRESENT(cl, cl->getTile(bm->visitablePos())->visitableObjects.back()->tempOwner, &IGameEventsReceiver::availableArtifactsChanged, bm);
 	}
 }
