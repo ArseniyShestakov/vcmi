@@ -12,6 +12,8 @@
 
 #include "rmg/CMapGenOptions.h"
 
+#include "mapping/CMapInfo.h"
+
 PlayerSettings::PlayerSettings()
 	: bonus(RANDOM), castle(NONE), hero(RANDOM), heroPortrait(RANDOM), color(0), handicap(NO_HANDICAP), team(0), compOnly(false)
 {
@@ -170,4 +172,9 @@ ui8 LobbyInfo::clientFirstId(int clientId) const
 	}
 
 	return 0;
+}
+
+PlayerInfo & LobbyInfo::getPlayerInfo(int color)
+{
+	return mi->mapHeader->players[color];
 }

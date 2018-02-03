@@ -616,8 +616,8 @@ void CVCMIServer::optionNextCastle(PlayerColor player, int dir)
 {
 	PlayerSettings & s = si->playerInfos[player];
 	si16 & cur = s.castle;
-	auto & allowed = mi->mapHeader->players[s.color.getNum()].allowedFactions;
-	const bool allowRandomTown = mi->mapHeader->players[s.color.getNum()].isFactionRandom;
+	auto & allowed = getPlayerInfo(player.getNum()).allowedFactions;
+	const bool allowRandomTown = getPlayerInfo(player.getNum()).isFactionRandom;
 
 	if(cur == PlayerSettings::NONE) //no change
 		return;
@@ -655,7 +655,7 @@ void CVCMIServer::optionNextCastle(PlayerColor player, int dir)
 		}
 	}
 
-	if(s.hero >= 0 && !mi->mapHeader->players[s.color.getNum()].hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
+	if(s.hero >= 0 && !getPlayerInfo(player.getNum()).hasCustomMainHero()) // remove hero unless it set to fixed one in map editor
 	{
 		s.hero = PlayerSettings::RANDOM;
 	}
@@ -733,7 +733,7 @@ void CVCMIServer::optionNextBonus(PlayerColor player, int dir)
 	PlayerSettings::Ebonus & ret = s.bonus = static_cast<PlayerSettings::Ebonus>(static_cast<int>(s.bonus) + dir);
 
 	if(s.hero == PlayerSettings::NONE &&
-		!mi->mapHeader->players[s.color.getNum()].heroesNames.size() &&
+		!getPlayerInfo(player.getNum()).heroesNames.size() &&
 		ret == PlayerSettings::ARTIFACT) //no hero - can't be artifact
 	{
 		if(dir < 0)
@@ -769,7 +769,7 @@ std::vector<int> CVCMIServer::getUsedHeroes()
 	std::vector<int> heroIds;
 	for(auto & p : si->playerInfos)
 	{
-		const auto & heroes = mi->mapHeader->players[p.first.getNum()].heroesNames;
+		const auto & heroes = getPlayerInfo(p.first.getNum()).heroesNames;
 		for(auto & hero : heroes)
 			if(hero.heroId >= 0) //in VCMI map format heroId = -1 means random hero
 				heroIds.push_back(hero.heroId);

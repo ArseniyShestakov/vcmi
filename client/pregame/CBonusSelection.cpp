@@ -180,11 +180,7 @@ void CBonusSelection::showAll(SDL_Surface * to)
 
 void CBonusSelection::show(SDL_Surface * to)
 {
-	std::string mapName = CSH->mi->mapHeader->name;
-	if(mapName.length())
-		printAtLoc(mapName, 481, 219, FONT_BIG, Colors::YELLOW, to);
-	else
-		printAtLoc("Unnamed", 481, 219, FONT_BIG, Colors::YELLOW, to);
+	printAtLoc(CSH->mi->getName(), 481, 219, FONT_BIG, Colors::YELLOW, to);
 
 	//map description
 	printAtLoc(CGI->generaltexth->allTexts[496], 481, 253, FONT_SMALL, Colors::YELLOW, to);
@@ -217,13 +213,13 @@ void CBonusSelection::show(SDL_Surface * to)
 	int ex = 629 + graphics->fonts[FONT_SMALL]->getStringWidth(CGI->generaltexth->allTexts[391]);
 	TeamID myT;
 	if(CSH->myFirstColor() < PlayerColor::PLAYER_LIMIT)
-		myT = SEL->getPlayerInfo(CSH->myFirstColor().getNum()).team;
+		myT = CSH->getPlayerInfo(CSH->myFirstColor().getNum()).team;
 	else
 		myT = TeamID::NO_TEAM;
 
 	for(auto i = CSH->si->playerInfos.cbegin(); i != CSH->si->playerInfos.cend(); i++)
 	{
-		int * myx = ((i->first == CSH->myFirstColor() || SEL->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
+		int * myx = ((i->first == CSH->myFirstColor() || CSH->getPlayerInfo(i->first.getNum()).team == myT) ? &fx : &ex);
 		IImage * flag = sFlags->getImage(i->first.getNum(), 0);
 		flag->draw(to, pos.x + *myx, pos.y + 405);
 		*myx += flag->width();

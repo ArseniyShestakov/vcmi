@@ -1945,8 +1945,7 @@ void CAdventureOptions::showScenarioInfo()
 	auto campState = LOCPLINT->cb->getStartInfo()->campState;
 	if(campState)
 	{
-		// MPTODO campaign
-		// GH.pushInt(new CBonusSelection(campState));
+		GH.pushInt(new CBonusSelection());
 	}
 	else
 	{

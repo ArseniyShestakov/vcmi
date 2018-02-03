@@ -14,6 +14,7 @@
 class CMapGenOptions;
 class CCampaignState;
 class CMapInfo;
+struct PlayerInfo;
 
 /// Struct which describes the name, the color, the starting bonus of a player
 struct DLL_LINKAGE PlayerSettings
@@ -177,6 +178,7 @@ struct DLL_LINKAGE LobbyInfo : public LobbyState
 	PlayerColor clientFirstColor(int clientId) const;
 	bool isClientColor(int clientId, PlayerColor color) const;
 	ui8 clientFirstId(int clientId) const; // Used by chat only!
+	PlayerInfo & getPlayerInfo(int color);
 };
 
 class ExceptionMapMissing : public std::exception {};
