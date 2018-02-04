@@ -113,6 +113,7 @@ public:
 
 	void startGameplay();
 	void endGameplay();
+	void startCampaignScenario(std::shared_ptr<CCampaignState> cs = {});
 };
 
 extern CServerHandler * CSH;

@@ -549,20 +549,11 @@ void CBonusSelection::startMap()
 
 void CBonusSelection::restartMap()
 {
-	/* MPTODO
 	GH.popInt(this);
 	LOCPLINT->showYesNoDialog(CGI->generaltexth->allTexts[67], [=]()
 	{
-		updateCampaignState();
-		auto si = new StartInfo(startInfo);
-
-		SDL_Event event;
-		event.type = SDL_USEREVENT;
-		event.user.code = EUserEvent::PREPARE_RESTART_CAMPAIGN;
-		event.user.data1 = si;
-		SDL_PushEvent(&event);
+		CSH->startCampaignScenario();
 	}, 0);
-	*/
 }
 
 void CBonusSelection::selectMap(int mapNr)

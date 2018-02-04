@@ -56,9 +56,8 @@
 #include "../lib/UnlockGuard.h"
 #include <SDL.h>
 
-// MPTODO: for campaign advance
-#include "../lib/mapping/CCampaignHandler.h"
-#include "../lib/serializer/CMemorySerializer.h"
+// MPTODO: For campaign advancement
+#include "CServerHandler.h"
 
 
 // The macro below is used to mark functions that are called by client when game state changes.
@@ -2514,17 +2513,10 @@ void CPlayerInterface::requestReturningToMainMenu(bool won)
 {
 	CCS->soundh->ambientStopAllChannels();
 	if(won && cb->gs->scenarioOps->campState)
-	{
-		SDL_Event event;
-		event.type = SDL_USEREVENT;
-		event.user.code = EUserEvent::CAMPAIGN_START_SCENARIO;
-		event.user.data1 = CMemorySerializer::deepCopy(*cb->gs->scenarioOps->campState.get()).release();
-		SDL_PushEvent(&event);
-	}
+		CSH->startCampaignScenario(cb->gs->scenarioOps->campState);
 	else
-	{
 		sendCustomEvent(EUserEvent::RETURN_TO_MAIN_MENU);
-	}
+
 	cb->unregisterAllInterfaces();
 }
 
