@@ -31,8 +31,13 @@ class CBaseForLobbyApply;
 class IServerAPI
 {
 public:
+	virtual ~IServerAPI() {}
+
 	virtual void sendClientConnecting() =0;
 	virtual void sendClientDisconnecting() =0;
+	virtual void setCampaignState(std::shared_ptr<CCampaignState> newCampaign) =0;
+	virtual void setCampaignMap(int mapId) =0;
+	virtual void setCampaignBonus(int bonusId) =0;
 	virtual void setMapInfo(std::shared_ptr<CMapInfo> to, std::shared_ptr<CMapGenOptions> mapGenOpts = {}) =0;
 	virtual void setPlayer(PlayerColor color) =0;
 	virtual void setPlayerOption(ui8 what, ui8 dir, PlayerColor player) =0;

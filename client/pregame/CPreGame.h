@@ -173,6 +173,7 @@ class CSimpleJoinScreen : public CIntObject
 	CTextInput * port;
 
 	void connectToServer(IShowActivatable * sel);
+	void leaveScreen(IShowActivatable * sel);
 	void onChange(const std::string & newText);
 
 public:

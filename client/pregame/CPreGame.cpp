@@ -516,7 +516,7 @@ CSimpleJoinScreen::CSimpleJoinScreen(IShowActivatable * sel)
 	port->filters += std::bind(&CTextInput::numberFilter, _1, _2, 0, 65535);
 
 	ok = new CButton(Point(26, 142), "MUBCHCK.DEF", CGI->generaltexth->zelp[560], std::bind(&CSimpleJoinScreen::connectToServer, this, sel), SDLK_RETURN);
-	cancel = new CButton(Point(142, 142), "MUBCANC.DEF", CGI->generaltexth->zelp[561], std::bind(&CGuiHandler::popIntTotally, std::ref(GH), this), SDLK_ESCAPE);
+	cancel = new CButton(Point(142, 142), "MUBCANC.DEF", CGI->generaltexth->zelp[561], std::bind(&CSimpleJoinScreen::leaveScreen, this, sel), SDLK_ESCAPE);
 	bar = new CGStatusBar(new CPicture(Rect(7, 186, 218, 18), 0));
 
 	port->setText(CServerHandler::getDefaultPortStr(), true);
@@ -530,6 +530,12 @@ void CSimpleJoinScreen::connectToServer(IShowActivatable * sel)
 
 	GH.popIntTotally(this);
 	GH.pushInt(sel);
+}
+
+void CSimpleJoinScreen::leaveScreen(IShowActivatable * sel)
+{
+	vstd::clear_pointer(sel);
+	GH.popIntTotally(this);
 }
 
 void CSimpleJoinScreen::onChange(const std::string & newText)

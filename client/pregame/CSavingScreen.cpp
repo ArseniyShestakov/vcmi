@@ -45,7 +45,6 @@ CSavingScreen::CSavingScreen()
 
 CSavingScreen::~CSavingScreen()
 {
-	vstd::clear_pointer(localSi);
 	vstd::clear_pointer(localMi);
 }
 
