@@ -86,7 +86,6 @@ public:
 	void disableSmartVectorMemberSerialization();
 	void enableSmartVectorMemberSerializatoin();
 
-	void prepareForSendingHeroes(); //disables sending vectorized, enables smart pointer serialization, clears saved/loaded ptr cache
 	void enterPregameConnectionMode();
 	void enterGameplayConnectionMode(CGameState * gs);
 

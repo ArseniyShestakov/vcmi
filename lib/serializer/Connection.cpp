@@ -251,15 +251,6 @@ void CConnection::enableSmartPointerSerialization()
 	iser.smartPointerSerialization = oser.smartPointerSerialization = true;
 }
 
-void CConnection::prepareForSendingHeroes()
-{
-	iser.loadedPointers.clear();
-	oser.savedPointers.clear();
-	disableSmartVectorMemberSerialization();
-	enableSmartPointerSerialization();
-	disableStackSendingByID();
-}
-
 void CConnection::enterPregameConnectionMode()
 {
 	iser.loadedPointers.clear();

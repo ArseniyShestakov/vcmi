@@ -320,8 +320,50 @@ DLL_LINKAGE void ChangeObjectVisitors::applyGs(CGameState *gs)
 DLL_LINKAGE void PlayerEndsGame::applyGs(CGameState *gs)
 {
 	PlayerState *p = gs->getPlayer(player);
-	if(victoryLossCheckResult.victory()) p->status = EPlayerStatus::WINNER;
-	else p->status = EPlayerStatus::LOSER;
+	if(victoryLossCheckResult.victory())
+	{
+		p->status = EPlayerStatus::WINNER;
+
+		// TODO: Campaign-specific code might as well go somewhere else
+		if(p->human && gs->scenarioOps->campState)
+		{
+			std::vector<CGHeroInstance *> crossoverHeroes;
+			for (CGHeroInstance * hero : gs->map->heroesOnMap)
+			{
+				if (hero->tempOwner == player)
+				{
+					// keep all heroes from the winning player
+					crossoverHeroes.push_back(hero);
+				}
+				else if (vstd::contains(gs->scenarioOps->campState->getCurrentScenario().keepHeroes, HeroTypeID(hero->subID)))
+				{
+					// keep hero whether lost or won (like Xeron in AB campaign)
+					crossoverHeroes.push_back(hero);
+				}
+			}
+			// keep lost heroes which are in heroes pool
+			for (auto & heroPair : gs->hpool.heroesPool)
+			{
+				if (vstd::contains(gs->scenarioOps->campState->getCurrentScenario().keepHeroes, HeroTypeID(heroPair.first)))
+				{
+					crossoverHeroes.push_back(heroPair.second.get());
+				}
+			}
+			// MPTODO: FIXME dirty dirty hack to avoid failure on serialization!
+			for(auto h : crossoverHeroes)
+			{
+				h->clear();
+				h->artifactsInBackpack.clear();
+				h->artifactsWorn.clear();
+			}
+
+			gs->scenarioOps->campState->setCurrentMapAsConquered(crossoverHeroes);
+		}
+	}
+	else
+	{
+		p->status = EPlayerStatus::LOSER;
+	}
 }
 
 DLL_LINKAGE void RemoveBonus::applyGs(CGameState *gs)

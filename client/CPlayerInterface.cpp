@@ -56,6 +56,10 @@
 #include "../lib/UnlockGuard.h"
 #include <SDL.h>
 
+// MPTODO: for campaign advance
+#include "../lib/mapping/CCampaignHandler.h"
+#include "../lib/serializer/CMemorySerializer.h"
+
 
 // The macro below is used to mark functions that are called by client when game state changes.
 // They all assume that CPlayerInterface::pim mutex is locked.
@@ -2184,22 +2188,13 @@ void CPlayerInterface::gameOver(PlayerColor player, const EVictoryLossCheckResul
 			}
 		}
 
-		if (cb->getStartInfo()->mode == StartInfo::CAMPAIGN)
+		if (victoryLossCheckResult.victory() && LOCPLINT == this) // end game if current human player has won
 		{
-			// if you lose the campaign go back to the main menu
-			// campaign wins are handled in proposeNextMission
-			if (victoryLossCheckResult.loss()) requestReturningToMainMenu();
+			requestReturningToMainMenu(true);
 		}
-		else
+		else if(howManyPeople == 0 && !settings["session"]["spectate"].Bool()) //all human players eliminated
 		{
-			if(howManyPeople == 0 && !settings["session"]["spectate"].Bool()) //all human players eliminated
-			{
-				requestReturningToMainMenu();
-			}
-			else if (victoryLossCheckResult.victory() && LOCPLINT == this) // end game if current human player has won
-			{
-				requestReturningToMainMenu();
-			}
+			requestReturningToMainMenu(false);
 		}
 
 		if (GH.curInt == this) GH.curInt = nullptr;
@@ -2515,10 +2510,21 @@ void CPlayerInterface::showShipyardDialogOrProblemPopup(const IShipyard *obj)
 		showShipyardDialog(obj);
 }
 
-void CPlayerInterface::requestReturningToMainMenu()
+void CPlayerInterface::requestReturningToMainMenu(bool won)
 {
-	sendCustomEvent(EUserEvent::RETURN_TO_MAIN_MENU);
 	CCS->soundh->ambientStopAllChannels();
+	if(won && cb->gs->scenarioOps->campState)
+	{
+		SDL_Event event;
+		event.type = SDL_USEREVENT;
+		event.user.code = EUserEvent::CAMPAIGN_START_SCENARIO;
+		event.user.data1 = CMemorySerializer::deepCopy(*cb->gs->scenarioOps->campState.get()).release();
+		SDL_PushEvent(&event);
+	}
+	else
+	{
+		sendCustomEvent(EUserEvent::RETURN_TO_MAIN_MENU);
+	}
 	cb->unregisterAllInterfaces();
 }
 

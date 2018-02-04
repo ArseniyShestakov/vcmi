@@ -60,6 +60,9 @@
 
 #include <boost/asio.hpp>
 
+// MPTODO: For campaign video player
+#include "pregame/CCampaignScreen.h"
+
 #ifdef VCMI_WINDOWS
 #include "SDL_syswm.h"
 #endif
@@ -1216,6 +1219,29 @@ static void handleEvent(SDL_Event & ev)
 				si.seedToBeUsed = 0; //server gives new random generator seed if 0
 				CSH->endGameplay();
 //MPTODO				startGame(&si);
+			}
+			break;
+		case EUserEvent::CAMPAIGN_START_SCENARIO:
+			{
+				CSH->endGameplay();
+				GH.curInt = CGPreGame::create();
+				auto ourCampaign = std::shared_ptr<CCampaignState>(reinterpret_cast<CCampaignState *>(ev.user.data1));
+				auto & epilogue = ourCampaign->camp->scenarios[ourCampaign->mapsConquered.back()].epilog;
+				auto finisher = [=]()
+				{
+					if(ourCampaign->mapsRemaining.size())
+					{
+						CGP->openCampaignLobby(ourCampaign);
+					}
+				};
+				if(epilogue.hasPrologEpilog)
+				{
+					GH.pushInt(new CPrologEpilogVideo(epilogue, finisher));
+				}
+				else
+				{
+					finisher();
+				}
 			}
 			break;
 		case EUserEvent::PREPARE_RESTART_CAMPAIGN:

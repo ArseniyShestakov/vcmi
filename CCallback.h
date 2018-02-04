@@ -96,8 +96,10 @@ public:
 	friend class CClient;
 };
 
+class CPlayerInterface;
 class CCallback : public CPlayerSpecificInfoCallback, public IGameActionCallback, public CBattleCallback
 {
+	friend class CPlayerInterface; // MPTODO: dirty hack!
 public:
 	CCallback(CGameState * GS, boost::optional<PlayerColor> Player, CClient *C);
 	virtual ~CCallback();

@@ -329,17 +329,6 @@ void RemoveBonus::applyCl(CClient *cl)
 	}
 }
 
-void UpdateCampaignState::applyCl(CClient *cl)
-{
-	cl->stopConnection();
-	cl->campaignMapFinished(camp);
-}
-
-void PrepareForAdvancingCampaign::applyCl(CClient *cl)
-{
-	CSH->c->prepareForSendingHeroes();
-}
-
 void RemoveObject::applyFirstCl(CClient *cl)
 {
 	const CGObjectInstance *o = cl->getObj(id);

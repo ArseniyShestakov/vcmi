@@ -627,38 +627,6 @@ void CClient::stopAllBattleActions()
 		stopPlayerBattleAction(playerActionThreads.begin()->first);
 }
 
-void CClient::campaignMapFinished(std::shared_ptr<CCampaignState> camp)
-{
-	endGame(false);
-
-	GH.curInt = CGPreGame::create();
-	auto & epilogue = camp->camp->scenarios[camp->mapsConquered.back()].epilog;
-	auto finisher = [=]()
-	{
-		if(camp->mapsRemaining.size())
-			proposeNextMission(camp);
-		else
-			finishCampaign(camp);
-	};
-	if(epilogue.hasPrologEpilog)
-	{
-		GH.pushInt(new CPrologEpilogVideo(epilogue, finisher));
-	}
-	else
-	{
-		finisher();
-	}
-}
-
-void CClient::finishCampaign(std::shared_ptr<CCampaignState> camp)
-{
-}
-
-void CClient::proposeNextMission(std::shared_ptr<CCampaignState> camp)
-{
-	CGPreGame::openCampaignLobby(camp);
-}
-
 void CClient::waitForMoveAndSend(PlayerColor color)
 {
 	try

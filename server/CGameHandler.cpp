@@ -5036,48 +5036,6 @@ void CGameHandler::checkVictoryLossConditionsForPlayer(PlayerColor player)
 
 			if (p->human)
 			{
-				// TODO: this campaign code can certainly live outside of server
-				if (gs->scenarioOps->campState)
-				{
-					std::vector<CGHeroInstance *> crossoverHeroes;
-					for (CGHeroInstance * hero : gs->map->heroesOnMap)
-					{
-						if (hero->tempOwner == player)
-						{
-							// keep all heroes from the winning player
-							crossoverHeroes.push_back(hero);
-						}
-						else if (vstd::contains(gs->scenarioOps->campState->getCurrentScenario().keepHeroes, HeroTypeID(hero->subID)))
-						{
-							// keep hero whether lost or won (like Xeron in AB campaign)
-							crossoverHeroes.push_back(hero);
-						}
-					}
-					// keep lost heroes which are in heroes pool
-					for (auto & heroPair : gs->hpool.heroesPool)
-					{
-						if (vstd::contains(gs->scenarioOps->campState->getCurrentScenario().keepHeroes, HeroTypeID(heroPair.first)))
-						{
-							crossoverHeroes.push_back(heroPair.second.get());
-						}
-					}
-
-					gs->scenarioOps->campState->setCurrentMapAsConquered(crossoverHeroes);
-
-					//Request clients to change connection mode
-					PrepareForAdvancingCampaign pfac;
-					sendAndApply(&pfac);
-					//Change connection mode
-					if (getPlayer(player)->human && getStartInfo()->campState)
-					{
-						for (auto connection : conns)
-							connection->prepareForSendingHeroes();
-					}
-
-					UpdateCampaignState ucs;
-					ucs.camp = gs->scenarioOps->campState;
-					sendAndApply(&ucs);
-				}
 				CVCMIServer::shuttingDown = true;
 			}
 		}

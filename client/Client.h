@@ -151,10 +151,6 @@ public:
 	void stopPlayerBattleAction(PlayerColor color);
 	void stopAllBattleActions();
 
-	void campaignMapFinished(std::shared_ptr<CCampaignState> camp);
-	void finishCampaign(std::shared_ptr<CCampaignState> camp);
-	void proposeNextMission(std::shared_ptr<CCampaignState> camp);
-
 	void invalidatePaths();
 	const CPathsInfo * getPathsInfo(const CGHeroInstance * h);
 	virtual PlayerColor getLocalPlayer() const override;

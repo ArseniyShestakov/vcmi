@@ -491,18 +491,6 @@ struct RemoveBonus :  public CPackForClient
 	}
 };
 
-struct UpdateCampaignState : public CPackForClient
-{
-	UpdateCampaignState(){}
-	std::shared_ptr<CCampaignState> camp;
-	void applyCl(CClient *cl);
-
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
-		h & camp;
-	}
-};
-
 struct SetCommanderProperty : public CPackForClient
 {
 	enum ECommanderProperty {ALIVE, BONUS, SECONDARY_SKILL, EXPERIENCE, SPECIAL_SKILL};
@@ -545,16 +533,6 @@ struct AddQuest : public CPackForClient
 	{
 		h & player;
 		h & quest;
-	}
-};
-
-struct PrepareForAdvancingCampaign : public CPackForClient
-{
-	PrepareForAdvancingCampaign(){}
-
-	void applyCl(CClient *cl);
-	template <typename Handler> void serialize(Handler &h, const int version)
-	{
 	}
 };
 
