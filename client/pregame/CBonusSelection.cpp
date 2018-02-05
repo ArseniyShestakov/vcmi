@@ -482,7 +482,8 @@ void CBonusSelection::updateBonusSelection()
 void CBonusSelection::updateAfterStateChange()
 {
 	// initialize restart / start button
-	if(!getCampaign()->currentMap || *getCampaign()->currentMap != CSH->campaignMap)
+//	if(!getCampaign()->currentMap || *getCampaign()->currentMap != CSH->campaignMap)
+	if(!CSH->ingame)
 	{
 		// draw start button
 		buttonRestart->disable();

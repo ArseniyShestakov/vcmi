@@ -1244,13 +1244,6 @@ static void handleEvent(SDL_Event & ev)
 				}
 			}
 			break;
-		case EUserEvent::PREPARE_RESTART_CAMPAIGN:
-			{
-				auto si = reinterpret_cast<StartInfo *>(ev.user.data1);
-				CSH->endGameplay();
-//MPTODO				startGame(si);
-			}
-			break;
 		case EUserEvent::RETURN_TO_MENU_LOAD:
 			CSH->endGameplay();
 			CGPreGame::create();

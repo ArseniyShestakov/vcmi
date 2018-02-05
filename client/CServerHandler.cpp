@@ -107,7 +107,7 @@ public:
 extern std::string NAME;
 
 CServerHandler::CServerHandler()
-	: LobbyInfo(), threadRunLocalServer(nullptr), shm(nullptr), threadConnectionToServer(nullptr), mx(new boost::recursive_mutex), pauseNetpackRetrieving(false), client(nullptr), disconnecting(false)
+	: LobbyInfo(), threadRunLocalServer(nullptr), shm(nullptr), threadConnectionToServer(nullptr), mx(new boost::recursive_mutex), pauseNetpackRetrieving(false), client(nullptr), disconnecting(false), ingame(false)
 {
 	uuid = boost::uuids::to_string(boost::uuids::random_generator()());
 	applier = new CApplier<CBaseForLobbyApply>();
@@ -125,6 +125,7 @@ CServerHandler::~CServerHandler()
 
 void CServerHandler::resetStateForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
 {
+	ingame = false;
 	th = make_unique<CStopWatch>();
 	disconnecting = false;
 	incomingPacks.clear();
@@ -529,7 +530,7 @@ void CServerHandler::threadHandleConnection()
 			logNetwork->error(e.what());
 			if(client)
 			{
-//				CGuiHandler::pushSDLEvent(SDL_USEREVENT, EUserEvent::RETURN_TO_MAIN_MENU);
+				CGuiHandler::pushSDLEvent(SDL_USEREVENT, EUserEvent::RETURN_TO_MAIN_MENU);
 			}
 			else
 			{

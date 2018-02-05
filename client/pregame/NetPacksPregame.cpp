@@ -27,7 +27,6 @@
 #include "CBonusSelection.h"
 #include "../widgets/TextControls.h"
 
-void startGame();
 
 void LobbyClientConnected::applyOnLobby(CLobbyScreen * lobby)
 {
@@ -92,6 +91,7 @@ void LobbyGuiAction::applyOnLobby(CLobbyScreen * lobby)
 
 bool LobbyStartGame::applyOnLobbyImmidiately(CLobbyScreen * lobby)
 {
+	CSH->ingame = true;
 	CSH->pauseNetpackRetrieving = true;
 	if(CSH->si->mode != StartInfo::LOAD_GAME)
 	{

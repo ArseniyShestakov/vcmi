@@ -65,6 +65,7 @@ class CServerHandler : public IServerAPI, public LobbyInfo
 	void threadRunServer();
 
 public:
+	bool ingame; // MPTODO: added for campaigns restart button activity hack
 	std::unique_ptr<CStopWatch> th;
 	boost::thread * threadRunLocalServer;
 	boost::thread * threadConnectionToServer;
