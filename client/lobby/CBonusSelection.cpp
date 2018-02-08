@@ -120,6 +120,7 @@ CBonusSelection::CBonusSelection()
 				if(!isCurrentMapConquerable || (isCurrentMapConquerable && g == *getCampaign()->currentMap))
 				{
 					highlightedRegion = regions.back();
+					selectMap(g);
 				}
 			}
 		}
