@@ -17,6 +17,7 @@ class CBinaryReader;
 class CMap;
 class CMapHeader;
 class CMapInfo;
+class JsonNode;
 
 namespace CampaignVersion
 {
@@ -137,13 +138,15 @@ public:
 
 	CScenarioTravel travelOptions;
 	std::vector<HeroTypeID> keepHeroes; // contains list of heroes which should be kept for next scenario (doesn't matter if they lost)
-	std::vector<CGHeroInstance *> crossoverHeroes; // contains all heroes with the same state when the campaign scenario was finished
-	std::vector<CGHeroInstance *> placedCrossoverHeroes; // contains all placed crossover heroes defined by hero placeholders when the scenario was started
+	std::vector<JsonNode> crossoverHeroes; // contains all heroes with the same state when the campaign scenario was finished
+	std::vector<JsonNode> placedCrossoverHeroes; // contains all placed crossover heroes defined by hero placeholders when the scenario was started
 
-	const CGHeroInstance * strongestHero(PlayerColor owner) const;
 	void loadPreconditionRegions(ui32 regions);
 	bool isNotVoid() const;
-	std::vector<CGHeroInstance *> getLostCrossoverHeroes() const; /// returns a list of crossover heroes which started the scenario, but didn't complete it
+	// MPTODO: No longer const due to json node
+	const CGHeroInstance * strongestHero(PlayerColor owner);
+	std::vector<CGHeroInstance *> getLostCrossoverHeroes(); /// returns a list of crossover heroes which started the scenario, but didn't complete it
+	std::vector<JsonNode> saveCompatibilityJson(std::vector<CGHeroInstance *> & heroes);
 
 	CCampaignScenario();
 
@@ -160,8 +163,19 @@ public:
 		h & prolog;
 		h & epilog;
 		h & travelOptions;
-		h & crossoverHeroes;
-		h & placedCrossoverHeroes;
+		if(formatVersion < 781)
+		{
+			std::vector<CGHeroInstance *> crossoverHeroesOld, placedCrossoverHeroesOld;
+			h & crossoverHeroesOld;
+			h & placedCrossoverHeroesOld;
+			crossoverHeroes = saveCompatibilityJson(crossoverHeroesOld);
+			placedCrossoverHeroes = saveCompatibilityJson(placedCrossoverHeroesOld);
+		}
+		else
+		{
+			h & crossoverHeroes;
+			h & placedCrossoverHeroes;
+		}
 		h & keepHeroes;
 	}
 };
@@ -204,6 +218,9 @@ public:
 	CMap * getMap(int scenarioId = -1) const;
 	std::unique_ptr<CMapHeader> getHeader(int scenarioId = -1) const;
 	std::shared_ptr<CMapInfo> getMapInfo(int scenarioId = -1) const;
+
+	static JsonNode crossoverSerialize(CGHeroInstance * hero);
+	static CGHeroInstance * crossoverDeserialize(JsonNode & node);
 
 	CCampaignState();
 	CCampaignState(std::unique_ptr<CCampaign> _camp);

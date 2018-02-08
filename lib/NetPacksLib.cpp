@@ -344,13 +344,6 @@ DLL_LINKAGE void PlayerEndsGame::applyGs(CGameState *gs)
 					crossoverHeroes.push_back(heroPair.second.get());
 				}
 			}
-			// MPTODO: FIXME dirty dirty hack to avoid failure on serialization!
-			for(auto h : crossoverHeroes)
-			{
-				h->clear();
-				h->artifactsInBackpack.clear();
-				h->artifactsWorn.clear();
-			}
 
 			gs->scenarioOps->campState->setCurrentMapAsConquered(crossoverHeroes);
 		}

@@ -131,6 +131,8 @@ CServerHandler::~CServerHandler()
 
 void CServerHandler::resetStateForLobby(const StartInfo::EMode mode, const std::vector<std::string> * names)
 {
+	campaignPassed = false;
+	campaignSent = false;
 	state = EClientState::NONE;
 	th = make_unique<CStopWatch>();
 	incomingPacks.clear();

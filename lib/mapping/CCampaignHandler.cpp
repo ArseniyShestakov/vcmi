@@ -25,7 +25,9 @@
 #include "CMap.h"
 #include "CMapInfo.h"
 
-namespace fs = boost::filesystem;
+// For hero crossover
+#include "serializer/JsonDeserializer.h"
+#include "serializer/JsonSerializer.h"
 
 CCampaignHeader::CCampaignHeader()
 	: version(0), mapVersion(0), difficultyChoosenByPlayer(0), music(0), filename(), loadFromLod(0)
@@ -374,25 +376,42 @@ bool CCampaignScenario::isNotVoid() const
 	return mapName.size() > 0;
 }
 
-const CGHeroInstance * CCampaignScenario::strongestHero( PlayerColor owner ) const
+const CGHeroInstance * CCampaignScenario::strongestHero(PlayerColor owner)
 {
-	using boost::adaptors::filtered;
-	std::function<bool(CGHeroInstance*)> isOwned =  [=](const CGHeroInstance *h){ return h->tempOwner == owner; };
-	auto ownedHeroes = crossoverHeroes | filtered(isOwned);
+	std::function<bool(JsonNode & node)> isOwned = [owner](JsonNode & node)
+	{
+		auto h = CCampaignState::crossoverDeserialize(node);
+		bool result = h->tempOwner == owner;
+		vstd::clear_pointer(h);
+		return result;
+	};
+	auto ownedHeroes = crossoverHeroes | boost::adaptors::filtered(isOwned);
 
-	auto i = vstd::maxElementByFun(ownedHeroes,
-									[](const CGHeroInstance * h) {return h->getHeroStrength();});
-	return i == ownedHeroes.end() ? nullptr : *i;
+	auto i = vstd::maxElementByFun(ownedHeroes, [](JsonNode & node)
+	{
+		auto h = CCampaignState::crossoverDeserialize(node);
+		double result = h->getHeroStrength();
+		vstd::clear_pointer(h);
+		return result;
+	});
+	return i == ownedHeroes.end() ? nullptr : CCampaignState::crossoverDeserialize(*i);
 }
 
-std::vector<CGHeroInstance *> CCampaignScenario::getLostCrossoverHeroes() const
+std::vector<CGHeroInstance *> CCampaignScenario::getLostCrossoverHeroes()
 {
 	std::vector<CGHeroInstance *> lostCrossoverHeroes;
 	if(conquered)
 	{
-		for(auto hero : placedCrossoverHeroes)
+		for(auto node2 : placedCrossoverHeroes)
 		{
-			auto it = range::find_if(crossoverHeroes, CGObjectInstanceBySubIdFinder(hero));
+			auto hero = CCampaignState::crossoverDeserialize(node2);
+			auto it = range::find_if(crossoverHeroes, [hero](JsonNode node)
+			{
+				auto h = CCampaignState::crossoverDeserialize(node);
+				bool result = hero->subID == h->subID;
+				vstd::clear_pointer(h);
+				return result;
+			});
 			if(it == crossoverHeroes.end())
 			{
 				lostCrossoverHeroes.push_back(hero);
@@ -402,9 +421,25 @@ std::vector<CGHeroInstance *> CCampaignScenario::getLostCrossoverHeroes() const
 	return lostCrossoverHeroes;
 }
 
-void CCampaignState::setCurrentMapAsConquered( const std::vector<CGHeroInstance*> & heroes )
+std::vector<JsonNode> CCampaignScenario::saveCompatibilityJson(std::vector<CGHeroInstance *> & heroes)
 {
-	camp->scenarios[*currentMap].crossoverHeroes = heroes;
+	// Save compatibility for format 781
+	std::vector<JsonNode> heroesNew;
+	for(auto hero : heroes)
+	{
+		heroesNew.push_back(CCampaignState::crossoverSerialize(hero));
+	}
+	return heroesNew;
+}
+
+void CCampaignState::setCurrentMapAsConquered(const std::vector<CGHeroInstance *> & heroes)
+{
+	camp->scenarios[*currentMap].crossoverHeroes.clear();
+	for(CGHeroInstance * hero : heroes)
+	{
+		camp->scenarios[*currentMap].crossoverHeroes.push_back(crossoverSerialize(hero));
+	}
+
 	mapsConquered.push_back(*currentMap);
 	mapsRemaining -= *currentMap;
 	camp->scenarios[*currentMap].conquered = true;
@@ -488,6 +523,23 @@ std::shared_ptr<CMapInfo> CCampaignState::getMapInfo(int scenarioId) const
 	mapInfo->mapHeader = getHeader(scenarioId);
 	mapInfo->countPlayers();
 	return mapInfo;
+}
+
+JsonNode CCampaignState::crossoverSerialize(CGHeroInstance * hero)
+{
+	JsonNode node;
+	JsonSerializer handler(nullptr, node);
+	hero->serializeJsonOptions(handler);
+	return node;
+}
+
+CGHeroInstance * CCampaignState::crossoverDeserialize(JsonNode & node)
+{
+	JsonDeserializer handler(nullptr, node);
+	auto hero = new CGHeroInstance();
+	hero->ID = Obj::HERO;
+	hero->serializeJsonOptions(handler);
+	return hero;
 }
 
 std::string CCampaignHandler::prologVideoName(ui8 index)
