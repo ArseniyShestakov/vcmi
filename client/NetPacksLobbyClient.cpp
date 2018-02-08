@@ -128,7 +128,7 @@ void LobbyChangeHost::applyOnLobby(CLobbyScreen * lobby)
 void LobbyUpdateState::applyOnLobby(CLobbyScreen * lobby)
 {
 	static_cast<LobbyState &>(*CSH) = state;
-	if(!lobby->bonusSel && CSH->si->campState)
+	if(!lobby->bonusSel && CSH->si->campState && CSH->state == EClientState::LOBBY_CAMPAIGN)
 	{
 		lobby->bonusSel = new CBonusSelection();
 		GH.pushInt(lobby->bonusSel);

@@ -655,6 +655,9 @@ void SelectionTab::parseSaves(const std::unordered_set<ResourceID> & files)
 			std::time_t time = boost::filesystem::last_write_time(*CResourceHandler::get()->getResourceName(file));
 			mapInfo->date = std::asctime(std::localtime(&time));
 			mapInfo->isSaveGame = true;
+			// We absolutely not need this data for lobby and server will read it from save
+			// FIXME: actually we don't want them in CMapHeader!
+			mapInfo->mapHeader->triggeredEvents.clear();
 
 			// Filter out other game modes
 			bool isCampaign = mapInfo->scenarioOpts->mode == StartInfo::CAMPAIGN;

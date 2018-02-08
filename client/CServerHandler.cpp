@@ -326,7 +326,7 @@ void CServerHandler::sendClientConnecting() const
 	lcc.uuid = uuid;
 	lcc.names = myNames;
 	lcc.mode = si->mode;
-	sendPack(lcc);
+	sendLobbyPack(lcc);
 }
 
 void CServerHandler::sendClientDisconnecting()
@@ -335,28 +335,28 @@ void CServerHandler::sendClientDisconnecting()
 	LobbyClientDisconnected lcd;
 	lcd.clientId = c->connectionID;
 	lcd.shutdownServer = isServerLocal();
-	sendPack(lcd);
+	sendLobbyPack(lcd);
 }
 
 void CServerHandler::setCampaignState(std::shared_ptr<CCampaignState> newCampaign) const
 {
 	LobbySetCampaign lsc;
 	lsc.ourCampaign = newCampaign;
-	sendPack(lsc);
+	sendLobbyPack(lsc);
 }
 
 void CServerHandler::setCampaignMap(int mapId) const
 {
 	LobbySetCampaignMap lscm;
 	lscm.mapId = mapId;
-	sendPack(lscm);
+	sendLobbyPack(lscm);
 }
 
 void CServerHandler::setCampaignBonus(int bonusId) const
 {
 	LobbySetCampaignBonus lscb;
 	lscb.bonusId = bonusId;
-	sendPack(lscb);
+	sendLobbyPack(lscb);
 }
 
 void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, std::shared_ptr<CMapGenOptions> mapGenOpts) const
@@ -364,14 +364,14 @@ void CServerHandler::setMapInfo(std::shared_ptr<CMapInfo> to, std::shared_ptr<CM
 	LobbySetMap lsm;
 	lsm.mapInfo = to;
 	lsm.mapGenOpts = mapGenOpts;
-	sendPack(lsm);
+	sendLobbyPack(lsm);
 }
 
 void CServerHandler::setPlayer(PlayerColor color) const
 {
 	LobbySetPlayer lsp;
 	lsp.clickedColor = color;
-	sendPack(lsp);
+	sendLobbyPack(lsp);
 }
 
 void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player) const
@@ -380,14 +380,14 @@ void CServerHandler::setPlayerOption(ui8 what, ui8 dir, PlayerColor player) cons
 	lcpo.what = what;
 	lcpo.direction = dir;
 	lcpo.color = player;
-	sendPack(lcpo);
+	sendLobbyPack(lcpo);
 }
 
 void CServerHandler::setDifficulty(int to) const
 {
 	LobbySetDifficulty lsd;
 	lsd.difficulty = to;
-	sendPack(lsd);
+	sendLobbyPack(lsd);
 }
 
 void CServerHandler::setTurnLength(int npos) const
@@ -395,7 +395,7 @@ void CServerHandler::setTurnLength(int npos) const
 	vstd::amin(npos, ARRAY_COUNT(GameConstants::POSSIBLE_TURNTIME) - 1);
 	LobbySetTurnTime lstt;
 	lstt.turnTime = GameConstants::POSSIBLE_TURNTIME[npos];
-	sendPack(lstt);
+	sendLobbyPack(lstt);
 }
 
 void CServerHandler::sendMessage(const std::string & txt) const
@@ -412,7 +412,7 @@ void CServerHandler::sendMessage(const std::string & txt) const
 		{
 			LobbyChangeHost lch;
 			lch.newHostConnectionId = boost::lexical_cast<int>(id);
-			sendPack(lch);
+			sendLobbyPack(lch);
 		}
 	}
 	else if(command == "!forcep")
@@ -429,7 +429,7 @@ void CServerHandler::sendMessage(const std::string & txt) const
 				LobbyForceSetPlayer lfsp;
 				lfsp.targetConnectedPlayer = connected;
 				lfsp.targetPlayerColor = color;
-				sendPack(lfsp);
+				sendLobbyPack(lfsp);
 			}
 		}
 	}
@@ -438,7 +438,7 @@ void CServerHandler::sendMessage(const std::string & txt) const
 		LobbyChatMessage lcm;
 		lcm.message = txt;
 		lcm.playerName = playerNames.find(myFirstId())->second.name;
-		sendPack(lcm);
+		sendLobbyPack(lcm);
 	}
 }
 
@@ -446,14 +446,14 @@ void CServerHandler::sendGuiAction(ui8 action) const
 {
 	LobbyGuiAction lga;
 	lga.action = static_cast<LobbyGuiAction::EAction>(action);
-	sendPack(lga);
+	sendLobbyPack(lga);
 }
 
 void CServerHandler::sendStartGame() const
 {
 	verifyStateBeforeStart(settings["session"]["onlyai"].Bool());
 	LobbyStartGame lsg;
-	sendPack(lsg);
+	sendLobbyPack(lsg);
 }
 
 void CServerHandler::startGameplay()
@@ -620,7 +620,7 @@ void CServerHandler::threadRunServer()
 #endif
 }
 
-void CServerHandler::sendPack(const CPack & pack) const
+void CServerHandler::sendLobbyPack(const CPackForLobby & pack) const
 {
 	if(state != EClientState::STARTING)
 		c->sendPack(&pack);

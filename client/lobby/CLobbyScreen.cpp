@@ -116,6 +116,7 @@ void CLobbyScreen::startCampaign()
 	if(CSH->mi)
 	{
 		auto ourCampaign = std::make_shared<CCampaignState>(CCampaignHandler::getCampaign(CSH->mi->fileURI));
+		CSH->state = EClientState::LOBBY_CAMPAIGN;
 		CSH->setCampaignState(ourCampaign);
 	}
 }
@@ -176,6 +177,7 @@ void CLobbyScreen::activate()
 	{
 		CSH->setCampaignState(CSH->campaignState);
 		CSH->campaignSent = true;
+		CSH->state = EClientState::LOBBY_CAMPAIGN;
 	}
 }
 

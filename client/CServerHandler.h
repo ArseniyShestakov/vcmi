@@ -36,6 +36,7 @@ enum class EClientState : ui8
 	CONNECTING, // Trying to connect to server
 	CONNECTION_CANCELLED, // Connection cancelled by player, stop attempts to connect
 	LOBBY, // Client is connected to lobby
+	LOBBY_CAMPAIGN, // Client is on scenario bonus selection screen
 	STARTING, // Gameplay interfaces being created, we pause netpacks retrieving
 	GAMEPLAY, // In-game, used by some UI
 	DISCONNECTING // We disconnecting, drop all netpacks
@@ -44,24 +45,24 @@ enum class EClientState : ui8
 class IServerAPI
 {
 protected:
-	virtual void sendPack(const CPack & pack) const =0;
+	virtual void sendLobbyPack(const CPackForLobby & pack) const = 0;
 
 public:
 	virtual ~IServerAPI() {}
 
-	virtual void sendClientConnecting() const =0;
-	virtual void sendClientDisconnecting() =0;
-	virtual void setCampaignState(std::shared_ptr<CCampaignState> newCampaign) const =0;
-	virtual void setCampaignMap(int mapId) const =0;
-	virtual void setCampaignBonus(int bonusId) const =0;
-	virtual void setMapInfo(std::shared_ptr<CMapInfo> to, std::shared_ptr<CMapGenOptions> mapGenOpts = {}) const =0;
-	virtual void setPlayer(PlayerColor color) const =0;
-	virtual void setPlayerOption(ui8 what, ui8 dir, PlayerColor player) const =0;
-	virtual void setDifficulty(int to) const =0;
-	virtual void setTurnLength(int npos) const =0;
-	virtual void sendMessage(const std::string & txt) const =0;
-	virtual void sendGuiAction(ui8 action) const =0; // TODO: possibly get rid of it?
-	virtual void sendStartGame() const =0;
+	virtual void sendClientConnecting() const = 0;
+	virtual void sendClientDisconnecting() = 0;
+	virtual void setCampaignState(std::shared_ptr<CCampaignState> newCampaign) const = 0;
+	virtual void setCampaignMap(int mapId) const = 0;
+	virtual void setCampaignBonus(int bonusId) const = 0;
+	virtual void setMapInfo(std::shared_ptr<CMapInfo> to, std::shared_ptr<CMapGenOptions> mapGenOpts = {}) const = 0;
+	virtual void setPlayer(PlayerColor color) const = 0;
+	virtual void setPlayerOption(ui8 what, ui8 dir, PlayerColor player) const = 0;
+	virtual void setDifficulty(int to) const = 0;
+	virtual void setTurnLength(int npos) const = 0;
+	virtual void sendMessage(const std::string & txt) const = 0;
+	virtual void sendGuiAction(ui8 action) const = 0; // TODO: possibly get rid of it?
+	virtual void sendStartGame() const = 0;
 };
 
 class CClient; //MPTODO: rework
@@ -79,7 +80,7 @@ class CServerHandler : public IServerAPI, public LobbyInfo
 
 	void threadHandleConnection();
 	void threadRunServer();
-	void sendPack(const CPack & pack) const override;
+	void sendLobbyPack(const CPackForLobby & pack) const override;
 
 public:
 	std::atomic<EClientState> state;
