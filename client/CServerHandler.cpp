@@ -63,6 +63,9 @@
 // CGCreature
 #include "../lib/mapObjects/MiscObjects.h"
 
+// For debug save start
+#include "../lib/serializer/CSerializer.h"
+
 template<typename T> class CApplyOnLobby;
 
 class CBaseForLobbyApply
@@ -83,12 +86,14 @@ public:
 	bool applyImmidiately(CLobbyScreen * selScr, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
+		logNetwork->trace("\tImmidiately apply on lobby: %s", typeList.getTypeInfo(ptr)->name());
 		return ptr->applyOnLobbyImmidiately(selScr);
 	}
 
 	void applyOnLobby(CLobbyScreen * selScr, void * pack) const override
 	{
 		T * ptr = static_cast<T *>(pack);
+		logNetwork->trace("\tApply on lobby from queue: %s", typeList.getTypeInfo(ptr)->name());
 		ptr->applyOnLobby(selScr);
 	}
 };
@@ -523,6 +528,78 @@ ui8 CServerHandler::getLoadMode()
 		return ELoadMode::SINGLE;
 	}
 	return loadMode;
+}
+
+void CServerHandler::debugStartTest(std::string filename, bool save)
+{
+	logGlobal->info("Starting debug test with file: %s", filename);
+	auto mapInfo = std::make_shared<CMapInfo>();
+	if(save)
+	{
+		resetStateForLobby(StartInfo::LOAD_GAME);
+		// FIXME: copy-paste from SelectionTab::parseSaves
+		auto file = ResourceID(filename, EResType::CLIENT_SAVEGAME);
+		CLoadFile lf(*CResourceHandler::get()->getResourceName(file), MINIMAL_SERIALIZATION_VERSION);
+		lf.checkMagicBytes(SAVEGAME_MAGIC);
+		mapInfo->mapHeader = make_unique<CMapHeader>();
+		mapInfo->scenarioOpts = nullptr; //to be created by serialiser
+		lf >> *(mapInfo->mapHeader.get()) >> mapInfo->scenarioOpts;
+		mapInfo->fileURI = file.getName();
+		mapInfo->countPlayers();
+		std::time_t time = boost::filesystem::last_write_time(*CResourceHandler::get()->getResourceName(file));
+		mapInfo->date = std::asctime(std::localtime(&time));
+		mapInfo->isSaveGame = true;
+		mapInfo->mapHeader->triggeredEvents.clear();
+		screenType = ESelectionScreen::loadGame;
+	}
+	else
+	{
+		resetStateForLobby(StartInfo::NEW_GAME);
+		mapInfo->mapInit(filename);
+		screenType = ESelectionScreen::newGame;
+	}
+	if(settings["session"]["donotstartserver"].Bool())
+		justConnectToServer("127.0.0.1", 3030);
+	else
+		startLocalServerAndConnect();
+
+	while(!dynamic_cast<CLobbyScreen *>(GH.topInt()))
+	{
+		processIncomingPacks();
+		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+	}
+	while(!mi || mapInfo->fileURI != CSH->mi->fileURI)
+	{
+		setMapInfo(mapInfo);
+		processIncomingPacks();
+		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+	}
+	// "Click" on color to remove us from it
+	setPlayer(myFirstColor());
+	while(myFirstColor() != PlayerColor::CANNOT_DETERMINE)
+	{
+		processIncomingPacks();
+		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+	}
+
+	while(true)
+	{
+		try
+		{
+			processIncomingPacks();
+			sendStartGame();
+			break;
+		}
+		catch(...)
+		{
+
+		}
+		boost::this_thread::sleep(boost::posix_time::milliseconds(50));
+	}
+	while(state != EClientState::GAMEPLAY)
+	{
+		processIncomingPacks();
+	}
 }
 
 void CServerHandler::threadHandleConnection()

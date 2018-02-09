@@ -146,6 +146,8 @@ public:
 	// TODO: LobbyState must be updated within game so we should always know how many player interfaces our client handle
 	int howManyPlayerInterfaces();
 	ui8 getLoadMode();
+
+	void debugStartTest(std::string filename, bool save = false);
 };
 
 extern CServerHandler * CSH;

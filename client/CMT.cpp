@@ -197,8 +197,8 @@ int main(int argc, char * argv[])
 		("version,v", "display version information and exit")
 		("disable-shm", "force disable shared memory usage")
 		("enable-shm-uuid", "use UUID for shared memory identifier")
-		("start", po::value<bfs::path>(), "starts game from saved StartInfo file")
 		("testmap", po::value<std::string>(), "")
+		("testsave", po::value<std::string>(), "")
 		("spectate,s", "enable spectator interface for AI-only games")
 		("spectate-ignore-hero", "wont follow heroes on adventure map")
 		("spectate-hero-speed", po::value<int>(), "hero movement speed on adventure map")
@@ -456,12 +456,13 @@ int main(int argc, char * argv[])
 	session["oneGoodAI"].Bool() = vm.count("oneGoodAI");
 	session["aiSolo"].Bool() = false;
 
-	bfs::path fileToStartFrom; //none by default
-	if(vm.count("start"))
-		fileToStartFrom = vm["start"].as<bfs::path>();
 	if(vm.count("testmap"))
 	{
 		session["testmap"].String() = vm["testmap"].as<std::string>();
+	}
+	if(vm.count("testsave"))
+	{
+		session["testsave"].String() = vm["testsave"].as<std::string>();
 	}
 
 	session["spectate"].Bool() = vm.count("spectate");
@@ -477,22 +478,17 @@ int main(int argc, char * argv[])
 	}
 	if(!session["testmap"].isNull())
 	{
-// MPTODO
-//		startTestMap(session["testmap"].String());
+		session["onlyai"].Bool() = true;
+		CSH->debugStartTest(session["testmap"].String());
+	}
+	if(!session["testsave"].isNull())
+	{
+		session["onlyai"].Bool() = true;
+		CSH->debugStartTest(session["testsave"].String(), true);
 	}
 	else
 	{
-	/* MPTODO
-	 *  	if(!fileToStartFrom.empty() && bfs::exists(fileToStartFrom))
-			startGameFromFile(fileToStartFrom); //ommit pregame and start the game using settings from file
-		else
-		{
-			if(!fileToStartFrom.empty())
-			{
-				logGlobal->warn("Warning: cannot find given file to start from (%s). Falling back to main menu.", fileToStartFrom.string());
-			} */
-			GH.curInt = CMainMenu::create(); //will set CGP pointer to itself
-//		}
+		GH.curInt = CMainMenu::create(); //will set CGP pointer to itself
 	}
 
 	if(!settings["session"]["headless"].Bool())
@@ -819,12 +815,6 @@ void processCommand(const std::string &message)
 			CSaveFile out(fname);
 			out << CSH->si;
 		}
-	}
-	else if(cn == "start")
-	{
-		std::string fname;
-		readed >> fname;
-//		startGameFromFile(fname);
 	}
 	else if(cn == "unlock")
 	{
