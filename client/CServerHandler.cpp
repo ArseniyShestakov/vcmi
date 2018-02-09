@@ -338,8 +338,9 @@ void CServerHandler::sendClientDisconnecting()
 	sendLobbyPack(lcd);
 }
 
-void CServerHandler::setCampaignState(std::shared_ptr<CCampaignState> newCampaign) const
+void CServerHandler::setCampaignState(std::shared_ptr<CCampaignState> newCampaign)
 {
+	state = EClientState::LOBBY_CAMPAIGN;
 	LobbySetCampaign lsc;
 	lsc.ourCampaign = newCampaign;
 	sendLobbyPack(lsc);

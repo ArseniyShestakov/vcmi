@@ -52,7 +52,7 @@ public:
 
 	virtual void sendClientConnecting() const = 0;
 	virtual void sendClientDisconnecting() = 0;
-	virtual void setCampaignState(std::shared_ptr<CCampaignState> newCampaign) const = 0;
+	virtual void setCampaignState(std::shared_ptr<CCampaignState> newCampaign) = 0;
 	virtual void setCampaignMap(int mapId) const = 0;
 	virtual void setCampaignBonus(int bonusId) const = 0;
 	virtual void setMapInfo(std::shared_ptr<CMapInfo> to, std::shared_ptr<CMapGenOptions> mapGenOpts = {}) const = 0;
@@ -127,7 +127,7 @@ public:
 	// Lobby server API for UI
 	void sendClientConnecting() const override;
 	void sendClientDisconnecting() override;
-	void setCampaignState(std::shared_ptr<CCampaignState> newCampaign) const override;
+	void setCampaignState(std::shared_ptr<CCampaignState> newCampaign) override;
 	void setCampaignMap(int mapId) const override;
 	void setCampaignBonus(int bonusId) const override;
 	void setMapInfo(std::shared_ptr<CMapInfo> to, std::shared_ptr<CMapGenOptions> mapGenOpts = {}) const override;

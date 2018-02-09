@@ -32,9 +32,6 @@ CLobbyScreen::CLobbyScreen(ESelectionScreen screenType)
 	: CSelectionBase(screenType), bonusSel(nullptr)
 {
 	OBJ_CONSTRUCTION_CAPTURING_ALL;
-	if(CSH->campaignState)
-		CSH->campaignPassed = true;
-
 	tabSel = new SelectionTab(screenType); //scenario selection tab
 	tabSel->recActions = 255;
 	curTab = tabSel;
@@ -95,7 +92,9 @@ CLobbyScreen::CLobbyScreen(ESelectionScreen screenType)
 
 CLobbyScreen::~CLobbyScreen()
 {
-
+	// TODO: For now we always destroy whole lobby when leaving bonus selection screen
+	if(CSH->state == EClientState::LOBBY_CAMPAIGN)
+		CSH->sendClientDisconnecting();
 }
 
 void CLobbyScreen::toggleTab(CIntObject * tab)
@@ -116,7 +115,6 @@ void CLobbyScreen::startCampaign()
 	if(CSH->mi)
 	{
 		auto ourCampaign = std::make_shared<CCampaignState>(CCampaignHandler::getCampaign(CSH->mi->fileURI));
-		CSH->state = EClientState::LOBBY_CAMPAIGN;
 		CSH->setCampaignState(ourCampaign);
 	}
 }
@@ -176,8 +174,8 @@ void CLobbyScreen::activate()
 	if(CSH->campaignState && !CSH->campaignSent)
 	{
 		CSH->setCampaignState(CSH->campaignState);
+		CSH->campaignState.reset();
 		CSH->campaignSent = true;
-		CSH->state = EClientState::LOBBY_CAMPAIGN;
 	}
 }
 

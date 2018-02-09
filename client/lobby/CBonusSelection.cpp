@@ -510,7 +510,23 @@ void CBonusSelection::updateAfterStateChange()
 
 void CBonusSelection::goBack()
 {
-	GH.popIntTotally(this);
+	if(CSH->state != EClientState::GAMEPLAY)
+	{
+		GH.popInts(2);
+	}
+	else
+	{
+		GH.popIntTotally(this);
+	}
+	// TODO: we can actually only pop bonus selection interface for custom campaigns
+	// Though this would require clearing CLobbyScreen::bonusSel pointer when poping this interface
+/*
+	else
+	{
+		GH.popIntTotally(this);
+		CSH->state = EClientState::LOBBY;
+	}
+*/
 }
 
 void CBonusSelection::startMap()
