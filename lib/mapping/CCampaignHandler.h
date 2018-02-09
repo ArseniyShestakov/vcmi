@@ -146,7 +146,7 @@ public:
 	// MPTODO: No longer const due to json node
 	const CGHeroInstance * strongestHero(PlayerColor owner);
 	std::vector<CGHeroInstance *> getLostCrossoverHeroes(); /// returns a list of crossover heroes which started the scenario, but didn't complete it
-	std::vector<JsonNode> saveCompatibilityJson(std::vector<CGHeroInstance *> & heroes);
+	std::vector<JsonNode> update781(std::vector<CGHeroInstance *> & heroes);
 
 	CCampaignScenario();
 
@@ -168,8 +168,8 @@ public:
 			std::vector<CGHeroInstance *> crossoverHeroesOld, placedCrossoverHeroesOld;
 			h & crossoverHeroesOld;
 			h & placedCrossoverHeroesOld;
-			crossoverHeroes = saveCompatibilityJson(crossoverHeroesOld);
-			placedCrossoverHeroes = saveCompatibilityJson(placedCrossoverHeroesOld);
+			crossoverHeroes = update781(crossoverHeroesOld);
+			placedCrossoverHeroes = update781(placedCrossoverHeroesOld);
 		}
 		else
 		{

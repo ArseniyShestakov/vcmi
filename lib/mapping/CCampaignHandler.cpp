@@ -26,6 +26,7 @@
 #include "CMapInfo.h"
 
 // For hero crossover
+#include "serializer/CSerializer.h"
 #include "serializer/JsonDeserializer.h"
 #include "serializer/JsonSerializer.h"
 
@@ -421,9 +422,9 @@ std::vector<CGHeroInstance *> CCampaignScenario::getLostCrossoverHeroes()
 	return lostCrossoverHeroes;
 }
 
-std::vector<JsonNode> CCampaignScenario::saveCompatibilityJson(std::vector<CGHeroInstance *> & heroes)
+std::vector<JsonNode> CCampaignScenario::update781(std::vector<CGHeroInstance *> & heroes)
 {
-	// Save compatibility for format 781
+	static_assert(MINIMAL_SERIALIZATION_VERSION < 781, "No longer needed CCampaignScenario::update781");
 	std::vector<JsonNode> heroesNew;
 	for(auto hero : heroes)
 	{
