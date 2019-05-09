@@ -57,6 +57,8 @@
 #include "gui/CAnimation.h"
 #include "../lib/serializer/Connection.h"
 #include "CServerHandler.h"
+#include "../lib/mapping/CMap.h"
+#include "../lib/mapping/CMapService.h"
 
 #include <boost/asio.hpp>
 
@@ -932,6 +934,12 @@ void processCommand(const std::string &message)
 			giveTurn(color);
 		}
 		session["aiSolo"].Bool() = !session["aiSolo"].Bool();
+	}
+	else if(cn == "savemap")
+	{
+		std::unique_ptr<CMap> map(CSH->client->gameState()->map.get());
+		CMapService mapService;
+		mapService.saveMap(map, "/tmp/map.vmap");
 	}
 	else if(cn == "controlai")
 	{
